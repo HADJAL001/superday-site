@@ -281,6 +281,35 @@
   .pricing-note{text-align:center; color:var(--text-muted); font-size:13px; margin-top:22px}
   .pricing-note b{color:var(--champagne); font-weight:600}
 
+  /* Download / stores */
+  .dl-lead{max-width:640px; margin:0 auto 34px; text-align:center; color:var(--text-dim); font-size:15px; line-height:1.6}
+  .stores{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; max-width:820px; margin:0 auto}
+  .store{
+    position:relative; border-radius:20px; padding:26px 20px; text-align:center;
+    background:linear-gradient(160deg,rgba(23,48,89,.55),rgba(11,23,48,.4));
+    border:1px solid var(--hair); overflow:hidden; transition:transform .4s ease, border-color .4s ease;
+  }
+  .store::before{content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
+    background:var(--grad-gold-soft); -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude; opacity:.35; pointer-events:none}
+  .store:hover{transform:translateY(-4px); border-color:rgba(231,197,110,.4)}
+  .store .ico{font-size:30px; line-height:1; display:block; margin-bottom:12px}
+  .store .sname{font-weight:700; color:var(--text); font-size:15px; letter-spacing:.3px}
+  .store .splat{display:block; font-size:11px; color:var(--text-muted); margin-top:2px; letter-spacing:1px; text-transform:uppercase}
+  .store .soon{display:inline-block; margin-top:14px; font-size:10px; font-weight:800; letter-spacing:1.4px;
+    color:#0A1A38; background:var(--grad-gold); padding:5px 12px; border-radius:999px}
+  .dl-how{max-width:680px; margin:40px auto 0; display:grid; grid-template-columns:repeat(3,1fr); gap:18px; counter-reset:dl}
+  .dl-how li{list-style:none; position:relative; padding:20px 16px 18px; border-radius:16px;
+    background:rgba(255,255,255,.02); border:1px solid var(--hair-soft); font-size:13px; color:var(--text-dim); line-height:1.5}
+  .dl-how li::before{counter-increment:dl; content:counter(dl); display:flex; align-items:center; justify-content:center;
+    width:30px; height:30px; margin-bottom:12px; border-radius:50%; font-family:"Cormorant Garamond",serif; font-weight:700; font-size:18px;
+    background:var(--grad-gold); -webkit-background-clip:text; background-clip:text; color:transparent; border:1px solid rgba(231,197,110,.35)}
+  .dl-how b{color:var(--text); display:block; margin-bottom:4px; font-size:13.5px}
+  .dl-cta{text-align:center; margin-top:34px}
+  .pay-line{text-align:center; margin-top:26px; color:var(--text-muted); font-size:12.5px; line-height:1.7}
+  .pay-line b{color:var(--champagne); font-weight:600}
+  @media(max-width:720px){ .stores{grid-template-columns:1fr; max-width:360px} .dl-how{grid-template-columns:1fr; max-width:420px} }
+
   /* Waitlist CTA */
   .cta{
     background:linear-gradient(150deg,rgba(23,48,89,.85),rgba(11,23,48,.7));
@@ -535,6 +564,7 @@
     <nav class="links">
       <a href="#features">Возможности</a>
       <a href="#how">Как работает</a>
+      <a href="#download">Скачать</a>
       <a href="#pricing">Тарифы</a>
       <a href="#faq">Вопросы</a>
       <a class="btn btn-gold" href="#waitlist">Ранний доступ</a>
@@ -615,6 +645,31 @@
         <div class="step reveal"><div class="n gold-text">2</div><h4>Позволь AI решить</h4><p>SUPER DAY расставит приоритеты, устроит дебаты о важном и построит маршрут дня.</p></div>
         <div class="step reveal"><div class="n gold-text">3</div><h4>Проживи</h4><p>Слушай план голосом и двигайся по нему — фокус на том, что действительно двигает вперёд.</p></div>
       </div>
+    </div>
+  </section>
+
+  <!-- DOWNLOAD -->
+  <section id="download">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow">Приложение</span>
+        <h2 class="serif">Для вашего удобства <span class="gold-text">сделали приложение</span></h2>
+      </div>
+      <p class="dl-lead reveal">SUPER DAY скоро выйдет на всех официальных площадках. Оставьте e-mail — пришлём ссылку на релиз, как только он появится в сторах. Никаких сторонних файлов: только официальная и безопасная установка.</p>
+      <div class="stores reveal">
+        <div class="store"><span class="ico"></span><span class="sname">App Store</span><span class="splat">iPhone · iPad</span><span class="soon">СКОРО</span></div>
+        <div class="store"><span class="ico">▶</span><span class="sname">Google Play</span><span class="splat">Android</span><span class="soon">СКОРО</span></div>
+        <div class="store"><span class="ico">◆</span><span class="sname">RuStore</span><span class="splat">Россия · Android</span><span class="soon">СКОРО</span></div>
+      </div>
+      <ol class="dl-how reveal">
+        <li><b>Оставьте e-mail</b>В форме ниже — займёт пару секунд.</li>
+        <li><b>Дождитесь письма</b>Пришлём прямую ссылку на официальный релиз в сторе.</li>
+        <li><b>Установите</b>Из App Store, Google Play или RuStore — в один тап.</li>
+      </ol>
+      <div class="dl-cta reveal">
+        <a class="btn btn-gold" href="#waitlist">Сообщить о выходе →</a>
+      </div>
+      <p class="pay-line reveal">Оплата подписки к запуску: для России — <b>СБП и YooKassa</b> (карты МИР, Visa, Mastercard); за рубежом — <b>Stripe и PayPal</b>.</p>
     </div>
   </section>
 
@@ -806,7 +861,7 @@
         }
       });
     }, {rootMargin:"-45% 0px -50% 0px"});
-    ["features","how","pricing","faq","waitlist"].forEach(function(id){ var s=document.getElementById(id); if(s) spy.observe(s); });
+    ["features","how","download","pricing","faq","waitlist"].forEach(function(id){ var s=document.getElementById(id); if(s) spy.observe(s); });
   }
 
   // Фирменная кинематографичная вспышка при нажатии
