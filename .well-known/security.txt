@@ -1,0 +1,5 @@
+# SUPER DAY — security policy (RFC 9116)
+Contact: mailto:hello@superday.fun
+Expires: 2027-07-25T00:00:00.000Z
+Preferred-Languages: ru, en
+Canonical: https://superday.fun/.well-known/security.txt
