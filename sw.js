@@ -2,14 +2,18 @@
    Стратегия: навигации — network-first с офлайн-фолбэком на кэш главной;
    статика (иконки, манифест, шрифты) — cache-first. Версия в имени кэша —
    меняй CACHE при обновлении, чтобы старый кэш очистился. */
-var CACHE = "superday-v6";
+var CACHE = "superday-v7";
 var SHELL = [
   "/",
   "/index.html",
   "/app.html",
   "/manifest.webmanifest",
   "/assets/mark.png",
-  "/assets/logo.png"
+  "/assets/logo.png",
+  "/assets/icon-192.png",
+  "/assets/icon-512.png",
+  "/assets/icon-maskable-512.png",
+  "/assets/apple-touch-icon-180.png"
 ];
 
 self.addEventListener("install", function (e) {
