@@ -569,6 +569,12 @@
     color:var(--gold-bright); background:rgba(201,169,106,.12); border:1px solid var(--hair-soft);
   }
   .wl-card .btn-gold{width:100%; padding:13px}
+  .wlc-share{margin-top:16px; padding-top:16px; border-top:1px solid var(--hair)}
+  .wlc-share p{margin:0 0 10px; font-size:13px; color:var(--text-dim); line-height:1.5}
+  .wlc-share p b{color:var(--champagne); font-weight:600}
+  .wlc-share .btn-ghost{width:100%; padding:12px; font-size:14px}
+  .wlc-share .wlc-shared{margin:8px 0 0; font-size:12.5px; color:var(--gold); text-align:center; opacity:0; transition:opacity .3s ease}
+  .wlc-share .wlc-shared.on{opacity:1}
 
   /* фон дышит только если движение разрешено */
   @media (prefers-reduced-motion: no-preference){
@@ -841,13 +847,21 @@
       '</div>' +
       '<div class="row wlc-mail"><span aria-hidden="true">&#9993;</span><span class="wlc-email"></span></div>';
 
+    // блок «поделиться» — честно, без обещаний двигать очередь
+    var shareBlock =
+      '<div class="row wlc-share">' +
+        '<p>Знаешь того, кто тонет в делах? <b>Покажи ему SUPER DAY</b> — веб-версия работает уже сейчас, без установки.</p>' +
+        '<button type="button" class="btn btn-ghost wlc-share-btn">Поделиться SUPER DAY</button>' +
+        '<p class="wlc-shared" aria-live="polite">Ссылка скопирована — отправь её другу</p>' +
+      '</div>';
+
     if(mode === "captured"){
       card.innerHTML = head +
         '<ul class="row wlc-steps">' +
           '<li><i>1</i><span>Готово — e-mail сохранён, подтверждать ничего не нужно.</span></li>' +
           '<li><i>2</i><span>Пришлём личную ссылку на скачивание в день запуска в сторах.</span></li>' +
           '<li><i>3</i><span>Ранний доступ = расширенные лимиты на старте. Это подарок первым.</span></li>' +
-        '</ul>';
+        '</ul>' + shareBlock;
     } else {
       var subj = encodeURIComponent("Ранний доступ к SUPER DAY");
       var body = encodeURIComponent("Хочу в список ожидания SUPER DAY. Мой e-mail: " + email);
@@ -858,10 +872,48 @@
           '<li><i>2</i><span>Пришлём личную ссылку на скачивание в день запуска в сторах.</span></li>' +
           '<li><i>3</i><span>Ранний доступ = расширенные лимиты на старте. Это подарок первым.</span></li>' +
         '</ul>' +
-        '<a class="btn btn-gold row" href="' + mailto + '">Открыть письмо и подтвердить</a>';
+        '<a class="btn btn-gold row" href="' + mailto + '">Открыть письмо и подтвердить</a>' +
+        shareBlock;
     }
     // e-mail вставляем текстом (без HTML-инъекций)
     card.querySelector(".wlc-email").textContent = email;
+
+    // кнопка «поделиться»: системный шэр → буфер обмена → фолбэк
+    var shareBtn = card.querySelector(".wlc-share-btn");
+    if(shareBtn){
+      var shareData = {
+        title: "SUPER DAY",
+        text: "SUPER DAY — планировщик дня: голосом выгружаешь дела, а он раскладывает их по приоритетам. Веб-версия уже работает.",
+        url: "https://superday.fun/"
+      };
+      var okMsg = card.querySelector(".wlc-shared");
+      function shareDone(text){
+        if(okMsg){ okMsg.textContent = text; okMsg.classList.add("on"); }
+      }
+      function copyLink(){
+        var link = "https://superday.fun/";
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(link).then(function(){ shareDone("Ссылка скопирована — отправь её другу"); },
+            function(){ fbCopy(link); });
+        } else { fbCopy(link); }
+      }
+      function fbCopy(link){
+        try{
+          var ta = document.createElement("textarea");
+          ta.value = link; ta.setAttribute("readonly","");
+          ta.style.position="absolute"; ta.style.left="-9999px";
+          document.body.appendChild(ta); ta.select();
+          document.execCommand("copy"); document.body.removeChild(ta);
+          shareDone("Ссылка скопирована — отправь её другу");
+        }catch(e){ shareDone("superday.fun — поделись этой ссылкой"); }
+      }
+      shareBtn.addEventListener("click", function(){
+        if(navigator.share){
+          navigator.share(shareData).then(function(){ shareDone("Спасибо, что делишься 🙌"); })
+            .catch(function(err){ if(err && err.name === "AbortError") return; copyLink(); });
+        } else { copyLink(); }
+      });
+    }
 
     var payBtn = card.querySelector(".btn-gold");
     if(payBtn){
