@@ -230,9 +230,81 @@
   .osgard-badge .sub{font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted)}
   .copyright{text-align:center; color:var(--text-muted); font-size:12px; margin-top:30px}
 
-  /* появление при скролле */
-  .reveal{opacity:0; transform:translateY(22px); transition:opacity .7s ease, transform .7s ease}
-  .reveal.in{opacity:1; transform:none}
+  /* появление при скролле — с blur-in и премиум-easing */
+  .reveal{opacity:0; transform:translateY(24px); filter:blur(6px);
+    transition:opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1), filter .8s ease}
+  .reveal.in{opacity:1; transform:none; filter:none}
+
+  /* ================= ПРЕМИУМ-ЭФФЕКТЫ (сдержанно) ================= */
+
+  /* «живой» фон: медленный дрейф золотого свечения */
+  @keyframes auroraDrift{
+    from{ transform:translate3d(0,0,0) scale(1); opacity:1 }
+    to{ transform:translate3d(-1.6%,1.2%,0) scale(1.06); opacity:.9 }
+  }
+
+  /* золотой блик, медленно проходящий по заголовку hero */
+  .gold-shimmer{
+    background:linear-gradient(100deg,var(--gold-deep) 0%,var(--gold) 28%,var(--gold-bright) 48%,var(--gold) 66%,var(--gold-deep) 100%);
+    background-size:230% 100%; background-position:130% 0;
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation:goldSheen 7s ease-in-out infinite;
+  }
+  @keyframes goldSheen{ 0%{background-position:130% 0} 100%{background-position:-130% 0} }
+
+  /* шапка при скролле — плотнее фон + золотая hairline-подсветка */
+  header.nav.scrolled{
+    background:rgba(5,8,15,.82);
+    box-shadow:0 1px 0 rgba(231,197,110,.16), 0 10px 34px rgba(0,0,0,.4);
+  }
+  nav.links a.active{color:var(--gold)}
+
+  /* внутренний золотой свет карточек при наведении (без 3D-наклона) */
+  .features .card:hover{
+    box-shadow:0 20px 44px rgba(0,0,0,.35), inset 0 1px 0 rgba(231,197,110,.14), inset 0 0 34px rgba(231,197,110,.05);
+  }
+
+  /* тактильное нажатие золотой кнопки */
+  .btn-gold:active{ transform:translateY(0) scale(.98); box-shadow:0 6px 18px rgba(231,197,110,.32), inset 0 0 18px rgba(255,255,255,.25) }
+
+  /* слой кинематографичных эффектов (поверх контента, не перехватывает клики) */
+  #fx-layer{position:fixed; inset:0; pointer-events:none; z-index:9998; overflow:hidden}
+  .fx-bloom,.fx-ring,.fx-spark{position:absolute; pointer-events:none; transform:translate(-50%,-50%)}
+  .fx-bloom{width:8px;height:8px;border-radius:50%;
+    background:radial-gradient(circle,rgba(246,227,168,.9),rgba(231,197,110,.45) 38%,transparent 72%);
+    animation:fxBloom .6s ease-out forwards}
+  @keyframes fxBloom{ 0%{opacity:.9;width:8px;height:8px} 100%{opacity:0;width:360px;height:360px} }
+  .fx-ring{width:6px;height:6px;border-radius:50%; border:1.5px solid rgba(231,197,110,.7);
+    animation:fxRing .6s cubic-bezier(.2,.7,.2,1) forwards}
+  @keyframes fxRing{ 0%{width:6px;height:6px;opacity:.85} 100%{width:230px;height:230px;opacity:0} }
+  .fx-spark{width:4px;height:4px;border-radius:50%;
+    background:linear-gradient(var(--gold-bright),var(--gold-deep)); box-shadow:0 0 6px rgba(231,197,110,.8)}
+
+  /* ненавязчивая кнопка звука */
+  .mute-btn{position:fixed; right:18px; bottom:18px; z-index:9999;
+    width:42px;height:42px;border-radius:50%; border:1px solid var(--hair);
+    background:rgba(5,8,15,.6); color:var(--gold); font-size:17px; line-height:1; cursor:pointer;
+    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    display:flex; align-items:center; justify-content:center;
+    transition:border-color .2s, transform .15s, color .2s}
+  .mute-btn:hover{border-color:var(--gold); transform:translateY(-2px)}
+  .mute-btn.off{color:var(--text-muted)}
+
+  /* подтверждение waitlist */
+  .wl-ok{margin-top:14px; color:var(--gold-bright); font-size:13px; font-weight:600; position:relative; opacity:0; animation:okIn .45s ease forwards}
+  @keyframes okIn{ to{opacity:1} }
+
+  /* фон дышит только если движение разрешено */
+  @media (prefers-reduced-motion: no-preference){
+    body::before{ animation:auroraDrift 26s ease-in-out infinite alternate }
+  }
+  /* уважение к «уменьшить движение»: статичный премиум-вид */
+  @media (prefers-reduced-motion: reduce){
+    .reveal{transition-duration:.001s; filter:none}
+    .gold-shimmer{animation:none}
+    .fx-bloom,.fx-ring{animation-duration:.28s}
+    .fx-spark{display:none}
+  }
 </style>
 </head>
 <body>
@@ -256,7 +328,7 @@
     <div class="wrap hero-grid">
       <div class="reveal">
         <span class="eyebrow">Премиальный планировщик дня</span>
-        <h1>Проживай день<br><span class="serif gold-text">на максимум.</span></h1>
+        <h1>Проживай день<br><span class="serif gold-text gold-shimmer">на максимум.</span></h1>
         <p class="lead">Скажи, что нужно сделать — SUPER DAY распределит задачи по матрице Эйзенхауэра, устроит AI-дебаты о приоритетах и озвучит готовый план. Голосом. За секунды.</p>
         <div class="hero-cta">
           <a class="btn btn-gold" href="#waitlist">Получить ранний доступ</a>
@@ -375,6 +447,10 @@
   <div class="copyright">© 2026 SUPER DAY · superday.fun · Все права защищены</div>
 </footer>
 
+<!-- слой кинематографичных эффектов + кнопка звука -->
+<div id="fx-layer" aria-hidden="true"></div>
+<button id="muteBtn" class="mute-btn" type="button" aria-label="Звук интерфейса">&#9834;</button>
+
 <script>
   // Плавное появление секций
   const io = new IntersectionObserver((entries)=>{
@@ -388,9 +464,140 @@
     ev.preventDefault();
     var email = document.getElementById("wlEmail").value.trim();
     if(!email) return;
+    // визуальное подтверждение + фирменная вспышка (на случай отправки Enter)
+    if(!this.parentNode.querySelector(".wl-ok")){
+      var okEl = document.createElement("div");
+      okEl.className = "wl-ok";
+      okEl.textContent = "✓ Готово — открываем письмо…";
+      this.parentNode.appendChild(okEl);
+    }
+    try{
+      var _b = this.querySelector("button").getBoundingClientRect();
+      cinematicPress(_b.left + _b.width/2, _b.top + _b.height/2);
+      playPressSound();
+    }catch(e){}
     var subj = encodeURIComponent("Ранний доступ к SUPER DAY");
     var body = encodeURIComponent("Хочу в список ожидания SUPER DAY. Мой e-mail: " + email);
     window.location.href = "mailto:hello@superday.fun?subject=" + subj + "&body=" + body;
+  });
+
+  // ================= Премиальные микровзаимодействия =================
+  var reduceMo = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  // Каскадное появление элементов внутри групп
+  document.querySelectorAll(".features, .steps, .pricing").forEach(function(group){
+    group.querySelectorAll(".reveal").forEach(function(el, i){ el.style.transitionDelay = (i * 0.08) + "s"; });
+  });
+
+  // Шапка плотнеет при скролле
+  var siteHeader = document.querySelector("header.nav");
+  window.addEventListener("scroll", function(){
+    if(siteHeader) siteHeader.classList.toggle("scrolled", window.scrollY > 10);
+  }, {passive:true});
+
+  // Подсветка активного пункта меню (scrollspy)
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('nav.links a[href^="#"]'));
+  if(navLinks.length){
+    var spy = new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(e.isIntersecting){
+          navLinks.forEach(function(a){ a.classList.toggle("active", a.getAttribute("href") === "#" + e.target.id); });
+        }
+      });
+    }, {rootMargin:"-45% 0px -50% 0px"});
+    ["features","how","pricing","waitlist"].forEach(function(id){ var s=document.getElementById(id); if(s) spy.observe(s); });
+  }
+
+  // Фирменная кинематографичная вспышка при нажатии
+  var fxLayer = document.getElementById("fx-layer");
+  function cinematicPress(x, y){
+    if(!fxLayer || x == null) return;
+    var bloom = document.createElement("div");
+    bloom.className = "fx-bloom"; bloom.style.left = x + "px"; bloom.style.top = y + "px";
+    fxLayer.appendChild(bloom); setTimeout(function(){ bloom.remove(); }, 650);
+
+    var ring = document.createElement("div");
+    ring.className = "fx-ring"; ring.style.left = x + "px"; ring.style.top = y + "px";
+    fxLayer.appendChild(ring); setTimeout(function(){ ring.remove(); }, 650);
+
+    if(reduceMo) return; // при «уменьшить движение» — только мягкий блум
+    for(var i = 0; i < 8; i++){
+      var sp = document.createElement("div");
+      sp.className = "fx-spark"; sp.style.left = x + "px"; sp.style.top = y + "px";
+      fxLayer.appendChild(sp);
+      var ang = -Math.PI/2 + (Math.random() - 0.5) * Math.PI * 0.9;
+      var dist = 42 + Math.random() * 72;
+      var dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist;
+      var dur = 520 + Math.random() * 340;
+      sp.animate([
+        { transform:"translate(-50%,-50%) translate(0px,0px) scale(1)", opacity:1 },
+        { transform:"translate(-50%,-50%) translate(" + dx + "px," + (dy + 34) + "px) scale(.3)", opacity:0 }
+      ], { duration:dur, easing:"cubic-bezier(.2,.7,.3,1)" });
+      (function(el, d){ setTimeout(function(){ el.remove(); }, d + 40); })(sp, dur);
+    }
+  }
+
+  // Тонкий синтезированный звук (Web Audio, без файлов)
+  var actx = null;
+  var soundMuted = (localStorage.getItem("superday_sound") === "off");
+  function ensureCtx(){
+    try{
+      if(!actx){ actx = new (window.AudioContext || window.webkitAudioContext)(); }
+      if(actx && actx.state === "suspended"){ actx.resume(); }
+    }catch(e){}
+  }
+  function playPressSound(){
+    if(soundMuted) return;
+    ensureCtx(); if(!actx) return;
+    var t = actx.currentTime;
+    [[880, 0], [1320, 0.055]].forEach(function(p){
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = "triangle"; o.frequency.value = p[0];
+      g.gain.setValueAtTime(0.0001, t + p[1]);
+      g.gain.exponentialRampToValueAtTime(0.06, t + p[1] + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + p[1] + 0.18);
+      o.connect(g).connect(actx.destination);
+      o.start(t + p[1]); o.stop(t + p[1] + 0.2);
+    });
+    try{
+      var dur = 0.16, buf = actx.createBuffer(1, Math.floor(actx.sampleRate * dur), actx.sampleRate), d = buf.getChannelData(0);
+      for(var i = 0; i < d.length; i++){ d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2); }
+      var src = actx.createBufferSource(); src.buffer = buf;
+      var bp = actx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 3500; bp.Q.value = 0.8;
+      var ng = actx.createGain(); ng.gain.value = 0.03;
+      src.connect(bp).connect(ng).connect(actx.destination);
+      src.start(t); src.stop(t + dur);
+    }catch(e){}
+  }
+
+  // Кнопка mute (состояние в localStorage)
+  var muteBtn = document.getElementById("muteBtn");
+  function renderMute(){
+    if(!muteBtn) return;
+    muteBtn.classList.toggle("off", soundMuted);
+    muteBtn.setAttribute("aria-label", soundMuted ? "Включить звук интерфейса" : "Выключить звук интерфейса");
+    muteBtn.setAttribute("aria-pressed", soundMuted ? "false" : "true");
+  }
+  if(muteBtn){
+    renderMute();
+    muteBtn.addEventListener("click", function(){
+      soundMuted = !soundMuted;
+      localStorage.setItem("superday_sound", soundMuted ? "off" : "on");
+      renderMute();
+      if(!soundMuted){ ensureCtx(); playPressSound(); }
+    });
+  }
+
+  // Навешиваем вспышку + звук на все золотые кнопки
+  document.querySelectorAll(".btn-gold").forEach(function(btn){
+    btn.addEventListener("pointerdown", function(e){
+      var x = e.clientX, y = e.clientY;
+      if(x == null || (x === 0 && y === 0)){
+        var r = btn.getBoundingClientRect(); x = r.left + r.width/2; y = r.top + r.height/2;
+      }
+      cinematicPress(x, y);
+      playPressSound();
+    });
   });
 </script>
 </body>
