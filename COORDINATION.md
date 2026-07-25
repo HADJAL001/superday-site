@@ -123,6 +123,12 @@
   чувствительности.
 - `sw.js` поднят до `superday-v6`. При правках `app.html`/`index.html` —
   снова поднимать `CACHE`.
+- **PWA-иконки исправлены** (`superday-v7`): manifest раньше объявлял только
+  `1024×1024 purpose:any` — браузер слабо предлагал установку, Android-маска
+  срезала логотип. Добавлены `assets/icon-192.png`, `icon-512.png` (any),
+  `icon-maskable-512.png` (лого ~70% в безопасной зоне на фоне `#0A0B0E`) и
+  лёгкий `apple-touch-icon-180.png` (заменил 600 КБ `logo.png` в `<link>`).
+  Иконки в précache SW. Генерились из `assets/mark.png` через Pillow.
 
 ## Открытые долги (ещё не сделаны)
 
