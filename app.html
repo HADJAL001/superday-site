@@ -6,6 +6,21 @@
 <title>SUPER DAY — веб-планировщик (бета)</title>
 <meta name="description" content="Бесплатный веб-планировщик SUPER DAY: продиктуй или впиши задачи, разложи по матрице Эйзенхауэра и получи спокойный план дня. Работает офлайн, данные хранятся только в этом браузере." />
 <meta name="theme-color" content="#101216" />
+<link rel="canonical" href="https://superday.fun/app.html" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="SUPER DAY" />
+<meta property="og:locale" content="ru_RU" />
+<meta property="og:url" content="https://superday.fun/app.html" />
+<meta property="og:title" content="SUPER DAY — планируй день прямо в браузере" />
+<meta property="og:description" content="Выгрузи задачи голосом или текстом, разложи по матрице Эйзенхауэра и получи спокойный маршрут дня. Бесплатно, работает офлайн." />
+<meta property="og:image" content="https://superday.fun/assets/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="SUPER DAY — проживай день на максимум" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="SUPER DAY — планируй день прямо в браузере" />
+<meta name="twitter:description" content="Задачи голосом → матрица Эйзенхауэра → спокойный план дня. Бесплатно, офлайн." />
+<meta name="twitter:image" content="https://superday.fun/assets/og.png" />
 <link rel="icon" href="assets/mark.png" type="image/png" />
 <link rel="apple-touch-icon" href="assets/logo.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -123,6 +138,8 @@
   .toolbar button{background:none; border:1px solid var(--border); color:var(--text-dim); border-radius:999px;
     padding:9px 18px; font-size:12.5px; cursor:pointer; font-family:inherit}
   .toolbar button:hover{border-color:var(--gold); color:var(--text)}
+  .toolbar button.accent{color:var(--champagne); border-color:var(--hair)}
+  .toolbar button.accent:hover{color:#141414; font-weight:700; border-color:transparent; background:var(--grad-gold)}
 
   footer{border-top:1px solid var(--hair-soft); padding:22px 0 34px; text-align:center; color:var(--text-muted); font-size:12px}
   footer a{color:var(--champagne); text-decoration:none}
@@ -201,6 +218,7 @@
   </section>
 
   <div class="toolbar">
+    <button id="copyPlan" class="accent" type="button">Поделиться планом</button>
     <button id="clearDone" type="button">Убрать выполненные</button>
     <button id="clearAll" type="button">Очистить всё</button>
   </div>
@@ -317,6 +335,44 @@
   document.getElementById("clearAll").addEventListener("click", function(){
     if(tasks.length && confirm("Удалить все задачи? Это действие нельзя отменить.")){ tasks=[]; save(); render(); }
   });
+
+  // Экспорт плана: собрать текст в порядке маршрута дня
+  function buildPlanText(){
+    var order = tasks.slice().sort(function(a,b){
+      if(a.done!==b.done) return a.done?1:-1;
+      return quadOf(a) - quadOf(b);
+    });
+    var MARK = {1:"🔴",2:"🟡",3:"🟢",4:"⚪"};
+    var lines = order.map(function(t,i){
+      return (t.done ? "✔ " : (i+1)+". ") + MARK[quadOf(t)] + " " + t.text;
+    });
+    return "Мой план на сегодня — SUPER DAY\n\n" + lines.join("\n") +
+      "\n\nСоставлено в SUPER DAY · superday.fun";
+  }
+
+  var copyBtn = document.getElementById("copyPlan");
+  copyBtn.addEventListener("click", function(){
+    if(!tasks.length){ input.focus(); return; }
+    var text = buildPlanText();
+    var flash = function(msg){ var old=copyBtn.textContent; copyBtn.textContent=msg;
+      setTimeout(function(){ copyBtn.textContent=old; }, 1800); };
+    if(navigator.share){
+      navigator.share({ title:"Мой план на сегодня — SUPER DAY", text:text }).catch(function(){});
+      return;
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ flash("Скопировано ✓"); })
+        .catch(function(){ fallbackCopy(text, flash); });
+    } else { fallbackCopy(text, flash); }
+  });
+  function fallbackCopy(text, flash){
+    try{
+      var ta=document.createElement("textarea"); ta.value=text;
+      ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta);
+      ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+      flash("Скопировано ✓");
+    }catch(e){ flash("Не удалось скопировать"); }
+  }
 
   // Голосовой ввод (Web Speech API, где поддерживается)
   (function(){
