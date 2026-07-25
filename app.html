@@ -3,6 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- Заголовки безопасности (GitHub Pages → только через meta).
+     upgrade-insecure-requests, object-src 'none', base-uri lock; инлайн требует 'unsafe-inline'.
+     blob:/data: — для WebAudio-сигнала и экспорта резервной копии (URL.createObjectURL). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https:; connect-src 'self' https:; manifest-src 'self'; media-src 'self' data: blob:; form-action 'self' https: mailto:; upgrade-insecure-requests" />
+<meta name="referrer" content="strict-origin-when-cross-origin" />
+<meta name="color-scheme" content="dark" />
 <title>SUPER DAY — веб-планировщик (бета)</title>
 <meta name="description" content="Бесплатный веб-планировщик SUPER DAY: продиктуй или впиши задачи, разложи по матрице Эйзенхауэра и получи спокойный план дня. Работает офлайн, данные хранятся только в этом браузере." />
 <meta name="theme-color" content="#101216" />
