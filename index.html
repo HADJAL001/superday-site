@@ -15,15 +15,29 @@
 
 <!-- Open Graph / соцсети -->
 <meta property="og:type" content="website" />
+<meta property="og:site_name" content="SUPER DAY" />
+<meta property="og:locale" content="ru_RU" />
 <meta property="og:title" content="SUPER DAY — умный премиальный планировщик дня" />
 <meta property="og:description" content="Голос, приоритеты по матрице Эйзенхауэра, AI-дебаты и озвучка плана. Создано с помощью OSGARD." />
-<meta property="og:image" content="assets/logo.png" />
+<meta property="og:image" content="https://superday.fun/assets/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="SUPER DAY — проживай день на максимум" />
 <meta property="og:url" content="https://superday.fun" />
 <meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="SUPER DAY — умный премиальный планировщик дня" />
+<meta name="twitter:description" content="Голос, приоритеты по матрице Эйзенхауэра, AI-дебаты и озвучка плана. Создано с помощью OSGARD." />
+<meta name="twitter:image" content="https://superday.fun/assets/og.png" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<!-- ACTIVATE-ANALYTICS · P0.2 · приватная веб-аналитика без cookie-баннера (GoatCounter).
+     Аккаунт заводит основатель: зарегистрируй код на https://www.goatcounter.com,
+     подставь его вместо YOURCODE и раскомментируй строку ниже. Подробности — COORDINATION.md.
+<script data-goatcounter="https://YOURCODE.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+-->
 
 <!-- Структурированные данные для богатых сниппетов в поиске -->
 <script type="application/ld+json">
@@ -804,63 +818,120 @@
   },{threshold:0.12});
   document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
 
-  // Waitlist — пока нет бэкенда, открываем письмо на почту продукта.
-  // Заменить hello@superday.fun на реальный ящик / подключить форму (Formspree/Netlify Forms).
-  document.getElementById("wlForm").addEventListener("submit", function(ev){
-    ev.preventDefault();
-    var email = document.getElementById("wlEmail").value.trim();
-    if(!email) return;
+  // ================= Waitlist — реальный сбор e-mail =================
+  // P0.1: форма шлёт POST на внешний эндпоинт (Formspree — бесплатно, без бэкенда).
+  // Активация: вставь сюда endpoint вида "https://formspree.io/f/xxxxxxx".
+  // Пока строка пустая — работает честный mailto-фолбэк (письмо на ящик продукта),
+  // так что регресса нет. Подробности — в COORDINATION.md.
+  var WAITLIST_ENDPOINT = "";                 // ← сюда Formspree endpoint
+  var WAITLIST_MAILBOX  = "hello@superday.fun"; // ящик для фолбэка/писем
 
-    // фирменная вспышка + звук от точки кнопки
-    try{
-      var _b = this.querySelector("button").getBoundingClientRect();
-      cinematicPress(_b.left + _b.width/2, _b.top + _b.height/2);
-      playPressSound();
-    }catch(e){}
-
-    var subj = encodeURIComponent("Ранний доступ к SUPER DAY");
-    var body = encodeURIComponent("Хочу в список ожидания SUPER DAY. Мой e-mail: " + email);
-    var mailto = "mailto:hello@superday.fun?subject=" + subj + "&body=" + body;
-
-    // если карта уже собрана — не дублируем
-    if(this.parentNode.querySelector(".wl-card")) return;
-
-    // строим «красивую карту», которая элегантно собирается
+  function wlBuildCard(email, mode){
+    // mode: "captured" — почта уже сохранена на сервере; "mailto" — нужен клик по письму
     var card = document.createElement("div");
     card.className = "wl-card";
     card.setAttribute("role", "status");
-    card.innerHTML =
+
+    var head =
       '<div class="row wlc-head">' +
         '<div class="wlc-check" aria-hidden="true">&#10003;</div>' +
         '<div class="wlc-title">Ты в списке ожидания<small>Место в первой волне SUPER DAY закреплено</small></div>' +
       '</div>' +
-      '<div class="row wlc-mail"><span aria-hidden="true">&#9993;</span><span class="wlc-email"></span></div>' +
-      '<ul class="row wlc-steps">' +
-        '<li><i>1</i><span>Открой письмо и отправь его — так мы зафиксируем тебя в списке.</span></li>' +
-        '<li><i>2</i><span>Пришлём личную ссылку на скачивание в день запуска в сторах.</span></li>' +
-        '<li><i>3</i><span>Ранний доступ = расширенные лимиты на старте. Это подарок первым.</span></li>' +
-      '</ul>' +
-      '<a class="btn btn-gold row" href="' + mailto + '">Открыть письмо и подтвердить</a>';
+      '<div class="row wlc-mail"><span aria-hidden="true">&#9993;</span><span class="wlc-email"></span></div>';
+
+    if(mode === "captured"){
+      card.innerHTML = head +
+        '<ul class="row wlc-steps">' +
+          '<li><i>1</i><span>Готово — e-mail сохранён, подтверждать ничего не нужно.</span></li>' +
+          '<li><i>2</i><span>Пришлём личную ссылку на скачивание в день запуска в сторах.</span></li>' +
+          '<li><i>3</i><span>Ранний доступ = расширенные лимиты на старте. Это подарок первым.</span></li>' +
+        '</ul>';
+    } else {
+      var subj = encodeURIComponent("Ранний доступ к SUPER DAY");
+      var body = encodeURIComponent("Хочу в список ожидания SUPER DAY. Мой e-mail: " + email);
+      var mailto = "mailto:" + WAITLIST_MAILBOX + "?subject=" + subj + "&body=" + body;
+      card.innerHTML = head +
+        '<ul class="row wlc-steps">' +
+          '<li><i>1</i><span>Открой письмо и отправь его — так мы зафиксируем тебя в списке.</span></li>' +
+          '<li><i>2</i><span>Пришлём личную ссылку на скачивание в день запуска в сторах.</span></li>' +
+          '<li><i>3</i><span>Ранний доступ = расширенные лимиты на старте. Это подарок первым.</span></li>' +
+        '</ul>' +
+        '<a class="btn btn-gold row" href="' + mailto + '">Открыть письмо и подтвердить</a>';
+    }
     // e-mail вставляем текстом (без HTML-инъекций)
     card.querySelector(".wlc-email").textContent = email;
 
-    var form = this;
+    var payBtn = card.querySelector(".btn-gold");
+    if(payBtn){
+      payBtn.addEventListener("pointerdown", function(e){
+        var x=e.clientX, y=e.clientY;
+        if(x==null||(x===0&&y===0)){ var r=payBtn.getBoundingClientRect(); x=r.left+r.width/2; y=r.top+r.height/2; }
+        cinematicPress(x,y); playPressSound();
+      });
+    }
+    return card;
+  }
+
+  function wlSwapToCard(form, card){
     form.style.transition = "opacity .35s ease, transform .35s ease";
     form.style.opacity = "0";
     form.style.transform = "translateY(-6px)";
     setTimeout(function(){
       form.style.display = "none";
       form.parentNode.insertBefore(card, form.nextSibling);
-      // блик+звук на кнопку письма внутри карты
-      var payBtn = card.querySelector(".btn-gold");
-      if(payBtn){
-        payBtn.addEventListener("pointerdown", function(e){
-          var x=e.clientX, y=e.clientY;
-          if(x==null||(x===0&&y===0)){ var r=payBtn.getBoundingClientRect(); x=r.left+r.width/2; y=r.top+r.height/2; }
-          cinematicPress(x,y); playPressSound();
-        });
-      }
     }, 300);
+  }
+
+  document.getElementById("wlForm").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var form = this;
+    var input = document.getElementById("wlEmail");
+    var btn = form.querySelector("button");
+    var email = input.value.trim();
+    // валидность проверяет и сам input[type=email]; подстрахуемся
+    if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      input.focus(); return;
+    }
+    if(form.parentNode.querySelector(".wl-card")) return; // не дублируем
+
+    // фирменная вспышка + звук от точки кнопки
+    try{
+      var _b = btn.getBoundingClientRect();
+      cinematicPress(_b.left + _b.width/2, _b.top + _b.height/2);
+      playPressSound();
+    }catch(e){}
+
+    // Нет эндпоинта → честный mailto-фолбэк (прежнее поведение)
+    if(!WAITLIST_ENDPOINT){
+      wlSwapToCard(form, wlBuildCard(email, "mailto"));
+      return;
+    }
+
+    // Есть эндпоинт → реальный сбор почты
+    btn.disabled = true;
+    var oldLabel = btn.textContent;
+    btn.textContent = "Отправляем…";
+
+    var payload = new FormData();
+    payload.append("email", email);
+    payload.append("_subject", "Новая заявка в список ожидания SUPER DAY");
+    payload.append("source", "superday.fun");
+
+    fetch(WAITLIST_ENDPOINT, {
+      method: "POST",
+      headers: { "Accept": "application/json" },
+      body: payload
+    }).then(function(res){
+      if(res.ok){
+        wlSwapToCard(form, wlBuildCard(email, "captured"));
+      } else {
+        throw new Error("bad status " + res.status);
+      }
+    }).catch(function(){
+      // сеть/сервис недоступны — не теряем пользователя, даём mailto-путь
+      btn.disabled = false; btn.textContent = oldLabel;
+      wlSwapToCard(form, wlBuildCard(email, "mailto"));
+    });
   });
 
   // ================= Премиальные микровзаимодействия =================

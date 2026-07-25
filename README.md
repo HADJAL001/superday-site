@@ -1,6 +1,6 @@
 # SUPER DAY — лендинг (superday.fun)
 
-> **Создано с помощью OSGARD** · OSGARD NEW WORLD · OS 0.5
+> **Создано с помощью OSGARD** · OSGARD NEW WORLD · OS 5.0
 
 Премиальный одностраничный лендинг продукта **SUPER DAY** — умного планировщика
 дня (голосовой ввод, приоритеты по матрице Эйзенхауэра, AI-дебаты, озвучка
@@ -54,8 +54,13 @@ npx vercel --prod
 `OsgardCredit` в мобильном приложении.
 
 ## Что доработать перед запуском
-- **Waitlist**: сейчас форма открывает письмо на `hello@superday.fun` (mailto).
-  Для реального сбора e-mail подключить Netlify Forms / Formspree — заменить
-  обработчик в конце `index.html`.
+- **Waitlist**: сбор e-mail готов (P0.1) — форма шлёт `POST` на внешний эндпоинт
+  через `fetch`. Нужно один раз вставить endpoint Formspree в константу
+  `WAITLIST_ENDPOINT` в `index.html`. Пока пусто — работает mailto-фолбэк.
+  Подробные шаги активации — в [COORDINATION.md](COORDINATION.md).
+- **Аналитика**: приватный сниппет (GoatCounter) добавлен в `<head>`
+  закомментированным — активировать по инструкции в `COORDINATION.md`.
 - Проверить, что почта `hello@superday.fun` заведена.
 - При желании — подставить реальные ссылки на сторы, когда приложение выйдет.
+
+> Полная карта границ, P0-работ и активации — в [COORDINATION.md](COORDINATION.md).
