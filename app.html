@@ -291,6 +291,31 @@
   .tpl-empty{font-size:12px; color:var(--text-muted); padding:2px 2px 0}
   .templates[hidden],.stats[hidden]{display:none}
 
+  /* ===== Время у задачи + напоминания ===== */
+  .ttime{flex:0 0 auto; display:inline-flex; align-items:center; gap:4px; cursor:pointer; font-size:11.5px;
+    font-weight:600; color:var(--champagne); background:rgba(201,169,106,.1); border:1px solid var(--hair-soft);
+    border-radius:999px; padding:3px 9px; margin-top:1px; white-space:nowrap; transition:.15s}
+  .ttime:hover{border-color:var(--gold); color:var(--gold-bright)}
+  .ttime.empty{color:var(--text-muted); background:none; border-style:dashed; opacity:.55}
+  .ttime.empty:hover{opacity:1; color:var(--champagne)}
+  .ttime.soon{color:#1A1509; background:var(--grad-gold); border-color:transparent}
+  .ttime.now{color:#141414; background:linear-gradient(120deg,#F0958B,#E5766B); border-color:transparent; animation:pulse 1.5s infinite}
+  .ttime.over{color:#E5766B; background:rgba(229,118,107,.12); border-color:rgba(229,118,107,.3)}
+  li.task.done .ttime{opacity:.45; filter:saturate(.35)}
+  ol.plan li .pt{flex:0 0 auto; font-size:12.5px; font-weight:700; color:var(--champagne); min-width:46px; text-align:right}
+  ol.plan li.done .pt{color:var(--text-muted); font-weight:600}
+  ol.plan li .pt.over{color:#E5766B}
+  .remindbar{max-width:760px; margin:12px auto 0; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    background:linear-gradient(180deg,rgba(32,35,43,.5),rgba(18,19,24,.4)); border:1px solid var(--border);
+    border-radius:14px; padding:11px 15px}
+  .remind-toggle{flex:0 0 auto; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; color:var(--champagne);
+    background:#0E0F13; border:1px solid var(--hair); border-radius:999px; padding:9px 16px; display:inline-flex;
+    align-items:center; gap:8px; transition:.2s}
+  .remind-toggle[aria-pressed=true]{color:#141414; border-color:transparent; background:var(--grad-gold)}
+  .remind-note{flex:1; min-width:180px; font-size:11.5px; color:var(--text-muted); line-height:1.45}
+  .remind-note b{color:var(--text-dim); font-weight:600}
+  .hint.toast-on{color:var(--gold-bright); font-weight:600}
+
   @media(max-width:640px){ .matrix{grid-template-columns:1fr} .composer .row1{flex-direction:column} .add-btn{padding:14px}
     .focus{flex-wrap:wrap} .focus .fx-done{width:100%}
     .day .col{height:52px} .day .lbl{font-size:9px}
@@ -321,12 +346,19 @@
       <button class="mic-btn" id="micBtn" type="button" title="Нажми и скажи дело" aria-label="Сказать дело голосом">&#127908;</button>
       <button class="add-btn" id="addBtn" type="button">Добавить</button>
     </div>
-    <div class="composer-help">Одно дело — одна строка. Нажми <b>Добавить</b> или <b>🎙</b> и продиктуй. Флажки ниже — по желанию.</div>
+    <div class="composer-help">Одно дело — одна строка. Нажми <b>Добавить</b> или <b>🎙</b> и продиктуй. Скажи время прямо в деле — «позвонить маме <b>в 15:00</b>» — и оно встанет в расписание. Флажки ниже — по желанию.</div>
     <div class="toggles">
       <span class="tg u" id="tgUrgent" role="button" tabindex="0" aria-pressed="false">🔥 Срочно</span>
       <span class="tg i" id="tgImportant" role="button" tabindex="0" aria-pressed="false">⭐ Важно</span>
       <span class="hint" id="quadHint">→ решим за тебя</span>
     </div>
+  </section>
+
+  <section class="remindbar" id="remindBar" aria-label="Напоминания">
+    <button class="remind-toggle" id="remindToggle" type="button" aria-pressed="false">
+      <span aria-hidden="true">🔔</span><span id="remindLabel">Напоминать о делах со временем</span>
+    </button>
+    <span class="remind-note" id="remindNote">Когда наступит время дела — приложение подскажет уведомлением и голосом. <b>Работает, пока открыта эта вкладка.</b> Фоновые напоминания при закрытом приложении — в полной версии.</span>
   </section>
 
   <section class="voicebar" id="voiceBar" aria-label="Голосовой режим">
@@ -451,16 +483,19 @@
   try{ tasks = JSON.parse(localStorage.getItem(STORE_KEY) || "[]") || []; }catch(e){ tasks = []; }
 
   // ===== Версия схемы данных + миграции (на будущее, чтобы не терять данные) =====
-  var SCHEMA = 1;
+  var SCHEMA = 2;
   (function migrate(){
     var cur = 0;
     try{ cur = parseInt(localStorage.getItem("superday_schema")||"0",10) || 0; }catch(e){ cur = 0; }
     if(cur === SCHEMA) return;
     // Нормализуем задачи под текущую форму (без потерь): гарантируем поля.
+    // v2: добавлено поле time ("ЧЧ:ММ" | null) и remindedOn (день последнего напоминания).
     try{
       tasks = (tasks||[]).map(function(t){
+        var tm = (typeof t.time==="string" && /^\d{2}:\d{2}$/.test(t.time)) ? t.time : null;
         return { id: t.id || ("t"+Math.random().toString(36).slice(2)),
-                 text: String(t.text||""), urgent: !!t.urgent, important: !!t.important, done: !!t.done };
+                 text: String(t.text||""), urgent: !!t.urgent, important: !!t.important, done: !!t.done,
+                 time: tm, remindedOn: (typeof t.remindedOn==="string"? t.remindedOn : null) };
       });
     }catch(e){}
     try{ localStorage.setItem("superday_schema", String(SCHEMA)); }catch(e){}
@@ -477,7 +512,100 @@
 
   function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(tasks)); }catch(e){} autoBackup(); }
   function uid(){ return "t" + (tasks.reduce(function(m,t){return Math.max(m, +String(t.id).slice(1)||0);},0) + 1) + "_" + tasks.length; }
+  // Короткое подтверждение действия в подсказке композера (потом восстанавливается).
+  var _toastTimer=null;
+  function toast(msg){
+    var el=document.getElementById("quadHint"); if(!el) return;
+    el.textContent=msg; el.classList.add("toast-on");
+    clearTimeout(_toastTimer);
+    _toastTimer=setTimeout(function(){ el.classList.remove("toast-on"); if(typeof refreshHint==="function") refreshHint(); }, 2600);
+  }
   function quadOf(t){ return t.urgent && t.important ? 1 : (!t.urgent && t.important ? 2 : (t.urgent && !t.important ? 3 : 4)); }
+
+  // ===== Время у задачи: парсинг из речи/текста + хелперы расписания =====
+  // Возвращает { time:"ЧЧ:ММ"|null, text:очищенный_текст }. Понимает
+  // «в 15:00», «в 9», «в 7 утра», «в 6 вечера», «в 5 дня», «в полдень/полночь», «к 18».
+  function parseTime(raw){
+    var text = " " + String(raw||"") + " ";
+    function period(str){
+      str=(str||"").toLowerCase();
+      if(/утр/.test(str)) return "am";
+      if(/вечер/.test(str)) return "pm";
+      if(/дн[яе]|полудн/.test(str)) return "day";
+      if(/ноч/.test(str)) return "night";
+      return null;
+    }
+    var hh=null, mm=0, matched=null, p=null;
+    var m=text.match(/(?:^|\s)(?:в|к|до|на|ко)?\s*(\d{1,2}):(\d{2})(?:\s*(утра|вечера|дня|ночи))?(?=\s|$)/i);
+    if(m){ hh=+m[1]; mm=+m[2]; matched=m[0]; p=period(m[3]); }
+    if(hh===null){
+      var mb=text.match(/(?:^|\s)(?:в|к|до|на|ко)\s*(\d{1,2})\.(\d{2})(?=\s|$)/i);
+      if(mb){ hh=+mb[1]; mm=+mb[2]; matched=mb[0]; }
+    }
+    if(hh===null){
+      var m2=text.match(/(?:^|\s)(?:в|к|до|на|ко)\s*(\d{1,2})(?:\s*час(?:а|ов)?)?(?:\s*(утра|вечера|дня|ночи))?(?=\s|$)/i);
+      if(m2){ hh=+m2[1]; mm=0; matched=m2[0]; p=period(m2[2]); }
+    }
+    if(hh===null){
+      if(/полдень|полудн/i.test(text)){ hh=12; mm=0; matched=(text.match(/(?:в\s*)?полдень/i)||[""])[0]; }
+      else if(/полноч/i.test(text)){ hh=0; mm=0; matched=(text.match(/(?:в\s*)?полноч[ьи]/i)||[""])[0]; }
+    }
+    if(hh===null) return { time:null, text:String(raw||"").trim() };
+    if(p==="pm" && hh>=1 && hh<12) hh+=12;
+    else if(p==="day" && hh>=1 && hh<12) hh+=12;
+    else if(p==="am" && hh===12) hh=0;
+    else if(p==="night" && hh===12) hh=0;
+    if(hh<0||hh>23||mm<0||mm>59) return { time:null, text:String(raw||"").trim() };
+    var clean=String(raw);
+    if(matched){ clean=clean.replace(matched.trim()," "); }
+    clean=clean.replace(/\s+/g," ")
+               .replace(/\s+(в|к|до|на|ко|часов|часа|час)\s*$/i,"")
+               .replace(/^\s*(в|к|до|на|ко)\s+/i,"")
+               .replace(/\s+/g," ").trim();
+    var HH=hh<10?"0"+hh:""+hh, MM=mm<10?"0"+mm:""+mm;
+    return { time:HH+":"+MM, text: clean || String(raw).trim() };
+  }
+  function validTime(s){ return typeof s==="string" && /^\d{2}:\d{2}$/.test(s); }
+  function timeToMin(s){ if(!validTime(s)) return null; var a=s.split(":"); return (+a[0])*60 + (+a[1]); }
+  function nowMin(){ var d=new Date(); return d.getHours()*60 + d.getMinutes(); }
+  // Ключ сортировки маршрута: дела со временем идут первыми в хронопорядке, затем — по приоритету.
+  function timeSortKey(t){ var m=timeToMin(t.time); return (m===null) ? (100000 + quadOf(t)) : m; }
+  // Статус дела со временем: "over" (прошло), "now" (±10 мин), "soon" (<60 мин), "" (позже).
+  function timeStatus(t){
+    var m=timeToMin(t.time); if(m===null || t.done) return "";
+    var diff = m - nowMin();
+    if(diff <= -10) return "over";
+    if(diff <= 10) return "now";
+    if(diff <= 60) return "soon";
+    return "";
+  }
+  // Человеческая подпись «через/назад».
+  function relTime(t){
+    var m=timeToMin(t.time); if(m===null) return "";
+    var diff = m - nowMin();
+    if(t.done) return "";
+    if(diff <= -1){ var a=-diff; return a>=90 ? ("было "+Math.round(a/60)+" ч назад") : (a>=60? "час назад" : a+" мин назад"); }
+    if(diff===0) return "сейчас";
+    if(diff<=1) return "сейчас";
+    if(diff<60) return "через "+diff+" мин";
+    var h=Math.floor(diff/60), mn=diff%60;
+    return "через "+h+" ч"+(mn? " "+mn+" мин":"");
+  }
+
+  // Правка/очистка времени дела. Принимает «15:00», «15», «3 вечера», «полдень»;
+  // пустая строка — снять время. Возвращает через render().
+  function editTaskTime(t){
+    var cur = t.time || "";
+    var ans = window.prompt("Время дела «"+t.text+"»\n\nВведи время (например 15:00, 9, «в 7 утра», «полдень»).\nОставь пустым, чтобы убрать время.", cur);
+    if(ans===null) return; // отмена
+    ans = ans.trim();
+    if(ans===""){ t.time=null; t.remindedOn=null; save(); render(); toast("Время убрано"); return; }
+    // сначала пробуем как есть, затем с приставкой «в» — чтобы «15» распозналось
+    var pt = parseTime(ans);
+    if(!pt.time) pt = parseTime("в "+ans);
+    if(!pt.time){ toast("Не понял время — попробуй «15:00» или «в 9 утра»"); return; }
+    t.time = pt.time; t.remindedOn=null; save(); render(); toast("Время дела: "+pt.time);
+  }
 
   // Инлайн-правка текста по клику: onSave(newText|null), null = отмена/пусто
   function inlineEdit(spanEl, current, onSave){
@@ -519,9 +647,12 @@
   [tgU,tgI].forEach(function(el){ el.addEventListener("keydown", function(e){ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); el.click(); } }); });
 
   function addTask(){
-    var text = input.value.trim();
-    if(!text) { input.focus(); return; }
-    tasks.push({ id:uid(), text:text, urgent:pend.urgent, important:pend.important, done:false });
+    var raw = input.value.trim();
+    if(!raw) { input.focus(); return; }
+    var pt = parseTime(raw);
+    var text = pt.text || raw;
+    tasks.push({ id:uid(), text:text, urgent:pend.urgent, important:pend.important, done:false, time:pt.time, remindedOn:null });
+    if(pt.time) toast("Время дела: "+pt.time+" · встало в расписание");
     save();
     input.value = "";
     pend = { urgent:false, important:false };
@@ -554,13 +685,27 @@
       tx.addEventListener("click", function(){
         inlineEdit(tx, t.text, function(v){ if(v!==null){ t.text=v; save(); } render(); });
       });
+      var tm = document.createElement("button"); tm.type="button";
+      var st = timeStatus(t);
+      tm.className = "ttime" + (t.time ? (st?(" "+st):"") : " empty");
+      if(t.time){
+        tm.textContent = t.time;
+        var rel = relTime(t);
+        tm.title = (rel? rel+" · ":"") + "Нажми, чтобы изменить время";
+        tm.setAttribute("aria-label","Время дела "+t.time+(rel?", "+rel:"")+". Нажми, чтобы изменить.");
+      } else {
+        tm.textContent = "＋время";
+        tm.title = "Задать время дела";
+        tm.setAttribute("aria-label","Задать время дела");
+      }
+      tm.addEventListener("click", function(){ editTaskTime(t); });
       var del = document.createElement("button"); del.className="del"; del.type="button";
       del.setAttribute("aria-label","Удалить"); del.innerHTML="&times;";
       del.addEventListener("click", function(){ tasks = tasks.filter(function(x){return x.id!==t.id;}); save(); render(); });
       var grip = document.createElement("span"); grip.className="grip"; grip.setAttribute("aria-hidden","true");
       grip.title="Перетащи в другой квадрант"; grip.innerHTML="&#9783;";
       grip.addEventListener("pointerdown", function(e){ startDrag(e, t, li); });
-      li.appendChild(chk); li.appendChild(tx); li.appendChild(del); li.appendChild(grip);
+      li.appendChild(chk); li.appendChild(tx); li.appendChild(tm); li.appendChild(del); li.appendChild(grip);
       ul.appendChild(li);
     });
     // счётчики + пустые состояния
@@ -587,7 +732,9 @@
     document.getElementById("focusTask").textContent=next.text;
     var QN={1:"Сделать сейчас · срочно и важно",2:"Важное · спокойно запланируй",
             3:"Быстро закрыть · срочное",4:"Необязательное · можно позже"};
-    document.getElementById("focusMeta").textContent=QN[quadOf(next)];
+    var meta = QN[quadOf(next)];
+    if(next.time){ var rel=relTime(next); meta = "⏱ "+next.time+(rel?" · "+rel:"")+" · "+meta; }
+    document.getElementById("focusMeta").textContent=meta;
   }
   (function(){
     var fd=document.getElementById("focusDone");
@@ -673,11 +820,18 @@
     } else { el.hidden=true; }
   }
 
-  function renderPlan(){
-    var order = tasks.slice().sort(function(a,b){
-      if(a.done!==b.done) return a.done?1:-1;      // выполненные вниз
-      return quadOf(a) - quadOf(b);                 // по приоритету квадранта
+  // Маршрут дня: выполненные — вниз; среди активных дела со временем идут первыми
+  // в хронопорядке, затем — по приоритету квадранта.
+  function planOrder(){
+    return tasks.slice().sort(function(a,b){
+      if(a.done!==b.done) return a.done?1:-1;
+      var ka=timeSortKey(a), kb=timeSortKey(b);
+      if(ka!==kb) return ka-kb;
+      return quadOf(a) - quadOf(b);
     });
+  }
+  function renderPlan(){
+    var order = planOrder();
     var ol = document.getElementById("planList");
     var planEmpty = document.getElementById("planEmpty");
     ol.innerHTML = "";
@@ -686,8 +840,12 @@
       var li = document.createElement("li");
       if(t.done) li.className="done";
       var qd = document.createElement("span"); qd.className="qd"; qd.style.background = QCOL[quadOf(t)];
+      var pt = document.createElement("span");
+      var st = timeStatus(t);
+      pt.className = "pt" + (st==="over"?" over":"");
+      pt.textContent = t.time || "";
       var sp = document.createElement("span"); sp.className="t"; sp.textContent = t.text;
-      li.appendChild(qd); li.appendChild(sp);
+      li.appendChild(qd); li.appendChild(pt); li.appendChild(sp);
       ol.appendChild(li);
     });
     planEmpty.style.display = tasks.length ? "none" : "block";
@@ -751,13 +909,11 @@
 
   // Экспорт плана: собрать текст в порядке маршрута дня
   function buildPlanText(){
-    var order = tasks.slice().sort(function(a,b){
-      if(a.done!==b.done) return a.done?1:-1;
-      return quadOf(a) - quadOf(b);
-    });
+    var order = planOrder();
     var MARK = {1:"🔴",2:"🟡",3:"🟢",4:"⚪"};
     var lines = order.map(function(t,i){
-      return (t.done ? "✔ " : (i+1)+". ") + MARK[quadOf(t)] + " " + t.text;
+      var tm = t.time ? (t.time + " — ") : "";
+      return (t.done ? "✔ " : (i+1)+". ") + MARK[quadOf(t)] + " " + tm + t.text;
     });
     return "Мой план на сегодня — SUPER DAY\n\n" + lines.join("\n") +
       "\n\nСоставлено в SUPER DAY · superday.fun";
@@ -842,7 +998,7 @@
 
     exportBtn.addEventListener("click", function(){
       if(!tasks.length && !notes.length){ flash("Пока нечего сохранять — добавь задачи или заметки."); return; }
-      var payload={ app:"SUPER DAY", kind:"backup", version:1, exportedAt:new Date().toISOString(),
+      var payload={ app:"SUPER DAY", kind:"backup", version:2, exportedAt:new Date().toISOString(),
         wake:readWake(), tasks:tasks, notes:notes };
       try{
         var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
@@ -872,7 +1028,8 @@
         (data.tasks||[]).forEach(function(t){
           if(!t || typeof t.text!=="string") return;
           var key=t.text.trim().toLowerCase(); if(!key || haveT[key]) return;
-          tasks.push({ id:uid(), text:t.text.trim(), urgent:!!t.urgent, important:!!t.important, done:!!t.done });
+          var tm=(typeof t.time==="string" && /^\d{2}:\d{2}$/.test(t.time))?t.time:null;
+          tasks.push({ id:uid(), text:t.text.trim(), urgent:!!t.urgent, important:!!t.important, done:!!t.done, time:tm, remindedOn:null });
           haveT[key]=true; addedT++;
         });
         var haveN={}; notes.forEach(function(n){ haveN[(n.text||"").trim().toLowerCase()]=true; });
@@ -1018,9 +1175,12 @@
     }
 
     function speakPlan(){
-      var order=tasks.slice().filter(function(t){return !t.done;}).sort(function(a,b){return quadOf(a)-quadOf(b);});
+      var order=planOrder().filter(function(t){return !t.done;});
       if(!order.length){ speak(tasks.length?"Все задачи выполнены. Отличная работа.":"Список задач пуст."); return; }
-      var parts=order.map(function(t,i){ return (i+1)+". "+t.text; });
+      var parts=order.map(function(t,i){
+        var tm = t.time ? ("в "+t.time.replace(":"," ")+", ") : "";
+        return (i+1)+". "+tm+t.text;
+      });
       speak("Твой план на сегодня. "+parts.join(". ")); setStatus("Читаю план…");
     }
     function speakNotes(){
@@ -1047,12 +1207,13 @@
       var clean=text.replace(/(^|\s)(это\s+)?(очень\s+)?(срочно|срочная|срочное|горит|важно|важная|важное)(\s|$)/gi," ").replace(/\s+/g," ").trim();
       clean=clean.replace(/^(добавь|запиши|создай|задачу|задача|напомни мне|напомни)\s+/i,"").trim();
       if(!clean){ awake=false; setStatus("Не расслышал задачу. Скажи «<b>"+wname()+"</b>» и повтори."); return; }
-      tasks.push({ id:uid(), text:cap(clean), urgent:urgent, important:important, done:false });
+      var pt=parseTime(clean); var tmClean = pt.text || clean; var tm = pt.time;
+      tasks.push({ id:uid(), text:cap(tmClean), urgent:urgent, important:important, done:false, time:tm, remindedOn:null });
       save(); render();
       var q=quadOf({urgent:urgent,important:important});
       var QN={1:"сделать сейчас",2:"запланировать",3:"быстро закрыть",4:"на потом"};
-      speak("Добавил: "+clean);
-      setStatus("Добавлено: «<b>"+escapeHtml(cap(clean))+"</b>» → "+QN[q]+". Скажи «<b>"+wname()+"</b>» для следующей.");
+      speak("Добавил: "+tmClean+(tm?", в "+tm.replace(":"," "):""));
+      setStatus("Добавлено: «<b>"+escapeHtml(cap(tmClean))+"</b>»"+(tm?" ⏱ "+tm:"")+" → "+QN[q]+". Скажи «<b>"+wname()+"</b>» для следующей.");
       awake=false;
     }
 
@@ -1151,7 +1312,8 @@
     tp.tasks.forEach(function(t){
       if(!t||typeof t.text!=="string") return;
       var key=t.text.trim().toLowerCase(); if(!key||have[key]) return;
-      tasks.push({ id:uid(), text:t.text.trim(), urgent:!!t.urgent, important:!!t.important, done:false });
+      var tm=(typeof t.time==="string" && /^\d{2}:\d{2}$/.test(t.time))?t.time:null;
+      tasks.push({ id:uid(), text:t.text.trim(), urgent:!!t.urgent, important:!!t.important, done:false, time:tm, remindedOn:null });
       have[key]=true; added++;
     });
     save(); render();
@@ -1165,7 +1327,7 @@
       if(!tasks.length){ alert("Сначала добавь дела — потом их можно сохранить как шаблон дня."); return; }
       var name=prompt("Название шаблона (например «Рабочий день», «Тренировка»):","");
       if(name===null) return; name=name.trim(); if(!name) return;
-      var snap=tasks.map(function(t){ return { text:t.text, urgent:!!t.urgent, important:!!t.important }; });
+      var snap=tasks.map(function(t){ return { text:t.text, urgent:!!t.urgent, important:!!t.important, time:t.time||null }; });
       var list=readTemplates();
       list.push({ id:"tpl"+Date.now()+"_"+list.length, name:name, tasks:snap });
       writeTemplates(list); renderTemplates();
@@ -1173,6 +1335,115 @@
       if(st){ st.textContent="Шаблон «"+name+"» сохранён ("+snap.length+" "+plural(snap.length,["дело","дела","дел"])+")."; st.classList.add("on");
         setTimeout(function(){ st.classList.remove("on"); }, 3500); }
     });
+  })();
+
+  // ================= Живые напоминания о делах со временем =================
+  // Работает, пока открыта вкладка: когда наступает время дела — уведомление
+  // (если разрешено), голос и подсветка. Фоновые push при закрытом приложении —
+  // зона бэкенда (needs_backend), тут честно об этом сказано в UI.
+  (function(){
+    var REM_KEY="superday_remind";
+    var toggle=document.getElementById("remindToggle");
+    var label=document.getElementById("remindLabel");
+    if(!toggle) return;
+    var on=false;
+    try{ on = localStorage.getItem(REM_KEY)==="1"; }catch(e){ on=false; }
+
+    // Отдельный компактный синтез речи для напоминаний (независим от голос-модуля,
+    // т.к. тот не запускается без распознавания речи).
+    function remindVoice(){
+      if(!window.speechSynthesis) return null;
+      var vs=window.speechSynthesis.getVoices()||[], best=null, bs=-1;
+      vs.forEach(function(v){
+        var n=(v.name||"").toLowerCase(), l=(v.lang||"").toLowerCase(), s=-1;
+        if(l.indexOf("ru")===0) s=100; else if(l.indexOf("ru")>-1) s=60; else return;
+        if(/natural|neural|online/.test(n)) s+=40; if(/google/.test(n)) s+=30; if(!v.localService) s+=8;
+        if(s>bs){ bs=s; best=v; }
+      });
+      return best;
+    }
+    function speakRemind(txt){
+      try{
+        if(!window.speechSynthesis) return;
+        var u=new SpeechSynthesisUtterance(txt); u.lang="ru-RU";
+        var v=remindVoice(); if(v) u.voice=v; u.rate=0.98; u.pitch=0.96; u.volume=1;
+        window.speechSynthesis.speak(u);
+      }catch(e){}
+    }
+    function chimeRemind(){
+      try{
+        var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+        var ac=new AC(), o=ac.createOscillator(), g=ac.createGain();
+        o.type="sine"; o.frequency.setValueAtTime(660, ac.currentTime);
+        o.frequency.exponentialRampToValueAtTime(990, ac.currentTime+0.14);
+        g.gain.setValueAtTime(0.0001, ac.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.18, ac.currentTime+0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+0.5);
+        o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime+0.52);
+        o.onended=function(){ try{ ac.close(); }catch(e){} };
+      }catch(e){}
+    }
+
+    function paint(){
+      toggle.setAttribute("aria-pressed", on?"true":"false");
+      if(label) label.textContent = on ? "Напоминания включены" : "Напоминать о делах со временем";
+    }
+    function persist(){ try{ localStorage.setItem(REM_KEY, on?"1":"0"); }catch(e){} }
+
+    function fire(t){
+      var msg = "Пора: "+t.text + (t.time?" ("+t.time+")":"");
+      chimeRemind();
+      speakRemind((t.time?"":"")+ t.text + (t.time? ", "+t.time.replace(":"," "):""));
+      var shown=false;
+      try{
+        if(window.Notification && Notification.permission==="granted"){
+          new Notification("SUPER DAY — "+ (t.time||""), { body: t.text, tag:"sd-"+t.id, silent:false });
+          shown=true;
+        }
+      }catch(e){}
+      // Внутренняя подсветка (сработает и без разрешения на уведомления).
+      if(typeof toast==="function") toast("🔔 "+msg);
+      // Пометить, что сегодня уже напомнили.
+      t.remindedOn = todayKey();
+      if(typeof save==="function") save();
+      if(typeof render==="function") render();
+    }
+
+    // Тик: раз в 30 c ищем активные дела со временем, чей момент наступил
+    // (в пределах 45 мин), и о которых сегодня ещё не напоминали.
+    function tick(){
+      if(!on) return;
+      var nm=nowMin(), t2=todayKey(), any=false;
+      (tasks||[]).forEach(function(t){
+        if(t.done) return;
+        var m=timeToMin(t.time); if(m===null) return;
+        if(t.remindedOn===t2) return;
+        var diff = nm - m;
+        if(diff>=0 && diff<=45){ fire(t); any=true; }
+      });
+      return any;
+    }
+    var timer=null;
+    function startTimer(){ if(timer) return; timer=setInterval(tick, 30000); }
+    function stopTimer(){ if(timer){ clearInterval(timer); timer=null; } }
+
+    function enable(){
+      on=true; persist(); paint();
+      // Запрос разрешения на уведомления (не блокирует — при отказе работает голос+подсветка).
+      try{
+        if(window.Notification && Notification.permission==="default"){
+          Notification.requestPermission().catch(function(){});
+        }
+      }catch(e){}
+      startTimer(); tick();
+      if(typeof toast==="function") toast("Напоминания включены — подскажу, когда наступит время дела");
+    }
+    function disable(){ on=false; persist(); paint(); stopTimer(); }
+
+    toggle.addEventListener("click", function(){ if(on) disable(); else enable(); });
+
+    paint();
+    if(on){ startTimer(); tick(); }
   })();
 
   // регистрация service worker для офлайна
