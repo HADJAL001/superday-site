@@ -31,7 +31,7 @@
   "operatingSystem":"Android, iOS",
   "url":"https://superday.fun",
   "description":"Премиальный планировщик дня: голосовой ввод, приоритеты по матрице Эйзенхауэра, AI-дебаты и озвучка плана.",
-  "offers":{"@type":"Offer","price":"0","priceCurrency":"RUB","description":"Бесплатный тариф — 7 AI-разборов задач в день"},
+  "offers":{"@type":"AggregateOffer","lowPrice":"0","highPrice":"1990","priceCurrency":"RUB","offerCount":"5","description":"Бесплатный тариф — 3 AI-разбора задач в день; платные от 490 ₽/мес"},
   "creator":{"@type":"Organization","name":"OSGARD NEW WORLD","url":"https://osgardnewworld.com"}
 }
 </script>
@@ -44,7 +44,7 @@
     {"@type":"Question","name":"Что такое AI-дебаты приоритетов?","acceptedAnswer":{"@type":"Answer","text":"Две AI-модели спорят «за» и «против» важности каждой задачи и выдают взвешенный вердикт — что делать первым."}},
     {"@type":"Question","name":"Нужно ли печатать задачи вручную?","acceptedAnswer":{"@type":"Answer","text":"Нет. Продиктуй задачи голосом одним потоком — распознавание и разбор берёт на себя AI."}},
     {"@type":"Question","name":"Когда запуск и на каких платформах?","acceptedAnswer":{"@type":"Answer","text":"Готовится выход в RuStore, Google Play и App Store. Оставьте e-mail в списке ожидания, чтобы получить ссылку в день запуска."}},
-    {"@type":"Question","name":"Сколько это будет стоить?","acceptedAnswer":{"@type":"Answer","text":"Есть бесплатный тариф — 7 AI-разборов задач в день. Платные тарифы поднимают лимит вплоть до безлимита; цены в рублях появятся к запуску."}}
+    {"@type":"Question","name":"Сколько это будет стоить?","acceptedAnswer":{"@type":"Answer","text":"Есть бесплатный тариф — 3 AI-разбора задач в день. Платные тарифы: Старт 490 ₽/мес (15 в день), Стандарт 790 ₽/мес (30), Про 1090 ₽/мес (50), Бизнес от 1990 ₽/мес (100). Оплата через YooKassa, годовая — 2 месяца в подарок."}}
   ]
 }
 </script>
@@ -273,10 +273,13 @@
   .plan .lim{font-family:"Cormorant Garamond",serif; font-size:36px; font-weight:700; margin:4px 0; position:relative;
     background:var(--grad-gold); -webkit-background-clip:text; background-clip:text; color:transparent;}
   .plan .lim small{font-size:13px; color:var(--text-muted); font-family:"Manrope",sans-serif; display:block; letter-spacing:0}
+  .plan .quota{font-size:12px; color:var(--champagne); font-weight:600; letter-spacing:.2px;
+    margin:6px 0 4px; padding-top:10px; border-top:1px solid var(--hair-soft)}
   .plan .desc{font-size:12.5px; color:var(--text-dim)}
   @media(max-width:900px){ .pricing{grid-template-columns:repeat(2,1fr)} }
   @media(max-width:520px){ .pricing{grid-template-columns:1fr} }
   .pricing-note{text-align:center; color:var(--text-muted); font-size:13px; margin-top:22px}
+  .pricing-note b{color:var(--champagne); font-weight:600}
 
   /* Waitlist CTA */
   .cta{
@@ -620,17 +623,17 @@
     <div class="wrap">
       <div class="sec-head reveal">
         <span class="eyebrow">Тарифы</span>
-        <h2 class="serif">Начни бесплатно, <span class="gold-text">расти без границ</span></h2>
-        <p>Лимит — это число AI-разборов задач в день. Подписка оформляется прямо в приложении.</p>
+        <h2 class="serif">Начни бесплатно, <span class="gold-text">выбери свой ритм</span></h2>
+        <p>Цена — за месяц, лимит — число AI-разборов задач в день. Подписка оформляется прямо в приложении.</p>
       </div>
       <div class="pricing">
-        <div class="plan reveal"><div class="pn">Free</div><div class="lim">7<small>задач / день</small></div><div class="desc">Попробовать всё ядро без оплаты.</div></div>
-        <div class="plan reveal"><div class="pn">Start</div><div class="lim">30<small>задач / день</small></div><div class="desc">Для личных дел и учёбы.</div></div>
-        <div class="plan pop reveal"><span class="tag">ПОПУЛЯРНЫЙ</span><div class="pn">Standard</div><div class="lim">100<small>задач / день</small></div><div class="desc">Для насыщенного рабочего ритма.</div></div>
-        <div class="plan reveal"><div class="pn">Pro</div><div class="lim">&#8734;<small>без лимита</small></div><div class="desc">Максимум для профессионалов.</div></div>
-        <div class="plan reveal"><div class="pn">Business</div><div class="lim">&#8734;<small>без лимита</small></div><div class="desc">Команды и повышенные объёмы.</div></div>
+        <div class="plan reveal"><div class="pn">Free</div><div class="lim">0<small>₽ навсегда</small></div><div class="quota">3 задачи в день</div><div class="desc">Попробовать всё ядро без оплаты.</div></div>
+        <div class="plan reveal"><div class="pn">Start</div><div class="lim">490<small>₽ / мес</small></div><div class="quota">15 задач в день</div><div class="desc">Для личных дел и учёбы.</div></div>
+        <div class="plan pop reveal"><span class="tag">ПОПУЛЯРНЫЙ</span><div class="pn">Standard</div><div class="lim">790<small>₽ / мес</small></div><div class="quota">30 задач в день</div><div class="desc">Для насыщенного рабочего ритма.</div></div>
+        <div class="plan reveal"><div class="pn">Pro</div><div class="lim">1090<small>₽ / мес</small></div><div class="quota">50 задач в день</div><div class="desc">Максимум для профессионалов.</div></div>
+        <div class="plan reveal"><div class="pn">Business</div><div class="lim">от 1990<small>₽ / мес</small></div><div class="quota">100 задач в день</div><div class="desc">Команды и повышенные объёмы.</div></div>
       </div>
-      <p class="pricing-note">Цены в рублях появятся к запуску подписок · оплата через YooKassa</p>
+      <p class="pricing-note">Годовая подписка — <b>2 месяца в подарок</b> · оплата через YooKassa</p>
     </div>
   </section>
 
@@ -660,7 +663,7 @@
         </details>
         <details>
           <summary><span class="qt">Сколько это будет стоить?</span><span class="q-ic" aria-hidden="true"></span></summary>
-          <div class="a">Есть <b>бесплатный тариф</b> — 7 AI-разборов задач в день, чтобы попробовать всё ядро. Платные тарифы поднимают дневной лимит вплоть до безлимита; точные цены в рублях появятся к запуску подписок (оплата через YooKassa).</div>
+          <div class="a">Есть <b>бесплатный тариф</b> — 3 AI-разбора задач в день, чтобы попробовать всё ядро. Платные: <b>Старт</b> 490 ₽/мес (15 в день), <b>Стандарт</b> 790 ₽/мес (30), <b>Про</b> 1090 ₽/мес (50), <b>Бизнес</b> от 1990 ₽/мес (100). Оплата через YooKassa, годовая подписка — 2 месяца в подарок.</div>
         </details>
       </div>
     </div>
