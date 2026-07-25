@@ -23,38 +23,63 @@
 
 <style>
   :root{
-    --bg:#0A1A38; --bg-deep:#05080F; --surface:#12244A; --surface-alt:#173059;
-    --border:#274169; --gold:#E7C56E; --gold-bright:#F6E3A8; --gold-deep:#C49A3F;
-    --text:#F3ECDA; --text-dim:#9FB0C9; --text-muted:#6E809E;
-    --hair:rgba(231,197,110,0.28); --hair-soft:rgba(231,197,110,0.14);
+    --bg:#081527; --bg-deep:#03060E; --surface:#122645; --surface-alt:#183258;
+    --border:#274169;
+    --gold:#E7C56E; --gold-bright:#FBEFC6; --gold-deep:#B8892E;
+    --champagne:#EAD9B0; --platinum:#DBE4F2;
+    --text:#F5EFE1; --text-dim:#A6B6CE; --text-muted:#6E809E;
+    --hair:rgba(231,197,110,0.30); --hair-soft:rgba(231,197,110,0.13);
+    /* «жидкое золото» — металлический градиент с несколькими бликами */
+    --grad-gold:linear-gradient(118deg,#B8892E 0%,#E7C56E 20%,#FBEFC6 40%,#E7C56E 58%,#C49A3F 74%,#FBEFC6 100%);
+    --grad-gold-soft:linear-gradient(120deg,var(--gold-bright),var(--gold) 52%,var(--gold-deep));
+    --shadow-lux:0 30px 70px -20px rgba(0,0,0,.6), 0 8px 24px -8px rgba(0,0,0,.5);
     --maxw:1120px;
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   body{
-    margin:0; background:var(--bg); color:var(--text);
+    margin:0; background:var(--bg-deep); color:var(--text);
     font-family:"Manrope",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-    line-height:1.6; -webkit-font-smoothing:antialiased;
+    line-height:1.6; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
     overflow-x:hidden;
   }
   /* атмосферное золотое свечение фона */
   body::before{
-    content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    content:""; position:fixed; inset:0; z-index:-2; pointer-events:none;
     background:
-      radial-gradient(680px 480px at 78% -8%, rgba(231,197,110,0.16), transparent 60%),
-      radial-gradient(720px 620px at 12% 8%, rgba(23,48,89,0.55), transparent 62%),
-      linear-gradient(180deg,#0A1A38 0%,#081530 55%,#05080F 100%);
+      radial-gradient(720px 520px at 80% -10%, rgba(231,197,110,0.20), transparent 60%),
+      radial-gradient(620px 520px at 8% 4%, rgba(234,217,176,0.06), transparent 60%),
+      radial-gradient(760px 660px at 14% 10%, rgba(24,50,88,0.60), transparent 62%),
+      linear-gradient(180deg,#0A1B3A 0%,#081226 52%,#03060E 100%);
+  }
+  /* киношное зерно плёнки + мягкая виньетка (8K-ощущение глубины) */
+  body::after{
+    content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background-image:
+      radial-gradient(140% 120% at 50% 42%, transparent 58%, rgba(2,4,10,0.55) 100%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+    background-size:auto, 160px 160px;
+    opacity:.5; mix-blend-mode:soft-light;
   }
   a{color:inherit; text-decoration:none}
   .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px}
   .serif{font-family:"Cormorant Garamond",Georgia,serif}
   .gold-text{
-    background:linear-gradient(120deg,var(--gold-bright),var(--gold) 40%,var(--gold-deep));
+    background:var(--grad-gold);
     -webkit-background-clip:text; background-clip:text; color:transparent;
   }
   .eyebrow{
-    font-size:12px; letter-spacing:3.5px; text-transform:uppercase;
-    color:var(--gold); font-weight:600;
+    display:inline-flex; align-items:center; gap:10px;
+    font-size:12px; letter-spacing:3.6px; text-transform:uppercase;
+    color:var(--champagne); font-weight:600;
+  }
+  .eyebrow::before{
+    content:""; width:26px; height:1px; flex:none;
+    background:linear-gradient(90deg,transparent,var(--gold));
+  }
+  .sec-head .eyebrow::after{
+    content:""; width:26px; height:1px; flex:none;
+    background:linear-gradient(90deg,var(--gold),transparent);
   }
 
   /* ---------- NAV ---------- */
@@ -66,7 +91,9 @@
   .nav-inner{display:flex; align-items:center; justify-content:space-between; height:68px}
   .brand{display:flex; align-items:center; gap:12px}
   .brand img{width:34px; height:34px; filter:drop-shadow(0 4px 12px rgba(231,197,110,0.35))}
-  .brand b{font-size:16px; letter-spacing:4px; font-weight:700; color:var(--text)}
+  .brand b{font-size:16px; letter-spacing:4px; font-weight:700;
+    background:linear-gradient(180deg,#FFFFFF,#E7C56E 140%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;}
   nav.links{display:flex; gap:30px; align-items:center}
   nav.links a{color:var(--text-dim); font-size:14px; font-weight:500; transition:color .2s}
   nav.links a:hover{color:var(--gold)}
@@ -76,12 +103,22 @@
     cursor:pointer; border:1px solid transparent; transition:transform .15s, box-shadow .2s, background .2s;
   }
   .btn-gold{
-    background:linear-gradient(120deg,var(--gold-bright),var(--gold) 55%,var(--gold-deep));
-    color:#0A1A38; box-shadow:0 8px 26px rgba(231,197,110,0.28);
+    position:relative; overflow:hidden;
+    background:linear-gradient(120deg,var(--gold-bright),var(--gold) 46%,var(--gold-deep));
+    color:#0A1A38; letter-spacing:.2px;
+    box-shadow:0 10px 30px -6px rgba(231,197,110,0.45), inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 0 rgba(120,80,20,.35);
   }
-  .btn-gold:hover{transform:translateY(-2px); box-shadow:0 12px 34px rgba(231,197,110,0.42)}
-  .btn-ghost{background:transparent; border-color:var(--hair); color:var(--text)}
-  .btn-ghost:hover{border-color:var(--gold); color:var(--gold)}
+  /* скользящий блик по кнопке */
+  .btn-gold::after{
+    content:""; position:absolute; top:0; left:-60%; width:45%; height:100%;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.65),transparent);
+    transform:skewX(-18deg); transition:left .6s cubic-bezier(.2,.7,.2,1); pointer-events:none;
+  }
+  .btn-gold:hover{transform:translateY(-2px); box-shadow:0 16px 40px -8px rgba(231,197,110,0.55), inset 0 1px 0 rgba(255,255,255,.6)}
+  .btn-gold:hover::after{left:120%}
+  .btn-ghost{background:rgba(255,255,255,.02); border-color:var(--hair); color:var(--text);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+  .btn-ghost:hover{border-color:var(--gold); color:var(--gold-bright); background:rgba(231,197,110,.05)}
   .nav .btn{padding:9px 18px}
   @media(max-width:760px){ nav.links a:not(.btn){display:none} .brand b{letter-spacing:2px} }
 
@@ -101,9 +138,12 @@
   .phone-stage{display:flex; justify-content:center; position:relative}
   .phone-glow{position:absolute; inset:-6% 10% 6% 10%; background:radial-gradient(circle at 50% 30%,rgba(231,197,110,0.30),transparent 62%); filter:blur(28px); z-index:0}
   .phone{
-    position:relative; z-index:1; width:298px; border-radius:42px; padding:14px;
-    background:linear-gradient(160deg,#1b2f57,#0b1730); border:1px solid var(--hair);
-    box-shadow:0 40px 90px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.03);
+    position:relative; z-index:1; width:298px; border-radius:44px; padding:14px;
+    background:
+      linear-gradient(160deg,#1d3157,#0a1530) padding-box,
+      linear-gradient(150deg,rgba(251,239,198,.5),rgba(184,137,46,.25) 45%,rgba(219,228,242,.18)) border-box;
+    border:1.5px solid transparent;
+    box-shadow:var(--shadow-lux), 0 0 60px -18px rgba(231,197,110,.35), inset 0 0 0 1px rgba(255,255,255,.04);
   }
   .phone-screen{
     background:linear-gradient(180deg,#0b1c3e,#081027); border-radius:30px; padding:20px 18px 24px;
@@ -137,21 +177,26 @@
   /* ---------- SECTIONS ---------- */
   section{padding:64px 0}
   .sec-head{text-align:center; max-width:640px; margin:0 auto 44px}
-  .sec-head h2{font-weight:700; font-size:clamp(30px,4.4vw,46px); margin:12px 0 12px; letter-spacing:.5px}
+  .sec-head h2{font-weight:700; font-size:clamp(30px,4.4vw,46px); margin:14px 0 12px; letter-spacing:.3px}
+  .sec-head .eyebrow{margin-bottom:2px}
   .sec-head p{color:var(--text-dim); font-size:16px; margin:0}
 
   .features{display:grid; grid-template-columns:repeat(4,1fr); gap:18px}
   .card{
-    background:linear-gradient(180deg,rgba(18,36,74,.7),rgba(11,23,48,.55));
-    border:1px solid var(--hair-soft); border-radius:22px; padding:26px 22px;
-    transition:transform .2s, border-color .2s, box-shadow .2s;
+    position:relative; border-radius:22px; padding:26px 22px;
+    background:
+      linear-gradient(180deg,rgba(20,40,80,.72),rgba(9,19,42,.62)) padding-box,
+      linear-gradient(150deg,rgba(231,197,110,.35),rgba(231,197,110,.03) 42%,rgba(219,228,242,.12)) border-box;
+    border:1px solid transparent;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+    transition:transform .25s cubic-bezier(.2,.7,.2,1), box-shadow .25s;
   }
-  .card:hover{transform:translateY(-4px); border-color:var(--hair); box-shadow:0 20px 44px rgba(0,0,0,.35)}
+  .card:hover{transform:translateY(-5px); box-shadow:0 26px 54px -18px rgba(0,0,0,.55), inset 0 1px 0 rgba(231,197,110,.16)}
   .card .ic{
-    width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;
-    font-size:22px; margin-bottom:16px;
-    background:linear-gradient(140deg,rgba(231,197,110,.2),rgba(231,197,110,.05));
-    border:1px solid var(--hair);
+    width:50px;height:50px;border-radius:15px;display:flex;align-items:center;justify-content:center;
+    font-size:22px; margin-bottom:16px; color:var(--gold-bright);
+    background:radial-gradient(120% 120% at 30% 20%,rgba(231,197,110,.28),rgba(231,197,110,.04));
+    border:1px solid var(--hair); box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 8px 20px -10px rgba(231,197,110,.4);
   }
   .card h3{font-size:17px; margin:0 0 8px; font-weight:700; color:var(--text)}
   .card p{font-size:13.5px; color:var(--text-dim); margin:0}
@@ -169,18 +214,36 @@
   /* Тарифы */
   .pricing{display:grid; grid-template-columns:repeat(5,1fr); gap:14px; align-items:stretch}
   .plan{
-    background:linear-gradient(180deg,rgba(18,36,74,.6),rgba(11,23,48,.5));
-    border:1px solid var(--hair-soft); border-radius:20px; padding:24px 18px; text-align:center;
+    border-radius:20px; padding:26px 18px; text-align:center;
     display:flex; flex-direction:column; gap:8px; position:relative;
+    background:
+      linear-gradient(180deg,rgba(18,36,74,.62),rgba(9,19,42,.52)) padding-box,
+      linear-gradient(160deg,rgba(231,197,110,.22),rgba(231,197,110,.02) 55%,rgba(219,228,242,.10)) border-box;
+    border:1px solid transparent;
+    transition:transform .22s cubic-bezier(.2,.7,.2,1), box-shadow .22s;
   }
-  .plan.pop{border-color:var(--gold); box-shadow:0 16px 46px rgba(231,197,110,.18)}
+  .plan:hover{transform:translateY(-4px); box-shadow:0 22px 48px -18px rgba(0,0,0,.5)}
+  .plan.pop{
+    background:
+      linear-gradient(180deg,rgba(28,50,96,.78),rgba(12,24,52,.6)) padding-box,
+      var(--grad-gold) border-box;
+    border:1.5px solid transparent;
+    box-shadow:0 22px 60px -16px rgba(231,197,110,.32), inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .plan.pop::before{
+    content:""; position:absolute; inset:-30% -10% auto -10%; height:70%;
+    background:radial-gradient(circle at 50% 0,rgba(231,197,110,.22),transparent 60%);
+    pointer-events:none;
+  }
   .plan.pop .tag{
     position:absolute; top:-11px; left:50%; transform:translateX(-50%);
-    background:linear-gradient(120deg,var(--gold-bright),var(--gold-deep)); color:#0A1A38;
-    font-size:10px; font-weight:800; letter-spacing:1px; padding:4px 12px; border-radius:999px;
+    background:var(--grad-gold); color:#0A1A38;
+    font-size:10px; font-weight:800; letter-spacing:1px; padding:5px 14px; border-radius:999px;
+    box-shadow:0 8px 20px -6px rgba(231,197,110,.6), inset 0 1px 0 rgba(255,255,255,.5);
   }
-  .plan .pn{font-size:13px; letter-spacing:2px; text-transform:uppercase; font-weight:700; color:var(--gold)}
-  .plan .lim{font-family:"Cormorant Garamond",serif; font-size:34px; font-weight:700; color:var(--text); margin:4px 0}
+  .plan .pn{font-size:13px; letter-spacing:2px; text-transform:uppercase; font-weight:700; color:var(--champagne); position:relative}
+  .plan .lim{font-family:"Cormorant Garamond",serif; font-size:36px; font-weight:700; margin:4px 0; position:relative;
+    background:var(--grad-gold); -webkit-background-clip:text; background-clip:text; color:transparent;}
   .plan .lim small{font-size:13px; color:var(--text-muted); font-family:"Manrope",sans-serif; display:block; letter-spacing:0}
   .plan .desc{font-size:12.5px; color:var(--text-dim)}
   @media(max-width:900px){ .pricing{grid-template-columns:repeat(2,1fr)} }
@@ -219,15 +282,39 @@
   .foot-brand b{letter-spacing:3px; font-size:14px}
   .foot-brand span{display:block; font-size:11px; color:var(--text-muted)}
   .osgard-badge{
-    display:inline-flex; flex-direction:column; align-items:center; gap:3px;
-    padding:12px 22px; border:1px solid var(--hair-soft); border-radius:16px;
-    background:rgba(5,8,15,.4); transition:border-color .2s, transform .15s;
-    text-align:center;
+    display:inline-flex; align-items:center; gap:14px;
+    padding:12px 20px 12px 14px; border-radius:18px;
+    background:
+      linear-gradient(180deg,rgba(10,18,38,.7),rgba(5,8,15,.5)) padding-box,
+      linear-gradient(140deg,rgba(231,197,110,.5),rgba(231,197,110,.05) 55%,rgba(219,228,242,.14)) border-box;
+    border:1px solid transparent;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+    transition:transform .2s cubic-bezier(.2,.7,.2,1), box-shadow .25s;
   }
-  .osgard-badge:hover{border-color:var(--gold); transform:translateY(-2px)}
-  .osgard-badge .made{font-size:12px; color:var(--text-dim)}
-  .osgard-badge .made b{color:var(--gold); font-weight:700; letter-spacing:1.5px}
-  .osgard-badge .sub{font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted)}
+  .osgard-badge:hover{transform:translateY(-2px); box-shadow:0 18px 40px -16px rgba(231,197,110,.5), inset 0 1px 0 rgba(231,197,110,.2)}
+  /* эмблема-монограмма OSGARD */
+  .osgard-emblem{
+    width:42px; height:42px; border-radius:50%; flex:none; position:relative;
+    display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(120% 120% at 30% 22%,#1b2f57,#070d1c);
+    border:1.5px solid transparent;
+    background-clip:padding-box;
+    box-shadow:0 8px 22px -8px rgba(231,197,110,.55), inset 0 1px 0 rgba(255,255,255,.12);
+  }
+  .osgard-emblem::before{
+    content:""; position:absolute; inset:-1.5px; border-radius:50%; z-index:-1;
+    background:conic-gradient(from 210deg,#B8892E,#FBEFC6,#E7C56E,#B8892E,#FBEFC6,#B8892E);
+  }
+  .osgard-emblem b{
+    font-family:"Cormorant Garamond",serif; font-weight:700; font-size:21px; line-height:1;
+    background:var(--grad-gold); -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 1px 1px rgba(0,0,0,.3);
+  }
+  .osgard-badge .made{font-size:12px; color:var(--text-dim); text-align:left}
+  .osgard-badge .made b{
+    display:inline-block; letter-spacing:1.6px; font-weight:700;
+    background:var(--grad-gold); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .osgard-badge .sub{display:block; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); text-align:left; margin-top:2px}
   .copyright{text-align:center; color:var(--text-muted); font-size:12px; margin-top:30px}
 
   /* появление при скролле — с blur-in и премиум-easing */
@@ -261,7 +348,7 @@
 
   /* внутренний золотой свет карточек при наведении (без 3D-наклона) */
   .features .card:hover{
-    box-shadow:0 20px 44px rgba(0,0,0,.35), inset 0 1px 0 rgba(231,197,110,.14), inset 0 0 34px rgba(231,197,110,.05);
+    box-shadow:0 28px 58px -18px rgba(0,0,0,.6), inset 0 1px 0 rgba(231,197,110,.22), inset 0 0 44px rgba(231,197,110,.07);
   }
 
   /* тактильное нажатие золотой кнопки */
@@ -294,6 +381,64 @@
   .wl-ok{margin-top:14px; color:var(--gold-bright); font-size:13px; font-weight:600; position:relative; opacity:0; animation:okIn .45s ease forwards}
   @keyframes okIn{ to{opacity:1} }
 
+  /* ===== «Красивая карта», которая собирается после запроса юзера ===== */
+  .wl-card{
+    position:relative; max-width:452px; margin:24px auto 0; text-align:left;
+    border-radius:22px; padding:22px 22px 20px; overflow:hidden;
+    background:
+      linear-gradient(180deg,rgba(22,42,84,.82),rgba(9,19,42,.72)) padding-box,
+      linear-gradient(150deg,rgba(231,197,110,.55),rgba(231,197,110,.05) 50%,rgba(219,228,242,.18)) border-box;
+    border:1px solid transparent;
+    box-shadow:var(--shadow-lux), 0 0 56px -22px rgba(231,197,110,.55);
+    transform-origin:center top;
+    animation:cardAssemble .6s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes cardAssemble{
+    0%{ opacity:0; transform:translateY(14px) scale(.94); filter:blur(8px) }
+    100%{ opacity:1; transform:none; filter:none }
+  }
+  /* золотой луч, проходящий по карте при сборке */
+  .wl-card::after{
+    content:""; position:absolute; top:0; left:-70%; width:55%; height:100%;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.14),transparent);
+    transform:skewX(-16deg); animation:cardSheen 1.15s ease-out .15s 1 forwards;
+  }
+  @keyframes cardSheen{ to{ left:130% } }
+  .wl-card .row{opacity:0; animation:rowIn .5s cubic-bezier(.2,.7,.2,1) forwards}
+  .wl-card .row:nth-child(1){animation-delay:.16s}
+  .wl-card .row:nth-child(2){animation-delay:.26s}
+  .wl-card .row:nth-child(3){animation-delay:.36s}
+  .wl-card .row:nth-child(4){animation-delay:.46s}
+  @keyframes rowIn{ from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none} }
+  .wlc-head{display:flex; align-items:center; gap:14px; margin-bottom:16px}
+  .wlc-check{
+    width:46px;height:46px;border-radius:50%; flex:none; position:relative;
+    display:flex;align-items:center;justify-content:center; color:#0A1A38; font-size:22px; font-weight:800;
+    background:var(--grad-gold);
+    box-shadow:0 10px 26px -8px rgba(231,197,110,.7), inset 0 1px 0 rgba(255,255,255,.6);
+    animation:checkPop .5s cubic-bezier(.2,1.3,.4,1) both;
+  }
+  @keyframes checkPop{ 0%{transform:scale(.3); opacity:0} 60%{transform:scale(1.12)} 100%{transform:scale(1); opacity:1} }
+  .wlc-check::before{ content:""; position:absolute; inset:-6px; border-radius:50%;
+    border:1px solid rgba(231,197,110,.4); animation:checkRing .8s ease-out .1s forwards }
+  @keyframes checkRing{ 0%{transform:scale(.7); opacity:.9} 100%{transform:scale(1.25); opacity:0} }
+  .wlc-title{font-family:"Cormorant Garamond",serif; font-size:23px; font-weight:700; color:var(--text); line-height:1.15}
+  .wlc-title small{display:block; font-family:"Manrope",sans-serif; font-size:12px; font-weight:500; color:var(--text-muted); letter-spacing:.3px; margin-top:2px}
+  .wlc-mail{
+    display:flex; align-items:center; gap:10px; margin-bottom:14px;
+    background:rgba(5,8,15,.5); border:1px solid var(--hair-soft); border-radius:12px; padding:11px 14px;
+    font-size:13px; color:var(--champagne); word-break:break-all;
+  }
+  .wlc-mail span:first-child{color:var(--gold)}
+  .wlc-steps{list-style:none; margin:0 0 18px; padding:0; display:grid; gap:9px}
+  .wlc-steps li{display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--text-dim)}
+  .wlc-steps li i{
+    width:20px;height:20px;border-radius:50%; flex:none; margin-top:1px;
+    display:flex;align-items:center;justify-content:center; font-style:normal; font-size:11px; font-weight:700;
+    color:var(--gold-bright); background:rgba(231,197,110,.12); border:1px solid var(--hair-soft);
+  }
+  .wl-card .btn-gold{width:100%; padding:13px}
+
   /* фон дышит только если движение разрешено */
   @media (prefers-reduced-motion: no-preference){
     body::before{ animation:auroraDrift 26s ease-in-out infinite alternate }
@@ -304,6 +449,12 @@
     .gold-shimmer{animation:none}
     .fx-bloom,.fx-ring{animation-duration:.28s}
     .fx-spark{display:none}
+    .wl-card{animation:okIn .3s ease both; filter:none}
+    .wl-card::after{display:none}
+    .wl-card .row{animation:none; opacity:1}
+    .wlc-check{animation:none}
+    .wlc-check::before{display:none}
+    .btn-gold::after{display:none}
   }
 </style>
 </head>
@@ -440,8 +591,11 @@
        href="https://osgardnewworld.com/?utm_source=superday_web&utm_medium=badge&utm_campaign=built_with_osgard"
        target="_blank" rel="noopener"
        aria-label="Создано с помощью OSGARD — открыть сайт платформы">
-      <span class="made">Создано с помощью <b>OSGARD</b></span>
-      <span class="sub">OSGARD NEW WORLD · OS 0.5</span>
+      <span class="osgard-emblem" aria-hidden="true"><b>O</b></span>
+      <span class="made-wrap">
+        <span class="made">Создано с помощью <b>OSGARD</b></span>
+        <span class="sub">OSGARD NEW WORLD · OS 0.5</span>
+      </span>
     </a>
   </div>
   <div class="copyright">© 2026 SUPER DAY · superday.fun · Все права защищены</div>
@@ -464,21 +618,57 @@
     ev.preventDefault();
     var email = document.getElementById("wlEmail").value.trim();
     if(!email) return;
-    // визуальное подтверждение + фирменная вспышка (на случай отправки Enter)
-    if(!this.parentNode.querySelector(".wl-ok")){
-      var okEl = document.createElement("div");
-      okEl.className = "wl-ok";
-      okEl.textContent = "✓ Готово — открываем письмо…";
-      this.parentNode.appendChild(okEl);
-    }
+
+    // фирменная вспышка + звук от точки кнопки
     try{
       var _b = this.querySelector("button").getBoundingClientRect();
       cinematicPress(_b.left + _b.width/2, _b.top + _b.height/2);
       playPressSound();
     }catch(e){}
+
     var subj = encodeURIComponent("Ранний доступ к SUPER DAY");
     var body = encodeURIComponent("Хочу в список ожидания SUPER DAY. Мой e-mail: " + email);
-    window.location.href = "mailto:hello@superday.fun?subject=" + subj + "&body=" + body;
+    var mailto = "mailto:hello@superday.fun?subject=" + subj + "&body=" + body;
+
+    // если карта уже собрана — не дублируем
+    if(this.parentNode.querySelector(".wl-card")) return;
+
+    // строим «красивую карту», которая элегантно собирается
+    var card = document.createElement("div");
+    card.className = "wl-card";
+    card.setAttribute("role", "status");
+    card.innerHTML =
+      '<div class="row wlc-head">' +
+        '<div class="wlc-check" aria-hidden="true">&#10003;</div>' +
+        '<div class="wlc-title">Ты в списке ожидания<small>Место в первой волне SUPER DAY закреплено</small></div>' +
+      '</div>' +
+      '<div class="row wlc-mail"><span aria-hidden="true">&#9993;</span><span class="wlc-email"></span></div>' +
+      '<ul class="row wlc-steps">' +
+        '<li><i>1</i><span>Открой письмо и отправь его — так мы зафиксируем тебя в списке.</span></li>' +
+        '<li><i>2</i><span>Пришлём личную ссылку на скачивание в день запуска в сторах.</span></li>' +
+        '<li><i>3</i><span>Ранний доступ = расширенные лимиты на старте. Это подарок первым.</span></li>' +
+      '</ul>' +
+      '<a class="btn btn-gold row" href="' + mailto + '">Открыть письмо и подтвердить</a>';
+    // e-mail вставляем текстом (без HTML-инъекций)
+    card.querySelector(".wlc-email").textContent = email;
+
+    var form = this;
+    form.style.transition = "opacity .35s ease, transform .35s ease";
+    form.style.opacity = "0";
+    form.style.transform = "translateY(-6px)";
+    setTimeout(function(){
+      form.style.display = "none";
+      form.parentNode.insertBefore(card, form.nextSibling);
+      // блик+звук на кнопку письма внутри карты
+      var payBtn = card.querySelector(".btn-gold");
+      if(payBtn){
+        payBtn.addEventListener("pointerdown", function(e){
+          var x=e.clientX, y=e.clientY;
+          if(x==null||(x===0&&y===0)){ var r=payBtn.getBoundingClientRect(); x=r.left+r.width/2; y=r.top+r.height/2; }
+          cinematicPress(x,y); playPressSound();
+        });
+      }
+    }, 300);
   });
 
   // ================= Премиальные микровзаимодействия =================
