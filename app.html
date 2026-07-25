@@ -90,6 +90,11 @@
   .mic-btn:hover{border-color:var(--gold)}
   .mic-btn.rec{color:#E5766B; border-color:#E5766B; animation:pulse 1.1s infinite}
   @keyframes pulse{50%{box-shadow:0 0 0 5px rgba(229,118,107,.18)}}
+  /* Доступность: уважаем системную настройку «уменьшить движение». */
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important; animation-iteration-count:1 !important;
+      transition-duration:.001ms !important; scroll-behavior:auto !important}
+  }
   .add-btn{flex:0 0 auto; border:none; cursor:pointer; border-radius:12px; padding:0 24px; font-weight:700;
     font-size:14px; color:#1A1509; background:linear-gradient(120deg,var(--gold-bright),var(--gold) 46%,var(--gold-deep));
     box-shadow:0 12px 28px -12px rgba(201,169,106,.5)}
