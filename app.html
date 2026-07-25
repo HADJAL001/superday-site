@@ -186,6 +186,15 @@
   .toolbar button.accent{color:var(--champagne); border-color:var(--hair)}
   .toolbar button.accent:hover{color:#141414; font-weight:700; border-color:transparent; background:var(--grad-gold)}
 
+  .databar{display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; margin:0 0 34px}
+  .databar button{background:none; border:1px solid var(--border); color:var(--text-dim); border-radius:999px;
+    padding:8px 16px; font-size:12.5px; cursor:pointer; font-family:inherit; transition:.18s}
+  .databar button:hover{border-color:var(--gold); color:var(--text)}
+  .databar-note{flex-basis:100%; text-align:center; font-size:11px; color:var(--text-muted); margin-top:1px}
+  .databar-status{flex-basis:100%; text-align:center; font-size:12.5px; color:var(--gold); min-height:1px;
+    opacity:0; transition:opacity .3s ease}
+  .databar-status.on{opacity:1}
+
   footer{border-top:1px solid var(--hair-soft); padding:22px 0 34px; text-align:center; color:var(--text-muted); font-size:12px}
   footer a{color:var(--champagne); text-decoration:none}
   .offline-note{display:inline-flex; align-items:center; gap:7px; font-size:11.5px; color:var(--text-muted);
@@ -293,6 +302,14 @@
     <button id="copyPlan" class="accent" type="button">Поделиться планом</button>
     <button id="clearDone" type="button">Убрать выполненные</button>
     <button id="clearAll" type="button">Очистить всё</button>
+  </div>
+
+  <div class="databar" aria-label="Резервная копия">
+    <button id="exportBtn" type="button">&#11015; Сохранить в файл</button>
+    <button id="importBtn" type="button">&#11014; Загрузить из файла</button>
+    <input type="file" id="importFile" accept="application/json,.json" hidden />
+    <span class="databar-note">Резервная копия задач и заметок · перенос между устройствами вручную · файл остаётся у тебя</span>
+    <span class="databar-status" id="dataStatus" role="status" aria-live="polite"></span>
   </div>
 </main>
 
@@ -504,6 +521,77 @@
     function go(){ var v=ni.value.trim(); if(v){ addNote(v); ni.value=""; ni.focus(); } }
     na.addEventListener("click", go);
     ni.addEventListener("keydown", function(e){ if(e.key==="Enter") go(); });
+  })();
+
+  // ================= Резервная копия (экспорт / импорт) =================
+  (function(){
+    var exportBtn=document.getElementById("exportBtn");
+    var importBtn=document.getElementById("importBtn");
+    var importFile=document.getElementById("importFile");
+    var statusEl=document.getElementById("dataStatus");
+    var stTimer=null;
+    function flash(msg){
+      if(!statusEl) return;
+      statusEl.textContent=msg; statusEl.classList.add("on");
+      clearTimeout(stTimer); stTimer=setTimeout(function(){ statusEl.classList.remove("on"); }, 4000);
+    }
+    function pad(n){ return n<10 ? "0"+n : ""+n; }
+    function stamp(){ var d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+    function readWake(){ try{ return localStorage.getItem("superday_wake")||""; }catch(e){ return ""; } }
+
+    exportBtn.addEventListener("click", function(){
+      if(!tasks.length && !notes.length){ flash("Пока нечего сохранять — добавь задачи или заметки."); return; }
+      var payload={ app:"SUPER DAY", kind:"backup", version:1, exportedAt:new Date().toISOString(),
+        wake:readWake(), tasks:tasks, notes:notes };
+      try{
+        var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+        var url=URL.createObjectURL(blob);
+        var a=document.createElement("a"); a.href=url; a.download="superday-backup-"+stamp()+".json";
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+        flash("Файл сохранён: задач "+tasks.length+", заметок "+notes.length+".");
+      }catch(e){ flash("Не удалось сохранить файл в этом браузере."); }
+    });
+
+    importBtn.addEventListener("click", function(){ importFile.value=""; importFile.click(); });
+    importFile.addEventListener("change", function(){
+      var file=importFile.files && importFile.files[0]; if(!file) return;
+      var reader=new FileReader();
+      reader.onload=function(){
+        var data;
+        try{ data=JSON.parse(reader.result); }
+        catch(e){ flash("Не удалось прочитать файл — это не резервная копия SUPER DAY."); return; }
+        if(!data || (!Array.isArray(data.tasks) && !Array.isArray(data.notes))){
+          flash("В файле нет данных SUPER DAY."); return;
+        }
+        var addedT=0, addedN=0;
+        var haveT={}; tasks.forEach(function(t){ haveT[(t.text||"").trim().toLowerCase()]=true; });
+        (data.tasks||[]).forEach(function(t){
+          if(!t || typeof t.text!=="string") return;
+          var key=t.text.trim().toLowerCase(); if(!key || haveT[key]) return;
+          tasks.push({ id:uid(), text:t.text.trim(), urgent:!!t.urgent, important:!!t.important, done:!!t.done });
+          haveT[key]=true; addedT++;
+        });
+        var haveN={}; notes.forEach(function(n){ haveN[(n.text||"").trim().toLowerCase()]=true; });
+        (data.notes||[]).forEach(function(n){
+          if(!n || typeof n.text!=="string") return;
+          var key=n.text.trim().toLowerCase(); if(!key || haveN[key]) return;
+          notes.push({ id:"n"+(++noteSeq), text:n.text.trim() });
+          haveN[key]=true; addedN++;
+        });
+        // имя-обращение подхватываем, только если своё ещё не задано
+        var wi=document.getElementById("wakeInput");
+        if(typeof data.wake==="string" && data.wake.trim() && wi && !wi.value.trim()){
+          wi.value=data.wake.trim();
+          try{ wi.dispatchEvent(new Event("input")); }catch(e){ try{ localStorage.setItem("superday_wake", data.wake.trim()); }catch(_){} }
+        }
+        save(); saveNotes(); render(); renderNotes();
+        if(addedT || addedN) flash("Загружено: задач +"+addedT+", заметок +"+addedN+". Дубликаты пропущены.");
+        else flash("Всё из файла уже есть — ничего не добавлено.");
+      };
+      reader.onerror=function(){ flash("Ошибка чтения файла."); };
+      reader.readAsText(file);
+    });
   })();
 
   // ====== Голос: ручная диктовка + hands-free «как ассистент» ======
