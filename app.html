@@ -219,7 +219,34 @@
     border:1px solid var(--hair-soft); border-radius:999px; padding:6px 13px; margin:0 auto}
   .offline-note .d{width:7px; height:7px; border-radius:50%; background:var(--q3)}
 
-  @media(max-width:640px){ .matrix{grid-template-columns:1fr} .composer .row1{flex-direction:column} .add-btn{padding:14px} }
+  /* Доступность: видимый фокус для клавиатуры */
+  :focus-visible{outline:2px solid var(--gold-bright); outline-offset:2px; border-radius:8px}
+  .tg:focus-visible, .vm-toggle:focus-visible, li.task .chk:focus-visible{outline-offset:3px}
+
+  /* Карточка «Начни с этого» — прямое исполнение обещания «начни с главного» */
+  .focus{max-width:760px; margin:22px auto 0; display:flex; align-items:center; gap:15px;
+    background:linear-gradient(120deg,rgba(201,169,106,.15),rgba(24,26,32,.6)); border:1px solid var(--hair);
+    border-radius:16px; padding:15px 18px}
+  .focus[hidden]{display:none}
+  .focus .fx-ic{flex:0 0 auto; width:40px; height:40px; border-radius:12px; display:grid; place-items:center;
+    font-size:17px; background:var(--grad-gold); color:#1A1509}
+  .focus .fx-body{flex:1; min-width:0}
+  .focus .fx-eyebrow{font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:var(--champagne); font-weight:700}
+  .focus .fx-task{font-size:15.5px; color:var(--text); font-weight:600; margin-top:3px; word-break:break-word}
+  .focus .fx-meta{font-size:11.5px; color:var(--text-muted); margin-top:2px}
+  .focus .fx-done{flex:0 0 auto; cursor:pointer; font-family:inherit; font-weight:700; font-size:13px; color:#1A1509;
+    border:none; border-radius:999px; padding:10px 18px; background:var(--grad-gold)}
+  .focus .fx-done:active{transform:translateY(1px)}
+
+  /* Приватность голоса + напоминание о резервной копии */
+  .vm-privacy{font-size:11px; color:var(--text-muted); padding-top:9px; margin-top:2px;
+    border-top:1px solid var(--hair-soft); line-height:1.5}
+  .vm-privacy b{color:var(--text-dim); font-weight:600}
+  .backup-remind{flex-basis:100%; text-align:center; font-size:11.5px; color:var(--champagne); margin-top:3px; line-height:1.4}
+  .backup-remind[hidden]{display:none}
+
+  @media(max-width:640px){ .matrix{grid-template-columns:1fr} .composer .row1{flex-direction:column} .add-btn{padding:14px}
+    .focus{flex-wrap:wrap} .focus .fx-done{width:100%} }
 </style>
 </head>
 <body>
@@ -258,13 +285,24 @@
       <button class="vm-toggle" id="vmToggle" type="button" aria-pressed="false">
         <span class="vm-dot"></span><span class="vm-ic">🎙</span><span id="vmLabel">Свободные руки</span>
       </button>
-      <span class="vm-status" id="vmStatus">Включи и произнеси имя приложения, затем — задачу или «заметка …». Оно ответит голосом.</span>
+      <span class="vm-status" id="vmStatus" aria-live="polite">Включи и произнеси имя приложения, затем — задачу или «заметка …». Оно ответит голосом.</span>
     </div>
     <div class="vm-config">
       <label for="wakeInput">Как обращаться к приложению:</label>
       <input id="wakeInput" type="text" autocomplete="off" maxlength="24" placeholder="Супер день" />
       <span class="vm-config-hint">— произнеси это слово, и оно откликнется</span>
     </div>
+    <p class="vm-privacy">🔒 Задачи и заметки не покидают этот браузер. Но само <b>распознавание речи</b> обрабатывается облачным сервисом браузера (например, Google) — как в любой веб-диктовке. Текстовый ввод полностью офлайн.</p>
+  </section>
+
+  <section class="focus" id="focusCard" hidden aria-live="polite" aria-label="Задача, с которой стоит начать">
+    <span class="fx-ic" aria-hidden="true">▶</span>
+    <div class="fx-body">
+      <div class="fx-eyebrow">Начни с этого</div>
+      <div class="fx-task" id="focusTask"></div>
+      <div class="fx-meta" id="focusMeta"></div>
+    </div>
+    <button class="fx-done" id="focusDone" type="button">Готово</button>
   </section>
 
   <section class="matrix" aria-label="Матрица Эйзенхауэра">
@@ -327,6 +365,7 @@
     <button id="importBtn" type="button">&#11014; Загрузить из файла</button>
     <input type="file" id="importFile" accept="application/json,.json" hidden />
     <span class="databar-note">Резервная копия задач и заметок · перенос между устройствами вручную · файл остаётся у тебя</span>
+    <span class="backup-remind" id="backupRemind" hidden></span>
     <span class="databar-status" id="dataStatus" role="status" aria-live="polite"></span>
   </div>
 </main>
@@ -343,7 +382,32 @@
 
   try{ tasks = JSON.parse(localStorage.getItem(STORE_KEY) || "[]") || []; }catch(e){ tasks = []; }
 
-  function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(tasks)); }catch(e){} }
+  // ===== Версия схемы данных + миграции (на будущее, чтобы не терять данные) =====
+  var SCHEMA = 1;
+  (function migrate(){
+    var cur = 0;
+    try{ cur = parseInt(localStorage.getItem("superday_schema")||"0",10) || 0; }catch(e){ cur = 0; }
+    if(cur === SCHEMA) return;
+    // Нормализуем задачи под текущую форму (без потерь): гарантируем поля.
+    try{
+      tasks = (tasks||[]).map(function(t){
+        return { id: t.id || ("t"+Math.random().toString(36).slice(2)),
+                 text: String(t.text||""), urgent: !!t.urgent, important: !!t.important, done: !!t.done };
+      });
+    }catch(e){}
+    try{ localStorage.setItem("superday_schema", String(SCHEMA)); }catch(e){}
+  })();
+
+  // ===== Тихий автобэкап в localStorage — страховка от случайной очистки =====
+  function autoBackup(){
+    try{
+      var snap = { app:"SUPER DAY", kind:"autobackup", version:SCHEMA, at:new Date().toISOString(),
+        tasks:tasks, notes:(typeof notes!=="undefined"?notes:[]) };
+      localStorage.setItem("superday_autobackup", JSON.stringify(snap));
+    }catch(e){}
+  }
+
+  function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(tasks)); }catch(e){} autoBackup(); }
   function uid(){ return "t" + (tasks.reduce(function(m,t){return Math.max(m, +String(t.id).slice(1)||0);},0) + 1) + "_" + tasks.length; }
   function quadOf(t){ return t.urgent && t.important ? 1 : (!t.urgent && t.important ? 2 : (t.urgent && !t.important ? 3 : 4)); }
 
@@ -414,7 +478,9 @@
       li.className = "task" + (t.done ? " done" : "");
       var chk = document.createElement("span"); chk.className="chk"; chk.setAttribute("role","checkbox");
       chk.setAttribute("aria-checked", t.done?"true":"false"); chk.innerHTML = t.done ? "&#10003;" : "";
+      chk.tabIndex = 0; chk.setAttribute("aria-label", "Отметить выполненной: "+t.text);
       chk.addEventListener("click", function(){ t.done=!t.done; save(); render(); });
+      chk.addEventListener("keydown", function(e){ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); t.done=!t.done; save(); render(); } });
       var tx = document.createElement("span"); tx.className="txt"; tx.textContent = t.text;
       tx.title = "Нажми, чтобы изменить";
       tx.addEventListener("click", function(){
@@ -436,7 +502,48 @@
       var emp = q.querySelector(".empty");
       if(emp) emp.style.display = counts[qi] ? "none" : "block";
     });
+    renderFocus();
+    updateBackupRemind();
     renderPlan();
+  }
+
+  // ===== «Начни с этого» — одна первая задача по приоритету =====
+  function renderFocus(){
+    var card=document.getElementById("focusCard");
+    if(!card) return;
+    var next=tasks.slice().filter(function(t){return !t.done;})
+      .sort(function(a,b){ return quadOf(a)-quadOf(b); })[0];
+    if(!next){ card.hidden=true; card.__id=null; return; }
+    card.hidden=false; card.__id=next.id;
+    document.getElementById("focusTask").textContent=next.text;
+    var QN={1:"Сделать сейчас · срочно и важно",2:"Важное · спокойно запланируй",
+            3:"Быстро закрыть · срочное",4:"Необязательное · можно позже"};
+    document.getElementById("focusMeta").textContent=QN[quadOf(next)];
+  }
+  (function(){
+    var fd=document.getElementById("focusDone");
+    if(!fd) return;
+    fd.addEventListener("click", function(){
+      var card=document.getElementById("focusCard"); var id=card&&card.__id;
+      if(!id) return;
+      var t=tasks.filter(function(x){return x.id===id;})[0];
+      if(t){ t.done=true; save(); render(); }
+    });
+  })();
+
+  // ===== Напоминание сделать резервную копию (если давно не экспортировал) =====
+  function updateBackupRemind(){
+    var el=document.getElementById("backupRemind");
+    if(!el) return;
+    if(!tasks.length && (typeof notes==="undefined" || !notes.length)){ el.hidden=true; return; }
+    var last=0;
+    try{ last=parseInt(localStorage.getItem("superday_last_export")||"0",10)||0; }catch(e){ last=0; }
+    var WEEK=7*24*60*60*1000, now=Date.now();
+    if(!last || (now-last)>WEEK){
+      el.hidden=false;
+      el.textContent = last ? "⚠ Давно не было резервной копии — сохрани в файл."
+                            : "⚠ Сделай первую резервную копию — сохрани данные в файл.";
+    } else { el.hidden=true; }
   }
 
   function renderPlan(){
@@ -558,7 +665,7 @@
   var notes = [];
   try{ notes = JSON.parse(localStorage.getItem(NOTE_KEY) || "[]") || []; }catch(e){ notes = []; }
   var noteSeq = notes.reduce(function(m,n){ var k=+String(n.id).replace(/\D/g,""); return Math.max(m, k||0); }, 0);
-  function saveNotes(){ try{ localStorage.setItem(NOTE_KEY, JSON.stringify(notes)); }catch(e){} }
+  function saveNotes(){ try{ localStorage.setItem(NOTE_KEY, JSON.stringify(notes)); }catch(e){} autoBackup(); }
   function addNote(text){
     text=(text||"").trim(); if(!text) return;
     notes.unshift({ id:"n"+(++noteSeq), text:text });
@@ -616,6 +723,8 @@
         var a=document.createElement("a"); a.href=url; a.download="superday-backup-"+stamp()+".json";
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+        try{ localStorage.setItem("superday_last_export", String(Date.now())); }catch(e){}
+        if(typeof updateBackupRemind==="function") updateBackupRemind();
         flash("Файл сохранён: задач "+tasks.length+", заметок "+notes.length+".");
       }catch(e){ flash("Не удалось сохранить файл в этом браузере."); }
     });
@@ -691,12 +800,40 @@
     });
     function wname(){ return escapeHtml(wakeInput.value.trim()||"Супер день"); }
 
-    // — синтез речи (голосовые ответы) —
+    // — синтез речи (голосовые ответы): чёткий, премиальный русский голос —
     var speaking=false;
+    var pickedVoice=null;
+    // Оценка голоса: выше — «премиальнее» (нейросетевые/облачные, женские ru).
+    function scoreVoice(v){
+      var name=(v.name||"").toLowerCase(), lang=(v.lang||"").toLowerCase();
+      var s=0;
+      if(lang.indexOf("ru")===0) s+=100; else if(lang.indexOf("ru")>-1) s+=60; else return -1;
+      if(/natural|neural|online/.test(name)) s+=40;   // Microsoft Online Natural — самые качественные
+      if(/google/.test(name)) s+=30;                   // Google russian — чистый и ровный
+      if(/svetlana|dariya|dar[yi]a|irina|elena|milena|katja|katya|alyona|тать|светл|дар|ирин|елен/.test(name)) s+=12;
+      if(!v.localService) s+=8;                         // облачные обычно богаче тембром
+      return s;
+    }
+    function chooseVoice(){
+      if(!window.speechSynthesis) return null;
+      var vs=window.speechSynthesis.getVoices()||[];
+      var best=null, bestS=-1;
+      vs.forEach(function(v){ var sc=scoreVoice(v); if(sc>bestS){ bestS=sc; best=v; } });
+      pickedVoice = (best && bestS>=100) ? best : null;
+      return pickedVoice;
+    }
+    chooseVoice();
+    if(window.speechSynthesis && typeof window.speechSynthesis.onvoiceschanged!=="undefined"){
+      window.speechSynthesis.onvoiceschanged=function(){ chooseVoice(); };
+    }
     function speak(t, cb){
       if(!window.speechSynthesis){ cb&&cb(); return; }
       try{
-        var u=new SpeechSynthesisUtterance(t); u.lang="ru-RU"; u.rate=1.03;
+        if(!pickedVoice) chooseVoice();
+        var u=new SpeechSynthesisUtterance(t); u.lang="ru-RU";
+        if(pickedVoice) u.voice=pickedVoice;
+        // Спокойный премиальный тон: чуть медленнее и ниже — читается разборчиво.
+        u.rate=0.98; u.pitch=0.96; u.volume=1;
         speaking=true;
         u.onend=function(){ speaking=false; cb&&cb(); };
         u.onerror=function(){ speaking=false; cb&&cb(); };
