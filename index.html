@@ -21,6 +21,34 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
+<!-- Структурированные данные для богатых сниппетов в поиске -->
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"SoftwareApplication",
+  "name":"SUPER DAY",
+  "applicationCategory":"ProductivityApplication",
+  "operatingSystem":"Android, iOS",
+  "url":"https://superday.fun",
+  "description":"Премиальный планировщик дня: голосовой ввод, приоритеты по матрице Эйзенхауэра, AI-дебаты и озвучка плана.",
+  "offers":{"@type":"Offer","price":"0","priceCurrency":"RUB","description":"Бесплатный тариф — 7 AI-разборов задач в день"},
+  "creator":{"@type":"Organization","name":"OSGARD NEW WORLD","url":"https://osgardnewworld.com"}
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"FAQPage",
+  "mainEntity":[
+    {"@type":"Question","name":"Чем SUPER DAY лучше обычного списка дел?","acceptedAnswer":{"@type":"Answer","text":"SUPER DAY решает, что делать первым: раскладывает дела по матрице Эйзенхауэра, устраивает AI-дебаты о приоритетах и строит маршрут дня."}},
+    {"@type":"Question","name":"Что такое AI-дебаты приоритетов?","acceptedAnswer":{"@type":"Answer","text":"Две AI-модели спорят «за» и «против» важности каждой задачи и выдают взвешенный вердикт — что делать первым."}},
+    {"@type":"Question","name":"Нужно ли печатать задачи вручную?","acceptedAnswer":{"@type":"Answer","text":"Нет. Продиктуй задачи голосом одним потоком — распознавание и разбор берёт на себя AI."}},
+    {"@type":"Question","name":"Когда запуск и на каких платформах?","acceptedAnswer":{"@type":"Answer","text":"Готовится выход в RuStore, Google Play и App Store. Оставьте e-mail в списке ожидания, чтобы получить ссылку в день запуска."}},
+    {"@type":"Question","name":"Сколько это будет стоить?","acceptedAnswer":{"@type":"Answer","text":"Есть бесплатный тариф — 7 AI-разборов задач в день. Платные тарифы поднимают лимит вплоть до безлимита; цены в рублях появятся к запуску."}}
+  ]
+}
+</script>
+
 <style>
   :root{
     --bg:#081527; --bg-deep:#03060E; --surface:#122645; --surface-alt:#183258;
@@ -317,6 +345,44 @@
   .osgard-badge .sub{display:block; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--text-muted); text-align:left; margin-top:2px}
   .copyright{text-align:center; color:var(--text-muted); font-size:12px; margin-top:30px}
 
+  /* ---------- МАНИФЕСТ (эмоциональный якорь) ---------- */
+  .manifesto{padding:48px 0 20px}
+  .manifesto .wrap{max-width:880px; text-align:center}
+  .m-line{width:1px; height:56px; margin:0 auto 24px; background:linear-gradient(180deg,transparent,var(--gold))}
+  .manifesto blockquote{
+    margin:0; font-family:"Cormorant Garamond",serif; font-weight:600;
+    font-size:clamp(27px,4vw,44px); line-height:1.22; letter-spacing:.3px; color:var(--text);
+  }
+  .manifesto blockquote em{font-style:normal; background:var(--grad-gold); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .manifesto .m-sub{margin:24px auto 0; max-width:600px; color:var(--text-dim); font-size:16.5px}
+
+  /* ---------- FAQ ---------- */
+  .faq{max-width:768px; margin:0 auto; display:grid; gap:12px}
+  .faq details{
+    border-radius:16px; overflow:hidden; border:1px solid transparent;
+    background:
+      linear-gradient(180deg,rgba(18,36,74,.5),rgba(9,19,42,.42)) padding-box,
+      linear-gradient(150deg,rgba(231,197,110,.22),rgba(231,197,110,.02) 60%,rgba(219,228,242,.08)) border-box;
+    transition:box-shadow .25s;
+  }
+  .faq details[open]{box-shadow:0 20px 44px -22px rgba(0,0,0,.55), inset 0 1px 0 rgba(231,197,110,.12)}
+  .faq summary{
+    list-style:none; cursor:pointer; padding:18px 20px; display:flex; align-items:center; gap:16px;
+    font-size:16px; font-weight:600; color:var(--text);
+  }
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary span.qt{flex:1}
+  .q-ic{width:24px; height:24px; border-radius:50%; flex:none; position:relative;
+    border:1px solid var(--hair); transition:transform .25s, border-color .2s}
+  .q-ic::before,.q-ic::after{content:""; position:absolute; top:50%; left:50%;
+    transform:translate(-50%,-50%); background:var(--gold); border-radius:2px}
+  .q-ic::before{width:10px; height:1.5px}
+  .q-ic::after{width:1.5px; height:10px; transition:opacity .2s}
+  .faq details[open] .q-ic{transform:rotate(90deg); border-color:var(--gold)}
+  .faq details[open] .q-ic::after{opacity:0}
+  .faq .a{padding:0 20px 18px; color:var(--text-dim); font-size:14.5px; line-height:1.62}
+  .faq .a b{color:var(--champagne); font-weight:600}
+
   /* появление при скролле — с blur-in и премиум-easing */
   .reveal{opacity:0; transform:translateY(24px); filter:blur(6px);
     transition:opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1), filter .8s ease}
@@ -467,6 +533,7 @@
       <a href="#features">Возможности</a>
       <a href="#how">Как работает</a>
       <a href="#pricing">Тарифы</a>
+      <a href="#faq">Вопросы</a>
       <a class="btn btn-gold" href="#waitlist">Ранний доступ</a>
     </nav>
   </div>
@@ -504,6 +571,15 @@
           </div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- МАНИФЕСТ -->
+  <section class="manifesto reveal">
+    <div class="wrap">
+      <div class="m-line" aria-hidden="true"></div>
+      <blockquote>День — это не список задач.<br>Это <em>16 часов твоей единственной жизни.</em></blockquote>
+      <p class="m-sub">SUPER DAY возвращает ощущение контроля: меньше тревоги от хаоса дел — больше ясности в том, что действительно важно именно сегодня.</p>
     </div>
   </section>
 
@@ -555,6 +631,38 @@
         <div class="plan reveal"><div class="pn">Business</div><div class="lim">&#8734;<small>без лимита</small></div><div class="desc">Команды и повышенные объёмы.</div></div>
       </div>
       <p class="pricing-note">Цены в рублях появятся к запуску подписок · оплата через YooKassa</p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow">Вопросы</span>
+        <h2 class="serif">Коротко <span class="gold-text">о главном</span></h2>
+      </div>
+      <div class="faq reveal">
+        <details>
+          <summary><span class="qt">Чем это лучше обычного списка дел?</span><span class="q-ic" aria-hidden="true"></span></summary>
+          <div class="a">Обычный то-до просто хранит задачи. SUPER DAY <b>решает, что делать первым</b>: раскладывает дела по матрице Эйзенхауэра, устраивает AI-дебаты о приоритетах и строит маршрут дня. Ты не планируешь — ты проживаешь готовый план.</div>
+        </details>
+        <details>
+          <summary><span class="qt">Что такое AI-дебаты приоритетов?</span><span class="q-ic" aria-hidden="true"></span></summary>
+          <div class="a">Две AI-модели спорят «за» и «против» важности каждой задачи и выдают <b>взвешенный вердикт</b> — что двигает тебя вперёд, а что крадёт время. Это как совет из двух умных советников в кармане.</div>
+        </details>
+        <details>
+          <summary><span class="qt">Нужно ли печатать задачи вручную?</span><span class="q-ic" aria-hidden="true"></span></summary>
+          <div class="a">Нет. Просто <b>продиктуй голосом</b> всё, что на уме — одним потоком. Распознавание и разбор берёт на себя AI, а план соберётся сам.</div>
+        </details>
+        <details>
+          <summary><span class="qt">Когда запуск и на каких платформах?</span><span class="q-ic" aria-hidden="true"></span></summary>
+          <div class="a">Готовим выход в <b>RuStore, Google Play и App Store</b>. Оставь e-mail в списке ожидания — пришлём личную ссылку в день запуска, а ранним участникам дадим расширенные лимиты на старте.</div>
+        </details>
+        <details>
+          <summary><span class="qt">Сколько это будет стоить?</span><span class="q-ic" aria-hidden="true"></span></summary>
+          <div class="a">Есть <b>бесплатный тариф</b> — 7 AI-разборов задач в день, чтобы попробовать всё ядро. Платные тарифы поднимают дневной лимит вплоть до безлимита; точные цены в рублях появятся к запуску подписок (оплата через YooKassa).</div>
+        </details>
+      </div>
     </div>
   </section>
 
@@ -695,7 +803,7 @@
         }
       });
     }, {rootMargin:"-45% 0px -50% 0px"});
-    ["features","how","pricing","waitlist"].forEach(function(id){ var s=document.getElementById(id); if(s) spy.observe(s); });
+    ["features","how","pricing","faq","waitlist"].forEach(function(id){ var s=document.getElementById(id); if(s) spy.observe(s); });
   }
 
   // Фирменная кинематографичная вспышка при нажатии
