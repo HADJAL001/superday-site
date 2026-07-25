@@ -312,6 +312,17 @@
     background:var(--grad-gold); -webkit-background-clip:text; background-clip:text; color:transparent; border:1px solid rgba(201,169,106,.35)}
   .dl-how b{color:var(--text); display:block; margin-bottom:4px; font-size:13.5px}
   .dl-cta{text-align:center; margin-top:34px}
+  /* Блок ранней беты .apk для Android */
+  .apk-box{max-width:640px; margin:34px auto 0; padding:26px 28px; border-radius:20px; text-align:center;
+    background:linear-gradient(160deg,rgba(30,32,40,.7),rgba(16,17,21,.5));
+    border:1px solid var(--hair); box-shadow:var(--shadow-lux)}
+  .apk-box .apk-eyebrow{font-size:11px; letter-spacing:2.4px; text-transform:uppercase; font-weight:700; color:var(--champagne)}
+  .apk-box h3{font-family:"Cormorant Garamond",serif; font-weight:700; font-size:24px; margin:8px 0 6px; color:var(--text)}
+  .apk-box p{color:var(--text-dim); font-size:13.5px; line-height:1.6; margin:0 auto 18px; max-width:460px}
+  .apk-box .btn-gold{padding:14px 32px}
+  .apk-meta{margin-top:12px; font-size:11.5px; color:var(--text-muted); letter-spacing:.3px}
+  .apk-note{margin-top:14px; font-size:11.5px; color:var(--text-muted); line-height:1.6}
+  .apk-note b{color:var(--champagne); font-weight:600}
   .pay-line{text-align:center; margin-top:26px; color:var(--text-muted); font-size:12.5px; line-height:1.7}
   .pay-line b{color:var(--champagne); font-weight:600}
   @media(max-width:720px){ .stores{grid-template-columns:1fr; max-width:360px} .dl-how{grid-template-columns:1fr; max-width:420px} }
@@ -661,19 +672,27 @@
         <span class="eyebrow">Приложение</span>
         <h2 class="serif">Для вашего удобства <span class="gold-text">сделали приложение</span></h2>
       </div>
-      <p class="dl-lead reveal">SUPER DAY скоро выйдет на всех официальных площадках. Оставьте e-mail — пришлём ссылку на релиз, как только он появится в сторах. Никаких сторонних файлов: только официальная и безопасная установка.</p>
+      <p class="dl-lead reveal">SUPER DAY скоро выйдет на всех официальных площадках. А для владельцев Android <b>уже доступна ранняя бета</b> — установите приложение прямо сейчас по файлу ниже. На iPhone пока работает веб-версия (добавьте сайт на экран «Домой»), а релиз в App Store — на подходе.</p>
       <div class="stores reveal">
         <div class="store"><span class="ico"></span><span class="sname">App Store</span><span class="splat">iPhone · iPad</span><span class="soon">СКОРО</span></div>
         <div class="store"><span class="ico">▶</span><span class="sname">Google Play</span><span class="splat">Android</span><span class="soon">СКОРО</span></div>
         <div class="store"><span class="ico">◆</span><span class="sname">RuStore</span><span class="splat">Россия · Android</span><span class="soon">СКОРО</span></div>
       </div>
+      <div class="apk-box reveal">
+        <span class="apk-eyebrow">Android · ранняя бета</span>
+        <h3>Скачать для Samsung и других Android</h3>
+        <p>Прямой установочный файл <b>.apk</b>. Работает на телефонах и планшетах Android 7.0 и новее.</p>
+        <a class="btn btn-gold" href="app/superday.apk" download="SuperDay.apk">Скачать для Android · .apk</a>
+        <div class="apk-meta">Файл ≈ 82 МБ · версия ранней беты</div>
+        <p class="apk-note">При установке Android спросит разрешение поставить приложение «из этого источника» — это нормально для беты. Нажмите <b>«Разрешить»</b> → <b>«Установить»</b>. Для iPhone файл-установка технически недоступна (ограничение Apple) — используйте веб-версию или дождитесь App Store.</p>
+      </div>
       <ol class="dl-how reveal">
-        <li><b>Оставьте e-mail</b>В форме ниже — займёт пару секунд.</li>
-        <li><b>Дождитесь письма</b>Пришлём прямую ссылку на официальный релиз в сторе.</li>
-        <li><b>Установите</b>Из App Store, Google Play или RuStore — в один тап.</li>
+        <li><b>Скачайте .apk</b>Кнопкой выше — файл загрузится в «Загрузки».</li>
+        <li><b>Откройте файл</b>Разрешите установку «из этого источника», если Android попросит.</li>
+        <li><b>Готово</b>Иконка SUPER DAY появится на экране — запускайте.</li>
       </ol>
       <div class="dl-cta reveal">
-        <a class="btn btn-gold" href="#waitlist">Сообщить о выходе →</a>
+        <a class="btn btn-ghost" href="#waitlist">Сообщить о релизе в сторах →</a>
         <button id="pwaInstall" class="btn btn-ghost" type="button" hidden>Установить веб-версию</button>
       </div>
       <p class="pay-line reveal">Оплата подписки к запуску: для России — <b>СБП и YooKassa</b> (карты МИР, Visa, Mastercard); за рубежом — <b>Stripe и PayPal</b>.</p>
