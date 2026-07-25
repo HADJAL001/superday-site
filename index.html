@@ -191,6 +191,12 @@
 
   /* CSS-мокап телефона */
   .phone-stage{display:flex; justify-content:center; position:relative}
+  a.phone-link{flex-direction:column; align-items:center; gap:14px; text-decoration:none; cursor:pointer; transition:transform .25s ease}
+  a.phone-link:hover{transform:translateY(-4px)}
+  a.phone-link:hover .phone{box-shadow:var(--shadow-lux), 0 0 80px -14px rgba(201,169,106,.55), inset 0 0 0 1px rgba(255,255,255,.06)}
+  a.phone-link:focus-visible{outline:none}
+  a.phone-link:focus-visible .phone{box-shadow:0 0 0 3px rgba(201,169,106,.7), var(--shadow-lux)}
+  .phone-open{position:relative; z-index:2; display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:600; letter-spacing:.3px; color:#1A1509; padding:9px 16px; border-radius:999px; background:linear-gradient(120deg,var(--gold-bright),var(--gold-deep)); box-shadow:0 8px 24px -10px rgba(201,169,106,.6)}
   .phone-glow{position:absolute; inset:-6% 10% 6% 10%; background:radial-gradient(circle at 50% 30%,rgba(201,169,106,0.30),transparent 62%); filter:blur(28px); z-index:0}
   .phone{
     position:relative; z-index:1; width:298px; border-radius:44px; padding:14px;
@@ -628,13 +634,13 @@
         <h1>Дел слишком много?<br><span class="serif gold-text gold-shimmer">Начни с главного.</span></h1>
         <p class="lead">Продиктуй голосом всё, что давит, — одним потоком. SUPER DAY разложит задачи по матрице Эйзенхауэра, рассудит приоритеты в AI-дебатах и вернёт спокойный план: что делать первым, что подождёт, что можно убрать. За секунды.</p>
         <div class="hero-cta">
-          <a class="btn btn-gold" href="#waitlist">Получить ранний доступ</a>
-          <a class="btn btn-ghost" href="app.html">Попробовать в браузере →</a>
+          <a class="btn btn-gold" href="app.html">Открыть планировщик — работает сразу →</a>
+          <a class="btn btn-ghost" href="#waitlist">Ранний доступ к приложению</a>
         </div>
-        <p class="hero-note">Бесплатная веб-версия уже работает — без установки. <b>Скоро в RuStore, Google Play и App Store.</b></p>
+        <p class="hero-note">Бесплатно, без установки: открыл → назвал дела → увидел план. <b>Скоро в RuStore, Google Play и App Store.</b></p>
       </div>
 
-      <div class="phone-stage reveal">
+      <a class="phone-stage reveal phone-link" href="app.html" aria-label="Открыть рабочий планировщик SUPER DAY">
         <div class="phone-glow"></div>
         <div class="phone">
           <div class="phone-screen">
@@ -649,7 +655,8 @@
             <div class="voice-bar"><span class="mic">&#9679;</span><span>«Добавь встречу в 15:00 и убери лишнее…»</span></div>
           </div>
         </div>
-      </div>
+        <span class="phone-open">Это живое приложение — нажми и попробуй →</span>
+      </a>
     </div>
   </section>
 
