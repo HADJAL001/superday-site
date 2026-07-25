@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Страница не найдена — SUPER DAY</title>
+<meta name="robots" content="noindex" />
+<meta name="theme-color" content="#0A1A38" />
+<link rel="icon" href="/assets/mark.png" type="image/png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#081527; --bg-deep:#03060E; --text:#F5EFE1; --text-dim:#A6B6CE;
+    --grad-gold:linear-gradient(118deg,#B8892E 0%,#E7C56E 20%,#FBEFC6 40%,#E7C56E 58%,#C49A3F 74%,#FBEFC6 100%);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:"Manrope",system-ui,sans-serif; color:var(--text);
+    background:radial-gradient(1200px 600px at 50% -10%,#12294d,transparent 60%),linear-gradient(180deg,var(--bg),var(--bg-deep));
+    display:flex; align-items:center; justify-content:center; text-align:center; padding:32px;
+  }
+  .box{max-width:520px}
+  .mark{width:56px; height:56px; margin:0 auto 26px; display:block; opacity:.95}
+  .code{
+    font-family:"Cormorant Garamond",serif; font-weight:700; font-size:clamp(72px,18vw,140px); line-height:1; margin:0;
+    background:var(--grad-gold); -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  h1{font-family:"Cormorant Garamond",serif; font-weight:600; font-size:clamp(22px,4vw,30px); margin:8px 0 12px}
+  p{color:var(--text-dim); font-size:15px; line-height:1.6; margin:0 0 30px}
+  .btn{
+    display:inline-block; text-decoration:none; color:#0A1A38; font-weight:700; letter-spacing:.3px;
+    background:var(--grad-gold); padding:14px 30px; border-radius:999px;
+    box-shadow:0 14px 34px -12px rgba(231,197,110,.6);
+  }
+</style>
+</head>
+<body>
+  <div class="box">
+    <img class="mark" src="/assets/mark.png" alt="SUPER DAY" />
+    <p class="code">404</p>
+    <h1>Такой страницы нет</h1>
+    <p>Возможно, ссылка устарела. Вернёмся к началу дня — там всё на месте.</p>
+    <a class="btn" href="/">На главную</a>
+  </div>
+</body>
+</html>

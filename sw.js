@@ -1,0 +1,58 @@
+/* SUPER DAY — service worker.
+   Стратегия: навигации — network-first с офлайн-фолбэком на кэш главной;
+   статика (иконки, манифест, шрифты) — cache-first. Версия в имени кэша —
+   меняй CACHE при обновлении, чтобы старый кэш очистился. */
+var CACHE = "superday-v1";
+var SHELL = [
+  "/",
+  "/index.html",
+  "/manifest.webmanifest",
+  "/assets/mark.png",
+  "/assets/logo.png"
+];
+
+self.addEventListener("install", function (e) {
+  e.waitUntil(
+    caches.open(CACHE).then(function (c) { return c.addAll(SHELL); })
+      .then(function () { return self.skipWaiting(); })
+  );
+});
+
+self.addEventListener("activate", function (e) {
+  e.waitUntil(
+    caches.keys().then(function (keys) {
+      return Promise.all(keys.map(function (k) {
+        if (k !== CACHE) { return caches.delete(k); }
+      }));
+    }).then(function () { return self.clients.claim(); })
+  );
+});
+
+self.addEventListener("fetch", function (e) {
+  var req = e.request;
+  if (req.method !== "GET") { return; }
+
+  // Навигации: сеть, при офлайне — кэш главной страницы.
+  if (req.mode === "navigate") {
+    e.respondWith(
+      fetch(req).catch(function () {
+        return caches.match("/index.html").then(function (r) { return r || caches.match("/"); });
+      })
+    );
+    return;
+  }
+
+  // Остальное: сначала кэш, затем сеть (с дозаписью в кэш).
+  e.respondWith(
+    caches.match(req).then(function (cached) {
+      if (cached) { return cached; }
+      return fetch(req).then(function (res) {
+        if (res && res.status === 200 && (res.type === "basic" || res.type === "cors")) {
+          var copy = res.clone();
+          caches.open(CACHE).then(function (c) { c.put(req, copy); });
+        }
+        return res;
+      }).catch(function () { return cached; });
+    })
+  );
+});

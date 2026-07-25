@@ -8,6 +8,10 @@
 <meta name="theme-color" content="#0A1A38" />
 <link rel="icon" href="assets/mark.png" type="image/png" />
 <link rel="apple-touch-icon" href="assets/logo.png" />
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="SUPER DAY" />
 
 <!-- Open Graph / соцсети -->
 <meta property="og:type" content="website" />
@@ -668,6 +672,7 @@
       </ol>
       <div class="dl-cta reveal">
         <a class="btn btn-gold" href="#waitlist">Сообщить о выходе →</a>
+        <button id="pwaInstall" class="btn btn-ghost" type="button" hidden>Установить веб-версию</button>
       </div>
       <p class="pay-line reveal">Оплата подписки к запуску: для России — <b>СБП и YooKassa</b> (карты МИР, Visa, Mastercard); за рубежом — <b>Stripe и PayPal</b>.</p>
     </div>
@@ -955,6 +960,33 @@
       playPressSound();
     });
   });
+
+  // ===== PWA: установка веб-версии на главный экран =====
+  var pwaBtn = document.getElementById("pwaInstall");
+  var deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", function(e){
+    e.preventDefault();
+    deferredPrompt = e;
+    if(pwaBtn){ pwaBtn.hidden = false; }
+  });
+  if(pwaBtn){
+    pwaBtn.addEventListener("click", function(){
+      if(!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(){ deferredPrompt = null; pwaBtn.hidden = true; });
+    });
+  }
+  window.addEventListener("appinstalled", function(){
+    deferredPrompt = null;
+    if(pwaBtn){ pwaBtn.hidden = true; }
+  });
+
+  // Регистрация service worker (офлайн-кэш оболочки). Сбои игнорируем.
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("sw.js").catch(function(){});
+    });
+  }
 </script>
 </body>
 </html>
