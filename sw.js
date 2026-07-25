@@ -2,10 +2,11 @@
    Стратегия: навигации — network-first с офлайн-фолбэком на кэш главной;
    статика (иконки, манифест, шрифты) — cache-first. Версия в имени кэша —
    меняй CACHE при обновлении, чтобы старый кэш очистился. */
-var CACHE = "superday-v1";
+var CACHE = "superday-v2";
 var SHELL = [
   "/",
   "/index.html",
+  "/app.html",
   "/manifest.webmanifest",
   "/assets/mark.png",
   "/assets/logo.png"
@@ -32,11 +33,13 @@ self.addEventListener("fetch", function (e) {
   var req = e.request;
   if (req.method !== "GET") { return; }
 
-  // Навигации: сеть, при офлайне — кэш главной страницы.
+  // Навигации: сеть, при офлайне — кэш этой же страницы, иначе главная.
   if (req.mode === "navigate") {
     e.respondWith(
       fetch(req).catch(function () {
-        return caches.match("/index.html").then(function (r) { return r || caches.match("/"); });
+        return caches.match(req).then(function (r) {
+          return r || caches.match("/index.html").then(function (h) { return h || caches.match("/"); });
+        });
       })
     );
     return;
