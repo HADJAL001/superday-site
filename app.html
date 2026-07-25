@@ -158,6 +158,10 @@
     line-height:1; padding:0 2px; opacity:.6}
   li.task .del:hover{opacity:1; color:#E5766B}
   .empty{color:var(--text-muted); font-size:12.5px; padding:6px 8px 12px}
+  li.task .txt, ul.notelist li .txt{cursor:text}
+  .edit-inp{flex:1; min-width:0; background:#0E0F13; border:1px solid var(--gold); color:var(--text);
+    border-radius:8px; padding:6px 9px; font-size:13.5px; font-family:inherit; outline:none;
+    box-shadow:0 0 0 3px rgba(201,169,106,.12)}
 
   /* Маршрут дня */
   .route{margin:22px auto 40px; max-width:760px;
@@ -308,6 +312,25 @@
   function uid(){ return "t" + (tasks.reduce(function(m,t){return Math.max(m, +String(t.id).slice(1)||0);},0) + 1) + "_" + tasks.length; }
   function quadOf(t){ return t.urgent && t.important ? 1 : (!t.urgent && t.important ? 2 : (t.urgent && !t.important ? 3 : 4)); }
 
+  // Инлайн-правка текста по клику: onSave(newText|null), null = отмена/пусто
+  function inlineEdit(spanEl, current, onSave){
+    if(spanEl.parentNode.querySelector(".edit-inp")) return; // уже правим
+    var inp=document.createElement("input");
+    inp.type="text"; inp.className="edit-inp"; inp.value=current; inp.setAttribute("aria-label","Изменить текст");
+    spanEl.replaceWith(inp); inp.focus(); inp.select();
+    var done=false;
+    function commit(saveIt){
+      if(done) return; done=true;
+      var v=inp.value.trim();
+      onSave(saveIt && v ? v : null);
+    }
+    inp.addEventListener("keydown", function(e){
+      if(e.key==="Enter"){ e.preventDefault(); commit(true); }
+      else if(e.key==="Escape"){ e.preventDefault(); commit(false); }
+    });
+    inp.addEventListener("blur", function(){ commit(true); });
+  }
+
   var input = document.getElementById("taskInput");
   var addBtn = document.getElementById("addBtn");
   var tgU = document.getElementById("tgUrgent");
@@ -358,6 +381,10 @@
       chk.setAttribute("aria-checked", t.done?"true":"false"); chk.innerHTML = t.done ? "&#10003;" : "";
       chk.addEventListener("click", function(){ t.done=!t.done; save(); render(); });
       var tx = document.createElement("span"); tx.className="txt"; tx.textContent = t.text;
+      tx.title = "Нажми, чтобы изменить";
+      tx.addEventListener("click", function(){
+        inlineEdit(tx, t.text, function(v){ if(v!==null){ t.text=v; save(); } render(); });
+      });
       var del = document.createElement("button"); del.className="del"; del.type="button";
       del.setAttribute("aria-label","Удалить"); del.innerHTML="&times;";
       del.addEventListener("click", function(){ tasks = tasks.filter(function(x){return x.id!==t.id;}); save(); render(); });
@@ -460,6 +487,10 @@
     notes.forEach(function(n){
       var li=document.createElement("li");
       var tx=document.createElement("span"); tx.className="txt"; tx.textContent=n.text;
+      tx.title = "Нажми, чтобы изменить";
+      tx.addEventListener("click", function(){
+        inlineEdit(tx, n.text, function(v){ if(v!==null){ n.text=v; saveNotes(); } renderNotes(); });
+      });
       var del=document.createElement("button"); del.className="del"; del.type="button";
       del.setAttribute("aria-label","Удалить"); del.innerHTML="&times;";
       del.addEventListener("click", function(){ notes=notes.filter(function(x){return x.id!==n.id;}); saveNotes(); renderNotes(); });
