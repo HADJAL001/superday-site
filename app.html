@@ -337,6 +337,10 @@
   .remind-toggle[aria-pressed=true]{color:#141414; border-color:transparent; background:var(--grad-gold)}
   .remind-note{flex:1; min-width:180px; font-size:11.5px; color:var(--text-muted); line-height:1.45}
   .remind-note b{color:var(--text-dim); font-weight:600}
+  /* Кнопка-ссылка внутри текста: ограничение объясняется там же, где выход из него. */
+  .inline-link{background:none; border:0; padding:0; font:inherit; color:var(--gold);
+    text-decoration:underline; text-underline-offset:2px; cursor:pointer}
+  .inline-link:hover{color:var(--champagne)}
   /* Тихий режим — один переключатель на весь звук приложения */
   .mute-toggle{flex:0 0 auto; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--text-dim);
     background:#0E0F13; border:1px solid var(--hair); border-radius:999px; padding:8px 14px; display:inline-flex;
@@ -516,7 +520,7 @@
             title="Тихий режим — выключить все звуки приложения (напоминания останутся на экране)">
       <span aria-hidden="true" id="muteIc">🔊</span><span id="muteLabel">Звук включён</span>
     </button>
-    <span class="remind-note" id="remindNote">Когда наступит время дела — приложение подскажет уведомлением и голосом. <b>Работает, пока открыта эта вкладка.</b> Фоновые напоминания при закрытом приложении — в полной версии.</span>
+    <span class="remind-note" id="remindNote">Когда наступит время дела — приложение подскажет уведомлением и голосом. <b>Работает, пока открыта эта вкладка.</b> Нужны напоминания при закрытом приложении — <button type="button" class="inline-link" id="icsFromRemind">выгрузи день в календарь</button>: события лягут в системный календарь с будильниками.</span>
   </section>
 
   <section class="voicebar" id="voiceBar" aria-label="Голосовой режим">
@@ -634,6 +638,7 @@
 
   <div class="toolbar">
     <button id="copyPlan" class="accent" type="button">Поделиться планом</button>
+    <button id="icsBtn" type="button" title="Скачать день файлом .ics — события лягут в системный календарь с будильниками">&#128197; В календарь</button>
     <button id="clearDone" type="button">Убрать выполненные</button>
     <button id="clearAll" type="button">Очистить всё</button>
   </div>
@@ -2031,6 +2036,194 @@
       flash("Скопировано ✓");
     }catch(e){ flash("Не удалось скопировать"); }
   }
+
+  // ================= День в календарь (.ics, RFC 5545) =================
+  // Зачем: напоминания приложения живут, только пока открыта вкладка — фоновый
+  // push при закрытом приложении требует сервера (needs_backend, зона инфры).
+  // Но системный календарь уже стоит на каждом устройстве и умеет будить телефон
+  // сам. Отдаём день файлом .ics с блоками VALARM — настоящие фоновые
+  // напоминания без единого запроса к серверу.
+  // Время намеренно «плавающее» (без Z и без TZID): личный план читается в
+  // локальном времени смотрящего, и это избавляет от блока VTIMEZONE.
+  var ICS_SEQ_KEY = "superday_ics_seq";
+  var ICS_DEFAULT_DUR = 30;              // дело без длительности — получасовое окно
+  var ICS_WD = ["SU","MO","TU","WE","TH","FR","SA"];
+  var ICS_QUAD = {1:"Срочно и важно", 2:"Важно, не срочно", 3:"Срочно, не важно", 4:"Потом"};
+  var ICS_PRIO = {1:1, 2:3, 3:5, 4:7};
+
+  function icsEsc(s){
+    return String(s==null ? "" : s)
+      .replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,")
+      .replace(/\r\n|\r|\n/g,"\\n");
+  }
+  // Длина строки в .ics считается в ОКТЕТАХ (75), а не в символах: кириллица —
+  // 2 байта. Наивная резка по символам делает строки длиннее нормы, а резка по
+  // байтам без оглядки на границу символа рвёт саму кириллицу.
+  function icsOctets(ch){
+    var c=ch.charCodeAt(0);
+    if(c<0x80) return 1;
+    if(c<0x800) return 2;
+    if(c>=0xD800 && c<0xDC00) return 4;   // старший суррогат — считаем всю пару
+    if(c>=0xDC00 && c<0xE000) return 0;   // младший суррогат уже учтён
+    return 3;
+  }
+  function icsFold(line){
+    var out=[], cur="", used=0;
+    for(var i=0;i<line.length;i++){
+      var ch=line.charAt(i), n=icsOctets(ch);
+      if(n>0 && used+n>75){ out.push(cur); cur=" "; used=1; }
+      cur+=ch; used+=n;
+    }
+    out.push(cur);
+    return out.join("\r\n");
+  }
+  function ics2(n){ return n<10 ? "0"+n : ""+n; }
+  function icsStampUTC(d){
+    return d.getUTCFullYear()+ics2(d.getUTCMonth()+1)+ics2(d.getUTCDate())+"T"+
+           ics2(d.getUTCHours())+ics2(d.getUTCMinutes())+ics2(d.getUTCSeconds())+"Z";
+  }
+  function icsDate(key){ return String(key).replace(/-/g,""); }
+  function icsLocal(key, hhmm){
+    var m=timeToMin(hhmm); if(m===null || !key) return null;
+    return icsDate(key)+"T"+ics2(Math.floor(m/60))+ics2(m%60)+"00";
+  }
+  // Конец дела = старт + длительность. Через полночь дело уезжает на следующую
+  // дату, поэтому считаем через Date, а не сложением строк.
+  function icsEnd(key, hhmm, dur){
+    var m=timeToMin(hhmm); if(m===null || !key) return null;
+    var p=String(key).split("-");
+    var d=new Date(+p[0], (+p[1])-1, +p[2], 0, 0, 0, 0);
+    d.setMinutes(m + (validDur(dur) ? dur : ICS_DEFAULT_DUR));
+    return icsDate(dayKeyOf(d))+"T"+ics2(d.getHours())+ics2(d.getMinutes())+"00";
+  }
+  function icsRRule(days){
+    if(!days || !days.length) return null;
+    if(days.length>=7) return "FREQ=DAILY";
+    var by=days.slice().sort(function(a,b){ return a-b; }).map(function(d){ return ICS_WD[d]; });
+    return "FREQ=WEEKLY;BYDAY="+by.join(",");
+  }
+  // Ближайший подходящий день ≥ сегодня. Если сегодня подходит, но время уже
+  // прошло — берём следующий: иначе часть календарей звонит будильником прямо
+  // в момент импорта (событие в прошлом).
+  function nextRepeatDate(days, hhmm, now){
+    if(!days || !days.length) return null;
+    var base=now || new Date();
+    var m=timeToMin(hhmm), nowM=base.getHours()*60 + base.getMinutes();
+    for(var i=0;i<8;i++){
+      var d=new Date(base.getTime()); d.setDate(d.getDate()+i);
+      if(days.indexOf(d.getDay())===-1) continue;
+      if(i===0 && m!==null && m<=nowM) continue;
+      return dayKeyOf(d);
+    }
+    return null;
+  }
+  // На какой день ставить дело: регулярное → ближайший свой день, перенесённое →
+  // дата переноса, остальное → сегодня. Одна точка правды на весь экспорт.
+  function icsTaskDate(t, now){
+    var days=repeatDays(t);
+    if(days) return nextRepeatDate(days, t.time, now);
+    if(t.defer && isDeferred(t)) return t.defer;
+    return dayKeyOf(now || new Date());
+  }
+  function buildICS(now, seq){
+    now = now || new Date();
+    seq = seq || 0;
+    var stamp=icsStampUTC(now), timed=[], untimed=[], repeating=0;
+    (tasks||[]).forEach(function(t){
+      if(!t || !t.text) return;
+      var rep=isRepeating(t);
+      if(t.done && !rep) return;                       // разовое выполненное уехало бы мусором
+      if(validTime(t.time)){ timed.push(t); if(rep) repeating++; }
+      else if(isToday(t)) untimed.push(t);             // без времени — только сегодняшние
+    });
+    var L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//SUPER DAY//app//RU",
+           "CALSCALE:GREGORIAN","METHOD:PUBLISH","X-WR-CALNAME:SUPER DAY"];
+    timed.forEach(function(t){
+      var key=icsTaskDate(t, now); if(!key) return;
+      var q=quadOf(t), rr=icsRRule(repeatDays(t));
+      L.push("BEGIN:VEVENT");
+      // UID стабилен между выгрузками — повторный импорт ОБНОВЛЯЕТ событие,
+      // а не плодит дубли; SEQUENCE говорит календарю, что версия свежее.
+      L.push("UID:sd-"+icsEsc(t.id)+"@superday.fun");
+      L.push("SEQUENCE:"+seq);
+      L.push("DTSTAMP:"+stamp);
+      L.push("DTSTART:"+icsLocal(key, t.time));
+      L.push("DTEND:"+icsEnd(key, t.time, t.dur));
+      if(rr) L.push("RRULE:"+rr);
+      L.push("SUMMARY:"+icsEsc(t.text));
+      L.push("DESCRIPTION:"+icsEsc(ICS_QUAD[q] + (rr ? " · "+fmtRepeat(t.repeat) : "") +
+             "\nСоставлено в SUPER DAY · superday.fun"));
+      L.push("CATEGORIES:"+icsEsc(ICS_QUAD[q]));
+      L.push("PRIORITY:"+ICS_PRIO[q]);
+      L.push("BEGIN:VALARM","ACTION:DISPLAY","TRIGGER:-PT10M",
+             "DESCRIPTION:"+icsEsc("Через 10 минут: "+t.text),"END:VALARM");
+      L.push("BEGIN:VALARM","ACTION:DISPLAY","TRIGGER:PT0S",
+             "DESCRIPTION:"+icsEsc("Пора: "+t.text),"END:VALARM");
+      L.push("END:VEVENT");
+    });
+    // Дела без времени не теряются: одно событие на весь день, без будильника —
+    // звонить не о чем, времени у них нет.
+    if(untimed.length){
+      var dk=dayKeyOf(now), nx=new Date(now.getTime()); nx.setDate(nx.getDate()+1);
+      L.push("BEGIN:VEVENT");
+      L.push("UID:sd-untimed-"+icsDate(dk)+"@superday.fun");
+      L.push("SEQUENCE:"+seq);
+      L.push("DTSTAMP:"+stamp);
+      L.push("DTSTART;VALUE=DATE:"+icsDate(dk));
+      L.push("DTEND;VALUE=DATE:"+icsDate(dayKeyOf(nx)));
+      L.push("SUMMARY:"+icsEsc("SUPER DAY: "+untimed.length+" "+
+             plural(untimed.length,["дело","дела","дел"])+" без времени"));
+      L.push("DESCRIPTION:"+icsEsc(untimed.map(function(t){ return "• "+t.text; }).join("\n") +
+             "\n\nСоставлено в SUPER DAY · superday.fun"));
+      L.push("END:VEVENT");
+    }
+    L.push("END:VCALENDAR");
+    return { text: L.map(icsFold).join("\r\n")+"\r\n",
+             counts: { timed:timed.length, repeating:repeating, untimed:untimed.length } };
+  }
+  function icsSeqNext(){
+    var v=0; try{ v=parseInt(localStorage.getItem(ICS_SEQ_KEY)||"0",10)||0; }catch(e){ v=0; }
+    v++; try{ localStorage.setItem(ICS_SEQ_KEY, String(v)); }catch(e){}
+    return v;
+  }
+  function exportICS(){
+    var now=new Date();
+    var probe=buildICS(now, 0);
+    if(!probe.counts.timed && !probe.counts.untimed){
+      toast("Пока нечего выгружать — добавь дело, лучше сразу со временем");
+      return null;
+    }
+    var res=buildICS(now, icsSeqNext());
+    var name="superday-"+dayKeyOf(now)+".ics", ok=false;
+    try{
+      var blob=new Blob([res.text],{type:"text/calendar;charset=utf-8"});
+      var file=null;
+      try{ file=new File([blob], name, {type:"text/calendar"}); }catch(e){ file=null; }
+      // На телефоне «Поделиться» кладёт файл прямо в приложение календаря;
+      // на десктопе этого API нет — там обычное скачивание.
+      if(file && navigator.canShare && navigator.share && navigator.canShare({files:[file]})){
+        navigator.share({ files:[file], title:"День в календарь — SUPER DAY" }).catch(function(){});
+        ok=true;
+      } else {
+        var url=URL.createObjectURL(blob);
+        var a=document.createElement("a"); a.href=url; a.download=name;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+        ok=true;
+      }
+    }catch(e){ ok=false; }
+    if(!ok){ toast("Не удалось создать файл календаря в этом браузере"); return null; }
+    var bits=[];
+    if(res.counts.timed) bits.push(res.counts.timed+" "+plural(res.counts.timed,["дело","дела","дел"])+" со временем");
+    if(res.counts.repeating) bits.push(res.counts.repeating+" "+plural(res.counts.repeating,["регулярное","регулярных","регулярных"]));
+    if(res.counts.untimed) bits.push(res.counts.untimed+" без времени — заметкой на день");
+    toast("📅 "+bits.join(" · ")+". Открой файл — календарь напомнит сам.");
+    return res;
+  }
+  ["icsBtn","icsFromRemind"].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.addEventListener("click", function(){ exportICS(); });
+  });
 
   // ================= Заметки =================
   var NOTE_KEY = "superday_notes_v1";
