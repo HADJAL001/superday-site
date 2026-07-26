@@ -252,6 +252,21 @@ window.__i18nDict("en", {
     "Сделать дело регулярным — каждый день, по будням или в выбранные дни": "Make the task recurring — every day, on weekdays or on chosen days",
     "Нажми, чтобы изменить повтор": "Tap to change the repeat",
     "＋повтор": "＋repeat",
+
+    /* ===== Карта дел (волна 18) ===== */
+    "Карта дел": "Task map",
+    "🔒 Карта — единственное место SUPER DAY, где <b>адреса</b> уходят за пределы браузера: в бесплатные сервисы OpenStreetMap (поиск места и путь по дорогам).": "🔒 The map is the only place in SUPER DAY where <b>addresses</b> leave the browser: to free OpenStreetMap services (place search and road routing).",
+    "Добавь место к делу («＋место» в строке дела) — здесь появится путь по карте.": "Add a place to a task (“＋place” in the task row) — a route will appear here.",
+    "Карта дел с путём между местами": "Task map with a route between places",
+    "＋место": "＋place",
+    "Нажми, чтобы изменить место": "Tap to change the place",
+    "Задать место дела — появится на карте дел": "Set the task's place — it will appear on the task map",
+    "Задать место дела": "Set the task's place",
+    "пока нет мест": "no places yet",
+    "Место дела — адрес или название (например «Тверская 1, Москва» или «Офис, ул. Ленина 5»).\n\nОставь пустым, чтобы убрать место.": "Task place — an address or a name (for example “5th Avenue, New York” or “Office, 1 Main St”).\n\nLeave empty to remove the place.",
+    "Ищу место…": "Looking up the place…",
+    "Это место не нашёл — попробуй проще: «улица, город»": "Couldn't find that place — try something simpler: “street, city”",
+    "Сеть недоступна — попробуй позже": "Network unavailable — try again later",
     "→ завтра": "→ tomorrow",
     "перенесено": "postponed",
     "Перенести на завтра — уйдёт из сегодняшнего маршрута и бюджета, но не потеряется": "Postpone to tomorrow — it leaves today's route and budget, but is not lost",
@@ -405,7 +420,16 @@ window.__i18nDict("en", {
     ["^на (\\d+) (?:минут|минуты|мин)$", "for $1 min"],
     ["^на (\\d+(?:[.,]\\d+)?) (?:час|часа|часов)$", function (all, n) {
       return "for " + n + " hour" + (n === "1" ? "" : "s");
-    }]
+    }],
+
+    /* ===== Карта дел: шаблоны с числами (волна 18) ===== */
+    ["^Показать путь по (\\d+) местам$", function (all, n) { return "Show the route through " + n + " place" + (+n === 1 ? "" : "s"); }],
+    ["^Путь собран — (\\d+) мест, ([\\d.,]+) км(?:, ~(\\d+) мин в пути)?$", function (all, n, km, mins) {
+      return "Route built — " + n + " place" + (+n === 1 ? "" : "s") + ", " + km + " km" + (mins ? ", ~" + mins + " min on the way" : "");
+    }],
+    ["^([\\d.,]+) км по прямой, без учёта дорог — путь по дорогам сейчас недоступен$", "$1 km as the crow flies, roads not accounted for — road routing is unavailable right now"],
+    ["^Нашёл: (.+) — сохранить как место дела\\?$", "Found: $1 — save it as the task's place?"],
+    ["^(\\d+) (?:место|места|мест)$", function (all, n) { return n + " place" + (+n === 1 ? "" : "s"); }]
   ],
 
   /* ===== Нормализация ввода: английская фраза → русская форма ===== */

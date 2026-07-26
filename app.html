@@ -399,6 +399,16 @@
   .task.deferred .ttime,.task.deferred .tdur,
   .task.offday .ttime,.task.offday .tdur{opacity:.35}
 
+  /* ===== Место дела («Карта дел») ===== */
+  .tloc{flex:0 0 auto; display:inline-flex; align-items:center; gap:4px; cursor:pointer; font-family:inherit;
+    font-size:11px; font-weight:600; color:var(--plat-dim); background:rgba(222,228,238,.06);
+    border:1px solid var(--hair-soft); border-radius:999px; padding:3px 8px; margin-top:1px;
+    max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; transition:.15s}
+  .tloc:hover{border-color:var(--gold); color:var(--gold-bright)}
+  .tloc.empty{color:var(--text-muted); background:none; border-style:dashed; opacity:.5}
+  .tloc.empty:hover{opacity:1; color:var(--champagne)}
+  .task.deferred .tloc,.task.offday .tloc{opacity:.35}
+
   /* ===== Онбординг первого экрана (показывается один раз) ===== */
   .onboard{margin:0 0 18px; border:1px solid var(--hair); border-radius:16px; padding:16px 18px;
     background:linear-gradient(180deg,rgba(20,31,54,.62),rgba(9,15,30,.62))}
@@ -696,6 +706,114 @@
     .focustimer{flex-wrap:wrap} .ft-actions{width:100%; justify-content:stretch} .ft-actions .ft-btn{flex:1}
     .day .col{height:52px} .day .lbl{font-size:9px}
     .tpl-head{flex-wrap:wrap} }
+
+  /* ===== Leaflet — минимальный необходимый набор, инлайн (CSP: style-src без внешних источников).
+        Урезано до того, что реально используется (свои div-иконки, свои попапы) — полный leaflet.css
+        тянет маркер-спрайты и слои, которые тут не нужны. Версия ориентир: Leaflet 1.9.x. */
+  .leaflet-pane,.leaflet-tile,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-tile-container,
+  .leaflet-pane > svg,.leaflet-pane > canvas,.leaflet-zoom-box,.leaflet-image-layer,.leaflet-layer{
+    position:absolute; left:0; top:0}
+  .leaflet-container{overflow:hidden; -webkit-tap-highlight-color:transparent}
+  .leaflet-tile,.leaflet-marker-icon,.leaflet-marker-shadow{-webkit-user-select:none; user-select:none;
+    -webkit-user-drag:none}
+  .leaflet-tile::selection{background:transparent}
+  .leaflet-safari .leaflet-tile{image-rendering:-webkit-optimize-contrast}
+  .leaflet-container .leaflet-overlay-pane svg{max-width:none; max-height:none}
+  .leaflet-container .leaflet-marker-pane img,.leaflet-container .leaflet-tile-pane img,
+  .leaflet-container img.leaflet-image-layer,.leaflet-container .leaflet-tile{max-width:none; max-height:none; width:auto; padding:0}
+  .leaflet-tile-container{width:256px; height:256px}
+  .leaflet-tile{filter:inherit; visibility:hidden}
+  .leaflet-tile-loaded{visibility:inherit}
+  .leaflet-zoom-box{width:0; height:0; box-sizing:border-box; z-index:800}
+  .leaflet-overlay-pane svg{-moz-user-select:none}
+  .leaflet-pane{z-index:400}
+  .leaflet-tile-pane{z-index:200}
+  .leaflet-overlay-pane{z-index:400}
+  .leaflet-shadow-pane{z-index:500}
+  .leaflet-marker-pane{z-index:600}
+  .leaflet-tooltip-pane{z-index:650}
+  .leaflet-popup-pane{z-index:700}
+  .leaflet-map-pane canvas{z-index:100}
+  .leaflet-map-pane svg{z-index:200}
+  .leaflet-vml-shape{width:1px; height:1px}
+  .lvml{behavior:url(#default#VML); display:inline-block; position:absolute}
+  .leaflet-control{position:relative; z-index:800; pointer-events:visiblePainted; pointer-events:auto}
+  .leaflet-top,.leaflet-bottom{position:absolute; z-index:1000; pointer-events:none}
+  .leaflet-top{top:0} .leaflet-right{right:0} .leaflet-bottom{bottom:0} .leaflet-left{left:0}
+  .leaflet-control{float:left; clear:both}
+  .leaflet-right .leaflet-control{float:right}
+  .leaflet-top .leaflet-control{margin-top:10px}
+  .leaflet-bottom .leaflet-control{margin-bottom:10px}
+  .leaflet-left .leaflet-control{margin-left:10px}
+  .leaflet-right .leaflet-control{margin-right:10px}
+  .leaflet-fade-anim .leaflet-popup{opacity:0; transition:opacity .2s linear}
+  .leaflet-fade-anim .leaflet-map-pane .leaflet-popup{opacity:1}
+  .leaflet-popup{position:absolute; text-align:center; margin-bottom:20px}
+  .leaflet-popup-content-wrapper{padding:1px; text-align:left; border-radius:12px}
+  .leaflet-popup-content{margin:13px 19px; line-height:1.4}
+  .leaflet-popup-tip-container{width:40px; height:20px; position:absolute; left:50%; margin-left:-20px;
+    overflow:hidden; pointer-events:none}
+  .leaflet-popup-tip{width:17px; height:17px; padding:1px; margin:-10px auto 0; pointer-events:auto;
+    transform:rotate(45deg)}
+  .leaflet-popup-close-button{position:absolute; top:0; right:0; padding:4px 4px 0 0; text-align:center;
+    width:24px; height:24px; font:16px/24px Tahoma,Verdana,sans-serif; text-decoration:none; font-weight:700}
+  .leaflet-container a.leaflet-popup-close-button{z-index:20}
+  .leaflet-control-zoom{border-radius:12px; overflow:hidden}
+  .leaflet-bar{box-shadow:0 3px 14px rgba(0,0,0,.4); border-radius:12px}
+  .leaflet-bar a{background-clip:padding-box; display:block; width:32px; height:32px; line-height:32px;
+    text-align:center; text-decoration:none}
+  .leaflet-bar a:first-child{border-top-left-radius:12px; border-top-right-radius:12px}
+  .leaflet-bar a:last-child{border-bottom-left-radius:12px; border-bottom-right-radius:12px; border-bottom:none}
+  .leaflet-control-attribution{font-size:10px}
+  .leaflet-control-attribution a{text-decoration:none}
+  .leaflet-control-attribution svg{display:inline; vertical-align:baseline}
+
+  /* ===== Карта дел — премиальная тема поверх нейтрального Leaflet ===== */
+  .mapcard{margin-top:13px}
+  .map-priv{font-size:11px; color:var(--text-muted); line-height:1.55; padding-bottom:10px;
+    border-bottom:1px solid var(--hair-soft); margin-bottom:11px}
+  .map-priv b{color:var(--plat-dim)}
+  .map-go{width:100%; cursor:pointer; font-family:inherit; font-size:13px; font-weight:700;
+    color:var(--on-accent); background:var(--grad-gold); border:0; border-radius:12px; padding:11px 14px;
+    transition:.15s; letter-spacing:.2px}
+  .map-go:hover{filter:brightness(1.06)}
+  .map-go:disabled{opacity:.4; cursor:default; filter:none}
+  .map-empty{margin-top:2px; border:1px dashed var(--hair-soft); border-radius:14px; padding:22px 16px;
+    text-align:center; color:var(--text-muted); font-size:12.5px; line-height:1.6}
+  .map-empty .me-dots{display:flex; justify-content:center; gap:10px; margin-bottom:12px; opacity:.5}
+  .map-empty .me-dots span{width:9px; height:9px; border-radius:50%; border:1.5px dashed var(--plat-deep)}
+  .map-note{font-size:11.5px; color:var(--text-muted); margin-top:9px; line-height:1.5}
+  .map-note.warn{color:var(--q1)}
+  .mapview{position:relative; margin-top:11px; border-radius:16px; overflow:hidden; height:280px;
+    border:1px solid var(--border); background:var(--ink)}
+  .mapview .leaflet-container{width:100%; height:100%; background:var(--ink); font-family:inherit}
+  .mapview .leaflet-tile-pane{filter:brightness(.82) contrast(1.12) saturate(1.35) sepia(.4) hue-rotate(-8deg)}
+  .mapview::after{content:""; position:absolute; inset:0; pointer-events:none; z-index:450;
+    box-shadow:inset 0 0 46px 6px rgba(6,9,18,.65);
+    background:radial-gradient(120% 90% at 50% 38%, transparent 55%, rgba(6,9,18,.34) 100%)}
+  .mapview .leaflet-bar a{background:var(--ink); color:var(--plat-dim); border-bottom:1px solid var(--border)}
+  .mapview .leaflet-bar a:hover{background:var(--surface-alt); color:var(--gold-bright)}
+  .mapview .leaflet-control-attribution{background:rgba(10,17,34,.72); color:var(--text-muted);
+    border-radius:8px 0 0 0; padding:2px 7px}
+  .mapview .leaflet-control-attribution a{color:var(--plat-dim)}
+  .mapview .leaflet-popup-content-wrapper{background:var(--surface); color:var(--text);
+    border:1px solid var(--border); box-shadow:0 10px 30px rgba(0,0,0,.45)}
+  .mapview .leaflet-popup-tip{background:var(--surface); border:1px solid var(--border)}
+  .mapview .leaflet-popup-close-button{color:var(--text-muted)}
+  .mapview .leaflet-popup-close-button:hover{color:var(--text)}
+  .mp-pop{min-width:150px}
+  .mp-pop .mp-num{display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px;
+    border-radius:50%; font-size:10px; font-weight:700; color:var(--on-accent); margin-right:6px}
+  .mp-pop .mp-text{font-size:13px; font-weight:600; color:var(--text)}
+  .mp-pop .mp-time{display:block; margin-top:4px; font-size:11px; color:var(--champagne)}
+  .mp-pop .mp-addr{display:block; margin-top:3px; font-size:11px; color:var(--text-muted); line-height:1.4}
+  .mp-pop .mp-nav{display:inline-block; margin-top:8px; font-size:11.5px; font-weight:600;
+    color:var(--gold-bright); text-decoration:none; border-bottom:1px dashed var(--gold-deep)}
+  .mp-pop .mp-nav:hover{color:var(--champagne)}
+  .mp-marker{width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; color:var(--on-accent); border:2px solid rgba(255,255,255,.75);
+    box-shadow:0 2px 10px rgba(0,0,0,.5); animation:rowIn .38s var(--ease-out) both}
+  @media(max-width:640px){ .mapview{height:220px} }
 </style>
 </head>
 <body>
@@ -829,6 +947,21 @@
           <div class="empty">Честно спроси: это вообще нужно?</div>
         </div>
       </section>
+    </div>
+  </section>
+  <section class="pgroup" data-sec="map">
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">🗺</span><span class="pg-title">Карта дел</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <div class="pg-body">
+      <div class="mapcard" id="mapCard">
+        <p class="map-priv">🔒 Карта — единственное место SUPER DAY, где <b>адреса</b> уходят за пределы браузера: в бесплатные сервисы OpenStreetMap (поиск места и путь по дорогам).</p>
+        <div class="map-empty" id="mapEmpty">
+          <div class="me-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+          Добавь место к делу («＋место» в строке дела) — здесь появится путь по карте.
+        </div>
+        <button type="button" class="map-go" id="mapGoBtn" hidden>Показать путь</button>
+        <div class="mapview" id="mapView" hidden aria-label="Карта дел с путём между местами"></div>
+        <p class="map-note" id="mapNote"></p>
+      </div>
     </div>
   </section>
   <section class="pgroup" data-sec="remind">
@@ -965,7 +1098,7 @@
   try{ tasks = JSON.parse(localStorage.getItem(STORE_KEY) || "[]") || []; }catch(e){ tasks = []; }
 
   // ===== Версия схемы данных + миграции (на будущее, чтобы не терять данные) =====
-  var SCHEMA = 5;
+  var SCHEMA = 6;
   // Нормализация повтора: принимаем и {days:[...]} и голый массив — возвращаем
   // либо {days:[отсортированные уникальные 0..6]}, либо null. Пустой набор = нет повтора.
   function normRepeat(r){
@@ -982,6 +1115,12 @@
     if(!out.length) return null;
     return { days: out.sort(function(a,b){ return a-b; }) };
   }
+  // Нормализация места дела: принимаем только валидную форму {lat,lon,label},
+  // addr при отсутствии — тот же label. Всё остальное (включая undefined) → null.
+  function normLoc(loc){
+    if(!loc || typeof loc.lat!=="number" || typeof loc.lon!=="number" || typeof loc.label!=="string") return null;
+    return { lat:loc.lat, lon:loc.lon, label:loc.label, addr:(typeof loc.addr==="string"? loc.addr : loc.label) };
+  }
   (function migrate(){
     var cur = 0;
     try{ cur = parseInt(localStorage.getItem("superday_schema")||"0",10) || 0; }catch(e){ cur = 0; }
@@ -992,6 +1131,7 @@
     // v4: поле defer ("ГГГГ-ММ-ДД" | null) — дело отложено на этот день.
     // v5: поле repeat ({days:[0..6]} | null) — регулярное дело; doneOn — день отметки
     //     «выполнено» (нужен, чтобы завтра регулярное дело само стало невыполненным).
+    // v6: поле loc ({lat,lon,label,addr} | null) — место дела для «Карты дел».
     try{
       tasks = (tasks||[]).map(function(t){
         var tm = (typeof t.time==="string" && /^\d{2}:\d{2}$/.test(t.time)) ? t.time : null;
@@ -999,9 +1139,10 @@
         var df = (typeof t.defer==="string" && /^\d{4}-\d{2}-\d{2}$/.test(t.defer)) ? t.defer : null;
         var rp = normRepeat(t.repeat);
         var dn = (typeof t.doneOn==="string" && /^\d{4}-\d{2}-\d{2}$/.test(t.doneOn)) ? t.doneOn : null;
+        var lc = normLoc(t.loc);
         return { id: t.id || ("t"+Math.random().toString(36).slice(2)),
                  text: String(t.text||""), urgent: !!t.urgent, important: !!t.important, done: !!t.done,
-                 time: tm, dur: du, defer: df, repeat: rp, doneOn: dn,
+                 time: tm, dur: du, defer: df, repeat: rp, doneOn: dn, loc: lc,
                  remindedOn: (typeof t.remindedOn==="string"? t.remindedOn : null) };
       });
     }catch(e){}
@@ -1487,6 +1628,18 @@
         if(isDeferred(t)) pickDefer(t);            // уже перенесено — выбор дня
         else { setDefer(t, tomorrowKey()); toast("→ Завтра: "+t.text); }
       });
+      var lc = document.createElement("button"); lc.type="button";
+      lc.className = "tloc" + (t.loc ? "" : " empty");
+      if(t.loc){
+        lc.textContent = "📍 "+t.loc.label;
+        lc.title = (t.loc.addr && t.loc.addr!==t.loc.label ? t.loc.addr+" · " : "")+"Нажми, чтобы изменить место";
+        lc.setAttribute("aria-label","Место: "+t.loc.label+". Нажми, чтобы изменить.");
+      } else {
+        lc.textContent = "＋место";
+        lc.title = "Задать место дела — появится на карте дел";
+        lc.setAttribute("aria-label","Задать место дела");
+      }
+      lc.addEventListener("click", function(){ editTaskLoc(t); });
       var del = document.createElement("button"); del.className="del"; del.type="button";
       del.setAttribute("aria-label","Удалить"); del.innerHTML="&times;";
       del.addEventListener("click", function(){ tasks = tasks.filter(function(x){return x.id!==t.id;}); save(); render(); });
@@ -1506,7 +1659,7 @@
       // Бейджи живут отдельной строкой: иначе на узком экране текст дела
       // сжимается в столбик из двух букв, а он тут главное.
       var meta = document.createElement("span"); meta.className="tmeta";
-      meta.appendChild(tm); meta.appendChild(dr); meta.appendChild(rp); meta.appendChild(df);
+      meta.appendChild(tm); meta.appendChild(dr); meta.appendChild(rp); meta.appendChild(df); meta.appendChild(lc);
       li.appendChild(meta);
       li.appendChild(del);
       if(!plan){
@@ -1555,6 +1708,105 @@
     }, 60);
   }
 
+  // ===== Карта дел: рендер секции панели =====
+  // Порядок точек — тот же planOrder(), что строит ol.plan: карта не заводит
+  // вторую систему истины о порядке дня (волна 14 уже отказалась от этого для
+  // карточной раскладки списка). Секция изолирована и ничего не меняет в
+  // renderPlan()/planOrder — только читает их результат.
+  var QCOLOR = {1:"var(--q1)", 2:"var(--q2)", 3:"var(--q3)", 4:"var(--q4)"};
+  var mapState = { map:null, layer:null };
+  function tasksForMap(){ return planOrder().filter(function(t){ return t.loc && !t.done; }); }
+  function renderMapCard(){
+    var empty=document.getElementById("mapEmpty"), go=document.getElementById("mapGoBtn"),
+        view=document.getElementById("mapView"), note=document.getElementById("mapNote");
+    if(!empty || !go || !view) return;
+    var pts = tasksForMap();
+    if(pts.length<2){
+      empty.style.display="block"; go.hidden=true; view.hidden=true; if(note) note.textContent="";
+      return;
+    }
+    empty.style.display="none";
+    if(view.hidden){ go.hidden=false; go.textContent="Показать путь по "+pts.length+" местам"; }
+    else if(mapState.map){ buildMapView(pts); }     // карта уже открыта — обновим при смене мест
+  }
+  function openMap(){
+    var pts = tasksForMap(); if(pts.length<2) return;
+    var view=document.getElementById("mapView"), go=document.getElementById("mapGoBtn");
+    view.hidden=false; go.hidden=true;
+    loadLeaflet(function(){ buildMapView(pts); }, function(){
+      view.hidden=true; go.hidden=false;
+      var note=document.getElementById("mapNote");
+      if(note){ note.textContent="Карту не загрузил — сеть подвела. Места остаются в списке дел."; note.className="map-note warn"; }
+    });
+  }
+  function loadLeaflet(ok, fail){
+    if(window.L){ ok(); return; }
+    if(loadLeaflet._q){ loadLeaflet._q.push({ok:ok,fail:fail}); return; }
+    loadLeaflet._q = [{ok:ok,fail:fail}];
+    var s=document.createElement("script");
+    s.src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    s.onload=function(){ var q=loadLeaflet._q||[]; loadLeaflet._q=null; q.forEach(function(p){ p.ok(); }); };
+    s.onerror=function(){ var q=loadLeaflet._q||[]; loadLeaflet._q=null; q.forEach(function(p){ if(p.fail) p.fail(); }); };
+    document.head.appendChild(s);
+  }
+  function mapPopup(t, idx, color){
+    var wrap=document.createElement("div"); wrap.className="mp-pop";
+    var num=document.createElement("span"); num.className="mp-num"; num.style.background=color; num.textContent=String(idx+1);
+    var text=document.createElement("span"); text.className="mp-text"; text.textContent=t.text;
+    wrap.appendChild(num); wrap.appendChild(text);
+    if(t.time){ var tm=document.createElement("span"); tm.className="mp-time"; tm.textContent=t.time; wrap.appendChild(tm); }
+    var addr=document.createElement("span"); addr.className="mp-addr"; addr.textContent=t.loc.addr||t.loc.label;
+    wrap.appendChild(addr);
+    var nav=document.createElement("a"); nav.className="mp-nav"; nav.target="_blank"; nav.rel="noopener";
+    nav.href="https://www.google.com/maps/dir/?api=1&destination="+t.loc.lat+","+t.loc.lon;
+    nav.textContent="Проложить туда →"; wrap.appendChild(nav);
+    return wrap;
+  }
+  function buildMapView(pts){
+    var view=document.getElementById("mapView"), note=document.getElementById("mapNote");
+    if(!view || !window.L) return;
+    if(!mapState.map){
+      mapState.map = L.map(view, { attributionControl:true });
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png", {
+        subdomains:"abcd", maxZoom:19,
+        attribution:'&copy; OpenStreetMap, &copy; CARTO'
+      }).addTo(mapState.map);
+      mapState.layer = L.layerGroup().addTo(mapState.map);
+    } else {
+      mapState.layer.clearLayers();
+    }
+    if(note){ note.textContent="Строю путь…"; note.className="map-note"; }
+    buildRoute(pts, function(route){
+      mapState.layer.clearLayers();
+      var bounds=[];
+      pts.forEach(function(t, i){
+        var color = QCOLOR[quadOf(t)] || "var(--gold)";
+        var icon = L.divIcon({ className:"mp-marker-wrap", html:'<div class="mp-marker" style="background:'+color+'">'+(i+1)+'</div>', iconSize:[26,26], iconAnchor:[13,13] });
+        var mk = L.marker([t.loc.lat, t.loc.lon], { icon:icon }).addTo(mapState.layer);
+        mk.bindPopup(mapPopup(t, i, color));
+        mk.on("click", function(){ spotTask(t.id); });
+        bounds.push([t.loc.lat, t.loc.lon]);
+      });
+      if(route){
+        var style = route.mode==="osrm" ? { color:"#C9A96A", weight:3, opacity:.85 }
+                                         : { color:"#C9A96A", weight:2, opacity:.6, dashArray:"2 8" };
+        L.polyline(route.coords, style).addTo(mapState.layer);
+        if(route.coords.length) bounds = route.coords;
+        if(note){
+          if(route.mode==="osrm"){
+            note.textContent = "Путь собран — "+pts.length+" мест, "+route.km+" км"+(route.mins!==null?(", ~"+route.mins+" мин в пути"):"");
+            note.className="map-note";
+          } else {
+            note.textContent = route.km+" км по прямой, без учёта дорог — путь по дорогам сейчас недоступен";
+            note.className="map-note warn";
+          }
+        }
+      } else if(note){ note.textContent=""; }
+      if(bounds.length){ try{ mapState.map.fitBounds(bounds, {padding:[26,26]}); }catch(e){} }
+      setTimeout(function(){ if(mapState.map) mapState.map.invalidateSize(); }, 60);
+    });
+  }
+
   function render(){
     // очистить квадранты
     document.querySelectorAll(".quad").forEach(function(q){
@@ -1585,6 +1837,7 @@
     renderStats();
     renderPlan();
     renderFocusTimer();
+    renderMapCard();
     if(typeof updatePanelDot==="function") updatePanelDot();
   }
 
@@ -2325,6 +2578,84 @@
     var num=parseFloat((ans.match(/[\d.,]+/)||["0"])[0].replace(",","."));
     if(!num || num<0){ toast("Введи число"); return; }
     c.fuel={ amount:Math.round(num*10)/10, unit:unit }; saveDayCtx(c); render(); toast("Дорога: "+c.fuel.amount+" "+unit);
+  }
+
+  // ===== Карта дел: места задач, геокод, путь =====
+  // Тот же принцип, что у погоды: только НАСТОЯЩИЕ данные, найденное — всегда
+  // подтверждается пользователем, недоступность сервиса — честный текст, не тишина.
+  var GEOCACHE_KEY = "superday_geocache_v1";
+  function geoCacheKey(q){ return String(q||"").trim().toLowerCase().replace(/\s+/g," "); }
+  function loadGeoCache(){ try{ return JSON.parse(localStorage.getItem(GEOCACHE_KEY)||"{}")||{}; }catch(e){ return {}; } }
+  function saveGeoCache(c){ try{ localStorage.setItem(GEOCACHE_KEY, JSON.stringify(c)); }catch(e){} }
+  function geocodePlace(query, cb){
+    var key = geoCacheKey(query);
+    if(!key){ cb(null); return; }
+    var cache = loadGeoCache();
+    if(cache[key]){ cb(cache[key]); return; }
+    var url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=" + encodeURIComponent(query);
+    fetch(url, { headers: { "Accept":"application/json" } })
+      .then(function(r){ return r.json(); })
+      .then(function(arr){
+        var hit = arr && arr[0];
+        if(!hit){ cb(null); return; }
+        var found = { lat:+hit.lat, lon:+hit.lon, addr: hit.display_name || query };
+        cache[key] = found; saveGeoCache(cache);
+        cb(found);
+      })
+      .catch(function(){ cb(undefined); });
+  }
+  function editTaskLoc(t){
+    var cur = t.loc ? (t.loc.label || t.loc.addr || "") : "";
+    var ans = window.prompt("Место дела — адрес или название (например «Тверская 1, Москва» или «Офис, ул. Ленина 5»).\n\nОставь пустым, чтобы убрать место.", cur);
+    if(ans===null) return;
+    ans = ans.trim();
+    if(ans===""){ t.loc = null; save(); render(); return; }
+    toast("Ищу место…");
+    geocodePlace(ans, function(found){
+      if(found===undefined){ toast("Сеть недоступна — попробуй позже"); return; }
+      if(found===null){ toast("Это место не нашёл — попробуй проще: «улица, город»"); return; }
+      var ok = window.confirm("Нашёл: " + found.addr + " — сохранить как место дела?");
+      if(!ok){ toast("Не сохранил — попробуй ввести точнее"); return; }
+      var label = ans.split(",")[0].trim().slice(0,40) || ans.slice(0,40);
+      t.loc = { lat:found.lat, lon:found.lon, label:label, addr:found.addr };
+      save(); render(); toast("Место сохранено: " + label);
+    });
+  }
+  function haversineKm(a, b){
+    var R=6371, dLat=(b.lat-a.lat)*Math.PI/180, dLon=(b.lon-a.lon)*Math.PI/180;
+    var la1=a.lat*Math.PI/180, la2=b.lat*Math.PI/180;
+    var h=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)*Math.sin(dLon/2);
+    return R*2*Math.atan2(Math.sqrt(h), Math.sqrt(1-h));
+  }
+  var ROUTECACHE_KEY = "superday_routecache_v1";
+  function routeCacheKey(pts){
+    var day = new Date().toDateString();
+    return day + "|" + pts.map(function(p){ return p.lat.toFixed(4)+","+p.lon.toFixed(4); }).join(";");
+  }
+  function loadRouteCache(){ try{ return JSON.parse(localStorage.getItem(ROUTECACHE_KEY)||"{}")||{}; }catch(e){ return {}; } }
+  function saveRouteCache(c){ try{ localStorage.setItem(ROUTECACHE_KEY, JSON.stringify(c)); }catch(e){} }
+  function buildFallbackRoute(pts){
+    var km=0; for(var i=1;i<pts.length;i++){ km += haversineKm(pts[i-1], pts[i]); }
+    return { coords: pts.map(function(p){ return [p.lat, p.lon]; }), km: Math.round(km*10)/10, mins:null, mode:"fallback" };
+  }
+  function buildRoute(tasksWithLoc, cb){
+    var pts = tasksWithLoc.map(function(t){ return t.loc; });
+    if(pts.length<2){ cb(null); return; }
+    var key = routeCacheKey(pts);
+    var cache = loadRouteCache();
+    if(cache[key]){ cb(cache[key]); return; }
+    var coordsStr = pts.map(function(p){ return p.lon+","+p.lat; }).join(";");
+    var url = "https://router.project-osrm.org/route/v1/driving/" + coordsStr + "?overview=full&geometries=geojson";
+    fetch(url)
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        var route = j && j.routes && j.routes[0];
+        if(!route){ var fb=buildFallbackRoute(pts); cache[key]=fb; saveRouteCache(cache); cb(fb); return; }
+        var coords = route.geometry.coordinates.map(function(c){ return [c[1], c[0]]; });
+        var result = { coords:coords, km: Math.round(route.distance/100)/10, mins: Math.round(route.duration/60), mode:"osrm" };
+        cache[key]=result; saveRouteCache(cache); cb(result);
+      })
+      .catch(function(){ var fb=buildFallbackRoute(pts); cb(fb); });
   }
 
   // Вердикт дня — по РЕАЛЬНОЙ нагрузке (дела, бюджет, наложения, контекст).
@@ -3168,6 +3499,11 @@
     });
   })();
 
+  (function(){
+    var btn=document.getElementById("mapGoBtn");
+    if(btn) btn.addEventListener("click", openMap);
+  })();
+
   // ================= Живые напоминания о делах со временем =================
   // Работает, пока открыта вкладка: когда наступает время дела — уведомление
   // (если разрешено), голос и подсветка. Фоновые push при закрытом приложении —
@@ -3391,6 +3727,28 @@
     T("plural", function(){ return plural(1,["дело","дела","дел"])==="дело" && plural(5,["дело","дела","дел"])==="дел"; });
     T("fmtRepeat", function(){ return fmtRepeat({days:[0,1,2,3,4,5,6]})==="каждый день"; });
 
+    G("Карта дел");
+    // Никаких реальных сетевых вызовов — только чистая математика/нормализация.
+    T("normLoc: валидное место проходит, addr по умолчанию = label", function(){
+      return eq(normLoc({lat:55.75,lon:37.61,label:"Офис"}), {lat:55.75,lon:37.61,label:"Офис",addr:"Офис"});
+    });
+    T("normLoc: отсутствующее/битое место → null", function(){
+      return normLoc(undefined)===null && normLoc(null)===null && normLoc({lat:"55",lon:37,label:"Х"})===null;
+    });
+    T("geoCacheKey: регистр и пробелы не влияют на ключ", function(){
+      return geoCacheKey("  Тверская   улица, Москва ")===geoCacheKey("тверская улица, москва");
+    });
+    T("geoCacheKey: разные адреса — разные ключи", function(){
+      return geoCacheKey("Тверская, Москва")!==geoCacheKey("Невский, СПб");
+    });
+    T("haversineKm: расстояние точки до самой себя = 0", function(){
+      return haversineKm({lat:55.75,lon:37.61},{lat:55.75,lon:37.61})===0;
+    });
+    T("haversineKm: Москва—Петербург ≈ 600–670 км", function(){
+      var km=haversineKm({lat:55.7558,lon:37.6173},{lat:59.9311,lon:30.3609});
+      return km>600 && km<670;
+    });
+
     G("Целостность DOM");
     // Самая опасная поломка этой волны — переезд секций в панель: узел уехал,
     // а скрипт продолжает искать его по id. Проверяем сам себя: вытаскиваем из
@@ -3463,6 +3821,7 @@
   var PANEL_KEY = "superday_panel_v1";
   var PANEL_SECS = [
     { id:"matrix", ic:"🧭", name:"Разбор по важности" },
+    { id:"map",    ic:"🗺", name:"Карта дел" },
     { id:"remind", ic:"🔔", name:"Напоминания и звук" },
     { id:"voice",  ic:"🎙", name:"Голос" },
     { id:"stats",  ic:"📊", name:"Неделя" },
@@ -3588,6 +3947,8 @@
     var cnt=[];
     document.querySelectorAll(".quad [data-cnt]").forEach(function(c){ cnt.push(c.textContent||"0"); });
     note("matrix", cnt.length ? cnt.join(" · ") : "");
+    var locN = tasks.filter(function(t){ return t.loc && !t.done; }).length;
+    note("map", locN ? (locN+" "+plural(locN,["место","места","мест"])) : "пока нет мест");
     var remOn=false;
     try{ remOn = localStorage.getItem("superday_remind")==="1"; }catch(e){}
     var muted=false;
