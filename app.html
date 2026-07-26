@@ -361,8 +361,34 @@
   .tdef:hover{opacity:1; color:var(--champagne); border-style:solid}
   .tdef.on{opacity:1; color:#0F1014; border-color:transparent; border-style:solid;
     background:linear-gradient(180deg,#9aa0ab,#6f747e)}
-  .task.deferred .txt{opacity:.5}
-  .task.deferred .ttime,.task.deferred .tdur{opacity:.35}
+  .task.deferred .txt,.task.offday .txt{opacity:.5}
+  .task.deferred .ttime,.task.deferred .tdur,
+  .task.offday .ttime,.task.offday .tdur{opacity:.35}
+
+  /* ===== Онбординг первого экрана (показывается один раз) ===== */
+  .onboard{margin:0 0 18px; border:1px solid var(--hair); border-radius:16px; padding:16px 18px;
+    background:linear-gradient(180deg,rgba(28,29,35,.62),rgba(18,19,24,.62))}
+  .ob-head{font-size:15px; font-weight:700; color:var(--champagne); letter-spacing:.2px}
+  .ob-steps{list-style:none; margin:11px 0 0; padding:0; display:flex; flex-direction:column; gap:7px}
+  .ob-step{display:block; width:100%; text-align:left; font-family:inherit; font-size:13px; line-height:1.55;
+    color:var(--text-dim); background:none; border:0; padding:0}
+  .ob-step b{color:var(--champagne); margin-right:6px}
+  button.ob-step{cursor:pointer; transition:.15s}
+  button.ob-step:hover{color:var(--text)}
+  .ob-row{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px}
+  .ob-close{cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:700; color:#141414;
+    background:var(--grad-gold); border:0; border-radius:999px; padding:8px 16px; transition:.2s}
+  .ob-close:hover{filter:brightness(1.06)}
+  .ob-note{font-size:11.5px; color:var(--text-muted)}
+
+  /* ===== Регулярное дело (повтор по дням недели) ===== */
+  .trep{flex:0 0 auto; cursor:pointer; font-family:inherit; font-size:11px; font-weight:600; white-space:nowrap;
+    color:var(--text-muted); background:none; border:1px solid var(--hair-soft); border-style:dashed;
+    border-radius:999px; padding:3px 8px; margin-top:1px; opacity:.5; transition:.15s}
+  .trep:hover{opacity:1; color:var(--champagne); border-style:solid}
+  .trep:not(.empty){opacity:.95; color:var(--champagne); border-style:solid; border-color:var(--hair)}
+  .trep.off{opacity:.45; color:var(--text-muted); border-style:dashed}
+  .trep.off:hover{opacity:1}
   .ds-unload{margin-top:9px; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:700; color:#141414;
     background:var(--grad-gold); border:0; border-radius:999px; padding:9px 16px; transition:.2s}
   .ds-unload:hover{filter:brightness(1.06)}
@@ -455,13 +481,26 @@
     <p>Впиши дело и нажми «Добавить». Или нажми 🎙 и скажи вслух — оно появится само. Настраивать ничего не нужно.</p>
   </section>
 
+  <section class="onboard" id="onboard" hidden aria-label="Как это работает">
+    <div class="ob-head">Три шага — и день разложен</div>
+    <ol class="ob-steps">
+      <li><button type="button" class="ob-step" id="obStep1"><b>1.</b> Впиши дело в поле ниже</button></li>
+      <li><span class="ob-step ob-static"><b>2.</b> Или нажми 🎙 и скажи вслух — можно сразу «в 15:00» или «каждый день»</span></li>
+      <li><span class="ob-step ob-static"><b>3.</b> Нажми «Готово» в карточке «Начни с этого» — и день сдвинулся</span></li>
+    </ol>
+    <div class="ob-row">
+      <button type="button" class="ob-close" id="obClose">Понятно</button>
+      <span class="ob-note">Настраивать нечего · данные остаются в этом браузере</span>
+    </div>
+  </section>
+
   <section class="composer" aria-label="Добавить задачу">
     <div class="row1">
       <input type="text" id="taskInput" placeholder="Назови дело: например, «позвонить маме»…" autocomplete="off" />
       <button class="mic-btn" id="micBtn" type="button" title="Нажми и скажи дело" aria-label="Сказать дело голосом">&#127908;</button>
       <button class="add-btn" id="addBtn" type="button">Добавить</button>
     </div>
-    <div class="composer-help">Одно дело — одна строка. Нажми <b>Добавить</b> или <b>🎙</b> и продиктуй. Скажи время прямо в деле — «позвонить маме <b>в 15:00</b>» — и оно встанет в расписание. Флажки ниже — по желанию.</div>
+    <div class="composer-help">Одно дело — одна строка. Нажми <b>Добавить</b> или <b>🎙</b> и продиктуй. Скажи время прямо в деле — «позвонить маме <b>в 15:00</b>» — и оно встанет в расписание. Повтор тоже понимает: «зарядка <b>каждый день</b> в 7 утра». Флажки ниже — по желанию.</div>
     <div class="toggles">
       <span class="tg u" id="tgUrgent" role="button" tabindex="0" aria-pressed="false">🔥 Срочно</span>
       <span class="tg i" id="tgImportant" role="button" tabindex="0" aria-pressed="false">⭐ Важно</span>
@@ -622,7 +661,23 @@
   try{ tasks = JSON.parse(localStorage.getItem(STORE_KEY) || "[]") || []; }catch(e){ tasks = []; }
 
   // ===== Версия схемы данных + миграции (на будущее, чтобы не терять данные) =====
-  var SCHEMA = 4;
+  var SCHEMA = 5;
+  // Нормализация повтора: принимаем и {days:[...]} и голый массив — возвращаем
+  // либо {days:[отсортированные уникальные 0..6]}, либо null. Пустой набор = нет повтора.
+  function normRepeat(r){
+    var src = null;
+    if(r && Object.prototype.toString.call(r.days)==="[object Array]") src = r.days;
+    else if(Object.prototype.toString.call(r)==="[object Array]") src = r;
+    if(!src) return null;
+    var seen={}, out=[];
+    for(var i=0;i<src.length;i++){
+      var d = parseInt(src[i],10);
+      if(isNaN(d) || d<0 || d>6 || seen[d]) continue;
+      seen[d]=true; out.push(d);
+    }
+    if(!out.length) return null;
+    return { days: out.sort(function(a,b){ return a-b; }) };
+  }
   (function migrate(){
     var cur = 0;
     try{ cur = parseInt(localStorage.getItem("superday_schema")||"0",10) || 0; }catch(e){ cur = 0; }
@@ -631,14 +686,19 @@
     // v2: поле time ("ЧЧ:ММ" | null) и remindedOn (день последнего напоминания).
     // v3: поле dur (длительность в минутах | null) — таймбоксинг.
     // v4: поле defer ("ГГГГ-ММ-ДД" | null) — дело отложено на этот день.
+    // v5: поле repeat ({days:[0..6]} | null) — регулярное дело; doneOn — день отметки
+    //     «выполнено» (нужен, чтобы завтра регулярное дело само стало невыполненным).
     try{
       tasks = (tasks||[]).map(function(t){
         var tm = (typeof t.time==="string" && /^\d{2}:\d{2}$/.test(t.time)) ? t.time : null;
         var du = (typeof t.dur==="number" && t.dur>0 && t.dur<=1440) ? Math.round(t.dur) : null;
         var df = (typeof t.defer==="string" && /^\d{4}-\d{2}-\d{2}$/.test(t.defer)) ? t.defer : null;
+        var rp = normRepeat(t.repeat);
+        var dn = (typeof t.doneOn==="string" && /^\d{4}-\d{2}-\d{2}$/.test(t.doneOn)) ? t.doneOn : null;
         return { id: t.id || ("t"+Math.random().toString(36).slice(2)),
                  text: String(t.text||""), urgent: !!t.urgent, important: !!t.important, done: !!t.done,
-                 time: tm, dur: du, defer: df, remindedOn: (typeof t.remindedOn==="string"? t.remindedOn : null) };
+                 time: tm, dur: du, defer: df, repeat: rp, doneOn: dn,
+                 remindedOn: (typeof t.remindedOn==="string"? t.remindedOn : null) };
       });
     }catch(e){}
     try{ localStorage.setItem("superday_schema", String(SCHEMA)); }catch(e){}
@@ -814,6 +874,122 @@
     if(h) return h+"ч";
     return m+"м";
   }
+  // ===== Регулярные дела: разбор «как часто» =====
+  // Возвращает {days:[0..6]} (0=Вс) либо null. Понимает пресеты и перечисление дней.
+  var DAY_SHORT = ["вс","пн","вт","ср","чт","пт","сб"];
+  var DAY_RE = [
+    { d:0, re:/воскресен|(?:^|[\s,])вс(?=[\s,]|$)/ },
+    { d:1, re:/понедельн|(?:^|[\s,])пн(?=[\s,]|$)/ },
+    { d:2, re:/вторник|вторн(?=[аи])|(?:^|[\s,])вт(?=[\s,]|$)/ },
+    { d:3, re:/сред[ауыое]|(?:^|[\s,])ср(?=[\s,]|$)/ },
+    { d:4, re:/четверг|(?:^|[\s,])чт(?=[\s,]|$)/ },
+    { d:5, re:/пятниц|(?:^|[\s,])пт(?=[\s,]|$)/ },
+    { d:6, re:/суббот|(?:^|[\s,])сб(?=[\s,]|$)/ }
+  ];
+  function parseRepeat(raw){
+    var s = " " + String(raw||"").toLowerCase().replace(/ё/g,"е") + " ";
+    if(!s.trim()) return null;
+    if(/кажд[а-я]*\s+день|ежедневн|всегда/.test(s)) return { days:[0,1,2,3,4,5,6] };
+    if(/будн|рабочи[а-я]*\s+дн/.test(s)) return { days:[1,2,3,4,5] };
+    if(/выходн/.test(s)) return { days:[0,6] };
+    var days=[];
+    DAY_RE.forEach(function(x){ if(x.re.test(s)) days.push(x.d); });
+    return normRepeat(days);
+  }
+  // Человеческая подпись повтора.
+  function fmtRepeat(rep){
+    var r = normRepeat(rep); if(!r) return "";
+    var d = r.days;
+    if(d.length===7) return "каждый день";
+    if(d.length===5 && d.join()==="1,2,3,4,5") return "по будням";
+    if(d.length===2 && d.join()==="0,6") return "по выходным";
+    // порядок недели с понедельника, воскресенье — в конец
+    var order = d.slice().sort(function(a,b){ return ((a+6)%7) - ((b+6)%7); });
+    return order.map(function(n){ return DAY_SHORT[n]; }).join(" ");
+  }
+  // Вырезание оборота повтора прямо из фразы («зарядка каждый день» → «зарядка»).
+  // Нарочно узкий список — чтобы «отчёт за понедельник» НЕ стало регулярным.
+  var REPEAT_PHRASES = [
+    { re:/(?:^|\s)кажд(?:ый|ые|ое)\s+день(?=\s|$)/i,        days:[0,1,2,3,4,5,6] },
+    { re:/(?:^|\s)ежедневно(?=\s|$)/i,                       days:[0,1,2,3,4,5,6] },
+    { re:/(?:^|\s)по\s+будням(?=\s|$)/i,                     days:[1,2,3,4,5] },
+    { re:/(?:^|\s)кажд(?:ый|ые)\s+будний\s+день(?=\s|$)/i,   days:[1,2,3,4,5] },
+    { re:/(?:^|\s)по\s+выходным(?=\s|$)/i,                   days:[0,6] },
+    { re:/(?:^|\s)кажд(?:ый|ую|ые)\s+(понедельник[а-я]*|вторник[а-я]*|сред[а-я]+|четверг[а-я]*|пятниц[а-я]+|суббот[а-я]+|воскресень[а-я]+)(?=\s|$)/i, days:null }
+  ];
+  function parseRepeatPhrase(raw){
+    var text = String(raw||"");
+    for(var i=0;i<REPEAT_PHRASES.length;i++){
+      var p = REPEAT_PHRASES[i];
+      var m = text.match(p.re);
+      if(!m) continue;
+      var days = p.days;
+      if(days===null){                     // «каждый вторник» — день из захвата
+        var r = parseRepeat(m[1]); if(!r) continue; days = r.days;
+      }
+      var clean = (text.slice(0, m.index) + " " + text.slice(m.index + m[0].length))
+                    .replace(/\s+/g," ").trim();
+      return { repeat: normRepeat(days), text: clean || text.trim() };
+    }
+    return { repeat:null, text:text.trim() };
+  }
+
+  // ===== Разбор дня, на который переносим дело =====
+  // Возвращает "ГГГГ-ММ-ДД" строго в будущем (не дальше года) либо null.
+  function parseDay(raw, baseDate){
+    var s = String(raw||"").toLowerCase().replace(/ё/g,"е").trim();
+    if(!s) return null;
+    var base = baseDate ? new Date(baseDate.getTime()) : new Date();
+    base.setHours(12,0,0,0);
+    function plus(n){ var d=new Date(base.getTime()); d.setDate(d.getDate()+n); return d; }
+    var d=null;
+    if(/^сегодня$/.test(s)) return null;                       // «сегодня» = снять перенос
+    else if(/^завтра$/.test(s)) d=plus(1);
+    else if(/^послезавтра$/.test(s)) d=plus(2);
+    if(!d){
+      var mn=s.match(/^через\s+(\d{1,3})\s*(?:дн|день|дня|дней)?/);
+      if(mn){ var n=+mn[1]; if(n>=1 && n<=366) d=plus(n); }
+    }
+    if(!d){
+      var iso=s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if(iso) d=new Date(+iso[1], +iso[2]-1, +iso[3], 12, 0, 0, 0);
+    }
+    if(!d){
+      var dm=s.match(/^(\d{1,2})[.\/](\d{1,2})(?:[.\/](\d{2,4}))?$/);
+      if(dm){
+        var yy = dm[3] ? (+dm[3] < 100 ? 2000 + +dm[3] : +dm[3]) : base.getFullYear();
+        d=new Date(yy, +dm[2]-1, +dm[1], 12, 0, 0, 0);
+        if(!dm[3] && d.getTime() <= base.getTime()) d.setFullYear(yy+1);   // ближайшее будущее
+      }
+    }
+    if(!d){                                    // название дня недели → ближайшее будущее
+      var rep=parseRepeat(s);
+      if(rep && rep.days.length===1){
+        var want=rep.days[0], cur=base.getDay();
+        var delta=(want - cur + 7) % 7; if(delta===0) delta=7;
+        d=plus(delta);
+      }
+    }
+    if(!d || isNaN(d.getTime())) return null;
+    d.setHours(12,0,0,0);
+    if(d.getTime() <= base.getTime()) return null;             // только будущее
+    var limit=new Date(base.getTime()); limit.setFullYear(limit.getFullYear()+1);
+    if(d.getTime() > limit.getTime()) return null;
+    return dayKeyOf(d);
+  }
+  // Подпись бейджа переноса: «завтра», «пн 28», «15 авг».
+  var MON_SHORT=["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"];
+  function fmtDefer(dateStr){
+    if(typeof dateStr!=="string" || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return "";
+    var p=dateStr.split("-"), d=new Date(+p[0], +p[1]-1, +p[2], 12,0,0,0);
+    var base=new Date(); base.setHours(12,0,0,0);
+    var diff=Math.round((d.getTime()-base.getTime())/86400000);
+    if(diff===1) return "завтра";
+    if(diff===2) return "послезавтра";
+    if(diff>=3 && diff<=6) return DAY_SHORT[d.getDay()]+" "+d.getDate();
+    return d.getDate()+" "+MON_SHORT[d.getMonth()];
+  }
+
   // Время окончания дела со стартом+длительностью → "ЧЧ:ММ" (в пределах суток).
   function endTime(t){
     var s=timeToMin(t.time); if(s===null || !validDur(t.dur)) return null;
@@ -893,15 +1069,24 @@
   function addTask(){
     var raw = input.value.trim();
     if(!raw) { input.focus(); return; }
-    var pd = parseDuration(raw);
-    var pt = parseTime(pd.text || raw);
-    var text = pt.text || pd.text || raw;
-    tasks.push({ id:uid(), text:text, urgent:pend.urgent, important:pend.important, done:false, time:pt.time, dur:pd.dur, defer:null, remindedOn:null });
-    if(pt.time || pd.dur){
-      var bits=[]; if(pt.time) bits.push("⏱ "+pt.time); if(pd.dur) bits.push("⏳ "+fmtDurShort(pd.dur));
-      toast(bits.join(" · ")+" · встало в расписание");
+    // Порядок разбора: повтор → длительность → время. Повтор снимаем первым,
+    // иначе «каждый день» мешает разбору времени.
+    var pr = parseRepeatPhrase(raw);
+    var pd = parseDuration(pr.text || raw);
+    var pt = parseTime(pd.text || pr.text || raw);
+    var text = pt.text || pd.text || pr.text || raw;
+    var task = { id:uid(), text:text, urgent:pend.urgent, important:pend.important, done:false,
+                 time:pt.time, dur:pd.dur, defer:null, repeat:pr.repeat, doneOn:null, remindedOn:null };
+    tasks.push(task);
+    if(pt.time || pd.dur || pr.repeat){
+      var bits=[];
+      if(pr.repeat) bits.push("🔁 "+fmtRepeat(pr.repeat));
+      if(pt.time) bits.push("⏱ "+pt.time);
+      if(pd.dur) bits.push("⏳ "+fmtDurShort(pd.dur));
+      toast(bits.join(" · ")+(isOffDay(task) ? " · сегодня не по расписанию" : " · встало в расписание"));
     }
     save();
+    if(typeof onboardFirstTask==="function") onboardFirstTask(task);
     input.value = "";
     pend = { urgent:false, important:false };
     tgU.setAttribute("aria-pressed","false"); tgI.setAttribute("aria-pressed","false");
@@ -921,10 +1106,11 @@
     tasks.forEach(function(t){
       var q = quadOf(t);
       var def = isDeferred(t);
-      if(!def) counts[q]++;              // счётчик квадранта = дела на сегодня
+      var off = !def && isOffDay(t);     // регулярное дело, но сегодня не его день
+      if(!def && !off) counts[q]++;      // счётчик квадранта = дела на сегодня
       var ul = document.querySelector('.quad[data-q="'+q+'"] ul.tasks');
       var li = document.createElement("li");
-      li.className = "task" + (t.done ? " done" : "") + (def ? " deferred" : "");
+      li.className = "task" + (t.done ? " done" : "") + (def ? " deferred" : "") + (off ? " offday" : "");
       var chk = document.createElement("span"); chk.className="chk"; chk.setAttribute("role","checkbox");
       chk.setAttribute("aria-checked", t.done?"true":"false"); chk.innerHTML = t.done ? "&#10003;" : "";
       chk.tabIndex = 0; chk.setAttribute("aria-label", "Отметить выполненной: "+t.text);
@@ -962,14 +1148,28 @@
         dr.setAttribute("aria-label","Задать длительность дела");
       }
       dr.addEventListener("click", function(){ editTaskDur(t); });
+      var rp = document.createElement("button"); rp.type="button";
+      var repLbl = fmtRepeat(t.repeat);
+      rp.className = "trep" + (repLbl ? "" : " empty") + (off ? " off" : "");
+      if(repLbl){
+        rp.textContent = "🔁 "+repLbl;
+        rp.title = (off ? "Сегодня не по расписанию — дело ждёт своего дня. " : "")+"Нажми, чтобы изменить повтор";
+        rp.setAttribute("aria-label","Повтор: "+repLbl+(off?", сегодня не по расписанию":"")+". Нажми, чтобы изменить.");
+      } else {
+        rp.textContent = "＋повтор";
+        rp.title = "Сделать дело регулярным — каждый день, по будням или в выбранные дни";
+        rp.setAttribute("aria-label","Сделать дело регулярным");
+      }
+      rp.addEventListener("click", function(){ editTaskRepeat(t); });
       var df = document.createElement("button"); df.type="button";
       df.className = "tdef" + (def ? " on" : "");
-      df.textContent = def ? "← сегодня" : "→ завтра";
-      df.title = def ? "Вернуть дело в сегодняшний день" : "Перенести на завтра — уйдёт из сегодняшнего маршрута и бюджета, но не потеряется";
-      df.setAttribute("aria-label", (def?"Вернуть сегодня: ":"Перенести на завтра: ")+t.text);
+      df.textContent = def ? ("→ "+(fmtDefer(t.defer)||"перенесено")) : "→ завтра";
+      df.title = def ? "Перенесено на "+t.defer+" · нажми, чтобы выбрать другой день или вернуть сегодня"
+                     : "Перенести на завтра — уйдёт из сегодняшнего маршрута и бюджета, но не потеряется";
+      df.setAttribute("aria-label", (def?"Перенесено на "+t.defer+". Нажми, чтобы выбрать другой день или вернуть сегодня: ":"Перенести на завтра: ")+t.text);
       df.addEventListener("click", function(){
-        setDefer(t, !isDeferred(t));
-        toast(isDeferred(t) ? "→ Завтра: "+t.text : "← Сегодня: "+t.text);
+        if(isDeferred(t)) pickDefer(t);            // уже перенесено — выбор дня
+        else { setDefer(t, tomorrowKey()); toast("→ Завтра: "+t.text); }
       });
       var del = document.createElement("button"); del.className="del"; del.type="button";
       del.setAttribute("aria-label","Удалить"); del.innerHTML="&times;";
@@ -977,7 +1177,7 @@
       var grip = document.createElement("span"); grip.className="grip"; grip.setAttribute("aria-hidden","true");
       grip.title="Перетащи в другой квадрант"; grip.innerHTML="&#9783;";
       grip.addEventListener("pointerdown", function(e){ startDrag(e, t, li); });
-      li.appendChild(chk); li.appendChild(tx); li.appendChild(tm); li.appendChild(dr); li.appendChild(df); li.appendChild(del); li.appendChild(grip);
+      li.appendChild(chk); li.appendChild(tx); li.appendChild(tm); li.appendChild(dr); li.appendChild(rp); li.appendChild(df); li.appendChild(del); li.appendChild(grip);
       ul.appendChild(li);
     });
     // счётчики + пустые состояния
@@ -1016,7 +1216,7 @@
       var card=document.getElementById("focusCard"); var id=card&&card.__id;
       if(!id) return;
       var t=tasks.filter(function(x){return x.id===id;})[0];
-      if(t && !t.done){ t.done=true; recordCompletion(); save(); render(); }
+      if(t && !t.done){ markDone(t); save(); render(); }
     });
   })();
 
@@ -1120,15 +1320,15 @@
     var done=document.getElementById("ftDone");
     if(done) done.addEventListener("click", function(){
       var id=focusState&&focusState.taskId; endFocus();
-      if(id){ var t=tasks.filter(function(x){return x.id===id;})[0]; if(t && !t.done){ t.done=true; recordCompletion(); save(); } }
+      if(id){ var t=tasks.filter(function(x){return x.id===id;})[0]; if(t && !t.done){ markDone(t); save(); } }
       render();
     });
   })();
 
   // ===== Выполнение задачи + учёт для статистики =====
   function toggleDone(t){
-    var was=t.done; t.done=!t.done;
-    if(!was && t.done) recordCompletion();
+    if(t.done){ t.done=false; t.doneOn=null; }
+    else { markDone(t); }
     save(); render();
   }
   function todayKey(){ var d=new Date(); function p(n){return n<10?"0"+n:""+n;} return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); }
@@ -1139,7 +1339,51 @@
   function dayKeyOf(d){ function p(n){return n<10?"0"+n:""+n;} return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); }
   function tomorrowKey(){ var d=new Date(); d.setDate(d.getDate()+1); return dayKeyOf(d); }
   function isDeferred(t){ return !!(t && typeof t.defer==="string" && t.defer > todayKey()); }
-  function isToday(t){ return !isDeferred(t); }
+  // ===== Регулярные дела =====
+  // Дело с повтором не копируется каждый день (это плодило бы объекты и путало
+  // статистику) — оно живёт одно, но в «не свои» дни недели просто не считается
+  // сегодняшним: тот же механизм, что у переноса. Отметка «выполнено» держится
+  // до конца дня (doneOn), а на следующий свой день снимается сама.
+  function repeatDays(t){
+    var r = t && t.repeat;
+    if(r && Object.prototype.toString.call(r.days)==="[object Array]" && r.days.length) return r.days;
+    return null;
+  }
+  function isRepeating(t){ return !!repeatDays(t); }
+  function isOffDay(t, d){
+    var days = repeatDays(t); if(!days) return false;
+    var wd = (d || new Date()).getDay();
+    return days.indexOf(wd) === -1;
+  }
+  function isToday(t){ return !isDeferred(t) && !isOffDay(t); }
+  // Новый день наступил — регулярное дело снова невыполненное.
+  function resetRepeats(){
+    var today=todayKey(), changed=false;
+    (tasks||[]).forEach(function(t){
+      if(isRepeating(t) && t.done && t.doneOn !== today){
+        t.done=false; t.doneOn=null; t.remindedOn=null; changed=true;
+      }
+    });
+    if(changed && typeof save==="function") save();
+    return changed;
+  }
+  // Отметка выполнения в одном месте — иначе doneOn забывается там, где done
+  // ставился вручную (карточка «Начни с этого», кнопка «Готово» таймера).
+  function markDone(t){
+    if(!t || t.done) return false;
+    t.done=true; t.doneOn=todayKey(); recordCompletion(); return true;
+  }
+  // Убрать выполненные, НЕ убивая правила повтора: регулярное дело остаётся и
+  // просто становится невыполненным. Иначе «Убрать выполненные» стирало бы зарядку.
+  function purgeDone(){
+    var removed=0;
+    tasks = (tasks||[]).filter(function(t){
+      if(!t.done) return true;
+      if(isRepeating(t)){ t.done=false; t.doneOn=null; t.remindedOn=null; return true; }
+      removed++; return false;
+    });
+    return removed;
+  }
   // Наступивший срок снимаем молча — дело просто возвращается в сегодняшний день.
   function clearStaleDefer(){
     var changed=false;
@@ -1147,11 +1391,51 @@
     if(changed && typeof save==="function") save();
     return changed;
   }
-  function setDefer(t, on){
+  // dateStr = "ГГГГ-ММ-ДД" (любая будущая дата) либо null — вернуть в сегодня.
+  // true/false принимаем для совместимости со старыми вызовами.
+  function setDefer(t, dateStr){
     if(!t) return;
-    t.defer = on ? tomorrowKey() : null;
-    if(on) t.remindedOn = null;      // завтра напомним заново
+    var d = (dateStr===true) ? tomorrowKey() : (dateStr || null);
+    if(d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) d = null;
+    t.defer = d;
+    if(d) t.remindedOn = null;      // в тот день напомним заново
     save(); render();
+  }
+  // Выбор дня переноса. Быстрый путь (клик по «→ завтра») сюда не заходит —
+  // диалог открывается только у уже перенесённого дела.
+  function pickDefer(t){
+    var ans = window.prompt(
+      "На какой день перенести «"+t.text+"»?\n\n"+
+      "Например: завтра · послезавтра · понедельник · через 3 дня · 28.07 · 2026-07-28\n"+
+      "Напиши «сегодня» или оставь пустым, чтобы вернуть дело в сегодняшний день.",
+      t.defer || "завтра");
+    if(ans===null) return;
+    ans = ans.trim();
+    if(ans==="" || /^сегодня$/i.test(ans)){ setDefer(t, null); toast("← Сегодня: "+t.text); return; }
+    var key = parseDay(ans);
+    if(!key){ toast("Не понял день — попробуй «завтра», «понедельник» или «28.07»"); return; }
+    setDefer(t, key);
+    toast("→ "+(fmtDefer(key)||key)+": "+t.text);
+  }
+  // Правка/снятие повтора. Пусто — сделать дело разовым.
+  function editTaskRepeat(t){
+    var cur = fmtRepeat(t.repeat);
+    var ans = window.prompt(
+      "Как часто повторять «"+t.text+"»?\n\n"+
+      "Например: каждый день · по будням · по выходным · пн ср пт\n"+
+      "Оставь пустым, чтобы сделать дело разовым.", cur);
+    if(ans===null) return;
+    ans = ans.trim();
+    if(ans===""){
+      if(!t.repeat){ return; }
+      t.repeat=null; save(); render(); toast("Повтор убран — дело разовое"); return;
+    }
+    var rep = parseRepeat(ans);
+    if(!rep){ toast("Не понял — попробуй «каждый день», «по будням» или «пн ср пт»"); return; }
+    t.repeat = rep;
+    t.doneOn = t.done ? (t.doneOn || todayKey()) : null;
+    save(); render();
+    toast("🔁 "+fmtRepeat(rep) + (isOffDay(t) ? " · сегодня не по расписанию" : ""));
   }
 
   function readStats(){ try{ return JSON.parse(localStorage.getItem("superday_stats_v1")||"{}")||{}; }catch(e){ return {}; } }
@@ -1232,11 +1516,66 @@
     var last=0;
     try{ last=parseInt(localStorage.getItem("superday_last_export")||"0",10)||0; }catch(e){ last=0; }
     var WEEK=7*24*60*60*1000, now=Date.now();
+    // Если браузер не выдал постоянное хранилище — честно говорим об этом:
+    // данные сайта могут быть вычищены при долгом простое (так делает, например, Safari).
+    var risky = (storagePersisted === false);
     if(!last || (now-last)>WEEK){
       el.hidden=false;
-      el.textContent = last ? "⚠ Давно не было резервной копии — сохрани в файл."
-                            : "⚠ Сделай первую резервную копию — сохрани данные в файл.";
+      el.textContent = (last ? "⚠ Давно не было резервной копии — сохрани в файл."
+                             : "⚠ Сделай первую резервную копию — сохрани данные в файл.")
+        + (risky ? " Браузер может очистить данные при долгом простое." : "");
+    } else if(risky){
+      el.hidden=false;
+      el.textContent = "⚠ Браузер может очистить данные при долгом простое — держи копию в файле.";
     } else { el.hidden=true; }
+  }
+
+  // ===== Онбординг первого экрана =====
+  // Показывается ровно один раз и только тому, у кого ещё ничего нет. Исчезает
+  // сам после первой добавленной задачи — объяснение не должно пережить первую
+  // победу. У существующих пользователей не появляется никогда.
+  var ONBOARD_KEY="superday_onboard_v1";
+  function onboardSeen(){ try{ return localStorage.getItem(ONBOARD_KEY)==="1"; }catch(e){ return true; } }
+  function onboardDone(){ try{ localStorage.setItem(ONBOARD_KEY,"1"); }catch(e){} }
+  function hideOnboard(){ var el=document.getElementById("onboard"); if(el){ el.hidden=true; } }
+  function initOnboard(){
+    var el=document.getElementById("onboard"); if(!el) return;
+    if(onboardSeen()) return;
+    if((tasks||[]).length){ onboardDone(); return; }   // не новичок — молча отмечаем
+    el.hidden=false;
+    var s1=document.getElementById("obStep1");
+    if(s1) s1.addEventListener("click", function(){ var i=document.getElementById("taskInput"); if(i) i.focus(); });
+    var cl=document.getElementById("obClose");
+    if(cl) cl.addEventListener("click", function(){ onboardDone(); hideOnboard(); });
+  }
+  // Первое дело добавлено: убрать карточку и один раз объяснить, что произошло.
+  function onboardFirstTask(task){
+    if(onboardSeen()) return;
+    onboardDone(); hideOnboard();
+    var QN={1:"Сделать сейчас",2:"Запланировать",3:"Быстро закрыть",4:"Отложить или убрать"};
+    setTimeout(function(){
+      toast("Дело попало в «"+QN[quadOf(task)]+"». Флажки 🔥/⭐ и перетаскивание меняют колонку.");
+    }, 900);
+  }
+
+  // ===== Постоянное хранилище =====
+  // Данные живут только в localStorage. Браузер вправе очистить их (Safari/iOS —
+  // после ~7 дней без визитов, любой браузер — при нехватке места). Просим
+  // постоянное хранилище, но только когда данные уже есть: иначе Firefox покажет
+  // системный запрос случайному посетителю, который ещё ничего не сделал.
+  var storagePersisted = null;          // null = неизвестно, true/false = ответ браузера
+  function askPersistentStorage(){
+    try{
+      if(!navigator.storage || !navigator.storage.persisted) return;
+      navigator.storage.persisted().then(function(p){
+        storagePersisted = !!p;
+        if(p || !navigator.storage.persist) { updateBackupRemind(); return; }
+        if((tasks||[]).length < 3){ updateBackupRemind(); return; }
+        return navigator.storage.persist().then(function(ok){
+          storagePersisted = !!ok; updateBackupRemind();
+        });
+      }).catch(function(){});
+    }catch(e){}
   }
 
   // Маршрут дня: выполненные — вниз; среди активных дела со временем идут первыми
@@ -1547,7 +1886,9 @@
   var LASTDAY_KEY="superday_lastday";
   function checkNewDay(){
     var bar=document.getElementById("rolloverBar"); if(!bar) return;
-    if(clearStaleDefer()) render();     // отложенные на сегодня — уже сегодняшние
+    var ch = clearStaleDefer();          // отложенные на сегодня — уже сегодняшние
+    if(resetRepeats()) ch = true;        // регулярные дела снова невыполненные
+    if(ch) render();
     var today=todayKey(), last=null;
     try{ last=localStorage.getItem(LASTDAY_KEY); }catch(e){ last=null; }
     if(!last){ try{ localStorage.setItem(LASTDAY_KEY, today); }catch(e){} return; }
@@ -1568,7 +1909,7 @@
     var primary=document.createElement("button"); primary.type="button"; primary.className="ro-primary";
     primary.textContent = done ? ("Перенести "+undone+", убрать выполненные") : "Начать новый день";
     primary.addEventListener("click", function(){
-      tasks = tasks.filter(function(t){return !t.done;});
+      purgeDone();                                          // регулярные не удаляем — сбрасываем
       tasks.forEach(function(t){ t.remindedOn=null; });    // сегодня напомним заново
       try{ localStorage.removeItem(DAYCTX_KEY); }catch(e){} // контекст — новый на новый день
       advanceDay(); save(); render();
@@ -1629,10 +1970,16 @@
   document.addEventListener("pointercancel", onUp);
 
   document.getElementById("clearDone").addEventListener("click", function(){
-    tasks = tasks.filter(function(t){return !t.done;}); save(); render();
+    var kept = tasks.filter(function(t){ return t.done && isRepeating(t); }).length;
+    purgeDone(); save(); render();
+    if(kept) toast("Регулярные дела остались — они вернутся в свой день");
   });
   document.getElementById("clearAll").addEventListener("click", function(){
-    if(tasks.length && confirm("Удалить все задачи? Это действие нельзя отменить.")){ tasks=[]; save(); render(); }
+    if(!tasks.length) return;
+    var rep = tasks.filter(isRepeating).length;
+    var msg = "Удалить все задачи? Это действие нельзя отменить."
+      + (rep ? "\n\nСреди них " + rep + " " + plural(rep,["регулярное дело","регулярных дела","регулярных дел"]) + " — правила повтора тоже удалятся." : "");
+    if(confirm(msg)){ tasks=[]; save(); render(); }
   });
 
   // Экспорт плана: собрать текст в порядке маршрута дня
@@ -1773,7 +2120,9 @@
           var tm=(typeof t.time==="string" && /^\d{2}:\d{2}$/.test(t.time))?t.time:null;
           var du=(typeof t.dur==="number" && t.dur>0 && t.dur<=1440)?Math.round(t.dur):null;
           var df=(typeof t.defer==="string" && /^\d{4}-\d{2}-\d{2}$/.test(t.defer))?t.defer:null;
-          tasks.push({ id:uid(), text:t.text.trim(), urgent:!!t.urgent, important:!!t.important, done:!!t.done, time:tm, dur:du, defer:df, remindedOn:null });
+          var rp=normRepeat(t.repeat);
+          var dn=(typeof t.doneOn==="string" && /^\d{4}-\d{2}-\d{2}$/.test(t.doneOn))?t.doneOn:null;
+          tasks.push({ id:uid(), text:t.text.trim(), urgent:!!t.urgent, important:!!t.important, done:!!t.done, time:tm, dur:du, defer:df, repeat:rp, doneOn:dn, remindedOn:null });
           haveT[key]=true; addedT++;
         });
         var haveN={}; notes.forEach(function(n){ haveN[(n.text||"").trim().toLowerCase()]=true; });
@@ -1957,14 +2306,15 @@
       var clean=text.replace(/(^|\s)(это\s+)?(очень\s+)?(срочно|срочная|срочное|горит|важно|важная|важное)(\s|$)/gi," ").replace(/\s+/g," ").trim();
       clean=clean.replace(/^(добавь|запиши|создай|задачу|задача|напомни мне|напомни)\s+/i,"").trim();
       if(!clean){ awake=false; setStatus("Не расслышал задачу. Скажи «<b>"+wname()+"</b>» и повтори."); return; }
-      var pd=parseDuration(clean); var pt=parseTime(pd.text||clean);
-      var tmClean = pt.text || pd.text || clean; var tm = pt.time; var du = pd.dur;
-      tasks.push({ id:uid(), text:cap(tmClean), urgent:urgent, important:important, done:false, time:tm, dur:du, defer:null, remindedOn:null });
+      var pr=parseRepeatPhrase(clean);
+      var pd=parseDuration(pr.text||clean); var pt=parseTime(pd.text||pr.text||clean);
+      var tmClean = pt.text || pd.text || pr.text || clean; var tm = pt.time; var du = pd.dur; var rp = pr.repeat;
+      tasks.push({ id:uid(), text:cap(tmClean), urgent:urgent, important:important, done:false, time:tm, dur:du, defer:null, repeat:rp, doneOn:null, remindedOn:null });
       save(); render();
       var q=quadOf({urgent:urgent,important:important});
       var QN={1:"сделать сейчас",2:"запланировать",3:"быстро закрыть",4:"на потом"};
-      speak("Добавил: "+tmClean+(tm?", в "+tm.replace(":"," "):"")+(du?", "+fmtDur(du):""));
-      setStatus("Добавлено: «<b>"+escapeHtml(cap(tmClean))+"</b>»"+(tm?" ⏱ "+tm:"")+(du?" ⏳ "+fmtDurShort(du):"")+" → "+QN[q]+". Скажи «<b>"+wname()+"</b>» для следующей.");
+      speak("Добавил: "+tmClean+(rp?", "+fmtRepeat(rp):"")+(tm?", в "+tm.replace(":"," "):"")+(du?", "+fmtDur(du):""));
+      setStatus("Добавлено: «<b>"+escapeHtml(cap(tmClean))+"</b>»"+(rp?" 🔁 "+escapeHtml(fmtRepeat(rp)):"")+(tm?" ⏱ "+tm:"")+(du?" ⏳ "+fmtDurShort(du):"")+" → "+QN[q]+". Скажи «<b>"+wname()+"</b>» для следующей.");
       awake=false;
     }
 
@@ -2069,7 +2419,7 @@
       var key=t.text.trim().toLowerCase(); if(!key||have[key]) return;
       var tm=(typeof t.time==="string" && /^\d{2}:\d{2}$/.test(t.time))?t.time:null;
       var du=(typeof t.dur==="number" && t.dur>0 && t.dur<=1440)?Math.round(t.dur):null;
-      tasks.push({ id:uid(), text:t.text.trim(), urgent:!!t.urgent, important:!!t.important, done:false, time:tm, dur:du, defer:null, remindedOn:null });
+      tasks.push({ id:uid(), text:t.text.trim(), urgent:!!t.urgent, important:!!t.important, done:false, time:tm, dur:du, defer:null, repeat:normRepeat(t.repeat), doneOn:null, remindedOn:null });
       have[key]=true; added++;
     });
     save(); render();
@@ -2083,7 +2433,7 @@
       if(!tasks.length){ alert("Сначала добавь дела — потом их можно сохранить как шаблон дня."); return; }
       var name=prompt("Название шаблона (например «Рабочий день», «Тренировка»):","");
       if(name===null) return; name=name.trim(); if(!name) return;
-      var snap=tasks.map(function(t){ return { text:t.text, urgent:!!t.urgent, important:!!t.important, time:t.time||null, dur:(validDur(t.dur)?t.dur:null) }; });
+      var snap=tasks.map(function(t){ return { text:t.text, urgent:!!t.urgent, important:!!t.important, time:t.time||null, dur:(validDur(t.dur)?t.dur:null), repeat:normRepeat(t.repeat) }; });
       var list=readTemplates();
       list.push({ id:"tpl"+Date.now()+"_"+list.length, name:name, tasks:snap });
       writeTemplates(list); renderTemplates();
@@ -2174,7 +2524,9 @@
       var nm=nowMin(), t2=todayKey(), any=false;
       (tasks||[]).forEach(function(t){
         if(t.done) return;
-        if(typeof isDeferred==="function" && isDeferred(t)) return;   // перенесено на завтра
+        // не сегодняшнее дело не напоминает: перенесено на другой день
+        // либо регулярное, но сегодня не по расписанию
+        if(typeof isToday==="function" && !isToday(t)) return;
         var m=timeToMin(t.time); if(m===null) return;
         if(t.remindedOn===t2) return;
         var diff = nm - m;
@@ -2209,6 +2561,9 @@
   if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(function(){}); }
 
   clearStaleDefer();      // наступило завтра — вернуть отложенные в сегодняшний день
+  resetRepeats();         // регулярные дела нового дня — снова невыполненные
+  askPersistentStorage(); // попросить браузер не стирать данные (не блокирует запуск)
+  initOnboard();          // первый экран новичка — один раз
   render();
   renderNotes();
   renderTemplates();
