@@ -1,41 +1,40 @@
-<!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Заголовки безопасности (GitHub Pages → только через meta).
      upgrade-insecure-requests, object-src 'none', base-uri lock; инлайн требует 'unsafe-inline'.
      blob:/data: — для WebAudio-сигнала и экспорта резервной копии (URL.createObjectURL). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https:; connect-src 'self' https:; manifest-src 'self'; media-src 'self' data: blob:; form-action 'self' https: mailto:; upgrade-insecure-requests" />
-<meta name="referrer" content="strict-origin-when-cross-origin" />
-<meta name="color-scheme" content="dark" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https:; connect-src 'self' https:; manifest-src 'self'; media-src 'self' data: blob:; form-action 'self' https: mailto:; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="color-scheme" content="dark">
 <title>SUPER DAY — веб-планировщик (бета)</title>
-<meta name="description" content="Бесплатный веб-планировщик SUPER DAY: продиктуй или впиши задачи, разложи по матрице Эйзенхауэра и получи спокойный план дня. Работает офлайн, данные хранятся только в этом браузере." />
-<meta name="theme-color" content="#101216" />
-<link rel="canonical" href="https://superday.fun/app.html" />
-<meta property="og:type" content="website" />
-<meta property="og:site_name" content="SUPER DAY" />
-<meta property="og:locale" content="ru_RU" />
-<meta property="og:url" content="https://superday.fun/app.html" />
-<meta property="og:title" content="SUPER DAY — планируй день прямо в браузере" />
-<meta property="og:description" content="Выгрузи задачи голосом или текстом, разложи по матрице Эйзенхауэра и получи спокойный маршрут дня. Бесплатно, работает офлайн." />
-<meta property="og:image" content="https://superday.fun/assets/og.png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="SUPER DAY — проживай день на максимум" />
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="SUPER DAY — планируй день прямо в браузере" />
-<meta name="twitter:description" content="Задачи голосом → матрица Эйзенхауэра → спокойный план дня. Бесплатно, офлайн." />
-<meta name="twitter:image" content="https://superday.fun/assets/og.png" />
-<link rel="icon" href="assets/mark.png" type="image/png" />
-<link rel="apple-touch-icon" href="assets/apple-touch-icon-180.png" />
-<link rel="manifest" href="manifest.webmanifest" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-title" content="SUPER DAY" />
-<meta name="robots" content="index,follow" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<meta name="description" content="Бесплатный веб-планировщик SUPER DAY: продиктуй или впиши задачи, разложи по матрице Эйзенхауэра и получи спокойный план дня. Работает офлайн, данные хранятся только в этом браузере.">
+<meta name="theme-color" content="#101216">
+<link rel="canonical" href="https://superday.fun/app.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SUPER DAY">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:url" content="https://superday.fun/app.html">
+<meta property="og:title" content="SUPER DAY — планируй день прямо в браузере">
+<meta property="og:description" content="Выгрузи задачи голосом или текстом, разложи по матрице Эйзенхауэра и получи спокойный маршрут дня. Бесплатно, работает офлайн.">
+<meta property="og:image" content="https://superday.fun/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="SUPER DAY — проживай день на максимум">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SUPER DAY — планируй день прямо в браузере">
+<meta name="twitter:description" content="Задачи голосом → матрица Эйзенхауэра → спокойный план дня. Бесплатно, офлайн.">
+<meta name="twitter:image" content="https://superday.fun/assets/og.png">
+<link rel="icon" href="assets/mark.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SUPER DAY">
+<meta name="robots" content="index,follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#101216; --bg-deep:#0A0B0E; --surface:#181A20; --surface-alt:#20232B;
@@ -367,7 +366,7 @@
 <header>
   <div class="wrap bar">
     <a class="brand" href="index.html">
-      <img src="assets/mark.png" alt="" />
+      <img src="assets/mark.png" alt="">
       <b>SUPER&nbsp;DAY</b><span class="beta">web · бета</span>
     </a>
     <a class="back" href="index.html">← На сайт</a>
@@ -383,8 +382,8 @@
 
   <section class="composer" aria-label="Добавить задачу">
     <div class="row1">
-      <input type="text" id="taskInput" placeholder="Назови дело: например, «позвонить маме»…" autocomplete="off" />
-      <button class="mic-btn" id="micBtn" type="button" title="Нажми и скажи дело" aria-label="Сказать дело голосом">&#127908;</button>
+      <input type="text" id="taskInput" placeholder="Назови дело: например, «позвонить маме»…" autocomplete="off">
+      <button class="mic-btn" id="micBtn" type="button" title="Нажми и скажи дело" aria-label="Сказать дело голосом">🎤</button>
       <button class="add-btn" id="addBtn" type="button">Добавить</button>
     </div>
     <div class="composer-help">Одно дело — одна строка. Нажми <b>Добавить</b> или <b>🎙</b> и продиктуй. Скажи время прямо в деле — «позвонить маме <b>в 15:00</b>» — и оно встанет в расписание. Флажки ниже — по желанию.</div>
@@ -411,13 +410,13 @@
     </div>
     <div class="vm-config">
       <label for="wakeInput">Своё слово-обращение (по желанию):</label>
-      <input id="wakeInput" type="text" autocomplete="off" maxlength="24" placeholder="Супер день" />
+      <input id="wakeInput" type="text" autocomplete="off" maxlength="24" placeholder="Супер день">
       <span class="vm-config-hint">— произнеси его, и оно откликнется</span>
     </div>
     <p class="vm-privacy">🔒 Задачи и заметки не покидают этот браузер. Но само <b>распознавание речи</b> обрабатывается облачным сервисом браузера (например, Google) — как в любой веб-диктовке. Текстовый ввод полностью офлайн.</p>
   </section>
 
-  <section class="focus" id="focusCard" hidden aria-live="polite" aria-label="Задача, с которой стоит начать">
+  <section class="focus" id="focusCard" hidden="" aria-live="polite" aria-label="Задача, с которой стоит начать">
     <span class="fx-ic" aria-hidden="true">▶</span>
     <div class="fx-body">
       <div class="fx-eyebrow">Начни с этого</div>
@@ -429,49 +428,49 @@
 
   <section class="matrix" aria-label="Матрица Эйзенхауэра">
     <div class="quad q1" data-q="1">
-      <h2>Сделать сейчас <span class="cnt" data-cnt>0</span></h2>
+      <h2>Сделать сейчас <span class="cnt" data-cnt="">0</span></h2>
       <span class="sub">Срочно и важно</span>
       <ul class="tasks"></ul>
-      <div class="empty">Пока пусто — сюда попадут задачи «горит и важно».</div>
+      <div class="empty" style="display: block;">Пока пусто — сюда попадут задачи «горит и важно».</div>
     </div>
     <div class="quad q2" data-q="2">
-      <h2>Запланировать <span class="cnt" data-cnt>0</span></h2>
+      <h2>Запланировать <span class="cnt" data-cnt="">0</span></h2>
       <span class="sub">Важно, но не срочно</span>
       <ul class="tasks"></ul>
-      <div class="empty">Главная зона роста — важное без спешки.</div>
+      <div class="empty" style="display: block;">Главная зона роста — важное без спешки.</div>
     </div>
     <div class="quad q3" data-q="3">
-      <h2>Быстро закрыть <span class="cnt" data-cnt>0</span></h2>
+      <h2>Быстро закрыть <span class="cnt" data-cnt="">0</span></h2>
       <span class="sub">Срочно, но не важно</span>
       <ul class="tasks"></ul>
-      <div class="empty">Мелочь, которая давит временем. Делегируй или сделай махом.</div>
+      <div class="empty" style="display: block;">Мелочь, которая давит временем. Делегируй или сделай махом.</div>
     </div>
     <div class="quad q4" data-q="4">
-      <h2>Отложить или убрать <span class="cnt" data-cnt>0</span></h2>
+      <h2>Отложить или убрать <span class="cnt" data-cnt="">0</span></h2>
       <span class="sub">Не срочно и не важно</span>
       <ul class="tasks"></ul>
-      <div class="empty">Честно спроси: это вообще нужно?</div>
+      <div class="empty" style="display: block;">Честно спроси: это вообще нужно?</div>
     </div>
   </section>
 
   <section class="route" aria-label="Маршрут дня">
     <h3>План на сегодня</h3>
     <div class="rsub">Порядок: сначала «сейчас», потом важное, затем быстрое, в конце — необязательное.</div>
-    <div class="day-summary" id="daySummary" hidden aria-live="polite"></div>
+    <div class="day-summary" id="daySummary" hidden="" aria-live="polite"></div>
     <ol class="plan" id="planList"></ol>
-    <div class="empty" id="planEmpty">Добавь задачи — и здесь появится спокойный маршрут дня.</div>
-    <div class="bar-wrap"><div class="bar-fill" id="barFill"></div></div>
+    <div class="empty" id="planEmpty" style="display: block;">Добавь задачи — и здесь появится спокойный маршрут дня.</div>
+    <div class="bar-wrap"><div class="bar-fill" id="barFill" style="width: 0px;"></div></div>
     <div class="done-line" id="doneLine">0 из 0 выполнено</div>
-    <div class="day-verdict" id="dayVerdict" hidden aria-live="polite"></div>
+    <div class="day-verdict" id="dayVerdict" hidden="" aria-live="polite"></div>
   </section>
 
   <section class="stats" id="statsCard" aria-label="Статистика недели">
     <div class="stats-head">
       <h3>Неделя</h3>
-      <span class="streak cold" id="streak" aria-live="polite"></span>
+      <span class="streak cold" id="streak" aria-live="polite">Начни серию — закрой сегодня хотя бы одно дело</span>
     </div>
-    <div class="week" id="weekBars"></div>
-    <div class="stats-foot" id="statsFoot"></div>
+    <div class="week" id="weekBars"><div class="day" title="2026-07-20: выполнено 0"><div class="num zero">0</div><div class="col"><div class="fill" style="height: 0%;"></div></div><div class="lbl">Пн</div></div><div class="day" title="2026-07-21: выполнено 0"><div class="num zero">0</div><div class="col"><div class="fill" style="height: 0%;"></div></div><div class="lbl">Вт</div></div><div class="day" title="2026-07-22: выполнено 0"><div class="num zero">0</div><div class="col"><div class="fill" style="height: 0%;"></div></div><div class="lbl">Ср</div></div><div class="day" title="2026-07-23: выполнено 0"><div class="num zero">0</div><div class="col"><div class="fill" style="height: 0%;"></div></div><div class="lbl">Чт</div></div><div class="day" title="2026-07-24: выполнено 0"><div class="num zero">0</div><div class="col"><div class="fill" style="height: 0%;"></div></div><div class="lbl">Пт</div></div><div class="day" title="2026-07-25: выполнено 0"><div class="num zero">0</div><div class="col"><div class="fill" style="height: 0%;"></div></div><div class="lbl">Сб</div></div><div class="day today" title="2026-07-26: выполнено 0"><div class="num zero">0</div><div class="col"><div class="fill" style="height: 0%;"></div></div><div class="lbl">Вс</div></div></div>
+    <div class="stats-foot" id="statsFoot">Сегодня выполнено: 0 · всего за всё время: 0. Данные считаются только в этом браузере.</div>
   </section>
 
   <section class="templates" id="templatesCard" aria-label="Шаблоны дня">
@@ -481,7 +480,7 @@
     </div>
     <div class="tpl-head"><span class="tsub">Повторяющиеся наборы задач — рабочий день, тренировка, уборка. Загрузка добавляет задачи, не затирая текущие.</span></div>
     <ul class="tpl-list" id="tplList"></ul>
-    <div class="tpl-empty" id="tplEmpty">Пока нет шаблонов. Разложи типовой день по задачам и нажми «Сохранить текущий день».</div>
+    <div class="tpl-empty" id="tplEmpty" style="display: block;">Пока нет шаблонов. Разложи типовой день по задачам и нажми «Сохранить текущий день».</div>
   </section>
 
   <section class="notes" aria-label="Заметки">
@@ -490,11 +489,11 @@
       <span class="nsub">Быстрые мысли — голосом «заметка …» или впиши руками.</span>
     </div>
     <div class="note-add">
-      <input type="text" id="noteInput" placeholder="Например: идея для презентации…" autocomplete="off" />
+      <input type="text" id="noteInput" placeholder="Например: идея для презентации…" autocomplete="off">
       <button class="add-btn" id="noteAdd" type="button" aria-label="Добавить заметку">＋</button>
     </div>
     <ul class="notelist" id="noteList"></ul>
-    <div class="empty" id="notesEmpty">Пока нет заметок.</div>
+    <div class="empty" id="notesEmpty" style="display: block;">Пока нет заметок.</div>
   </section>
 
   <div class="toolbar">
@@ -504,18 +503,18 @@
   </div>
 
   <div class="databar" aria-label="Резервная копия">
-    <button id="exportBtn" type="button">&#11015; Сохранить в файл</button>
-    <button id="importBtn" type="button">&#11014; Загрузить из файла</button>
-    <input type="file" id="importFile" accept="application/json,.json" hidden />
+    <button id="exportBtn" type="button">⬇ Сохранить в файл</button>
+    <button id="importBtn" type="button">⬆ Загрузить из файла</button>
+    <input type="file" id="importFile" accept="application/json,.json" hidden="">
     <span class="databar-note">Резервная копия задач и заметок · перенос между устройствами вручную · файл остаётся у тебя</span>
-    <span class="backup-remind" id="backupRemind" hidden></span>
+    <span class="backup-remind" id="backupRemind" hidden=""></span>
     <span class="databar-status" id="dataStatus" role="status" aria-live="polite"></span>
   </div>
 </main>
 
 <footer class="wrap">
   <div class="offline-note"><span class="d"></span> Работает офлайн · данные только в этом браузере</div>
-  <p style="margin:16px 0 0">Это ранняя веб-версия. Полное приложение с голосом и AI-дебатами — <a href="index.html#waitlist">в списке ожидания</a>.<br>Создано с помощью <a href="https://osgardnewworld.com/?utm_source=superday_web&utm_medium=app&utm_campaign=built_with_osgard" target="_blank" rel="noopener">OSGARD</a>.</p>
+  <p style="margin:16px 0 0">Это ранняя веб-версия. Полное приложение с голосом и AI-дебатами — <a href="index.html#waitlist">в списке ожидания</a>.<br>Создано с помощью <a href="https://osgardnewworld.com/?utm_source=superday_web&amp;utm_medium=app&amp;utm_campaign=built_with_osgard" target="_blank" rel="noopener">OSGARD</a>.</p>
 </footer>
 
 <script>
@@ -1784,5 +1783,6 @@
   renderNotes();
   renderTemplates();
 </script>
-</body>
-</html>
+
+
+</body></html>
