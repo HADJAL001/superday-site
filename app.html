@@ -357,6 +357,21 @@
     background:linear-gradient(180deg,rgba(32,35,43,.5),rgba(18,19,24,.4)); border:1px solid var(--border);
     border-radius:14px; padding:14px 18px}
 
+  /* ===== Новый день: перенос незавершённого ===== */
+  .rollover{max-width:760px; margin:0 auto 20px; background:linear-gradient(180deg,rgba(201,169,106,.1),rgba(18,19,24,.4));
+    border:1px solid var(--hair-soft); border-radius:16px; padding:15px 18px}
+  .rollover[hidden]{display:none}
+  .ro-title{font-size:14px; font-weight:700; color:var(--gold-bright); margin-bottom:3px}
+  .ro-text{font-size:12.5px; color:var(--text-dim); line-height:1.5; margin-bottom:12px}
+  .ro-text b{color:var(--text)}
+  .ro-actions{display:flex; gap:9px; flex-wrap:wrap}
+  .ro-actions button{cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; border-radius:999px;
+    padding:9px 15px; transition:.15s; border:1px solid var(--hair)}
+  .ro-primary{color:#1A1509; background:var(--grad-gold); border-color:transparent}
+  .ro-primary:hover{filter:brightness(1.06)}
+  .ro-ghost{color:var(--text-dim); background:#0E0F13}
+  .ro-ghost:hover{border-color:var(--gold); color:var(--text)}
+
   @media(max-width:640px){ .matrix{grid-template-columns:1fr} .composer .row1{flex-direction:column} .add-btn{padding:14px}
     .focus{flex-wrap:wrap} .focus .fx-done{width:100%}
     .day .col{height:52px} .day .lbl{font-size:9px}
@@ -416,6 +431,8 @@
     </div>
     <p class="vm-privacy">🔒 Задачи и заметки не покидают этот браузер. Но само <b>распознавание речи</b> обрабатывается облачным сервисом браузера (например, Google) — как в любой веб-диктовке. Текстовый ввод полностью офлайн.</p>
   </section>
+
+  <div class="rollover" id="rolloverBar" hidden role="region" aria-label="Новый день"></div>
 
   <section class="focus" id="focusCard" hidden aria-live="polite" aria-label="Задача, с которой стоит начать">
     <span class="fx-ic" aria-hidden="true">▶</span>
@@ -1165,6 +1182,47 @@
     box.appendChild(row); box.appendChild(ph);
   }
 
+  // ===== Новый день: мягкий перенос незавершённого (без авто-удаления) =====
+  // Если приложение открыли в новый календарный день, а с прошлого остались дела —
+  // предлагаем перенести незавершённые и убрать выполненные. Ничего не удаляем
+  // без явного нажатия; данные пользователя в безопасности.
+  var LASTDAY_KEY="superday_lastday";
+  function checkNewDay(){
+    var bar=document.getElementById("rolloverBar"); if(!bar) return;
+    var today=todayKey(), last=null;
+    try{ last=localStorage.getItem(LASTDAY_KEY); }catch(e){ last=null; }
+    if(!last){ try{ localStorage.setItem(LASTDAY_KEY, today); }catch(e){} return; }
+    if(last===today){ return; }                         // тот же день — нечего переносить
+    var undone=tasks.filter(function(t){return !t.done;}).length;
+    var done=tasks.filter(function(t){return t.done;}).length;
+    if(!tasks.length){ try{ localStorage.setItem(LASTDAY_KEY, today); }catch(e){} return; }
+    showRollover(bar, undone, done);
+  }
+  function advanceDay(){ try{ localStorage.setItem(LASTDAY_KEY, todayKey()); }catch(e){} }
+  function showRollover(bar, undone, done){
+    bar.hidden=false; bar.innerHTML="";
+    var title=document.createElement("div"); title.className="ro-title"; title.textContent="Новый день ✨";
+    var text=document.createElement("div"); text.className="ro-text";
+    text.innerHTML = "С прошлого дня осталось <b>"+undone+" "+plural(undone,["незавершённое дело","незавершённых дела","незавершённых дел"])+"</b>"
+      + (done? " и <b>"+done+" выполненных</b>":"") + ". Перенести незавершённые на сегодня и начать с чистого листа?";
+    var acts=document.createElement("div"); acts.className="ro-actions";
+    var primary=document.createElement("button"); primary.type="button"; primary.className="ro-primary";
+    primary.textContent = done ? ("Перенести "+undone+", убрать выполненные") : "Начать новый день";
+    primary.addEventListener("click", function(){
+      tasks = tasks.filter(function(t){return !t.done;});
+      tasks.forEach(function(t){ t.remindedOn=null; });    // сегодня напомним заново
+      try{ localStorage.removeItem(DAYCTX_KEY); }catch(e){} // контекст — новый на новый день
+      advanceDay(); save(); render();
+      bar.hidden=true; bar.innerHTML="";
+      toast(undone? ("Перенёс "+undone+" "+plural(undone,["дело","дела","дел"])+" · выполненные убраны") : "Новый день начат");
+    });
+    var ghost=document.createElement("button"); ghost.type="button"; ghost.className="ro-ghost";
+    ghost.textContent="Оставить всё как есть";
+    ghost.addEventListener("click", function(){ advanceDay(); bar.hidden=true; bar.innerHTML=""; });
+    acts.appendChild(primary); acts.appendChild(ghost);
+    bar.appendChild(title); bar.appendChild(text); bar.appendChild(acts);
+  }
+
   // ===== Перетаскивание задач между квадрантами (мышь + палец) =====
   var drag=null;
   var QSET={1:{urgent:true,important:true},2:{urgent:false,important:true},
@@ -1783,6 +1841,7 @@
   render();
   renderNotes();
   renderTemplates();
+  checkNewDay();
 </script>
 </body>
 </html>
