@@ -251,7 +251,8 @@
 
   /* Доступность: видимый фокус для клавиатуры */
   :focus-visible{outline:2px solid var(--gold-bright); outline-offset:2px; border-radius:8px}
-  .tg:focus-visible, .vm-toggle:focus-visible, li.task .chk:focus-visible, li.task .grip:focus-visible{outline-offset:3px}
+  .tg:focus-visible, .vm-toggle:focus-visible, li.task .chk:focus-visible, li.task .grip:focus-visible,
+  li.task .txt:focus-visible, ul.notelist li .txt:focus-visible{outline-offset:3px}
 
   /* Карточка «Начни с этого» — прямое исполнение обещания «начни с главного» */
   .focus{max-width:760px; margin:22px auto 0; display:flex; align-items:center; gap:15px;
@@ -737,7 +738,7 @@
   <section class="composer" aria-label="Добавить задачу">
     <div class="row1">
       <input type="text" id="taskInput" placeholder="Задача — например, «позвонить маме»…" autocomplete="off" />
-      <button class="mic-btn" id="micBtn" type="button" title="Продиктовать задачу голосом" aria-label="Продиктовать задачу голосом">&#127908;</button>
+      <button class="mic-btn" id="micBtn" type="button" title="Продиктовать задачу голосом" aria-label="Продиктовать задачу голосом" aria-pressed="false">&#127908;</button>
       <button class="add-btn" id="addBtn" type="button">Добавить</button>
     </div>
     <div class="composer-help">Одна задача — одна строка. Время и повтор указываются прямо в тексте и распознаются автоматически: «позвонить маме <b>в 15:00</b>», «зарядка <b>каждый день</b> в 7 утра», «отчёт <b>на 2 часа</b>». Флажки ниже нужны, только если приоритет хочется задать вручную.</div>
@@ -913,7 +914,7 @@
       <p class="pg-lead">Планом можно поделиться текстом, а день — выгрузить в системный календарь: события лягут с будильниками и сработают при закрытом приложении.</p>
       <div class="toolbar">
         <button id="copyPlan" class="accent" type="button">Поделиться планом</button>
-        <button id="icsBtn" type="button" title="Скачать день файлом .ics — события лягут в системный календарь с будильниками">&#128197; В календарь</button>
+        <button id="icsBtn" type="button" title="Скачать день файлом .ics — события лягут в системный календарь с будильниками" aria-label="Скачать день файлом .ics — события лягут в системный календарь с будильниками">&#128197; В календарь</button>
         <button id="clearDone" type="button">Убрать выполненные</button>
         <button id="clearAll" type="button">Очистить всё</button>
       </div>
@@ -1348,6 +1349,17 @@
     inp.addEventListener("blur", function(){ commit(true); });
   }
 
+  // Текстовые "span.txt" (строка дела, заметка) правятся только по click — сигнал
+  // "нажми" держится на cursor:text и hover-title, невидим для клавиатуры и диктора.
+  function makeTextEditable(tx, text){
+    tx.setAttribute("role","button");
+    tx.tabIndex = 0;
+    tx.setAttribute("aria-label", text+". Нажми Enter, чтобы изменить.");
+    tx.addEventListener("keydown", function(e){
+      if(e.key==="Enter" || e.key===" "){ e.preventDefault(); tx.click(); }
+    });
+  }
+
   var input = document.getElementById("taskInput");
   var addBtn = document.getElementById("addBtn");
   var tgU = document.getElementById("tgUrgent");
@@ -1421,6 +1433,7 @@
       tx.addEventListener("click", function(){
         inlineEdit(tx, t.text, function(v){ if(v!==null){ t.text=v; save(); } render(); });
       });
+      makeTextEditable(tx, t.text);
       var tm = document.createElement("button"); tm.type="button";
       var st = timeStatus(t);
       tm.className = "ttime" + (t.time ? (st?(" "+st):"") : " empty");
@@ -2294,9 +2307,11 @@
     if(ans===null) return; var t=parseInt(ans,10); if(isNaN(t)){ toast("Введи число градусов"); return; }
     var c=loadDayCtx(); c.weather={ temp:t, code:null, label:"" }; saveDayCtx(c); render(); toast("Погода: "+t+"° · "+tempWord(t));
   }
+  var TRAFFIC_TOAST={light:"Пробки: дороги свободны",medium:"Пробки: средние",hard:"Пробки: адские"};
   function cycleTraffic(){
     var nxt={light:"medium",medium:"hard",hard:null}; var c=loadDayCtx();
     c.traffic = c.traffic ? nxt[c.traffic] : "light"; saveDayCtx(c); render();
+    toast(c.traffic ? TRAFFIC_TOAST[c.traffic] : "Пробки: не указано");
   }
   function editFuel(){
     var c=loadDayCtx(); var cur=c.fuel? String(c.fuel.amount):"";
@@ -2360,15 +2375,18 @@
     var w=document.createElement("button"); w.type="button"; w.className="dv-chip"+(ctx.weather?" set":"");
     if(ctx.weather){ w.textContent="🌡 "+ctx.weather.temp+"°"+(ctx.weather.label?" · "+ctx.weather.label:" · "+tempWord(ctx.weather.temp)); w.title="Погода дня — нажми, чтобы обновить"; }
     else { w.textContent="🌡 погода"; w.title="Определить погоду (Open-Meteo) или ввести вручную"; }
+    w.setAttribute("aria-label", w.title);
     w.addEventListener("click", fetchWeather);
     var traLbl={light:"🟢 дороги свободны", medium:"🟡 средние пробки", hard:"🔴 адские пробки"};
     var tr=document.createElement("button"); tr.type="button"; tr.className="dv-chip"+(ctx.traffic?" set":"");
     tr.textContent = ctx.traffic ? traLbl[ctx.traffic] : "🚗 пробки";
     tr.title="Оцени пробки за день (нажимай по кругу)";
+    tr.setAttribute("aria-label", tr.title);
     tr.addEventListener("click", cycleTraffic);
     var fu=document.createElement("button"); fu.type="button"; fu.className="dv-chip"+(ctx.fuel?" set":"");
     fu.textContent = ctx.fuel ? ("⛽ "+ctx.fuel.amount+" "+ctx.fuel.unit) : "⛽ дорога";
     fu.title="Сколько ушло на дорогу/топливо";
+    fu.setAttribute("aria-label", fu.title);
     fu.addEventListener("click", editFuel);
     row.appendChild(w); row.appendChild(tr); row.appendChild(fu);
     var ph=document.createElement("div"); ph.className="dv-phrase"; ph.textContent=v.phrase;
@@ -2755,6 +2773,7 @@
       tx.addEventListener("click", function(){
         inlineEdit(tx, n.text, function(v){ if(v!==null){ n.text=v; saveNotes(); } renderNotes(); });
       });
+      makeTextEditable(tx, n.text);
       var del=document.createElement("button"); del.className="del"; del.type="button";
       del.setAttribute("aria-label","Удалить"); del.innerHTML="&times;";
       del.addEventListener("click", function(){ notes=notes.filter(function(x){return x.id!==n.id;}); saveNotes(); renderNotes(); });
@@ -2867,6 +2886,7 @@
               "Ввод дел текстом работает полностью.";
       if(vmStatus){ vmStatus.textContent=msg; }
       micBtn.setAttribute("aria-disabled","true");
+      micBtn.setAttribute("aria-describedby","vmStatus");
       micBtn.title="Голос доступен только по HTTPS";
       micBtn.style.opacity="0.5";
       micBtn.addEventListener("click", function(e){
@@ -2875,7 +2895,7 @@
         if(vmStatus) vmStatus.textContent=msg;
       });
       if(vmToggle){
-        vmToggle.setAttribute("aria-disabled","true"); vmToggle.style.opacity="0.5";
+        vmToggle.setAttribute("aria-disabled","true"); vmToggle.setAttribute("aria-describedby","vmStatus"); vmToggle.style.opacity="0.5";
         vmToggle.addEventListener("click", function(e){ e.preventDefault(); e.stopPropagation(); if(vmStatus) vmStatus.textContent=msg; });
       }
       return;
@@ -3040,12 +3060,13 @@
     };
     rec.onerror=function(e){
       if(e && (e.error==="not-allowed"||e.error==="service-not-allowed")){
-        mode=null; awake=false; vmToggle.setAttribute("aria-pressed","false"); micBtn.classList.remove("rec");
+        mode=null; awake=false; vmToggle.setAttribute("aria-pressed","false");
+        micBtn.classList.remove("rec"); micBtn.setAttribute("aria-pressed","false");
         setStatus("Нет доступа к микрофону. Разреши его в браузере и включи снова.");
       }
     };
     rec.onend=function(){
-      micBtn.classList.remove("rec");
+      micBtn.classList.remove("rec"); micBtn.setAttribute("aria-pressed","false");
       if(mode==="hands"){
         try{ rec.start(); }catch(e){ setTimeout(function(){ try{ if(mode==="hands") rec.start(); }catch(_){}}, 400); }
       } else if(mode==="dictation"){ mode=null; }
@@ -3056,7 +3077,7 @@
       if(mode==="hands"){ stopHands(false); return; }
       if(mode==="dictation"){ try{ rec.stop(); }catch(e){} mode=null; return; }
       rec.interimResults=false; rec.continuous=false; mode="dictation";
-      try{ rec.start(); micBtn.classList.add("rec"); }catch(e){ mode=null; }
+      try{ rec.start(); micBtn.classList.add("rec"); micBtn.setAttribute("aria-pressed","true"); }catch(e){ mode=null; }
     });
 
     // hands-free режим
