@@ -251,7 +251,7 @@
 
   /* Доступность: видимый фокус для клавиатуры */
   :focus-visible{outline:2px solid var(--gold-bright); outline-offset:2px; border-radius:8px}
-  .tg:focus-visible, .vm-toggle:focus-visible, li.task .chk:focus-visible{outline-offset:3px}
+  .tg:focus-visible, .vm-toggle:focus-visible, li.task .chk:focus-visible, li.task .grip:focus-visible{outline-offset:3px}
 
   /* Карточка «Начни с этого» — прямое исполнение обещания «начни с главного» */
   .focus{max-width:760px; margin:22px auto 0; display:flex; align-items:center; gap:15px;
@@ -744,7 +744,7 @@
     <div class="toggles">
       <span class="tg u" id="tgUrgent" role="button" tabindex="0" aria-pressed="false">🔥 Срочно</span>
       <span class="tg i" id="tgImportant" role="button" tabindex="0" aria-pressed="false">⭐ Важно</span>
-      <span class="hint" id="quadHint">→ приоритет определится сам</span>
+      <span class="hint" id="quadHint" role="status" aria-live="polite">→ приоритет определится сам</span>
     </div>
   </section>
 
@@ -1443,7 +1443,7 @@
         dr.title = fmtDur(t.dur)+" · нажми, чтобы изменить длительность";
         dr.setAttribute("aria-label","Длительность "+fmtDur(t.dur)+". Нажми, чтобы изменить.");
       } else {
-        dr.textContent = "＋длит.";
+        dr.textContent = "＋длительность";
         dr.title = "Задать длительность дела";
         dr.setAttribute("aria-label","Задать длительность дела");
       }
@@ -1483,7 +1483,7 @@
         qb.style.background = {1:"var(--q1)",2:"var(--q2)",3:"var(--q3)",4:"var(--q4)"}[qi];
         qb.title = "Важность: "+QUAD_SHORT[qi]+" · нажми, чтобы разложить по матрице";
         qb.setAttribute("aria-label", "Важность: "+QUAD_SHORT[qi]+". Открыть разбор по важности.");
-        qb.addEventListener("click", function(){ spotTask(t.id); });
+        qb.addEventListener("click", function(){ toast(QUAD_SHORT[qi]+" — "+QUAD_NAME[qi]); spotTask(t.id); });
         li.appendChild(qb);
       }
       li.appendChild(tx);
@@ -1494,9 +1494,28 @@
       li.appendChild(meta);
       li.appendChild(del);
       if(!plan){
-        var grip = document.createElement("span"); grip.className="grip"; grip.setAttribute("aria-hidden","true");
-        grip.title="Перетащи в другой квадрант"; grip.innerHTML="&#9783;";
+        // Раньше это была чисто мышиная/тач ручка (aria-hidden, только
+        // pointerdown) — с клавиатуры и с экранным диктором до смены
+        // квадранта было не добраться никак. Теперь та же ручка фокусируется
+        // и стрелками циклически меняет квадрант через assignQuad() — ту же
+        // функцию, что и обычный drop мышью.
+        var grip = document.createElement("span"); grip.className="grip";
+        grip.tabIndex = 0; grip.setAttribute("role","button");
+        grip.title="Перетащи в другой квадрант · или стрелками с клавиатуры";
+        grip.setAttribute("aria-label","Сменить приоритет: "+t.text+". Сейчас — "+QUAD_SHORT[quadOf(t)]+". Стрелка вверх или вниз — сменить квадрант.");
+        grip.innerHTML="&#9783;";
         grip.addEventListener("pointerdown", function(e){ startDrag(e, t, li); });
+        grip.addEventListener("keydown", function(e){
+          if(e.key!=="ArrowUp" && e.key!=="ArrowDown" && e.key!=="ArrowLeft" && e.key!=="ArrowRight") return;
+          e.preventDefault();
+          var dir = (e.key==="ArrowUp"||e.key==="ArrowLeft") ? -1 : 1;
+          var qn = ((quadOf(t) - 1 + dir + 4) % 4) + 1;
+          if(!assignQuad(t, qn)) return;
+          toast(QUAD_SHORT[qn]+" — "+QUAD_NAME[qn]);
+          render();
+          var again = document.querySelector('li[data-id="'+t.id+'"] .grip');
+          if(again) again.focus();
+        });
         li.appendChild(grip);
       }
       if(opts.clash){
@@ -2404,6 +2423,15 @@
   var drag=null;
   var QSET={1:{urgent:true,important:true},2:{urgent:false,important:true},
             3:{urgent:true,important:false},4:{urgent:false,important:false}};
+  // Одна точка правды для смены квадранта — её же дёргает и мышиный drop
+  // (onUp), и клавиатурная ручка .grip, чтобы не разъезжались два способа
+  // сделать одно и то же.
+  function assignQuad(t, qi){
+    var q=QSET[qi]; if(!q) return false;
+    if(t.urgent===q.urgent && t.important===q.important) return false;
+    t.urgent=q.urgent; t.important=q.important; save();
+    return true;
+  }
   function moveGhost(x,y){ if(drag&&drag.ghost) drag.ghost.style.transform="translate("+(x-drag.w/2)+"px,"+(y-18)+"px)"; }
   // Матрица живёт в прокручиваемой панели: у её краёв тянем содержимое сами,
   // иначе до дальнего квадранта дело просто не донести.
@@ -2446,9 +2474,7 @@
     if(q){
       var qi=+q.getAttribute("data-q");
       var t=tasks.filter(function(x){return x.id===d.id;})[0];
-      if(t && QSET[qi] && (t.urgent!==QSET[qi].urgent || t.important!==QSET[qi].important)){
-        t.urgent=QSET[qi].urgent; t.important=QSET[qi].important; save();
-      }
+      if(t) assignQuad(t, qi);
     }
     render();
   }
