@@ -164,7 +164,12 @@
     cursor:pointer; margin-top:1px; display:grid; place-items:center; color:#1A1509; font-size:12px; transition:.15s}
   li.task.done .chk{background:var(--grad-gold); border-color:transparent}
   li.task.done .txt{text-decoration:line-through; color:var(--text-muted)}
-  li.task .txt{flex:1; word-break:break-word}
+  li.task{flex-wrap:wrap}
+  li.task .txt{flex:1 1 auto; min-width:0; word-break:break-word}
+  /* Вторая строка карточки: время · длительность · повтор · перенос. */
+  /* order: бейджи уезжают на вторую строку, а «×» и ручка остаются в первой. */
+  .tmeta{flex:1 1 100%; order:1; display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:3px}
+  li.task.done .tmeta{opacity:.6}
   li.task .del{flex:0 0 auto; cursor:pointer; color:var(--text-muted); background:none; border:none; font-size:16px;
     line-height:1; padding:0 2px; opacity:.6}
   li.task .del:hover{opacity:1; color:#E5766B}
@@ -191,8 +196,17 @@
   ol.plan li{counter-increment:s; display:flex; align-items:center; gap:13px; font-size:14px}
   ol.plan li::before{content:counter(s); flex:0 0 auto; width:26px; height:26px; border-radius:50%;
     display:grid; place-items:center; font-size:12px; font-weight:700; color:#1A1509; background:var(--grad-gold)}
-  ol.plan li .qd{width:8px; height:8px; border-radius:50%; flex:0 0 auto}
-  ol.plan li.done span.t{text-decoration:line-through; color:var(--text-muted)}
+  /* Строка маршрута — та же карточка дела, что и в матрице: одно дело
+     редактируется в одном месте, а не показывается дважды разным кодом. */
+  ol.plan li.task{align-items:center; gap:9px; flex-wrap:wrap; font-size:13.5px}
+  ol.plan li button.qd{width:10px; height:10px; border-radius:50%; flex:0 0 auto; border:0; padding:0;
+    cursor:pointer; transition:box-shadow .15s}
+  ol.plan li button.qd:hover{box-shadow:0 0 0 3px rgba(201,169,106,.3)}
+  ol.plan li.task.done{opacity:.72}
+  li.task.spot{border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,169,106,.22)}
+  /* На широком экране маршруту хватает одной строки; матрица живёт в узкой
+     панели и всегда переносит бейджи вниз. */
+  @media(min-width:760px){ ol.plan li.task .tmeta{flex:0 1 auto; order:0; margin-top:0} }
   .route .done-line{margin-top:14px; font-size:12px; color:var(--text-muted)}
   .route .bar-wrap{height:6px; border-radius:6px; background:#0E0F13; overflow:hidden; margin-top:8px; border:1px solid var(--border)}
   .route .bar-fill{height:100%; width:0; background:var(--grad-gold); transition:width .4s ease}
@@ -240,6 +254,7 @@
   .focus .fx-focus{flex:0 0 auto; cursor:pointer; font-family:inherit; font-weight:700; font-size:13px; color:var(--gold);
     background:rgba(212,175,110,.12); border:1px solid rgba(212,175,110,.4); border-radius:12px; padding:9px 14px; margin-right:8px}
   .focus .fx-focus:active{transform:translateY(1px)}
+  .focustimer[hidden]{display:none}
   .focustimer{max-width:760px; margin:14px auto 0; display:flex; align-items:center; gap:16px;
     padding:16px 18px; border-radius:16px; border:1px solid rgba(212,175,110,.34);
     background:linear-gradient(160deg, rgba(30,26,16,.9), rgba(18,17,14,.92)); box-shadow:0 10px 34px rgba(0,0,0,.34)}
@@ -325,9 +340,6 @@
   .ttime.now{color:#141414; background:linear-gradient(120deg,#F0958B,#E5766B); border-color:transparent; animation:pulse 1.5s infinite}
   .ttime.over{color:#E5766B; background:rgba(229,118,107,.12); border-color:rgba(229,118,107,.3)}
   li.task.done .ttime{opacity:.45; filter:saturate(.35)}
-  ol.plan li .pt{flex:0 0 auto; font-size:12.5px; font-weight:700; color:var(--champagne); min-width:46px; text-align:right}
-  ol.plan li.done .pt{color:var(--text-muted); font-weight:600}
-  ol.plan li .pt.over{color:#E5766B}
   .remindbar{max-width:760px; margin:12px auto 0; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
     background:linear-gradient(180deg,rgba(32,35,43,.5),rgba(18,19,24,.4)); border:1px solid var(--border);
     border-radius:14px; padding:11px 15px}
@@ -412,9 +424,7 @@
   .ul-no{color:var(--text-dim); background:#0E0F13; border:1px solid var(--hair)}
   .ul-no:hover{color:var(--champagne)}
   li.task.done .tdur{opacity:.4; filter:saturate(.3)}
-  ol.plan li .t .pd{display:inline-block; margin-left:8px; font-size:11px; font-weight:600; color:var(--text-muted)}
-  ol.plan li.clash{position:relative}
-  ol.plan li .t .clash-badge{display:inline-block; margin-left:8px; font-size:10.5px; font-weight:700;
+  li.task .txt .clash-badge{display:inline-block; margin-left:8px; font-size:10.5px; font-weight:700;
     color:#E5766B; background:rgba(229,118,107,.1); border:1px solid rgba(229,118,107,.3); border-radius:999px; padding:1px 7px}
 
   /* ===== Сводка дня (бюджет времени) ===== */
@@ -460,7 +470,94 @@
   .ro-ghost{color:var(--text-dim); background:#0E0F13}
   .ro-ghost:hover{border-color:var(--gold); color:var(--text)}
 
+  /* ===== Правая панель: всё второстепенное живёт здесь =====
+     Слои по z-index: шапка 20 · рельс 21 · затемнение 39 · панель 40.
+     Призрак перетаскивания (.drag-ghost) — 50, он обязан оставаться выше
+     панели, иначе дело «ныряет» под неё во время переноса. */
+  .panel-btn{display:inline-flex; align-items:center; gap:7px; cursor:pointer; font-family:inherit;
+    font-size:12.5px; font-weight:600; color:var(--text-dim); background:#0E0F13; border:1px solid var(--border);
+    border-radius:999px; padding:8px 14px; transition:.15s; position:relative}
+  .panel-btn:hover{border-color:var(--gold); color:var(--text)}
+  .panel-btn .pb-ic{font-size:14px; line-height:1}
+  .panel-btn .pb-dot{position:absolute; top:5px; right:6px; width:7px; height:7px; border-radius:50%;
+    background:var(--gold); box-shadow:0 0 0 2px rgba(16,18,22,.9)}
+  .panel-btn .pb-dot[hidden]{display:none}
+  .bar .right{display:flex; align-items:center; gap:12px}
+
+  .scrim{position:fixed; inset:0; z-index:39; background:rgba(6,7,9,.62); backdrop-filter:blur(2px);
+    opacity:0; pointer-events:none; transition:opacity .22s ease}
+  .scrim.on{opacity:1; pointer-events:auto}
+
+  .panel{position:fixed; top:0; right:0; bottom:0; z-index:40; width:min(560px,100vw);
+    display:flex; flex-direction:column; background:linear-gradient(180deg,#15171D,#0D0E12);
+    border-left:1px solid var(--hair-soft); box-shadow:-30px 0 60px -30px rgba(0,0,0,.8);
+    transform:translateX(101%); transition:transform .22s ease; will-change:transform}
+  .panel.open{transform:translateX(0)}
+  .panel[hidden]{display:none}
+  .panel-head{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 18px 12px;
+    border-bottom:1px solid var(--hair-soft); flex:0 0 auto}
+  .panel-head h2{font-family:"Cormorant Garamond",serif; font-size:22px; font-weight:700; margin:0; letter-spacing:.3px}
+  .panel-head .ph-sub{display:block; font-family:"Manrope",system-ui,sans-serif; font-size:11px; letter-spacing:1.6px;
+    text-transform:uppercase; color:var(--text-muted); font-weight:600; margin-top:3px}
+  .panel-close{cursor:pointer; font-family:inherit; font-size:20px; line-height:1; color:var(--text-dim);
+    background:#0E0F13; border:1px solid var(--border); border-radius:12px; width:38px; height:38px; transition:.15s}
+  .panel-close:hover{border-color:var(--gold); color:var(--text)}
+  .panel-body{flex:1 1 auto; overflow-y:auto; overscroll-behavior:contain; padding:12px 18px 40px;
+    -webkit-overflow-scrolling:touch}
+
+  .pgroup{border:1px solid var(--border); border-radius:14px; margin:0 0 10px;
+    background:linear-gradient(180deg,rgba(32,35,43,.42),rgba(18,19,24,.3)); overflow:hidden}
+  .pg-head{width:100%; display:flex; align-items:center; gap:11px; cursor:pointer; font-family:inherit;
+    text-align:left; background:none; border:0; color:var(--text); padding:14px 15px; font-size:14px; font-weight:700}
+  .pg-head:hover{color:var(--gold-bright)}
+  .pg-ic{font-size:16px; line-height:1; width:20px; text-align:center; flex:0 0 auto}
+  .pg-title{flex:1 1 auto}
+  .pg-note{font-size:11.5px; font-weight:500; color:var(--text-muted); white-space:nowrap;
+    max-width:46%; overflow:hidden; text-overflow:ellipsis}
+  .pg-chev{flex:0 0 auto; color:var(--text-muted); font-size:12px; transition:transform .18s ease}
+  .pgroup.open .pg-chev{transform:rotate(90deg)}
+  .pg-body{display:none; padding:0 15px 15px; border-top:1px solid var(--hair-soft)}
+  .pgroup.open .pg-body{display:block}
+  .pg-lead{font-size:12.5px; color:var(--text-dim); line-height:1.6; margin:13px 0 0}
+  .pg-lead b{color:var(--text)}
+
+  /* Секции, переехавшие в панель, теряют «страничные» отступы и ширину. */
+  .pg-body > section,
+  .pg-body > .toolbar,
+  .pg-body > .databar{max-width:none; margin:13px 0 0; padding-left:0; padding-right:0}
+  .pg-body .stats,.pg-body .notes{background:none; border:0; padding:0}
+  .pg-body .matrix{grid-template-columns:1fr; gap:10px}
+  .pg-body .quad{min-height:0}
+  .pg-body .remindbar,.pg-body .voicebar{background:none; border:0; padding:0}
+  .pg-body .toolbar,.pg-body .databar{justify-content:flex-start}
+  .pg-body h3{margin-top:0}
+  .pg-body .stats-head h3,.pg-body .tpl-head h3,.pg-body .notes-head h3{display:none}
+
+  /* Рельс — «корешок» панели: на широком экране разделы видны всегда. */
+  .rail{position:fixed; top:50%; right:0; transform:translateY(-50%); z-index:21; display:none;
+    flex-direction:column; gap:4px; padding:8px 6px; border:1px solid var(--hair-soft); border-right:0;
+    border-radius:14px 0 0 14px; background:rgba(20,22,28,.82); backdrop-filter:blur(10px)}
+  .rail button{cursor:pointer; font-family:inherit; font-size:15px; line-height:1; background:none; border:0;
+    color:var(--text-dim); width:34px; height:34px; border-radius:10px; transition:.15s}
+  .rail button:hover{background:rgba(201,169,106,.13); color:var(--gold-bright)}
+  @media(min-width:1024px){ .rail{display:flex} .panel{width:min(520px,38vw)} }
+
+  /* «Под капотом» — диагностика для тех, кто любит покопаться. */
+  .diag{display:grid; grid-template-columns:auto 1fr; gap:5px 14px; font-size:12.5px; margin:13px 0 0}
+  .diag dt{color:var(--text-muted)}
+  .diag dd{margin:0; color:var(--text); font-variant-numeric:tabular-nums}
+  .diag-run{margin-top:13px; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600;
+    color:var(--champagne); background:#0E0F13; border:1px solid var(--hair); border-radius:999px;
+    padding:9px 16px; transition:.15s}
+  .diag-run:hover{border-color:var(--gold); color:var(--gold-bright)}
+  .diag-out{margin-top:11px; font-size:12px; line-height:1.6; color:var(--text-dim); white-space:pre-wrap;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .diag-out .ok{color:#7FCB9B}
+  .diag-out .bad{color:#E5766B; font-weight:700}
+
   @media(max-width:640px){ .matrix{grid-template-columns:1fr} .composer .row1{flex-direction:column} .add-btn{padding:14px}
+    /* В колонку flex-basis становится высотой — поле ввода раздувалось до 260px. */
+    .composer input[type=text]{flex:0 0 auto}
     .focus{flex-wrap:wrap} .focus .fx-done{width:100%} .focus .fx-focus{flex:1; margin-right:0}
     .focustimer{flex-wrap:wrap} .ft-actions{width:100%; justify-content:stretch} .ft-actions .ft-btn{flex:1}
     .day .col{height:52px} .day .lbl{font-size:9px}
@@ -474,7 +571,14 @@
       <img src="assets/mark.png" alt="" />
       <b>SUPER&nbsp;DAY</b><span class="beta">web · бета</span>
     </a>
-    <a class="back" href="index.html">← На сайт</a>
+    <div class="right">
+      <a class="back" href="index.html">← На сайт</a>
+      <button class="panel-btn" id="panelBtn" type="button" aria-expanded="false" aria-controls="panel"
+              title="Настройки, матрица, неделя, шаблоны, заметки и данные">
+        <span class="pb-ic" aria-hidden="true">☰</span><span>Панель</span>
+        <span class="pb-dot" id="panelDot" hidden aria-hidden="true"></span>
+      </button>
+    </div>
   </div>
 </header>
 
@@ -482,7 +586,7 @@
   <section class="intro">
     <span class="eyebrow">Планировщик дня · работает сразу</span>
     <h1>Просто назови свои дела —<br><span class="g">увидишь, что делать первым.</span></h1>
-    <p>Впиши дело и нажми «Добавить». Или нажми 🎙 и скажи вслух — оно появится само. Настраивать ничего не нужно.</p>
+    <p>Впиши дело и нажми «Добавить». Или нажми 🎙 и скажи вслух. <button type="button" class="inline-link" id="introHelp">Как это работает</button> · всё остальное — в <button type="button" class="inline-link" id="introPanel">Панели</button>.</p>
   </section>
 
   <section class="onboard" id="onboard" hidden aria-label="Как это работает">
@@ -512,31 +616,7 @@
     </div>
   </section>
 
-  <section class="remindbar" id="remindBar" aria-label="Напоминания">
-    <button class="remind-toggle" id="remindToggle" type="button" aria-pressed="false">
-      <span aria-hidden="true">🔔</span><span id="remindLabel">Напоминать о делах со временем</span>
-    </button>
-    <button class="mute-toggle" id="muteToggle" type="button" aria-pressed="false"
-            title="Тихий режим — выключить все звуки приложения (напоминания останутся на экране)">
-      <span aria-hidden="true" id="muteIc">🔊</span><span id="muteLabel">Звук включён</span>
-    </button>
-    <span class="remind-note" id="remindNote">Когда наступит время дела — приложение подскажет уведомлением и голосом. <b>Работает, пока открыта эта вкладка.</b> Нужны напоминания при закрытом приложении — <button type="button" class="inline-link" id="icsFromRemind">выгрузи день в календарь</button>: события лягут в системный календарь с будильниками.</span>
-  </section>
 
-  <section class="voicebar" id="voiceBar" aria-label="Голосовой режим">
-    <div class="vm-main">
-      <button class="vm-toggle" id="vmToggle" type="button" aria-pressed="false">
-        <span class="vm-dot"></span><span class="vm-ic">🎙</span><span id="vmLabel">Управлять голосом</span>
-      </button>
-      <span class="vm-status" id="vmStatus" aria-live="polite">Хочешь управлять без рук? Включи, скажи «супер день» — и назови дело. Оно ответит голосом. (Для простого ввода это не нужно — просто жми 🎙 у поля выше.)</span>
-    </div>
-    <div class="vm-config">
-      <label for="wakeInput">Своё слово-обращение (по желанию):</label>
-      <input id="wakeInput" type="text" autocomplete="off" maxlength="24" placeholder="Супер день" />
-      <span class="vm-config-hint">— произнеси его, и оно откликнется</span>
-    </div>
-    <p class="vm-privacy">🔒 Задачи и заметки не покидают этот браузер. Но само <b>распознавание речи</b> обрабатывается облачным сервисом браузера (например, Google) — как в любой веб-диктовке. Текстовый ввод полностью офлайн.</p>
-  </section>
 
   <div class="rollover" id="rolloverBar" hidden role="region" aria-label="Новый день"></div>
 
@@ -566,36 +646,9 @@
     </div>
   </section>
 
-  <section class="matrix" aria-label="Матрица Эйзенхауэра">
-    <div class="quad q1" data-q="1">
-      <h2>Сделать сейчас <span class="cnt" data-cnt>0</span></h2>
-      <span class="sub">Срочно и важно</span>
-      <ul class="tasks"></ul>
-      <div class="empty">Пока пусто — сюда попадут задачи «горит и важно».</div>
-    </div>
-    <div class="quad q2" data-q="2">
-      <h2>Запланировать <span class="cnt" data-cnt>0</span></h2>
-      <span class="sub">Важно, но не срочно</span>
-      <ul class="tasks"></ul>
-      <div class="empty">Главная зона роста — важное без спешки.</div>
-    </div>
-    <div class="quad q3" data-q="3">
-      <h2>Быстро закрыть <span class="cnt" data-cnt>0</span></h2>
-      <span class="sub">Срочно, но не важно</span>
-      <ul class="tasks"></ul>
-      <div class="empty">Мелочь, которая давит временем. Делегируй или сделай махом.</div>
-    </div>
-    <div class="quad q4" data-q="4">
-      <h2>Отложить или убрать <span class="cnt" data-cnt>0</span></h2>
-      <span class="sub">Не срочно и не важно</span>
-      <ul class="tasks"></ul>
-      <div class="empty">Честно спроси: это вообще нужно?</div>
-    </div>
-  </section>
-
   <section class="route" aria-label="Маршрут дня">
-    <h3>План на сегодня</h3>
-    <div class="rsub">Порядок: сначала «сейчас», потом важное, затем быстрое, в конце — необязательное.</div>
+    <h3>Сегодня</h3>
+    <div class="rsub">Порядок: сначала «сейчас», потом важное, затем быстрое, в конце — необязательное. Время, длительность, повтор и перенос правятся прямо в строке; цветная точка слева — важность.</div>
     <div class="day-summary" id="daySummary" hidden aria-live="polite"></div>
     <ol class="plan" id="planList"></ol>
     <div class="empty" id="planEmpty">Добавь задачи — и здесь появится спокойный маршрут дня.</div>
@@ -603,55 +656,166 @@
     <div class="done-line" id="doneLine">0 из 0 выполнено</div>
     <div class="day-verdict" id="dayVerdict" hidden aria-live="polite"></div>
   </section>
-
-  <section class="stats" id="statsCard" aria-label="Статистика недели">
-    <div class="stats-head">
-      <h3>Неделя</h3>
-      <span class="streak cold" id="streak" aria-live="polite"></span>
-    </div>
-    <div class="week" id="weekBars"></div>
-    <div class="stats-foot" id="statsFoot"></div>
-  </section>
-
-  <section class="templates" id="templatesCard" aria-label="Шаблоны дня">
-    <div class="tpl-head">
-      <h3>Шаблоны дня</h3>
-      <button class="tpl-save" id="tplSave" type="button">＋ Сохранить текущий день</button>
-    </div>
-    <div class="tpl-head"><span class="tsub">Повторяющиеся наборы задач — рабочий день, тренировка, уборка. Загрузка добавляет задачи, не затирая текущие.</span></div>
-    <ul class="tpl-list" id="tplList"></ul>
-    <div class="tpl-empty" id="tplEmpty">Пока нет шаблонов. Разложи типовой день по задачам и нажми «Сохранить текущий день».</div>
-  </section>
-
-  <section class="notes" aria-label="Заметки">
-    <div class="notes-head">
-      <h3>Заметки</h3>
-      <span class="nsub">Быстрые мысли — голосом «заметка …» или впиши руками.</span>
-    </div>
-    <div class="note-add">
-      <input type="text" id="noteInput" placeholder="Например: идея для презентации…" autocomplete="off" />
-      <button class="add-btn" id="noteAdd" type="button" aria-label="Добавить заметку">＋</button>
-    </div>
-    <ul class="notelist" id="noteList"></ul>
-    <div class="empty" id="notesEmpty">Пока нет заметок.</div>
-  </section>
-
-  <div class="toolbar">
-    <button id="copyPlan" class="accent" type="button">Поделиться планом</button>
-    <button id="icsBtn" type="button" title="Скачать день файлом .ics — события лягут в системный календарь с будильниками">&#128197; В календарь</button>
-    <button id="clearDone" type="button">Убрать выполненные</button>
-    <button id="clearAll" type="button">Очистить всё</button>
-  </div>
-
-  <div class="databar" aria-label="Резервная копия">
-    <button id="exportBtn" type="button">&#11015; Сохранить в файл</button>
-    <button id="importBtn" type="button">&#11014; Загрузить из файла</button>
-    <input type="file" id="importFile" accept="application/json,.json" hidden />
-    <span class="databar-note">Резервная копия задач и заметок · перенос между устройствами вручную · файл остаётся у тебя</span>
-    <span class="backup-remind" id="backupRemind" hidden></span>
-    <span class="databar-status" id="dataStatus" role="status" aria-live="polite"></span>
-  </div>
 </main>
+<div class="scrim" id="scrim" aria-hidden="true"></div>
+<aside class="panel" id="panel" hidden role="dialog" aria-modal="true" aria-labelledby="panelTitle">
+  <div class="panel-head">
+    <h2 id="panelTitle">Панель<span class="ph-sub">всё, что не нужно каждую минуту</span></h2>
+    <button class="panel-close" id="panelClose" type="button" aria-label="Закрыть панель">&times;</button>
+  </div>
+  <div class="panel-body" id="panelBody">
+  <section class="pgroup" data-sec="matrix">
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">🧭</span><span class="pg-title">Разбор по важности</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <div class="pg-body">
+      <p class="pg-lead">Матрица Эйзенхауэра: <b>🔥 срочно</b> — горит по времени, <b>⭐ важно</b> — двигает жизнь. Перетащи дело за ручку ☰ в другой квадрант — маршрут дня пересоберётся сам.</p>
+      <section class="matrix" aria-label="Матрица Эйзенхауэра">
+        <div class="quad q1" data-q="1">
+          <h2>Сделать сейчас <span class="cnt" data-cnt>0</span></h2>
+          <span class="sub">Срочно и важно</span>
+          <ul class="tasks"></ul>
+          <div class="empty">Пока пусто — сюда попадут задачи «горит и важно».</div>
+        </div>
+        <div class="quad q2" data-q="2">
+          <h2>Запланировать <span class="cnt" data-cnt>0</span></h2>
+          <span class="sub">Важно, но не срочно</span>
+          <ul class="tasks"></ul>
+          <div class="empty">Главная зона роста — важное без спешки.</div>
+        </div>
+        <div class="quad q3" data-q="3">
+          <h2>Быстро закрыть <span class="cnt" data-cnt>0</span></h2>
+          <span class="sub">Срочно, но не важно</span>
+          <ul class="tasks"></ul>
+          <div class="empty">Мелочь, которая давит временем. Делегируй или сделай махом.</div>
+        </div>
+        <div class="quad q4" data-q="4">
+          <h2>Отложить или убрать <span class="cnt" data-cnt>0</span></h2>
+          <span class="sub">Не срочно и не важно</span>
+          <ul class="tasks"></ul>
+          <div class="empty">Честно спроси: это вообще нужно?</div>
+        </div>
+      </section>
+    </div>
+  </section>
+  <section class="pgroup" data-sec="remind">
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">🔔</span><span class="pg-title">Напоминания и звук</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <div class="pg-body">
+      <section class="remindbar" id="remindBar" aria-label="Напоминания">
+        <button class="remind-toggle" id="remindToggle" type="button" aria-pressed="false">
+          <span aria-hidden="true">🔔</span><span id="remindLabel">Напоминать о делах со временем</span>
+        </button>
+        <button class="mute-toggle" id="muteToggle" type="button" aria-pressed="false"
+                title="Тихий режим — выключить все звуки приложения (напоминания останутся на экране)">
+          <span aria-hidden="true" id="muteIc">🔊</span><span id="muteLabel">Звук включён</span>
+        </button>
+        <span class="remind-note" id="remindNote">Когда наступит время дела — приложение подскажет уведомлением и голосом. <b>Работает, пока открыта эта вкладка.</b> Нужны напоминания при закрытом приложении — <button type="button" class="inline-link" id="icsFromRemind">выгрузи день в календарь</button>: события лягут в системный календарь с будильниками.</span>
+      </section>
+    </div>
+  </section>
+  <section class="pgroup" data-sec="voice">
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">🎙</span><span class="pg-title">Голос</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <div class="pg-body">
+      <section class="voicebar" id="voiceBar" aria-label="Голосовой режим">
+        <div class="vm-main">
+          <button class="vm-toggle" id="vmToggle" type="button" aria-pressed="false">
+            <span class="vm-dot"></span><span class="vm-ic">🎙</span><span id="vmLabel">Управлять голосом</span>
+          </button>
+          <span class="vm-status" id="vmStatus" aria-live="polite">Хочешь управлять без рук? Включи, скажи «супер день» — и назови дело. Оно ответит голосом. (Для простого ввода это не нужно — просто жми 🎙 у поля выше.)</span>
+        </div>
+        <div class="vm-config">
+          <label for="wakeInput">Своё слово-обращение (по желанию):</label>
+          <input id="wakeInput" type="text" autocomplete="off" maxlength="24" placeholder="Супер день" />
+          <span class="vm-config-hint">— произнеси его, и оно откликнется</span>
+        </div>
+        <p class="vm-privacy">🔒 Задачи и заметки не покидают этот браузер. Но само <b>распознавание речи</b> обрабатывается облачным сервисом браузера (например, Google) — как в любой веб-диктовке. Текстовый ввод полностью офлайн.</p>
+      </section>
+    </div>
+  </section>
+  <section class="pgroup" data-sec="stats">
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">📊</span><span class="pg-title">Неделя</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <div class="pg-body">
+      <section class="stats" id="statsCard" aria-label="Статистика недели">
+        <div class="stats-head">
+          <h3>Неделя</h3>
+          <span class="streak cold" id="streak" aria-live="polite"></span>
+        </div>
+        <div class="week" id="weekBars"></div>
+        <div class="stats-foot" id="statsFoot"></div>
+      </section>
+    </div>
+  </section>
+  <section class="pgroup" data-sec="tpl">
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">🗂</span><span class="pg-title">Шаблоны дня</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <div class="pg-body">
+      <section class="templates" id="templatesCard" aria-label="Шаблоны дня">
+        <div class="tpl-head">
+          <h3>Шаблоны дня</h3>
+          <button class="tpl-save" id="tplSave" type="button">＋ Сохранить текущий день</button>
+        </div>
+        <div class="tpl-head"><span class="tsub">Повторяющиеся наборы задач — рабочий день, тренировка, уборка. Загрузка добавляет задачи, не затирая текущие.</span></div>
+        <ul class="tpl-list" id="tplList"></ul>
+        <div class="tpl-empty" id="tplEmpty">Пока нет шаблонов. Разложи типовой день по задачам и нажми «Сохранить текущий день».</div>
+      </section>
+    </div>
+  </section>
+  <section class="pgroup" data-sec="notes">
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">✍️</span><span class="pg-title">Заметки</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <div class="pg-body">
+      <section class="notes" aria-label="Заметки">
+        <div class="notes-head">
+          <h3>Заметки</h3>
+          <span class="nsub">Быстрые мысли — голосом «заметка …» или впиши руками.</span>
+        </div>
+        <div class="note-add">
+          <input type="text" id="noteInput" placeholder="Например: идея для презентации…" autocomplete="off" />
+          <button class="add-btn" id="noteAdd" type="button" aria-label="Добавить заметку">＋</button>
+        </div>
+        <ul class="notelist" id="noteList"></ul>
+        <div class="empty" id="notesEmpty">Пока нет заметок.</div>
+      </section>
+    </div>
+  </section>
+  <section class="pgroup" data-sec="data">
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">💾</span><span class="pg-title">Данные и календарь</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <div class="pg-body">
+      <p class="pg-lead">Планом можно поделиться текстом, а день — выгрузить в системный календарь: события лягут с будильниками и сработают при закрытом приложении.</p>
+      <div class="toolbar">
+        <button id="copyPlan" class="accent" type="button">Поделиться планом</button>
+        <button id="icsBtn" type="button" title="Скачать день файлом .ics — события лягут в системный календарь с будильниками">&#128197; В календарь</button>
+        <button id="clearDone" type="button">Убрать выполненные</button>
+        <button id="clearAll" type="button">Очистить всё</button>
+      </div>
+      <div class="databar" aria-label="Резервная копия">
+        <button id="exportBtn" type="button">&#11015; Сохранить в файл</button>
+        <button id="importBtn" type="button">&#11014; Загрузить из файла</button>
+        <input type="file" id="importFile" accept="application/json,.json" hidden />
+        <span class="databar-note">Резервная копия задач и заметок · перенос между устройствами вручную · файл остаётся у тебя</span>
+        <span class="backup-remind" id="backupRemind" hidden></span>
+        <span class="databar-status" id="dataStatus" role="status" aria-live="polite"></span>
+      </div>
+    </div>
+  </section>
+  <section class="pgroup" data-sec="help">
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">❔</span><span class="pg-title">Как это работает</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <div class="pg-body">
+      <p class="pg-lead"><b>Три шага.</b> Впиши дело — или скажи голосом, можно сразу «в 15:00» и «каждый день». Приложение само раскладывает дела по важности и показывает, с чего начать. Нажми «Готово» в карточке «Начни с этого» — день сдвинулся.</p>
+      <p class="pg-lead"><b>Матрица.</b> 🔥 срочно — горит по времени. ⭐ важно — двигает жизнь. Дело без флажков попадает в «Отложить». Переложить можно перетаскиванием за ручку ☰ в разделе «Разбор по важности».</p>
+      <p class="pg-lead"><b>Где данные.</b> Только в этом браузере — ни аккаунта, ни сервера. Поэтому раз в неделю имеет смысл сохранять копию файлом в разделе «Данные». Приложение работает офлайн.</p>
+      <p class="pg-lead"><b>Клавиатура.</b> Enter в поле — добавить дело. Esc — закрыть панель. Аппаратная «Назад» на телефоне тоже закрывает панель, а не страницу.</p>
+    </div>
+  </section>
+  <section class="pgroup" data-sec="diag">
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">🔧</span><span class="pg-title">Под капотом</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <div class="pg-body">
+      <p class="pg-lead">Состояние этой копии приложения. Самотесты гоняют логику (парсеры времени, повторов, дат, порядок маршрута, сборку календаря) прямо на живом коде — тем же набором, что и в сборке.</p>
+      <dl class="diag" id="diagList"></dl>
+      <button class="diag-run" id="diagRun" type="button">Прогнать самотесты</button>
+      <div class="diag-out" id="diagOut" role="status" aria-live="polite"></div>
+    </div>
+  </section>
+  </div>
+</aside>
+<nav class="rail" id="rail" aria-label="Разделы панели"></nav>
+
 
 <footer class="wrap">
   <div class="offline-note"><span class="d"></span> Работает офлайн · данные только в этом браузере</div>
@@ -1102,20 +1266,18 @@
   addBtn.addEventListener("click", addTask);
   input.addEventListener("keydown", function(e){ if(e.key==="Enter") addTask(); });
 
-  function render(){
-    // очистить квадранты
-    document.querySelectorAll(".quad").forEach(function(q){
-      q.querySelector("ul.tasks").innerHTML = "";
-    });
-    var counts = {1:0,2:0,3:0,4:0};
-    tasks.forEach(function(t){
-      var q = quadOf(t);
+  // ===== Одна строка дела — общая для маршрута и для матрицы =====
+  // Раньше дело рисовалось дважды разным кодом: интерактивная строка в матрице и
+  // строка «только чтение» в маршруте. Теперь строку строит одна функция, а режим
+  // задаётся опциями: в маршруте вместо ручки перетаскивания — точка квадранта.
+  function taskRow(t, opts){
+      opts = opts || {};
+      var plan = !!opts.plan;
       var def = isDeferred(t);
       var off = !def && isOffDay(t);     // регулярное дело, но сегодня не его день
-      if(!def && !off) counts[q]++;      // счётчик квадранта = дела на сегодня
-      var ul = document.querySelector('.quad[data-q="'+q+'"] ul.tasks');
       var li = document.createElement("li");
-      li.className = "task" + (t.done ? " done" : "") + (def ? " deferred" : "") + (off ? " offday" : "");
+      li.className = "task" + (t.done ? " done" : "") + (def ? " deferred" : "") + (off ? " offday" : "")
+                   + (plan ? " plan-row" : "") + (opts.clash ? " clash" : "");
       var chk = document.createElement("span"); chk.className="chk"; chk.setAttribute("role","checkbox");
       chk.setAttribute("aria-checked", t.done?"true":"false"); chk.innerHTML = t.done ? "&#10003;" : "";
       chk.tabIndex = 0; chk.setAttribute("aria-label", "Отметить выполненной: "+t.text);
@@ -1179,17 +1341,75 @@
       var del = document.createElement("button"); del.className="del"; del.type="button";
       del.setAttribute("aria-label","Удалить"); del.innerHTML="&times;";
       del.addEventListener("click", function(){ tasks = tasks.filter(function(x){return x.id!==t.id;}); save(); render(); });
-      var grip = document.createElement("span"); grip.className="grip"; grip.setAttribute("aria-hidden","true");
-      grip.title="Перетащи в другой квадрант"; grip.innerHTML="&#9783;";
-      grip.addEventListener("pointerdown", function(e){ startDrag(e, t, li); });
-      li.appendChild(chk); li.appendChild(tx); li.appendChild(tm); li.appendChild(dr); li.appendChild(rp); li.appendChild(df); li.appendChild(del); li.appendChild(grip);
+      li.appendChild(chk);
+      if(plan){
+        // Цветная точка = квадрант. Она же вход в разбор по важности: нажал —
+        // панель открылась на матрице и подсветила именно это дело.
+        var qb = document.createElement("button"); qb.type="button"; qb.className="qd";
+        var qi = quadOf(t);
+        qb.style.background = {1:"var(--q1)",2:"var(--q2)",3:"var(--q3)",4:"var(--q4)"}[qi];
+        qb.title = "Важность: "+QUAD_SHORT[qi]+" · нажми, чтобы разложить по матрице";
+        qb.setAttribute("aria-label", "Важность: "+QUAD_SHORT[qi]+". Открыть разбор по важности.");
+        qb.addEventListener("click", function(){ spotTask(t.id); });
+        li.appendChild(qb);
+      }
+      li.appendChild(tx);
+      // Бейджи живут отдельной строкой: иначе на узком экране текст дела
+      // сжимается в столбик из двух букв, а он тут главное.
+      var meta = document.createElement("span"); meta.className="tmeta";
+      meta.appendChild(tm); meta.appendChild(dr); meta.appendChild(rp); meta.appendChild(df);
+      li.appendChild(meta);
+      li.appendChild(del);
+      if(!plan){
+        var grip = document.createElement("span"); grip.className="grip"; grip.setAttribute("aria-hidden","true");
+        grip.title="Перетащи в другой квадрант"; grip.innerHTML="&#9783;";
+        grip.addEventListener("pointerdown", function(e){ startDrag(e, t, li); });
+        li.appendChild(grip);
+      }
+      if(opts.clash){
+        var cb=document.createElement("span"); cb.className="clash-badge"; cb.textContent="⚠ наложение";
+        tx.appendChild(cb);
+      }
+      return li;
+  }
+  var QUAD_SHORT = {1:"срочно и важно",2:"важное, без спешки",3:"срочное, но мелкое",4:"необязательное"};
+
+  // Открыть матрицу в панели и подсветить конкретное дело.
+  function spotTask(id){
+    if(typeof openPanel!=="function") return;
+    openPanel("matrix");
+    setTimeout(function(){
+      var q=document.querySelector('.quad ul.tasks li.task[data-id="'+id+'"]');
+      if(!q) return;
+      q.classList.add("spot");
+      if(q.scrollIntoView) try{ q.scrollIntoView({block:"center", behavior:"smooth"}); }catch(e){ q.scrollIntoView(); }
+      setTimeout(function(){ q.classList.remove("spot"); }, 2200);
+    }, 60);
+  }
+
+  function render(){
+    // очистить квадранты
+    document.querySelectorAll(".quad").forEach(function(q){
+      q.querySelector("ul.tasks").innerHTML = "";
+    });
+    var counts = {1:0,2:0,3:0,4:0};
+    tasks.forEach(function(t){
+      var q = quadOf(t);
+      var def = isDeferred(t);
+      var off = !def && isOffDay(t);
+      if(!def && !off) counts[q]++;      // счётчик квадранта = дела на сегодня
+      var ul = document.querySelector('.quad[data-q="'+q+'"] ul.tasks');
+      var li = taskRow(t);
+      li.setAttribute("data-id", t.id);
       ul.appendChild(li);
     });
     // счётчики + пустые состояния
     document.querySelectorAll(".quad").forEach(function(q){
       var qi = +q.getAttribute("data-q");
       q.querySelector("[data-cnt]").textContent = counts[qi];
-      var emp = q.querySelector(".empty");
+      // Только собственная подсказка квадранта: бейджи «＋время»/«＋повтор»
+      // внутри дел тоже носят класс .empty, и без :scope пряталось бы одно из них.
+      var emp = q.querySelector(":scope > .empty");
       if(emp) emp.style.display = counts[qi] ? "none" : "block";
     });
     renderFocus();
@@ -1197,6 +1417,7 @@
     renderStats();
     renderPlan();
     renderFocusTimer();
+    if(typeof updatePanelDot==="function") updatePanelDot();
   }
 
   // ===== «Начни с этого» — одна первая задача по приоритету =====
@@ -1559,7 +1780,7 @@
     onboardDone(); hideOnboard();
     var QN={1:"Сделать сейчас",2:"Запланировать",3:"Быстро закрыть",4:"Отложить или убрать"};
     setTimeout(function(){
-      toast("Дело попало в «"+QN[quadOf(task)]+"». Флажки 🔥/⭐ и перетаскивание меняют колонку.");
+      toast("Важность дела — «"+QN[quadOf(task)]+"». Цветная точка слева от дела показывает её; нажми точку — откроется разбор по важности.");
     }, 900);
   }
 
@@ -1618,25 +1839,9 @@
     var ol = document.getElementById("planList");
     var planEmpty = document.getElementById("planEmpty");
     ol.innerHTML = "";
-    var QCOL = {1:"var(--q1)",2:"var(--q2)",3:"var(--q3)",4:"var(--q4)"};
     order.forEach(function(t){
-      var li = document.createElement("li");
-      if(t.done) li.className="done";
-      if(conflict[t.id]) li.className += " clash";
-      var qd = document.createElement("span"); qd.className="qd"; qd.style.background = QCOL[quadOf(t)];
-      var pt = document.createElement("span");
-      var st = timeStatus(t);
-      pt.className = "pt" + (st==="over"?" over":"");
-      var et = endTime(t);
-      pt.textContent = t.time ? (et ? (t.time+"–"+et) : t.time) : "";
-      var sp = document.createElement("span"); sp.className="t"; sp.textContent = t.text;
-      if(validDur(t.dur)){
-        var db=document.createElement("span"); db.className="pd"; db.textContent=fmtDurShort(t.dur); sp.appendChild(db);
-      }
-      if(conflict[t.id]){
-        var cl=document.createElement("span"); cl.className="clash-badge"; cl.textContent="⚠ наложение"; sp.appendChild(cl);
-      }
-      li.appendChild(qd); li.appendChild(pt); li.appendChild(sp);
+      var li = taskRow(t, { plan:true, clash:!!conflict[t.id] });
+      li.setAttribute("data-id", t.id);
       ol.appendChild(li);
     });
     planEmpty.style.display = order.length ? "none" : "block";
@@ -1933,6 +2138,15 @@
   var QSET={1:{urgent:true,important:true},2:{urgent:false,important:true},
             3:{urgent:true,important:false},4:{urgent:false,important:false}};
   function moveGhost(x,y){ if(drag&&drag.ghost) drag.ghost.style.transform="translate("+(x-drag.w/2)+"px,"+(y-18)+"px)"; }
+  // Матрица живёт в прокручиваемой панели: у её краёв тянем содержимое сами,
+  // иначе до дальнего квадранта дело просто не донести.
+  function edgeScroll(y){
+    var box=document.getElementById("panelBody");
+    if(!box || !box.offsetParent) return;
+    var r=box.getBoundingClientRect(), Z=64;
+    if(y < r.top+Z) box.scrollTop -= Math.max(6, (r.top+Z-y)/3);
+    else if(y > r.bottom-Z) box.scrollTop += Math.max(6, (y-(r.bottom-Z))/3);
+  }
   function quadUnder(x,y){
     var el=document.elementFromPoint(x,y);
     while(el){ if(el.classList&&el.classList.contains("quad")) return el; el=el.parentElement; }
@@ -1951,6 +2165,7 @@
   function onMove(e){
     if(!drag) return;
     moveGhost(e.clientX, e.clientY);
+    edgeScroll(e.clientY);
     var q=quadUnder(e.clientX, e.clientY);
     document.querySelectorAll(".quad.drop").forEach(function(x){ if(x!==q) x.classList.remove("drop"); });
     if(q) q.classList.add("drop");
@@ -2748,6 +2963,485 @@
 
     paint();
     if(on){ startTimer(); tick(); }
+  })();
+
+  // ===== Встроенные самотесты (?selftest=1 или кнопка в «Под капотом») =====
+  // Раньше та же логика вытаскивалась из живого файла в Node вручную при каждой
+  // волне. Здесь она проверяется в живом браузере на живом коде — без сборки и
+  // без копий. Тесты чистые: данные пользователя не пишутся, глобальный `tasks`
+  // подменяется только на время прогона и возвращается в finally.
+  function runSelfTests(){
+    var list=[], gr=null;
+    function G(name){ gr=name; }
+    function T(name, fn){
+      var ok=false, err="";
+      try{ ok = fn()===true; }catch(e){ ok=false; err=e && e.message ? e.message : String(e); }
+      list.push({ group:gr, name:name, ok:ok, err:err });
+    }
+    function eq(a,b){ return JSON.stringify(a)===JSON.stringify(b); }
+
+    G("Парсеры");
+    T("время «в 15:00»", function(){ return eq(parseTime("позвонить маме в 15:00"), {time:"15:00",text:"позвонить маме"}); });
+    T("время «в 7 утра»", function(){ return parseTime("зарядка в 7 утра").time==="07:00"; });
+    T("время «в 7 вечера»", function(){ return parseTime("встреча в 7 вечера").time==="19:00"; });
+    T("не время: «дом 25»", function(){ return parseTime("купить дом 25").time!=="25:00"; });
+    T("длительность «на 30 минут»", function(){ return parseDuration("созвон на 30 минут").dur===30; });
+    T("длительность «полтора часа»", function(){ return parseDuration("тренировка на полтора часа").dur===90; });
+    T("длительность «1 ч 30 мин»", function(){ return parseDuration("отчёт 1 ч 30 мин").dur===90; });
+    T("длительность вне диапазона → null", function(){ return parseDuration("проект на 3000 мин").dur===null; });
+    T("повтор «каждый день»", function(){ var r=parseRepeatPhrase("зарядка каждый день"); return r.repeat && r.repeat.days.length===7 && r.text==="зарядка"; });
+    T("повтор «по будням»", function(){ var r=parseRepeatPhrase("планёрка по будням"); return r.repeat && eq(r.repeat.days,[1,2,3,4,5]); });
+    T("без повтора → null", function(){ return parseRepeatPhrase("сходить в банк").repeat===null; });
+    T("день «завтра»", function(){
+      var base=new Date(2026,6,26), d=new Date(2026,6,27);
+      return parseDay("завтра", base)===dayKeyOf(d);
+    });
+    T("день «28.07» в будущем", function(){ return parseDay("28.07", new Date(2026,6,26))==="2026-07-28"; });
+    T("прошлое не принимается", function(){ return parseDay("вчера", new Date(2026,6,26))===null; });
+    T("timeToMin", function(){ return timeToMin("07:30")===450 && timeToMin("нет")===null; });
+    T("validTime", function(){ return validTime("09:05")===true && validTime("9:05")===false; });
+
+    G("Матрица и маршрут");
+    T("quadOf: срочно+важно = 1", function(){ return quadOf({urgent:true,important:true})===1; });
+    T("quadOf: важно = 2", function(){ return quadOf({urgent:false,important:true})===2; });
+    T("quadOf: срочно = 3", function(){ return quadOf({urgent:true,important:false})===3; });
+    T("quadOf: пусто = 4", function(){ return quadOf({urgent:false,important:false})===4; });
+    T("planOrder: время вперёд, выполненные в конец", function(){
+      var keep=tasks;
+      try{
+        tasks=[{id:"a",text:"a",time:"18:00",done:false},{id:"b",text:"b",time:"09:00",done:false},
+               {id:"c",text:"c",done:false,urgent:true,important:true},{id:"d",text:"d",time:"08:00",done:true}];
+        var o=planOrder().map(function(t){return t.id;});
+        return eq(o,["b","a","c","d"]);
+      } finally { tasks=keep; }
+    });
+    T("findOverlaps ловит наложение", function(){
+      var o=[{id:"x",time:"10:00",dur:60},{id:"y",time:"10:30",dur:30}];
+      var c=findOverlaps(o); return !!(c.x && c.y);
+    });
+    T("findOverlaps молчит на встык", function(){
+      var o=[{id:"x",time:"10:00",dur:60},{id:"y",time:"11:00",dur:30}];
+      var c=findOverlaps(o); return !c.x && !c.y;
+    });
+    T("endTime считает конец", function(){ return endTime({time:"23:40",dur:40})==="00:20"; });
+
+    G("Календарь (.ics)");
+    T("экранирование по RFC", function(){ return icsEsc("а, б; в\\г")==="а\\, б\\; в\\\\г"; });
+    T("свёртка ≤75 октетов", function(){
+      var line="SUMMARY:"+new Array(60).join("щ");
+      return icsFold(line).split("\r\n").every(function(p){ return icsOctets(p)<=75; });
+    });
+    T("свёртка обратима", function(){
+      var src="SUMMARY:"+new Array(40).join("щ🙂");
+      return icsFold(src).split("\r\n").map(function(p,i){ return i? p.slice(1):p; }).join("")===src;
+    });
+    T("RRULE: 7 дней → DAILY", function(){ return icsRRule([0,1,2,3,4,5,6])==="FREQ=DAILY"; });
+    T("RRULE: будни → BYDAY", function(){ return icsRRule([1,2,3,4,5])==="FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"; });
+    T("nextRepeatDate не звонит в прошлое", function(){
+      var now=new Date(2026,6,26,20,0,0);            // воскресенье, 20:00
+      return nextRepeatDate([0], "07:00", now)==="2026-08-02";
+    });
+    T("buildICS: CRLF и баланс BEGIN/END", function(){
+      var keep=tasks;
+      try{
+        tasks=[{id:"t1",text:"созвон",time:"15:00",dur:30,done:false}];
+        var s=buildICS(new Date(2026,6,26,9,0,0), 1).text;
+        var L=s.split("\r\n");
+        var b=L.filter(function(x){ return x.indexOf("BEGIN:")===0; }).length;
+        var e=L.filter(function(x){ return x.indexOf("END:")===0; }).length;
+        return s.indexOf("BEGIN:VCALENDAR")===0 && b===e && b>=2 && s.indexOf("\n\n")<0;
+      } finally { tasks=keep; }
+    });
+    T("buildICS: UID стабилен, SEQUENCE растёт", function(){
+      var keep=tasks;
+      try{
+        tasks=[{id:"t1",text:"созвон",time:"15:00",done:false}];
+        var a=buildICS(new Date(2026,6,26,9,0,0), 3).text, b=buildICS(new Date(2026,6,26,10,0,0), 4).text;
+        return a.indexOf("UID:sd-t1@superday.fun")>-1 && b.indexOf("UID:sd-t1@superday.fun")>-1
+            && a.indexOf("SEQUENCE:3")>-1 && b.indexOf("SEQUENCE:4")>-1;
+      } finally { tasks=keep; }
+    });
+    T("buildICS: выполненное разовое не уезжает", function(){
+      var keep=tasks;
+      try{
+        tasks=[{id:"t9",text:"сделано",time:"09:00",done:true}];
+        return buildICS(new Date(2026,6,26,12,0,0),0).text.indexOf("sd-t9@")<0;
+      } finally { tasks=keep; }
+    });
+
+    G("Форматтеры");
+    T("fmtDur", function(){ return fmtDur(90)==="1 ч 30 мин" && fmtDur(45)==="45 мин"; });
+    T("plural", function(){ return plural(1,["дело","дела","дел"])==="дело" && plural(5,["дело","дела","дел"])==="дел"; });
+    T("fmtRepeat", function(){ return fmtRepeat({days:[0,1,2,3,4,5,6]})==="каждый день"; });
+
+    G("Целостность DOM");
+    // Самая опасная поломка этой волны — переезд секций в панель: узел уехал,
+    // а скрипт продолжает искать его по id. Проверяем сам себя: вытаскиваем из
+    // собственного текста все getElementById и убеждаемся, что они находятся.
+    var DYNAMIC={ unloadPanel:1 };                    // создаётся кодом на лету
+    var src="";
+    try{
+      var sc=document.querySelectorAll("script");
+      src=sc.length ? (sc[sc.length-1].textContent||"") : "";
+    }catch(e){}
+    var wanted={}, re=/getElementById\("([A-Za-z0-9_-]+)"\)/g, m;
+    while((m=re.exec(src))) if(!DYNAMIC[m[1]]) wanted[m[1]]=1;
+    var ids=Object.keys(wanted);
+    T("все id из кода есть в разметке ("+ids.length+")", function(){
+      var miss=ids.filter(function(id){ return !document.getElementById(id); });
+      if(miss.length) throw new Error("нет: "+miss.join(", "));
+      return true;
+    });
+    T("четыре квадранта на месте", function(){ return document.querySelectorAll(".quad").length===4; });
+    T("подсказка квадранта прячется, а бейджи дела — нет", function(){
+      var keep=tasks.slice();
+      try{
+        tasks.length=0;
+        tasks.push({id:"st1",text:"проверка",urgent:true,important:true,done:false,
+                    time:null,dur:null,defer:null,repeat:null,doneOn:null});
+        render();
+        var q=document.querySelector('.quad[data-q="1"]');
+        var own=q.querySelector(":scope > .empty");
+        var badge=q.querySelector("ul.tasks .trep");
+        if(own.style.display!=="none") throw new Error("подсказка квадранта осталась");
+        if(badge.style.display==="none") throw new Error("спрятался бейдж дела");
+        return true;
+      } finally { tasks.length=0; keep.forEach(function(x){ tasks.push(x); }); render(); }
+    });
+    T("каждый раздел панели существует", function(){
+      var miss=PANEL_SECS.filter(function(s){ return !document.querySelector('.pgroup[data-sec="'+s.id+'"]'); });
+      if(miss.length) throw new Error("нет разделов: "+miss.map(function(s){return s.id;}).join(", "));
+      return true;
+    });
+    T("призрак перетаскивания выше панели", function(){
+      var g=document.createElement("li"); g.className="task drag-ghost";
+      document.body.appendChild(g);
+      var zg=+getComputedStyle(g).zIndex, zp=+getComputedStyle(document.getElementById("panel")).zIndex;
+      document.body.removeChild(g);
+      return zg>zp;
+    });
+
+    var pass=list.filter(function(r){ return r.ok; }).length;
+    return { total:list.length, pass:pass, fail:list.length-pass, list:list };
+  }
+  window.__selftest = runSelfTests;
+
+  // Отчёт: и в панель, и на отдельный экран по ?selftest=1.
+  function selftestReport(box){
+    var r=runSelfTests(), out=[], g=null;
+    r.list.forEach(function(t){
+      if(t.group!==g){ g=t.group; out.push("── "+g); }
+      out.push((t.ok?"  ✓ ":"  ✗ ")+t.name+(t.ok?"":"  — "+t.err));
+    });
+    box.textContent = (r.fail? "✗ " : "✓ ") + r.pass+"/"+r.total+" пройдено\n\n" + out.join("\n");
+    box.className = "diag-out " + (r.fail ? "bad" : "ok");
+    return r;
+  }
+
+  // ===== Правая панель: второй слой приложения =====
+  // Главный экран отвечает на один вопрос — «что делать сейчас». Всё, что не
+  // нужно каждую минуту (настройки, разбор, статистика, данные), живёт здесь и
+  // открывается по желанию. Секции физически переехали сюда теми же узлами —
+  // значит все обработчики и render-функции работают без изменений.
+  var PANEL_KEY = "superday_panel_v1";
+  var PANEL_SECS = [
+    { id:"matrix", ic:"🧭", name:"Разбор по важности" },
+    { id:"remind", ic:"🔔", name:"Напоминания и звук" },
+    { id:"voice",  ic:"🎙", name:"Голос" },
+    { id:"stats",  ic:"📊", name:"Неделя" },
+    { id:"tpl",    ic:"🗂", name:"Шаблоны дня" },
+    { id:"notes",  ic:"✍️", name:"Заметки" },
+    { id:"data",   ic:"💾", name:"Данные и календарь" },
+    { id:"help",   ic:"❔", name:"Как это работает" },
+    { id:"diag",   ic:"🔧", name:"Под капотом" }
+  ];
+  var panelEl, scrimEl, panelBtn, panelOpen=false, panelPushed=false, panelReturn=null;
+
+  function panelPrefs(){
+    try{ return JSON.parse(localStorage.getItem(PANEL_KEY)||"{}") || {}; }catch(e){ return {}; }
+  }
+  function savePanelPrefs(p){ try{ localStorage.setItem(PANEL_KEY, JSON.stringify(p)); }catch(e){} }
+
+  function pgroup(sec){ return document.querySelector('.pgroup[data-sec="'+sec+'"]'); }
+
+  // Аккордеон: открыт один раздел за раз — иначе панель превращается в тот же
+  // бесконечный свиток, от которого мы уходили.
+  function openSection(sec, scroll){
+    var found=false;
+    document.querySelectorAll(".pgroup").forEach(function(g){
+      var on = g.getAttribute("data-sec")===sec;
+      if(on) found=true;
+      g.classList.toggle("open", on);
+      var h=g.querySelector(".pg-head"); if(h) h.setAttribute("aria-expanded", on?"true":"false");
+    });
+    if(found){
+      var p=panelPrefs(); p.sec=sec; savePanelPrefs(p);
+      if(scroll){
+        var g=pgroup(sec);
+        if(g && g.scrollIntoView) try{ g.scrollIntoView({block:"start", behavior:"smooth"}); }catch(e){ g.scrollIntoView(); }
+      }
+    }
+    return found;
+  }
+  function collapseAll(){
+    document.querySelectorAll(".pgroup").forEach(function(g){
+      g.classList.remove("open");
+      var h=g.querySelector(".pg-head"); if(h) h.setAttribute("aria-expanded","false");
+    });
+    var p=panelPrefs(); p.sec=null; savePanelPrefs(p);
+  }
+
+  // Фон под панелью не должен быть достижим ни мышью, ни клавиатурой.
+  function setBackdropInert(on){
+    Array.prototype.forEach.call(document.body.children, function(el){
+      if(el===panelEl || el===scrimEl) return;
+      if(on){
+        if("inert" in HTMLElement.prototype) el.inert=true;
+        el.setAttribute("aria-hidden","true");
+      } else {
+        if("inert" in HTMLElement.prototype) el.inert=false;
+        el.removeAttribute("aria-hidden");
+      }
+    });
+  }
+
+  function panelFocusables(){
+    return Array.prototype.filter.call(
+      panelEl.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])'),
+      function(el){ return el.offsetParent!==null || el===document.activeElement; });
+  }
+
+  function openPanel(sec, viaHistory){
+    if(!panelEl) return;
+    var pref = sec || panelPrefs().sec || null;
+    if(!panelOpen){
+      // Куда вернуть фокус при закрытии. Если панель открыли не с клавиатуры
+      // (клик мышью фокус не переносит), возвращаемся на саму кнопку.
+      panelReturn = document.activeElement;
+      if(!panelReturn || panelReturn===document.body) panelReturn = panelBtn;
+      panelEl.hidden=false;
+      // Между hidden и .open нужен пересчёт стилей, иначе transform не проиграется.
+      // Именно чтение offsetWidth, а не requestAnimationFrame: кадр может прийти
+      // позже закрытия панели и вернуть класс .open уже закрытой панели.
+      void panelEl.offsetWidth;
+      panelEl.classList.add("open");
+      scrimEl.classList.add("on");
+      setBackdropInert(true);
+      panelOpen=true;
+      panelBtn.setAttribute("aria-expanded","true");
+      document.body.style.overflow="hidden";
+      if(!viaHistory && window.history && history.pushState){
+        try{ history.pushState({sdPanel:1}, "", "#panel"+(pref?("/"+pref):"")); panelPushed=true; }catch(e){ panelPushed=false; }
+      }
+      updatePanelNotes();
+    }
+    if(pref) openSection(pref, false);
+    var f=panelFocusables();
+    if(f.length) f[0].focus();
+  }
+  function doClosePanel(){
+    if(!panelOpen) return;
+    panelEl.classList.remove("open");
+    scrimEl.classList.remove("on");
+    setBackdropInert(false);
+    panelOpen=false;
+    panelBtn.setAttribute("aria-expanded","false");
+    document.body.style.overflow="";
+    var el=panelEl;
+    setTimeout(function(){ if(!panelOpen) el.hidden=true; }, 240);
+    if(panelReturn && panelReturn.focus) try{ panelReturn.focus(); }catch(e){}
+    panelReturn=null;
+    updatePanelDot();
+  }
+  function closePanel(){
+    if(!panelOpen) return;
+    // Панель — это состояние истории: аппаратная «Назад» на телефоне должна
+    // закрывать её, а не уводить со страницы. Поэтому закрытие идёт через back().
+    if(panelPushed && window.history){ panelPushed=false; history.back(); }
+    else doClosePanel();
+  }
+  function togglePanel(){ if(panelOpen) closePanel(); else openPanel(); }
+
+  // Подписи у свёрнутых разделов: панель обязана быть информативной закрытой.
+  function updatePanelNotes(){
+    function note(sec, txt){
+      var g=pgroup(sec); if(!g) return;
+      var n=g.querySelector("[data-note]"); if(n) n.textContent = txt || "";
+    }
+    var cnt=[];
+    document.querySelectorAll(".quad [data-cnt]").forEach(function(c){ cnt.push(c.textContent||"0"); });
+    note("matrix", cnt.length ? cnt.join(" · ") : "");
+    var remOn=false;
+    try{ remOn = localStorage.getItem("superday_remind")==="1"; }catch(e){}
+    var muted=false;
+    try{ muted = localStorage.getItem("superday_mute")==="1"; }catch(e){}
+    note("remind", (remOn?"включены":"выключены") + (muted?" · без звука":""));
+    var vm=document.getElementById("vmToggle");
+    note("voice", vm && vm.getAttribute("aria-pressed")==="true" ? "слушает" : "выключен");
+    var st=document.getElementById("streak");
+    note("stats", st && st.textContent ? st.textContent : "");
+    var tl=document.getElementById("tplList");
+    var tn=tl?tl.children.length:0;
+    note("tpl", tn ? (tn+" "+plural(tn,["шаблон","шаблона","шаблонов"])) : "пусто");
+    var nl=document.getElementById("noteList");
+    var nn=nl?nl.children.length:0;
+    note("notes", nn ? (nn+" "+plural(nn,["заметка","заметки","заметок"])) : "пусто");
+    var last=0;
+    try{ last=parseInt(localStorage.getItem("superday_last_export")||"0",10)||0; }catch(e){}
+    var days = last ? Math.floor((Date.now()-last)/86400000) : -1;
+    note("data", days<0 ? "копии ещё нет" : (days===0 ? "копия сегодня" : ("копия "+days+" "+plural(days,["день","дня","дней"])+" назад")));
+  }
+
+  // Точка на кнопке — только когда внутри правда что-то требует внимания.
+  function updatePanelDot(){
+    var dot=document.getElementById("panelDot"); if(!dot) return;
+    var need=false;
+    var br=document.getElementById("backupRemind");
+    if(br && !br.hidden) need=true;
+    if(!need){
+      var remOn=false;
+      try{ remOn = localStorage.getItem("superday_remind")==="1"; }catch(e){}
+      if(!remOn){
+        need = tasks.some(function(t){
+          return t.time && !t.done && !isDeferred(t) && !isOffDay(t);
+        });
+      }
+    }
+    dot.hidden = !need;
+    dot.parentNode.title = need
+      ? "В панели есть что посмотреть: напоминания или резервная копия"
+      : "Настройки, матрица, неделя, шаблоны, заметки и данные";
+    updatePanelNotes();
+  }
+
+  (function initPanel(){
+    panelEl=document.getElementById("panel");
+    scrimEl=document.getElementById("scrim");
+    panelBtn=document.getElementById("panelBtn");
+    if(!panelEl || !scrimEl || !panelBtn) return;
+
+    panelBtn.addEventListener("click", function(){ togglePanel(); });
+    document.getElementById("panelClose").addEventListener("click", function(){ closePanel(); });
+    scrimEl.addEventListener("click", function(){ closePanel(); });
+
+    document.querySelectorAll(".pg-head").forEach(function(h){
+      h.addEventListener("click", function(){
+        var g=h.parentNode, sec=g.getAttribute("data-sec");
+        if(g.classList.contains("open")) collapseAll(); else openSection(sec, true);
+      });
+    });
+
+    // Рельс: на широком экране разделы видны всегда, панель открывается сразу нужным.
+    var rail=document.getElementById("rail");
+    if(rail){
+      PANEL_SECS.forEach(function(s){
+        var b=document.createElement("button"); b.type="button";
+        b.textContent=s.ic; b.title=s.name; b.setAttribute("aria-label", s.name);
+        b.addEventListener("click", function(){ openPanel(s.id); });
+        rail.appendChild(b);
+      });
+    }
+
+    // Клавиатура: Esc закрывает, Tab не выпускает фокус из панели.
+    document.addEventListener("keydown", function(e){
+      if(!panelOpen) return;
+      if(e.key==="Escape"){ e.preventDefault(); closePanel(); return; }
+      if(e.key!=="Tab") return;
+      var f=panelFocusables(); if(!f.length) return;
+      var first=f[0], last=f[f.length-1];
+      if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+    });
+
+    window.addEventListener("popstate", function(){
+      if(panelOpen){ panelPushed=false; doClosePanel(); }
+      else if(/^#panel/.test(location.hash)) openPanel(hashSec(), true);
+    });
+
+    // Свайп от правого края — открыть; свайп вправо внутри панели — закрыть.
+    var sw=null;
+    document.addEventListener("pointerdown", function(e){
+      if(e.pointerType==="mouse") return;
+      if(!panelOpen && e.clientX > window.innerWidth-24) sw={x:e.clientX, y:e.clientY, open:true};
+      else if(panelOpen && panelEl.contains(e.target)) sw={x:e.clientX, y:e.clientY, open:false};
+      else sw=null;
+    }, {passive:true});
+    document.addEventListener("pointerup", function(e){
+      if(!sw) return;
+      var dx=e.clientX-sw.x, dy=Math.abs(e.clientY-sw.y);
+      var s=sw; sw=null;
+      if(dy>60) return;
+      if(s.open && dx<-60) openPanel();
+      else if(!s.open && dx>90) closePanel();
+    }, {passive:true});
+
+    document.getElementById("introPanel").addEventListener("click", function(){ openPanel(); });
+    document.getElementById("introHelp").addEventListener("click", function(){ openPanel("help"); });
+    var rt=document.getElementById("remindToggle");
+    if(rt) rt.addEventListener("click", function(){ setTimeout(updatePanelDot, 0); });
+
+    if(/^#panel/.test(location.hash)) openPanel(hashSec(), true);
+    else openSection(panelPrefs().sec || "matrix", false);
+    updatePanelDot();
+  })();
+
+  function hashSec(){
+    var m=/^#panel\/([a-z]+)/.exec(location.hash||"");
+    return m ? m[1] : null;
+  }
+
+  // ===== «Под капотом»: состояние копии + запуск самотестов =====
+  (function initDiag(){
+    var run=document.getElementById("diagRun"), out=document.getElementById("diagOut"),
+        dl=document.getElementById("diagList");
+    if(!run || !out || !dl) return;
+
+    function storeBytes(){
+      var n=0;
+      try{
+        for(var i=0;i<localStorage.length;i++){
+          var k=localStorage.key(i);
+          if(k && k.indexOf("superday")===0) n += k.length + (localStorage.getItem(k)||"").length;
+        }
+      }catch(e){ return -1; }
+      return n;
+    }
+    function row(k,v){
+      var dt=document.createElement("dt"); dt.textContent=k;
+      var dd=document.createElement("dd"); dd.textContent=v;
+      dl.appendChild(dt); dl.appendChild(dd);
+    }
+    function fill(){
+      dl.innerHTML="";
+      var b=storeBytes();
+      var last=0; try{ last=parseInt(localStorage.getItem("superday_last_export")||"0",10)||0; }catch(e){}
+      row("Схема данных", "v"+SCHEMA);
+      row("Дел / заметок", (tasks||[]).length + " / " + ((typeof notes!=="undefined" && notes) ? notes.length : 0));
+      row("Шаблонов", String(readTemplates().length));
+      row("Занято в браузере", b<0 ? "недоступно" : (b<1024 ? b+" Б" : Math.round(b/1024)+" КБ"));
+      row("Хранилище постоянное", storagePersisted===true ? "да" : (storagePersisted===false ? "нет — браузер может очистить" : "неизвестно"));
+      row("Последняя копия", last ? new Date(last).toLocaleString("ru-RU") : "не делалась");
+      row("Офлайн-кэш", "проверяю…");
+      if(window.caches && caches.keys){
+        caches.keys().then(function(k){
+          var sd=k.filter(function(x){ return x.indexOf("superday")===0; });
+          if(dl.lastChild) dl.lastChild.textContent = sd.length ? sd.join(", ") : "нет";
+        }).catch(function(){ if(dl.lastChild) dl.lastChild.textContent="недоступен"; });
+      } else if(dl.lastChild){ dl.lastChild.textContent="не поддерживается"; }
+    }
+
+    run.addEventListener("click", function(){ selftestReport(out); });
+    var head=pgroup("diag");
+    if(head) head.querySelector(".pg-head").addEventListener("click", fill);
+    fill();
+
+    // Прямая ссылка для проверки сборки: app.html?selftest=1
+    if(/[?&]selftest=1/.test(location.search||"")){
+      openPanel("diag");
+      var r=selftestReport(out);
+      var g=pgroup("diag"); if(g){ var n=g.querySelector("[data-note]"); if(n) n.textContent=r.pass+"/"+r.total; }
+      document.title=(r.fail? "FAIL " : "OK ")+r.pass+"/"+r.total+" — SUPER DAY selftest";
+    }
   })();
 
   // регистрация service worker для офлайна
