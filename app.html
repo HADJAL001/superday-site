@@ -323,6 +323,16 @@
   .day .lbl{font-size:10px; letter-spacing:.5px; text-transform:uppercase; color:var(--text-muted)}
   .day.today .lbl{color:var(--champagne)}
   .stats-foot{margin-top:13px; font-size:11.5px; color:var(--text-muted); line-height:1.5; text-align:center}
+  .ctxbal{margin-top:15px; padding-top:14px; border-top:1px solid var(--hair-soft)}
+  .ctxbal-head{font-size:12px; font-weight:700; color:var(--champagne); text-align:center; margin-bottom:8px}
+  .ctxbal-bar{display:flex; height:10px; border-radius:999px; overflow:hidden; background:rgba(222,228,238,.06)}
+  .ctxseg{display:block}
+  .ctxseg.ctx-work{background:#7aa2ff}
+  .ctxseg.ctx-home{background:#e7c56e}
+  .ctxseg.ctx-health{background:#6ed7a0}
+  .ctxseg.ctx-untagged{background:var(--hair)}
+  .ctxbal-legend{display:flex; flex-wrap:wrap; gap:9px; justify-content:center; margin-top:9px;
+    font-size:11.5px; color:var(--text-dim)}
 
   /* ===== Шаблоны дня ===== */
   .templates{max-width:760px; margin:22px auto 0}
@@ -407,6 +417,15 @@
   .tloc.empty{color:var(--text-muted); background:none; border-style:dashed; opacity:.5}
   .tloc.empty:hover{opacity:1; color:var(--champagne)}
   .task.deferred .tloc,.task.offday .tloc{opacity:.35}
+
+  /* ===== Сфера жизни дела (баланс недели) ===== */
+  .tctx{flex:0 0 auto; cursor:pointer; font-family:inherit; font-size:11px; font-weight:600; white-space:nowrap;
+    color:var(--plat-dim); background:rgba(222,228,238,.06); border:1px solid var(--hair-soft);
+    border-radius:999px; padding:3px 8px; margin-top:1px; transition:.15s}
+  .tctx:hover{border-color:var(--gold); color:var(--gold-bright)}
+  .tctx.empty{color:var(--text-muted); background:none; border-style:dashed; opacity:.5}
+  .tctx.empty:hover{opacity:1; color:var(--champagne)}
+  .task.deferred .tctx,.task.offday .tctx{opacity:.35}
 
   /* ===== Онбординг первого экрана (показывается один раз) ===== */
   .onboard{margin:0 0 18px; border:1px solid var(--hair); border-radius:16px; padding:16px 18px;
@@ -999,6 +1018,7 @@
         </div>
         <div class="week" id="weekBars"></div>
         <div class="stats-foot" id="statsFoot"></div>
+        <div class="ctxbal" id="ctxBalance" aria-label="Баланс недели по сферам жизни"></div>
       </section>
     </div>
   </section>
@@ -1092,7 +1112,13 @@
   try{ tasks = JSON.parse(localStorage.getItem(STORE_KEY) || "[]") || []; }catch(e){ tasks = []; }
 
   // ===== Версия схемы данных + миграции (на будущее, чтобы не терять данные) =====
-  var SCHEMA = 6;
+  var SCHEMA = 7;
+  var CTX_LIST = ["work","home","health"];
+  var CTX_LABEL = {work:"Работа", home:"Дом", health:"Здоровье"};
+  var CTX_ICON = {work:"💼", home:"🏠", health:"❤️"};
+  // Нормализация контекста жизни: только фиксированный список, иначе null
+  // («без контекста» — законное состояние, не ошибка).
+  function normContext(c){ return (CTX_LIST.indexOf(c)>=0) ? c : null; }
   // Нормализация повтора: принимаем и {days:[...]} и голый массив — возвращаем
   // либо {days:[отсортированные уникальные 0..6]}, либо null. Пустой набор = нет повтора.
   function normRepeat(r){
@@ -1126,6 +1152,7 @@
     // v5: поле repeat ({days:[0..6]} | null) — регулярное дело; doneOn — день отметки
     //     «выполнено» (нужен, чтобы завтра регулярное дело само стало невыполненным).
     // v6: поле loc ({lat,lon,label,addr} | null) — место дела для «Карты дел».
+    // v7: поле context ("work"|"home"|"health"|null) — сфера жизни, для баланса недели.
     try{
       tasks = (tasks||[]).map(function(t){
         var tm = (typeof t.time==="string" && /^\d{2}:\d{2}$/.test(t.time)) ? t.time : null;
@@ -1134,9 +1161,10 @@
         var rp = normRepeat(t.repeat);
         var dn = (typeof t.doneOn==="string" && /^\d{4}-\d{2}-\d{2}$/.test(t.doneOn)) ? t.doneOn : null;
         var lc = normLoc(t.loc);
+        var cx = normContext(t.context);
         return { id: t.id || ("t"+Math.random().toString(36).slice(2)),
                  text: String(t.text||""), urgent: !!t.urgent, important: !!t.important, done: !!t.done,
-                 time: tm, dur: du, defer: df, repeat: rp, doneOn: dn, loc: lc,
+                 time: tm, dur: du, defer: df, repeat: rp, doneOn: dn, loc: lc, context: cx,
                  remindedOn: (typeof t.remindedOn==="string"? t.remindedOn : null) };
       });
     }catch(e){}
@@ -1634,6 +1662,19 @@
         lc.setAttribute("aria-label","Задать место дела");
       }
       lc.addEventListener("click", function(){ editTaskLoc(t); });
+      var cx = document.createElement("button"); cx.type="button";
+      var ctxVal = normContext(t.context);
+      cx.className = "tctx" + (ctxVal ? "" : " empty");
+      if(ctxVal){
+        cx.textContent = CTX_ICON[ctxVal]+" "+CTX_LABEL[ctxVal];
+        cx.title = "Сфера жизни: "+CTX_LABEL[ctxVal]+" · нажми, чтобы сменить";
+        cx.setAttribute("aria-label","Сфера жизни: "+CTX_LABEL[ctxVal]+". Нажми, чтобы сменить.");
+      } else {
+        cx.textContent = "＋сфера";
+        cx.title = "Отметить сферу жизни — работа, дом или здоровье (для баланса недели)";
+        cx.setAttribute("aria-label","Отметить сферу жизни дела");
+      }
+      cx.addEventListener("click", function(){ cycleTaskContext(t); });
       var del = document.createElement("button"); del.className="del"; del.type="button";
       del.setAttribute("aria-label","Удалить"); del.innerHTML="&times;";
       del.addEventListener("click", function(){ tasks = tasks.filter(function(x){return x.id!==t.id;}); save(); render(); });
@@ -1653,7 +1694,7 @@
       // Бейджи живут отдельной строкой: иначе на узком экране текст дела
       // сжимается в столбик из двух букв, а он тут главное.
       var meta = document.createElement("span"); meta.className="tmeta";
-      meta.appendChild(tm); meta.appendChild(dr); meta.appendChild(rp); meta.appendChild(df); meta.appendChild(lc);
+      meta.appendChild(tm); meta.appendChild(dr); meta.appendChild(rp); meta.appendChild(df); meta.appendChild(lc); meta.appendChild(cx);
       li.appendChild(meta);
       li.appendChild(del);
       if(!plan){
@@ -2265,6 +2306,60 @@
     }
     document.getElementById("statsFoot").textContent =
       digest + "Сегодня выполнено: "+todayV+" · всего за всё время: "+total+". Данные считаются только в этом браузере.";
+    renderCtxBalance();
+  }
+  // Баланс недели по сферам жизни: отвечает «на что уходит жизнь», а не
+  // только «что успел» (readStats/renderStats выше — про число дел, не про их
+  // природу). Чистая функция без побочных эффектов — тестируется напрямую.
+  function weekContextBalance(list, todayStr){
+    var endDate = new Date(todayStr+"T00:00:00");
+    var keys = {};
+    for(var i=0;i<7;i++){
+      var d = new Date(endDate); d.setDate(d.getDate()-i);
+      keys[dayKeyOf(d)] = true;
+    }
+    var out = {work:0, home:0, health:0, untagged:0, total:0};
+    (list||[]).forEach(function(t){
+      if(!t || !t.done || !t.doneOn || !keys[t.doneOn]) return;
+      out.total++;
+      var c = normContext(t.context);
+      if(c) out[c]++; else out.untagged++;
+    });
+    return out;
+  }
+  function renderCtxBalance(){
+    var wrap = document.getElementById("ctxBalance"); if(!wrap) return;
+    var bal = weekContextBalance(tasks, todayKey());
+    wrap.innerHTML = "";
+    if(!bal.total){
+      wrap.textContent = "Отметь сферу дела («＋сфера» у строки), чтобы увидеть баланс недели.";
+      return;
+    }
+    var head = document.createElement("div"); head.className="ctxbal-head";
+    head.textContent = "Баланс недели: "+bal.total+" "+plural(bal.total,["дело","дела","дел"])+" за 7 дней";
+    wrap.appendChild(head);
+    var bar = document.createElement("div"); bar.className="ctxbal-bar";
+    CTX_LIST.concat(["untagged"]).forEach(function(c){
+      var n = bal[c]; if(!n) return;
+      var seg = document.createElement("span"); seg.className="ctxseg ctx-"+c;
+      seg.style.flexGrow = n;
+      seg.title = (c==="untagged"?"Без сферы":CTX_LABEL[c])+": "+n;
+      bar.appendChild(seg);
+    });
+    wrap.appendChild(bar);
+    var legend = document.createElement("div"); legend.className="ctxbal-legend";
+    CTX_LIST.forEach(function(c){
+      if(!bal[c]) return;
+      var it = document.createElement("span"); it.className="ctxleg";
+      it.textContent = CTX_ICON[c]+" "+CTX_LABEL[c]+" "+bal[c];
+      legend.appendChild(it);
+    });
+    if(bal.untagged){
+      var it2 = document.createElement("span"); it2.className="ctxleg";
+      it2.textContent = "· без сферы "+bal.untagged;
+      legend.appendChild(it2);
+    }
+    wrap.appendChild(legend);
   }
   function plural(n, forms){
     var n10=n%10, n100=n%100;
@@ -2695,6 +2790,19 @@
       t.loc = { lat:found.lat, lon:found.lon, label:label, addr:found.addr };
       save(); render(); toast("Место сохранено: " + label);
     });
+  }
+  // Сфера жизни дела: цикл по кругу (без сферы → работа → дом → здоровье → без
+  // сферы), как смена квадранта стрелками — фиксированный список из четырёх
+  // состояний удобнее листать кликом, чем набирать текстом.
+  function nextContext(c){
+    var cur = normContext(c);
+    var i = cur ? CTX_LIST.indexOf(cur) : -1;
+    return (i+1 < CTX_LIST.length) ? CTX_LIST[i+1] : null;
+  }
+  function cycleTaskContext(t){
+    t.context = nextContext(t.context);
+    save(); render();
+    toast(t.context ? (CTX_ICON[t.context]+" "+CTX_LABEL[t.context]) : "Сфера убрана");
   }
   function haversineKm(a, b){
     var R=6371, dLat=(b.lat-a.lat)*Math.PI/180, dLon=(b.lon-a.lon)*Math.PI/180;
@@ -3933,6 +4041,33 @@
       ];
       var res=icsEventsToTasks(events, [], "2026-08-05");
       return res.added[0].defer===null && res.added[1].defer==="2026-08-06";
+    });
+
+    G("Контексты жизни");
+    T("normContext: только фиксированный список", function(){
+      return normContext("work")==="work" && normContext("home")==="home" &&
+             normContext("health")==="health" && normContext("hobby")===null && normContext(null)===null;
+    });
+    T("nextContext: цикл без сферы → работа → дом → здоровье → без сферы", function(){
+      return nextContext(null)==="work" && nextContext("work")==="home" &&
+             nextContext("home")==="health" && nextContext("health")===null;
+    });
+    T("weekContextBalance: считает только done+doneOn за 7 дней, группирует по context", function(){
+      var list=[
+        { done:true, doneOn:"2026-08-05", context:"work" },
+        { done:true, doneOn:"2026-08-04", context:"work" },
+        { done:true, doneOn:"2026-08-03", context:"home" },
+        { done:true, doneOn:"2026-08-05", context:null },
+        { done:false, doneOn:"2026-08-05", context:"health" },
+        { done:true, doneOn:null, context:"health" }
+      ];
+      var bal=weekContextBalance(list, "2026-08-05");
+      return bal.work===2 && bal.home===1 && bal.untagged===1 && bal.health===0 && bal.total===4;
+    });
+    T("weekContextBalance: старше 7 дней не считается", function(){
+      var list=[{ done:true, doneOn:"2026-07-28", context:"work" }];
+      var bal=weekContextBalance(list, "2026-08-05");
+      return bal.total===0;
     });
 
     G("Форматтеры");
