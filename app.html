@@ -337,6 +337,13 @@
   .remind-toggle[aria-pressed=true]{color:#141414; border-color:transparent; background:var(--grad-gold)}
   .remind-note{flex:1; min-width:180px; font-size:11.5px; color:var(--text-muted); line-height:1.45}
   .remind-note b{color:var(--text-dim); font-weight:600}
+  /* Тихий режим — один переключатель на весь звук приложения */
+  .mute-toggle{flex:0 0 auto; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--text-dim);
+    background:#0E0F13; border:1px solid var(--hair); border-radius:999px; padding:8px 14px; display:inline-flex;
+    align-items:center; gap:7px; transition:.2s}
+  .mute-toggle:hover{color:var(--champagne); border-color:var(--hair-soft)}
+  .mute-toggle[aria-pressed=true]{color:#0F1014; border-color:transparent;
+    background:linear-gradient(180deg,#9aa0ab,#6f747e)}
   .hint.toast-on{color:var(--gold-bright); font-weight:600}
 
   /* ===== Длительность дел / таймбоксинг ===== */
@@ -437,6 +444,10 @@
   <section class="remindbar" id="remindBar" aria-label="Напоминания">
     <button class="remind-toggle" id="remindToggle" type="button" aria-pressed="false">
       <span aria-hidden="true">🔔</span><span id="remindLabel">Напоминать о делах со временем</span>
+    </button>
+    <button class="mute-toggle" id="muteToggle" type="button" aria-pressed="false"
+            title="Тихий режим — выключить все звуки приложения (напоминания останутся на экране)">
+      <span aria-hidden="true" id="muteIc">🔊</span><span id="muteLabel">Звук включён</span>
     </button>
     <span class="remind-note" id="remindNote">Когда наступит время дела — приложение подскажет уведомлением и голосом. <b>Работает, пока открыта эта вкладка.</b> Фоновые напоминания при закрытом приложении — в полной версии.</span>
   </section>
@@ -622,6 +633,42 @@
     clearTimeout(_toastTimer);
     _toastTimer=setTimeout(function(){ el.classList.remove("toast-on"); if(typeof refreshHint==="function") refreshHint(); }, 2600);
   }
+  // ===== Тихий режим — одна кнопка на весь звук приложения =====
+  // Звук раньше шёл из трёх независимых мест (сигнал голосового режима,
+  // напоминания, финиш таймбокса) и заглушить его одним движением было нельзя.
+  // Теперь все они спрашивают isMuted(). Тихий режим глушит ЗВУК, но не гасит
+  // сами напоминания: тост на экране и системное уведомление остаются —
+  // уведомление просто приходит без сигнала (silent).
+  var MUTE_KEY="superday_mute", _muted=null;
+  function isMuted(){
+    if(_muted===null){ try{ _muted = localStorage.getItem(MUTE_KEY)==="1"; }catch(e){ _muted=false; } }
+    return !!_muted;
+  }
+  function paintMute(){
+    var b=document.getElementById("muteToggle"); if(!b) return;
+    var m=isMuted(), ic=document.getElementById("muteIc"), lb=document.getElementById("muteLabel");
+    b.setAttribute("aria-pressed", m?"true":"false");
+    if(ic) ic.textContent = m ? "🔇" : "🔊";
+    if(lb) lb.textContent = m ? "Тихий режим" : "Звук включён";
+  }
+  function setMuted(v){
+    _muted=!!v;
+    try{ localStorage.setItem(MUTE_KEY, _muted?"1":"0"); }catch(e){}
+    // Уже начатую фразу тоже обрываем — иначе «выключил» ощущается сломанным.
+    if(_muted){ try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(e){} }
+    paintMute();
+  }
+  (function(){
+    var b=document.getElementById("muteToggle"); if(!b) return;
+    b.addEventListener("click", function(){
+      setMuted(!isMuted());
+      if(typeof toast==="function") toast(isMuted()
+        ? "🔇 Тихий режим: приложение молчит. Напоминания остаются на экране."
+        : "🔊 Звук включён");
+    });
+    paintMute();
+  })();
+
   function quadOf(t){ return t.urgent && t.important ? 1 : (!t.urgent && t.important ? 2 : (t.urgent && !t.important ? 3 : 4)); }
 
   // ===== Время у задачи: парсинг из речи/текста + хелперы расписания =====
@@ -943,6 +990,7 @@
   function saveFocus(){ try{ if(focusState) localStorage.setItem(FOCUS_KEY, JSON.stringify(focusState)); else localStorage.removeItem(FOCUS_KEY); }catch(e){} }
   function fmtClock(ms){ if(ms<0)ms=0; var s=Math.round(ms/1000); var m=Math.floor(s/60); s=s%60; function p(n){return n<10?"0"+n:""+n;} return p(m)+":"+p(s); }
   function focusChime(){
+    if(typeof isMuted==="function" && isMuted()) return;   // тихий режим
     try{
       var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return; var ac=new AC();
       [880,1174,1568].forEach(function(f,i){
@@ -955,7 +1003,7 @@
       setTimeout(function(){ try{ ac.close(); }catch(e){} }, 1400);
     }catch(e){}
   }
-  function focusSay(txt){ try{ if(!window.speechSynthesis) return; var u=new SpeechSynthesisUtterance(txt); u.lang="ru-RU"; u.rate=0.98; u.pitch=0.96; window.speechSynthesis.speak(u); }catch(e){} }
+  function focusSay(txt){ if(typeof isMuted==="function" && isMuted()) return; try{ if(!window.speechSynthesis) return; var u=new SpeechSynthesisUtterance(txt); u.lang="ru-RU"; u.rate=0.98; u.pitch=0.96; window.speechSynthesis.speak(u); }catch(e){} }
   function startFocusInterval(){ if(focusInt) return; focusInt=setInterval(focusTick, 250); }
   function stopFocusInterval(){ if(focusInt){ clearInterval(focusInt); focusInt=null; } }
   function focusRemaining(){ if(!focusState) return 0; if(focusState.paused) return focusState.remainingMs; return focusState.endTs - Date.now(); }
@@ -971,7 +1019,8 @@
   function focusFinish(){
     if(!focusState) return; stopFocusInterval();
     focusChime(); focusSay("Время вышло. "+focusState.text);
-    try{ if(window.Notification && Notification.permission==="granted"){ new Notification("SUPER DAY — таймбокс завершён", { body:focusState.text, tag:"sd-focus", silent:false }); } }catch(e){}
+    // В тихом режиме уведомление всё равно приходит — просто без сигнала.
+    try{ if(window.Notification && Notification.permission==="granted"){ new Notification("SUPER DAY — таймбокс завершён", { body:focusState.text, tag:"sd-focus", silent:(typeof isMuted==="function" && isMuted()) }); } }catch(e){}
     if(typeof toast==="function") toast("⏳ Время вышло: "+focusState.text);
     focusState.done=true; focusState.paused=true; focusState.remainingMs=0; saveFocus();
     renderFocusTimer();
@@ -1698,6 +1747,8 @@
       window.speechSynthesis.onvoiceschanged=function(){ chooseVoice(); };
     }
     function speak(t, cb){
+      // Тихий режим: молчим, но цепочку не рвём — ответ остаётся на экране (setStatus).
+      if(typeof isMuted==="function" && isMuted()){ speaking=false; cb&&cb(); return; }
       if(!window.speechSynthesis){ cb&&cb(); return; }
       try{
         if(!pickedVoice) chooseVoice();
@@ -1713,6 +1764,7 @@
     }
     // — короткий сигнал «слушаю» —
     function chime(){
+      if(typeof isMuted==="function" && isMuted()) return;   // тихий режим
       try{
         var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
         var ac=new AC(), o=ac.createOscillator(), g=ac.createGain();
@@ -1830,7 +1882,11 @@
     function startHands(){
       rec.interimResults=true; rec.continuous=true; mode="hands"; awake=false;
       vmToggle.setAttribute("aria-pressed","true");
-      setStatus("<b>Слушаю.</b> Скажи «<b>"+wname()+"</b>», затем задачу или «заметка …».");
+      // Если включён тихий режим — предупреждаем прямо здесь, иначе «оно ответит
+      // голосом» выглядит сломанным: ответы будут только текстом.
+      var mutedNow = (typeof isMuted==="function" && isMuted());
+      setStatus("<b>Слушаю.</b> Скажи «<b>"+wname()+"</b>», затем задачу или «заметка …»."
+        + (mutedNow ? " <b>🔇 Тихий режим включён</b> — отвечаю текстом, без голоса." : ""));
       try{ rec.start(); }catch(e){}
       speak("Голосовой режим включён.");
     }
@@ -1933,6 +1989,7 @@
       return best;
     }
     function speakRemind(txt){
+      if(typeof isMuted==="function" && isMuted()) return;   // тихий режим
       try{
         if(!window.speechSynthesis) return;
         var u=new SpeechSynthesisUtterance(txt); u.lang="ru-RU";
@@ -1941,6 +1998,7 @@
       }catch(e){}
     }
     function chimeRemind(){
+      if(typeof isMuted==="function" && isMuted()) return;   // тихий режим
       try{
         var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
         var ac=new AC(), o=ac.createOscillator(), g=ac.createGain();
@@ -1967,7 +2025,7 @@
       var shown=false;
       try{
         if(window.Notification && Notification.permission==="granted"){
-          new Notification("SUPER DAY — "+ (t.time||""), { body: t.text, tag:"sd-"+t.id, silent:false });
+          new Notification("SUPER DAY — "+ (t.time||""), { body: t.text, tag:"sd-"+t.id, silent:(typeof isMuted==="function" && isMuted()) });
           shown=true;
         }
       }catch(e){}
