@@ -20,10 +20,25 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="SUPER DAY" />
 
+<!-- Языковые версии одной страницы: язык выбирается по браузеру, ?lang= перекрывает.
+     Отдельных файлов на язык нет, поэтому все hreflang ведут на этот же адрес. -->
+<link rel="alternate" hreflang="ru" href="https://superday.fun/?lang=ru" />
+<link rel="alternate" hreflang="en" href="https://superday.fun/?lang=en" />
+<link rel="alternate" hreflang="es" href="https://superday.fun/?lang=es" />
+<link rel="alternate" hreflang="de" href="https://superday.fun/?lang=de" />
+<link rel="alternate" hreflang="fr" href="https://superday.fun/?lang=fr" />
+<link rel="alternate" hreflang="zh" href="https://superday.fun/?lang=zh" />
+<link rel="alternate" hreflang="x-default" href="https://superday.fun/" />
+
 <!-- Open Graph / соцсети -->
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="SUPER DAY" />
 <meta property="og:locale" content="ru_RU" />
+<meta property="og:locale:alternate" content="en_US" />
+<meta property="og:locale:alternate" content="es_ES" />
+<meta property="og:locale:alternate" content="de_DE" />
+<meta property="og:locale:alternate" content="fr_FR" />
+<meta property="og:locale:alternate" content="zh_CN" />
 <meta property="og:title" content="SUPER DAY — умный премиальный планировщик дня" />
 <meta property="og:description" content="Голос, приоритеты по матрице Эйзенхауэра, AI-дебаты и озвучка плана. Создано с помощью OSGARD." />
 <meta property="og:image" content="https://superday.fun/assets/og.png" />
@@ -1160,5 +1175,8 @@
     });
   }
 </script>
+<!-- Язык страницы по настройкам браузера (волна 11). data-scope="site" — грузится
+     ещё и словарь лендинга, чтобы приложение не тянуло его тексты, и наоборот. -->
+<script src="i18n.js" data-scope="site"></script>
 </body>
 </html>
