@@ -353,6 +353,34 @@
   .tdur:hover{border-color:var(--gold); color:var(--gold-bright)}
   .tdur.empty{color:var(--text-muted); background:none; border-style:dashed; opacity:.5}
   .tdur.empty:hover{opacity:1; color:var(--champagne)}
+
+  /* ===== Перенос дела на завтра + разгрузка дня ===== */
+  .tdef{flex:0 0 auto; cursor:pointer; font-family:inherit; font-size:11px; font-weight:600; white-space:nowrap;
+    color:var(--text-muted); background:none; border:1px solid var(--hair-soft); border-style:dashed;
+    border-radius:999px; padding:3px 8px; margin-top:1px; opacity:.5; transition:.15s}
+  .tdef:hover{opacity:1; color:var(--champagne); border-style:solid}
+  .tdef.on{opacity:1; color:#0F1014; border-color:transparent; border-style:solid;
+    background:linear-gradient(180deg,#9aa0ab,#6f747e)}
+  .task.deferred .txt{opacity:.5}
+  .task.deferred .ttime,.task.deferred .tdur{opacity:.35}
+  .ds-unload{margin-top:9px; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:700; color:#141414;
+    background:var(--grad-gold); border:0; border-radius:999px; padding:9px 16px; transition:.2s}
+  .ds-unload:hover{filter:brightness(1.06)}
+  .ds-unload[disabled]{opacity:.5; cursor:default; filter:none}
+  .ul-panel{margin-top:10px; border:1px solid var(--hair); border-radius:12px; padding:11px 13px;
+    background:rgba(20,21,26,.55)}
+  .ul-head{font-size:12px; color:var(--text-dim); line-height:1.5}
+  .ul-list{list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:5px}
+  .ul-list li{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; font-size:12.5px}
+  .ul-t{color:var(--text)}
+  .ul-m{font-size:11px; color:var(--text-muted)}
+  .ul-row{display:flex; gap:9px; flex-wrap:wrap; margin-top:11px}
+  .ul-ok,.ul-no{cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; border-radius:999px;
+    padding:8px 15px; transition:.2s}
+  .ul-ok{color:#141414; background:var(--grad-gold); border:0}
+  .ul-ok:hover{filter:brightness(1.06)}
+  .ul-no{color:var(--text-dim); background:#0E0F13; border:1px solid var(--hair)}
+  .ul-no:hover{color:var(--champagne)}
   li.task.done .tdur{opacity:.4; filter:saturate(.3)}
   ol.plan li .t .pd{display:inline-block; margin-left:8px; font-size:11px; font-weight:600; color:var(--text-muted)}
   ol.plan li.clash{position:relative}
@@ -594,7 +622,7 @@
   try{ tasks = JSON.parse(localStorage.getItem(STORE_KEY) || "[]") || []; }catch(e){ tasks = []; }
 
   // ===== Версия схемы данных + миграции (на будущее, чтобы не терять данные) =====
-  var SCHEMA = 3;
+  var SCHEMA = 4;
   (function migrate(){
     var cur = 0;
     try{ cur = parseInt(localStorage.getItem("superday_schema")||"0",10) || 0; }catch(e){ cur = 0; }
@@ -602,13 +630,15 @@
     // Нормализуем задачи под текущую форму (без потерь): гарантируем поля.
     // v2: поле time ("ЧЧ:ММ" | null) и remindedOn (день последнего напоминания).
     // v3: поле dur (длительность в минутах | null) — таймбоксинг.
+    // v4: поле defer ("ГГГГ-ММ-ДД" | null) — дело отложено на этот день.
     try{
       tasks = (tasks||[]).map(function(t){
         var tm = (typeof t.time==="string" && /^\d{2}:\d{2}$/.test(t.time)) ? t.time : null;
         var du = (typeof t.dur==="number" && t.dur>0 && t.dur<=1440) ? Math.round(t.dur) : null;
+        var df = (typeof t.defer==="string" && /^\d{4}-\d{2}-\d{2}$/.test(t.defer)) ? t.defer : null;
         return { id: t.id || ("t"+Math.random().toString(36).slice(2)),
                  text: String(t.text||""), urgent: !!t.urgent, important: !!t.important, done: !!t.done,
-                 time: tm, dur: du, remindedOn: (typeof t.remindedOn==="string"? t.remindedOn : null) };
+                 time: tm, dur: du, defer: df, remindedOn: (typeof t.remindedOn==="string"? t.remindedOn : null) };
       });
     }catch(e){}
     try{ localStorage.setItem("superday_schema", String(SCHEMA)); }catch(e){}
@@ -866,7 +896,7 @@
     var pd = parseDuration(raw);
     var pt = parseTime(pd.text || raw);
     var text = pt.text || pd.text || raw;
-    tasks.push({ id:uid(), text:text, urgent:pend.urgent, important:pend.important, done:false, time:pt.time, dur:pd.dur, remindedOn:null });
+    tasks.push({ id:uid(), text:text, urgent:pend.urgent, important:pend.important, done:false, time:pt.time, dur:pd.dur, defer:null, remindedOn:null });
     if(pt.time || pd.dur){
       var bits=[]; if(pt.time) bits.push("⏱ "+pt.time); if(pd.dur) bits.push("⏳ "+fmtDurShort(pd.dur));
       toast(bits.join(" · ")+" · встало в расписание");
@@ -889,10 +919,12 @@
     });
     var counts = {1:0,2:0,3:0,4:0};
     tasks.forEach(function(t){
-      var q = quadOf(t); counts[q]++;
+      var q = quadOf(t);
+      var def = isDeferred(t);
+      if(!def) counts[q]++;              // счётчик квадранта = дела на сегодня
       var ul = document.querySelector('.quad[data-q="'+q+'"] ul.tasks');
       var li = document.createElement("li");
-      li.className = "task" + (t.done ? " done" : "");
+      li.className = "task" + (t.done ? " done" : "") + (def ? " deferred" : "");
       var chk = document.createElement("span"); chk.className="chk"; chk.setAttribute("role","checkbox");
       chk.setAttribute("aria-checked", t.done?"true":"false"); chk.innerHTML = t.done ? "&#10003;" : "";
       chk.tabIndex = 0; chk.setAttribute("aria-label", "Отметить выполненной: "+t.text);
@@ -930,13 +962,22 @@
         dr.setAttribute("aria-label","Задать длительность дела");
       }
       dr.addEventListener("click", function(){ editTaskDur(t); });
+      var df = document.createElement("button"); df.type="button";
+      df.className = "tdef" + (def ? " on" : "");
+      df.textContent = def ? "← сегодня" : "→ завтра";
+      df.title = def ? "Вернуть дело в сегодняшний день" : "Перенести на завтра — уйдёт из сегодняшнего маршрута и бюджета, но не потеряется";
+      df.setAttribute("aria-label", (def?"Вернуть сегодня: ":"Перенести на завтра: ")+t.text);
+      df.addEventListener("click", function(){
+        setDefer(t, !isDeferred(t));
+        toast(isDeferred(t) ? "→ Завтра: "+t.text : "← Сегодня: "+t.text);
+      });
       var del = document.createElement("button"); del.className="del"; del.type="button";
       del.setAttribute("aria-label","Удалить"); del.innerHTML="&times;";
       del.addEventListener("click", function(){ tasks = tasks.filter(function(x){return x.id!==t.id;}); save(); render(); });
       var grip = document.createElement("span"); grip.className="grip"; grip.setAttribute("aria-hidden","true");
       grip.title="Перетащи в другой квадрант"; grip.innerHTML="&#9783;";
       grip.addEventListener("pointerdown", function(e){ startDrag(e, t, li); });
-      li.appendChild(chk); li.appendChild(tx); li.appendChild(tm); li.appendChild(dr); li.appendChild(del); li.appendChild(grip);
+      li.appendChild(chk); li.appendChild(tx); li.appendChild(tm); li.appendChild(dr); li.appendChild(df); li.appendChild(del); li.appendChild(grip);
       ul.appendChild(li);
     });
     // счётчики + пустые состояния
@@ -957,7 +998,7 @@
   function renderFocus(){
     var card=document.getElementById("focusCard");
     if(!card) return;
-    var next=tasks.slice().filter(function(t){return !t.done;})
+    var next=tasks.filter(function(t){return !t.done && isToday(t);})
       .sort(function(a,b){ return quadOf(a)-quadOf(b); })[0];
     if(!next){ card.hidden=true; card.__id=null; return; }
     card.hidden=false; card.__id=next.id;
@@ -1091,6 +1132,28 @@
     save(); render();
   }
   function todayKey(){ var d=new Date(); function p(n){return n<10?"0"+n:""+n;} return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); }
+  // ===== Перенос дела на завтра =====
+  // Дело не удаляется и не прячется — оно остаётся в своём квадранте, но
+  // помечено «→ завтра» и НЕ входит в сегодняшний маршрут, бюджет, фокус и
+  // напоминания. Когда завтра наступит, метка снимается сама (clearStaleDefer).
+  function dayKeyOf(d){ function p(n){return n<10?"0"+n:""+n;} return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); }
+  function tomorrowKey(){ var d=new Date(); d.setDate(d.getDate()+1); return dayKeyOf(d); }
+  function isDeferred(t){ return !!(t && typeof t.defer==="string" && t.defer > todayKey()); }
+  function isToday(t){ return !isDeferred(t); }
+  // Наступивший срок снимаем молча — дело просто возвращается в сегодняшний день.
+  function clearStaleDefer(){
+    var changed=false;
+    (tasks||[]).forEach(function(t){ if(t.defer && !isDeferred(t)){ t.defer=null; changed=true; } });
+    if(changed && typeof save==="function") save();
+    return changed;
+  }
+  function setDefer(t, on){
+    if(!t) return;
+    t.defer = on ? tomorrowKey() : null;
+    if(on) t.remindedOn = null;      // завтра напомним заново
+    save(); render();
+  }
+
   function readStats(){ try{ return JSON.parse(localStorage.getItem("superday_stats_v1")||"{}")||{}; }catch(e){ return {}; } }
   function recordCompletion(){
     try{ var s=readStats(); var k=todayKey(); s[k]=(s[k]||0)+1; localStorage.setItem("superday_stats_v1", JSON.stringify(s)); }catch(e){}
@@ -1179,7 +1242,8 @@
   // Маршрут дня: выполненные — вниз; среди активных дела со временем идут первыми
   // в хронопорядке, затем — по приоритету квадранта.
   function planOrder(){
-    return tasks.slice().sort(function(a,b){
+    // Отложенные на завтра в сегодняшний маршрут не входят.
+    return tasks.filter(isToday).sort(function(a,b){
       if(a.done!==b.done) return a.done?1:-1;
       var ka=timeSortKey(a), kb=timeSortKey(b);
       if(ka!==kb) return ka-kb;
@@ -1231,10 +1295,10 @@
       li.appendChild(qd); li.appendChild(pt); li.appendChild(sp);
       ol.appendChild(li);
     });
-    planEmpty.style.display = tasks.length ? "none" : "block";
-    var done = tasks.filter(function(t){return t.done;}).length;
-    document.getElementById("doneLine").textContent = done + " из " + tasks.length + " выполнено";
-    document.getElementById("barFill").style.width = tasks.length ? (done/tasks.length*100)+"%" : "0";
+    planEmpty.style.display = order.length ? "none" : "block";
+    var done = order.filter(function(t){return t.done;}).length;
+    document.getElementById("doneLine").textContent = done + " из " + order.length + " выполнено";
+    document.getElementById("barFill").style.width = order.length ? (done/order.length*100)+"%" : "0";
     renderDaySummary(order, conflict);
     renderVerdict(order, conflict);
   }
@@ -1270,6 +1334,14 @@
       note.textContent="Свободно ещё "+fmtDur(budget-planned)+" в бюджете дня.";
     }
     box.appendChild(head); box.appendChild(track); box.appendChild(note);
+    // Перегруз мало просто назвать — предлагаем конкретный выход в одно нажатие.
+    if(over){
+      var ub=document.createElement("button"); ub.type="button"; ub.className="ds-unload";
+      ub.textContent="🪄 Разгрузить день";
+      ub.title="Подобрать, что перенести на завтра, чтобы день влез в бюджет";
+      ub.addEventListener("click", function(){ showUnloadPlan(box, active, planned, budget, ub); });
+      box.appendChild(ub);
+    }
     var conflicts=Object.keys(conflict||{}).length;
     if(conflicts){
       var cw=document.createElement("div"); cw.className="ds-note warn";
@@ -1282,6 +1354,62 @@
       box.appendChild(hint);
     }
   }
+  // ===== Разгрузка перегруженного дня =====
+  // Чем жертвуем первым: наименее приоритетный квадрант (4 → 1); внутри —
+  // сначала дела БЕЗ назначенного времени (там нет договорённости с миром),
+  // затем более длинные (один перенос освобождает больше). Ничего не
+  // применяется без явного подтверждения — сначала показываем список.
+  function unloadCandidates(active){
+    return active.filter(function(t){ return validDur(t.dur); }).slice().sort(function(a,b){
+      var qa=quadOf(a), qb=quadOf(b); if(qa!==qb) return qb-qa;
+      var ta=a.time?1:0, tb=b.time?1:0; if(ta!==tb) return ta-tb;
+      if(a.dur!==b.dur) return b.dur-a.dur;
+      return 0;
+    });
+  }
+  function pickUnload(active, planned, budget){
+    var cand=unloadCandidates(active), pick=[], left=planned;
+    for(var i=0;i<cand.length && left>budget;i++){ pick.push(cand[i]); left-=cand[i].dur; }
+    return { pick:pick, left:left };
+  }
+  function showUnloadPlan(box, active, planned, budget, btn){
+    var old=document.getElementById("unloadPanel"); if(old) old.parentNode.removeChild(old);
+    var res=pickUnload(active, planned, budget);
+    var panel=document.createElement("div"); panel.className="ul-panel"; panel.id="unloadPanel";
+    if(!res.pick.length){
+      panel.innerHTML='<div class="ul-head">Переносить нечего: перегруз дают дела без оценки времени. Задай им «＋длит.» — тогда подберу.</div>';
+      box.appendChild(panel); if(btn) btn.disabled=true; return;
+    }
+    var h=document.createElement("div"); h.className="ul-head";
+    h.textContent="Предлагаю перенести на завтра "+res.pick.length+" "+plural(res.pick.length,["дело","дела","дел"])+
+      " — начиная с наименее приоритетных. Останется "+fmtDur(res.left)+" из "+fmtDur(budget)+".";
+    panel.appendChild(h);
+    var ul=document.createElement("ul"); ul.className="ul-list";
+    var QN={1:"срочно и важно",2:"важное",3:"срочное",4:"необязательное"};
+    res.pick.forEach(function(t){
+      var li=document.createElement("li");
+      var tx=document.createElement("span"); tx.className="ul-t"; tx.textContent=t.text;
+      var mt=document.createElement("span"); mt.className="ul-m";
+      mt.textContent=(t.time? t.time+" · ":"")+fmtDurShort(t.dur)+" · "+QN[quadOf(t)];
+      li.appendChild(tx); li.appendChild(mt); ul.appendChild(li);
+    });
+    panel.appendChild(ul);
+    var row=document.createElement("div"); row.className="ul-row";
+    var ok=document.createElement("button"); ok.type="button"; ok.className="ul-ok";
+    ok.textContent="Перенести на завтра";
+    ok.addEventListener("click", function(){
+      res.pick.forEach(function(t){ t.defer=tomorrowKey(); t.remindedOn=null; });
+      save(); render();
+      toast("→ Завтра: "+res.pick.length+" "+plural(res.pick.length,["дело","дела","дел"])+". Вернуть можно кнопкой «← сегодня».");
+    });
+    var no=document.createElement("button"); no.type="button"; no.className="ul-no";
+    no.textContent="Оставить как есть";
+    no.addEventListener("click", function(){ panel.parentNode && panel.parentNode.removeChild(panel); });
+    row.appendChild(ok); row.appendChild(no);
+    panel.appendChild(row);
+    box.appendChild(panel);
+  }
+
   function editDayBudget(){
     var cur=dayBudget();
     var ans=window.prompt("Бюджет дня — сколько часов фокус-времени у тебя есть?\n\nВведи часы (например 8) или минуты со словом «мин».", String(Math.round(cur/60*10)/10));
@@ -1419,6 +1547,7 @@
   var LASTDAY_KEY="superday_lastday";
   function checkNewDay(){
     var bar=document.getElementById("rolloverBar"); if(!bar) return;
+    if(clearStaleDefer()) render();     // отложенные на сегодня — уже сегодняшние
     var today=todayKey(), last=null;
     try{ last=localStorage.getItem(LASTDAY_KEY); }catch(e){ last=null; }
     if(!last){ try{ localStorage.setItem(LASTDAY_KEY, today); }catch(e){} return; }
@@ -1611,7 +1740,7 @@
 
     exportBtn.addEventListener("click", function(){
       if(!tasks.length && !notes.length){ flash("Пока нечего сохранять — добавь задачи или заметки."); return; }
-      var payload={ app:"SUPER DAY", kind:"backup", version:3, exportedAt:new Date().toISOString(),
+      var payload={ app:"SUPER DAY", kind:"backup", version:SCHEMA, exportedAt:new Date().toISOString(),
         wake:readWake(), tasks:tasks, notes:notes };
       try{
         var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
@@ -1643,7 +1772,8 @@
           var key=t.text.trim().toLowerCase(); if(!key || haveT[key]) return;
           var tm=(typeof t.time==="string" && /^\d{2}:\d{2}$/.test(t.time))?t.time:null;
           var du=(typeof t.dur==="number" && t.dur>0 && t.dur<=1440)?Math.round(t.dur):null;
-          tasks.push({ id:uid(), text:t.text.trim(), urgent:!!t.urgent, important:!!t.important, done:!!t.done, time:tm, dur:du, remindedOn:null });
+          var df=(typeof t.defer==="string" && /^\d{4}-\d{2}-\d{2}$/.test(t.defer))?t.defer:null;
+          tasks.push({ id:uid(), text:t.text.trim(), urgent:!!t.urgent, important:!!t.important, done:!!t.done, time:tm, dur:du, defer:df, remindedOn:null });
           haveT[key]=true; addedT++;
         });
         var haveN={}; notes.forEach(function(n){ haveN[(n.text||"").trim().toLowerCase()]=true; });
@@ -1829,7 +1959,7 @@
       if(!clean){ awake=false; setStatus("Не расслышал задачу. Скажи «<b>"+wname()+"</b>» и повтори."); return; }
       var pd=parseDuration(clean); var pt=parseTime(pd.text||clean);
       var tmClean = pt.text || pd.text || clean; var tm = pt.time; var du = pd.dur;
-      tasks.push({ id:uid(), text:cap(tmClean), urgent:urgent, important:important, done:false, time:tm, dur:du, remindedOn:null });
+      tasks.push({ id:uid(), text:cap(tmClean), urgent:urgent, important:important, done:false, time:tm, dur:du, defer:null, remindedOn:null });
       save(); render();
       var q=quadOf({urgent:urgent,important:important});
       var QN={1:"сделать сейчас",2:"запланировать",3:"быстро закрыть",4:"на потом"};
@@ -1939,7 +2069,7 @@
       var key=t.text.trim().toLowerCase(); if(!key||have[key]) return;
       var tm=(typeof t.time==="string" && /^\d{2}:\d{2}$/.test(t.time))?t.time:null;
       var du=(typeof t.dur==="number" && t.dur>0 && t.dur<=1440)?Math.round(t.dur):null;
-      tasks.push({ id:uid(), text:t.text.trim(), urgent:!!t.urgent, important:!!t.important, done:false, time:tm, dur:du, remindedOn:null });
+      tasks.push({ id:uid(), text:t.text.trim(), urgent:!!t.urgent, important:!!t.important, done:false, time:tm, dur:du, defer:null, remindedOn:null });
       have[key]=true; added++;
     });
     save(); render();
@@ -2044,6 +2174,7 @@
       var nm=nowMin(), t2=todayKey(), any=false;
       (tasks||[]).forEach(function(t){
         if(t.done) return;
+        if(typeof isDeferred==="function" && isDeferred(t)) return;   // перенесено на завтра
         var m=timeToMin(t.time); if(m===null) return;
         if(t.remindedOn===t2) return;
         var diff = nm - m;
@@ -2077,6 +2208,7 @@
   // регистрация service worker для офлайна
   if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(function(){}); }
 
+  clearStaleDefer();      // наступило завтра — вернуть отложенные в сегодняшний день
   render();
   renderNotes();
   renderTemplates();
