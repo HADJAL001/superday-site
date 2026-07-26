@@ -237,6 +237,29 @@
   .focus .fx-done{flex:0 0 auto; cursor:pointer; font-family:inherit; font-weight:700; font-size:13px; color:#1A1509;
     border:none; border-radius:999px; padding:10px 18px; background:var(--grad-gold)}
   .focus .fx-done:active{transform:translateY(1px)}
+  .focus .fx-focus{flex:0 0 auto; cursor:pointer; font-family:inherit; font-weight:700; font-size:13px; color:var(--gold);
+    background:rgba(212,175,110,.12); border:1px solid rgba(212,175,110,.4); border-radius:12px; padding:9px 14px; margin-right:8px}
+  .focus .fx-focus:active{transform:translateY(1px)}
+  .focustimer{max-width:760px; margin:14px auto 0; display:flex; align-items:center; gap:16px;
+    padding:16px 18px; border-radius:16px; border:1px solid rgba(212,175,110,.34);
+    background:linear-gradient(160deg, rgba(30,26,16,.9), rgba(18,17,14,.92)); box-shadow:0 10px 34px rgba(0,0,0,.34)}
+  .focustimer.paused{border-color:rgba(150,150,160,.28); filter:saturate(.55)}
+  .ft-ring{flex:0 0 auto; position:relative; width:64px; height:64px; border-radius:50%; display:grid; place-items:center;
+    background:conic-gradient(var(--gold) calc(var(--p,0)*360deg), rgba(255,255,255,.08) 0); transition:background .3s linear}
+  .ft-ring::before{content:""; position:absolute; inset:6px; border-radius:50%; background:#14130F}
+  .ft-ring .ft-clock{position:relative; z-index:1; font-variant-numeric:tabular-nums; font-weight:700; font-size:14.5px; color:var(--text)}
+  .ft-ring.done{background:conic-gradient(#7FB88B 360deg, #7FB88B 0)}
+  .ft-ring.done .ft-clock{color:#7FB88B; font-size:22px}
+  .ft-body{flex:1; min-width:0}
+  .ft-eyebrow{font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:var(--champagne); font-weight:700}
+  .ft-task{font-size:15.5px; color:var(--text); font-weight:600; margin-top:3px; word-break:break-word}
+  .ft-sub{font-size:11.5px; color:var(--text-muted); margin-top:2px}
+  .ft-actions{flex:0 0 auto; display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+  .ft-btn{cursor:pointer; font-family:inherit; font-weight:600; font-size:12.5px; color:var(--text);
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:10px; padding:8px 12px}
+  .ft-btn:active{transform:translateY(1px)}
+  .ft-btn.ft-plus{color:var(--champagne)}
+  .ft-btn.ft-done{color:#1A1509; background:linear-gradient(180deg,var(--gold),#B9924A); border-color:transparent; font-weight:700}
 
   /* Приватность голоса + напоминание о резервной копии */
   .vm-privacy{font-size:11px; color:var(--text-muted); padding-top:9px; margin-top:2px;
@@ -373,7 +396,8 @@
   .ro-ghost:hover{border-color:var(--gold); color:var(--text)}
 
   @media(max-width:640px){ .matrix{grid-template-columns:1fr} .composer .row1{flex-direction:column} .add-btn{padding:14px}
-    .focus{flex-wrap:wrap} .focus .fx-done{width:100%}
+    .focus{flex-wrap:wrap} .focus .fx-done{width:100%} .focus .fx-focus{flex:1; margin-right:0}
+    .focustimer{flex-wrap:wrap} .ft-actions{width:100%; justify-content:stretch} .ft-actions .ft-btn{flex:1}
     .day .col{height:52px} .day .lbl{font-size:9px}
     .tpl-head{flex-wrap:wrap} }
 </style>
@@ -441,7 +465,23 @@
       <div class="fx-task" id="focusTask"></div>
       <div class="fx-meta" id="focusMeta"></div>
     </div>
+    <button class="fx-focus" id="focusStart" type="button" title="Запустить таймбокс на длительность дела">▶ Фокус</button>
     <button class="fx-done" id="focusDone" type="button">Готово</button>
+  </section>
+
+  <section class="focustimer" id="focusTimer" hidden aria-live="polite" aria-label="Таймер фокуса">
+    <div class="ft-ring" id="ftRing" aria-hidden="true"><span class="ft-clock" id="ftClock">00:00</span></div>
+    <div class="ft-body">
+      <div class="ft-eyebrow" id="ftState">Фокус</div>
+      <div class="ft-task" id="ftTask"></div>
+      <div class="ft-sub" id="ftSub"></div>
+    </div>
+    <div class="ft-actions">
+      <button class="ft-btn" id="ftPause" type="button">Пауза</button>
+      <button class="ft-btn ft-plus" id="ftPlus" type="button" title="Добавить 5 минут">+5</button>
+      <button class="ft-btn" id="ftStop" type="button">Стоп</button>
+      <button class="ft-btn ft-done" id="ftDone" type="button">Готово</button>
+    </div>
   </section>
 
   <section class="matrix" aria-label="Матрица Эйзенхауэра">
@@ -863,6 +903,7 @@
     updateBackupRemind();
     renderStats();
     renderPlan();
+    renderFocusTimer();
   }
 
   // ===== «Начни с этого» — одна первая задача по приоритету =====
@@ -888,6 +929,109 @@
       if(!id) return;
       var t=tasks.filter(function(x){return x.id===id;})[0];
       if(t && !t.done){ t.done=true; recordCompletion(); save(); render(); }
+    });
+  })();
+
+  // ===== Таймер фокуса — таймбокс дела в действии =====
+  // Состояние переживает перезагрузку: считаем по wall-clock (endTs), а не по
+  // тикам. Работает при открытой вкладке; фоновые сигналы при закрытом
+  // приложении — вне фронтенда (needs_backend, зона инфраструктуры).
+  var FOCUS_KEY="superday_focus";
+  var focusState=null;   // {taskId,text,dur(мин),endTs,paused,remainingMs,done}
+  var focusInt=null;
+  function loadFocus(){ try{ return JSON.parse(localStorage.getItem(FOCUS_KEY)||"null"); }catch(e){ return null; } }
+  function saveFocus(){ try{ if(focusState) localStorage.setItem(FOCUS_KEY, JSON.stringify(focusState)); else localStorage.removeItem(FOCUS_KEY); }catch(e){} }
+  function fmtClock(ms){ if(ms<0)ms=0; var s=Math.round(ms/1000); var m=Math.floor(s/60); s=s%60; function p(n){return n<10?"0"+n:""+n;} return p(m)+":"+p(s); }
+  function focusChime(){
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return; var ac=new AC();
+      [880,1174,1568].forEach(function(f,i){
+        var o=ac.createOscillator(), g=ac.createGain(), t0=ac.currentTime+i*0.18;
+        o.type="sine"; o.frequency.setValueAtTime(f,t0);
+        g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(0.16,t0+0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001,t0+0.5);
+        o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0+0.52);
+      });
+      setTimeout(function(){ try{ ac.close(); }catch(e){} }, 1400);
+    }catch(e){}
+  }
+  function focusSay(txt){ try{ if(!window.speechSynthesis) return; var u=new SpeechSynthesisUtterance(txt); u.lang="ru-RU"; u.rate=0.98; u.pitch=0.96; window.speechSynthesis.speak(u); }catch(e){} }
+  function startFocusInterval(){ if(focusInt) return; focusInt=setInterval(focusTick, 250); }
+  function stopFocusInterval(){ if(focusInt){ clearInterval(focusInt); focusInt=null; } }
+  function focusRemaining(){ if(!focusState) return 0; if(focusState.paused) return focusState.remainingMs; return focusState.endTs - Date.now(); }
+  function startFocus(task){
+    if(!task) return;
+    var dur = validDur(task.dur) ? task.dur : 25;
+    focusState={ taskId:task.id, text:task.text, dur:dur, endTs:Date.now()+dur*60000, paused:false, remainingMs:dur*60000, done:false };
+    saveFocus(); startFocusInterval(); focusTick();
+    try{ if(window.Notification && Notification.permission==="default"){ Notification.requestPermission().catch(function(){}); } }catch(e){}
+    if(typeof toast==="function") toast("▶ Фокус "+fmtDur(dur)+": "+task.text);
+  }
+  function endFocus(){ stopFocusInterval(); focusState=null; saveFocus(); renderFocusTimer(); }
+  function focusFinish(){
+    if(!focusState) return; stopFocusInterval();
+    focusChime(); focusSay("Время вышло. "+focusState.text);
+    try{ if(window.Notification && Notification.permission==="granted"){ new Notification("SUPER DAY — таймбокс завершён", { body:focusState.text, tag:"sd-focus", silent:false }); } }catch(e){}
+    if(typeof toast==="function") toast("⏳ Время вышло: "+focusState.text);
+    focusState.done=true; focusState.paused=true; focusState.remainingMs=0; saveFocus();
+    renderFocusTimer();
+  }
+  function focusTick(){
+    if(!focusState){ renderFocusTimer(); return; }
+    if(!focusState.done && !focusState.paused && focusRemaining()<=0){ focusFinish(); return; }
+    renderFocusTimer();
+  }
+  function renderFocusTimer(){
+    var bar=document.getElementById("focusTimer"); if(!bar) return;
+    if(!focusState){ bar.hidden=true; bar.classList.remove("paused"); return; }
+    bar.hidden=false;
+    var rem=focusRemaining(); if(rem<0) rem=0;
+    var total=focusState.dur*60000; var p = total>0 ? (1 - rem/total) : 1; if(p<0)p=0; if(p>1)p=1;
+    var ring=document.getElementById("ftRing"), clock=document.getElementById("ftClock");
+    var state=document.getElementById("ftState"), tsk=document.getElementById("ftTask"), sub=document.getElementById("ftSub");
+    var pauseBtn=document.getElementById("ftPause");
+    if(tsk) tsk.textContent=focusState.text;
+    if(ring) ring.style.setProperty("--p", p.toFixed(3));
+    if(focusState.done){
+      if(ring) ring.classList.add("done"); if(clock) clock.textContent="✓";
+      if(state) state.textContent="Время вышло"; if(sub) sub.textContent="Отметить готовым или продлить на +5";
+      if(pauseBtn) pauseBtn.hidden=true; bar.classList.remove("paused");
+    } else {
+      if(ring) ring.classList.remove("done"); if(clock) clock.textContent=fmtClock(rem);
+      if(state) state.textContent = focusState.paused ? "Пауза" : "Фокус";
+      if(sub) sub.textContent = "Таймбокс "+fmtDur(focusState.dur);
+      if(pauseBtn){ pauseBtn.hidden=false; pauseBtn.textContent = focusState.paused ? "Продолжить" : "Пауза"; }
+      bar.classList.toggle("paused", !!focusState.paused);
+    }
+  }
+  (function(){
+    var start=document.getElementById("focusStart");
+    if(start) start.addEventListener("click", function(){
+      var card=document.getElementById("focusCard"); var id=card&&card.__id; if(!id) return;
+      var t=tasks.filter(function(x){return x.id===id;})[0]; if(t && !t.done) startFocus(t);
+    });
+    var pause=document.getElementById("ftPause");
+    if(pause) pause.addEventListener("click", function(){
+      if(!focusState||focusState.done) return;
+      if(focusState.paused){ focusState.paused=false; focusState.endTs=Date.now()+focusState.remainingMs; startFocusInterval(); }
+      else { focusState.remainingMs=focusRemaining(); focusState.paused=true; stopFocusInterval(); }
+      saveFocus(); renderFocusTimer();
+    });
+    var plus=document.getElementById("ftPlus");
+    if(plus) plus.addEventListener("click", function(){
+      if(!focusState) return;
+      if(focusState.done){ focusState.done=false; focusState.paused=false; focusState.dur+=5; focusState.remainingMs=5*60000; focusState.endTs=Date.now()+5*60000; startFocusInterval(); }
+      else { focusState.dur+=5; if(focusState.paused){ focusState.remainingMs+=5*60000; } else { focusState.endTs+=5*60000; } }
+      saveFocus(); focusTick();
+      if(typeof toast==="function") toast("+5 минут к таймбоксу");
+    });
+    var stop=document.getElementById("ftStop");
+    if(stop) stop.addEventListener("click", function(){ endFocus(); if(typeof toast==="function") toast("Фокус остановлен"); });
+    var done=document.getElementById("ftDone");
+    if(done) done.addEventListener("click", function(){
+      var id=focusState&&focusState.taskId; endFocus();
+      if(id){ var t=tasks.filter(function(x){return x.id===id;})[0]; if(t && !t.done){ t.done=true; recordCompletion(); save(); } }
+      render();
     });
   })();
 
@@ -1879,6 +2023,21 @@
   renderNotes();
   renderTemplates();
   checkNewDay();
+
+  // Восстановить активный таймбокс после перезагрузки (по wall-clock).
+  (function(){
+    focusState=loadFocus();
+    if(!focusState){ renderFocusTimer(); return; }
+    if(!focusState.done && !focusState.paused && focusRemaining()<=0){
+      // Время истекло, пока вкладка была закрыта — тихо показываем финиш-панель.
+      focusState.done=true; focusState.paused=true; focusState.remainingMs=0; saveFocus();
+      renderFocusTimer();
+    } else if(focusState.done || focusState.paused){
+      renderFocusTimer();
+    } else {
+      startFocusInterval(); focusTick();
+    }
+  })();
 </script>
 </body>
 </html>
