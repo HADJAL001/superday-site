@@ -121,7 +121,7 @@
     if (!input || !chipsBox) return;
     var raw = input.value || "";
     chipsBox.innerHTML = "";
-    if (!raw.trim()) { chipsBox.hidden = true; return; }
+    if (!raw.trim()) { chipsBox.hidden = true; input.style.boxShadow = ""; return; }
 
     var chips = [];
     try {
@@ -148,25 +148,46 @@
     // Куда дело попадёт на самом деле — по текущим флажкам, без домыслов.
     var urgent = ($("tgUrgent") || {}).getAttribute && $("tgUrgent").getAttribute("aria-pressed") === "true";
     var important = ($("tgImportant") || {}).getAttribute && $("tgImportant").getAttribute("aria-pressed") === "true";
-    if (!urgent && URGENT_RE[lang()] && URGENT_RE[lang()].test(raw)) {
-      chips.push({ cls: "ux-chip-sugg", text: pick(TXT.urgentHint), act: "urgent" });
+    var suggUrgent = !urgent && !!(URGENT_RE[lang()] && URGENT_RE[lang()].test(raw));
+    var suggImportant = !important && !!(IMPORTANT_RE[lang()] && IMPORTANT_RE[lang()].test(raw));
+    if (suggUrgent) {
+      chips.push({ cls: "ux-chip-sugg", text: pick(TXT.urgentHint), act: "urgent", dot: "var(--q1)" });
     }
-    if (!important && IMPORTANT_RE[lang()] && IMPORTANT_RE[lang()].test(raw)) {
-      chips.push({ cls: "ux-chip-sugg", text: pick(TXT.importantHint), act: "important" });
+    if (suggImportant) {
+      chips.push({ cls: "ux-chip-sugg", text: pick(TXT.importantHint), act: "important", dot: "var(--q2)" });
     }
+
+    // Немедленный отклик прямо на поле ввода — тем же языком цвета, что и
+    // квадранты матрицы (--q1 срочное, --q2 важное). Раньше подсказка была
+    // только текстом в чипе снизу; глаз, застрявший на самом поле, её не видел.
+    input.style.boxShadow = suggUrgent ? "inset 3px 0 0 0 var(--q1)"
+      : suggImportant ? "inset 3px 0 0 0 var(--q2)"
+      : "";
 
     if (!chips.length) { chipsBox.hidden = true; return; }
     chips.forEach(function (c) {
       var el = document.createElement(c.act ? "button" : "span");
       el.className = "ux-chip " + c.cls;
-      el.textContent = c.text;
+      if (c.dot) {
+        var dot = document.createElement("span");
+        dot.className = "ux-chip-dot";
+        dot.style.background = c.dot;
+        dot.setAttribute("aria-hidden", "true");
+        el.appendChild(dot);
+      }
+      el.appendChild(document.createTextNode(c.text));
       if (c.act) {
         el.type = "button";
         el.addEventListener("click", function () {
-          var tg = $(c.act === "urgent" ? "tgUrgent" : "tgImportant");
-          if (tg) tg.click();          // переключатель приложения, своей логики приоритета нет
-          buildChips();
-          if ($("taskInput")) $("taskInput").focus();
+          // Видимый отклик на сам чип до его исчезновения — без этого клик
+          // выглядел так, будто ничего не произошло (чип сразу пересобирался).
+          el.classList.add("ux-chip-pop");
+          setTimeout(function () {
+            var tg = $(c.act === "urgent" ? "tgUrgent" : "tgImportant");
+            if (tg) tg.click();        // переключатель приложения, своей логики приоритета нет
+            buildChips();
+            if ($("taskInput")) $("taskInput").focus();
+          }, 150);
         });
       }
       chipsBox.appendChild(el);
@@ -341,6 +362,11 @@
       "button.ux-chip{cursor:pointer}" +
       "button.ux-chip:hover{background:rgba(212,175,55,.2)}" +
       ".ux-chip-sugg{border-style:dashed;opacity:.92}" +
+      ".ux-chip-dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 1px rgba(0,0,0,.25) inset}" +
+      "#taskInput{transition:box-shadow .15s ease}" +
+      ".ux-chip-pop{animation:uxChipPop .3s ease}" +
+      "@keyframes uxChipPop{0%{transform:scale(1)}35%{transform:scale(1.14);" +
+      "background:rgba(212,175,55,.34);border-style:solid}100%{transform:scale(1)}}" +
       ".ux-examples{margin:11px 0 0;display:flex;flex-direction:column;gap:7px;align-items:flex-start}" +
       ".ux-ex-title{font-size:12.5px;opacity:.66}" +
       ".ux-ex{padding:7px 12px;border-radius:10px;border:1px dashed rgba(212,175,55,.4);" +
@@ -357,7 +383,8 @@
       "@media(min-width:760px){.ux-undo{left:auto;right:18px;bottom:18px;max-width:420px}" +
       ".ux-examples{flex-direction:row;flex-wrap:wrap;align-items:center}" +
       ".ux-ex-title{width:100%}}" +
-      "@media (prefers-reduced-motion: reduce){.ux-chip,.ux-ex{transition:none}}";
+      "@media (prefers-reduced-motion: reduce){.ux-chip,.ux-ex,#taskInput{transition:none}" +
+      ".ux-chip-pop{animation:none}}";
     (document.head || document.documentElement).appendChild(css);
   }
 
