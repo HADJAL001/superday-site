@@ -907,6 +907,7 @@
   function renderStats(){
     var wrap=document.getElementById("weekBars"); if(!wrap) return;
     var s=readStats();
+    var dlog=readDayLog();
     var LBL=["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
     var days=[], maxV=1, todayK=todayKey();
     for(var i=6;i>=0;i--){
@@ -922,11 +923,18 @@
       var bar=document.createElement("div"); bar.className="col";
       var fill=document.createElement("div"); fill.className="fill";
       fill.style.height=(d.v? Math.max(8, Math.round(d.v/maxV*100)) : 0)+"%";
+      var entry=dlog[d.key];
+      if(entry && typeof entry.load==="number"){
+        var band=loadBand(entry.load);
+        fill.style.background=LOAD_COL[band];
+        col.title=d.key+": выполнено "+d.v+" · "+LOAD_LBL[band]+" ("+entry.done+"/"+entry.total+")";
+      } else {
+        col.title=d.key+": выполнено "+d.v;
+      }
       bar.appendChild(fill);
       var num=document.createElement("div"); num.className="num"+(d.v?"":" zero"); num.textContent=d.v;
       var lbl=document.createElement("div"); lbl.className="lbl"; lbl.textContent=d.lbl;
       col.appendChild(num); col.appendChild(bar); col.appendChild(lbl);
-      col.title=d.key+": выполнено "+d.v;
       wrap.appendChild(col);
     });
     // серия: сколько дней подряд заканчивая сегодняшним (или вчерашним) было ≥1
@@ -939,8 +947,19 @@
     else { stEl.className="streak cold"; stEl.textContent="Начни серию — закрой сегодня хотя бы одно дело"; }
     var total=Object.keys(s).reduce(function(m,k){return m+(s[k]||0);},0);
     var todayV=s[todayK]||0;
+    // Итог недели по тяжести дней (из журнала нагрузки)
+    var bands={light:0,medium:0,heavy:0}, nb=0;
+    days.forEach(function(d){ var e=dlog[d.key]; if(e && typeof e.load==="number"){ bands[loadBand(e.load)]++; nb++; } });
+    var digest="";
+    if(nb){
+      var parts=[];
+      if(bands.light) parts.push("🟢 "+bands.light+" "+plural(bands.light,["лёгкий","лёгких","лёгких"]));
+      if(bands.medium) parts.push("🟡 "+bands.medium+" в меру");
+      if(bands.heavy) parts.push("🔴 "+bands.heavy+" "+plural(bands.heavy,["тяжёлый","тяжёлых","тяжёлых"]));
+      digest="Неделя по нагрузке: "+parts.join(" · ")+". ";
+    }
     document.getElementById("statsFoot").textContent =
-      "Сегодня выполнено: "+todayV+" · всего за всё время: "+total+". Данные считаются только в этом браузере.";
+      digest + "Сегодня выполнено: "+todayV+" · всего за всё время: "+total+". Данные считаются только в этом браузере.";
   }
   function plural(n, forms){
     var n10=n%10, n100=n%100;
@@ -1156,12 +1175,30 @@
     else if(load>=2) phrase="День тяжёлый. Сделано "+doneN+" из "+total+" — часть спокойно перенеси на завтра, это нормально.";
     else if(load<=0 && total>0) phrase="Лёгкий день, без перегруза. Держи темп — успеешь всё.";
     else phrase="Рабочий день в меру. Сделано "+doneN+" из "+total+" — ты в графике.";
-    return { phrase:phrase, ctx:ctx };
+    return { phrase:phrase, ctx:ctx, load:load, done:doneN, total:total };
+  }
+
+  // Журнал дней: как дался каждый день (для недельного итога). Только этот браузер.
+  var DAYLOG_KEY="superday_daylog";
+  function readDayLog(){ try{ return JSON.parse(localStorage.getItem(DAYLOG_KEY)||"{}")||{}; }catch(e){ return {}; } }
+  function loadBand(load){ if(load>=2) return "heavy"; if(load<=0) return "light"; return "medium"; }
+  var LOAD_COL={light:"#7FB88B", medium:"var(--gold)", heavy:"#E5766B"};
+  var LOAD_LBL={light:"лёгкий день", medium:"в меру", heavy:"тяжёлый день"};
+  function recordDayLog(v){
+    if(!v || !v.total) return;
+    try{
+      var log=readDayLog(); log[todayKey()]={ load:v.load, done:v.done, total:v.total };
+      // держим журнал компактным — не больше ~60 последних дней
+      var keys=Object.keys(log).sort();
+      while(keys.length>60){ delete log[keys.shift()]; }
+      localStorage.setItem(DAYLOG_KEY, JSON.stringify(log));
+    }catch(e){}
   }
   function renderVerdict(order, conflict){
     var box=document.getElementById("dayVerdict"); if(!box) return;
     if(!order.length){ box.hidden=true; box.innerHTML=""; return; }
     var v=dayVerdict(order, conflict); var ctx=v.ctx;
+    recordDayLog(v);
     box.hidden=false; box.innerHTML="";
     var row=document.createElement("div"); row.className="dv-ctx";
     var w=document.createElement("button"); w.type="button"; w.className="dv-chip"+(ctx.weather?" set":"");
