@@ -253,7 +253,7 @@
   /* Доступность: видимый фокус для клавиатуры */
   :focus-visible{outline:2px solid var(--gold-bright); outline-offset:2px; border-radius:8px}
   .tg:focus-visible, .vm-toggle:focus-visible, li.task .chk:focus-visible, li.task .grip:focus-visible,
-  li.task .txt:focus-visible, ul.notelist li .txt:focus-visible{outline-offset:3px}
+  li.task .txt:focus-visible, ul.notelist li .txt:focus-visible, .in-chip:focus-visible{outline-offset:3px}
 
   /* Карточка «Начни с этого» — прямое исполнение обещания «начни с главного» */
   .focus{max-width:760px; margin:22px auto 0; display:flex; align-items:center; gap:15px;
@@ -482,6 +482,9 @@
   .dv-phrase{text-align:center; font-size:14.5px; line-height:1.5; color:var(--text); font-weight:600;
     background:linear-gradient(180deg,rgba(29,44,76,.5),rgba(9,15,30,.4)); border:1px solid var(--border);
     border-radius:14px; padding:14px 18px}
+  .dv-intent{text-align:center; font-size:12.5px; color:var(--text-dim); line-height:1.5; margin-bottom:8px}
+  .dv-intent b{color:var(--champagne)}
+  .dv-affirm{text-align:center; font-size:12.5px; color:var(--text-dim); font-style:italic; line-height:1.5; margin-top:10px}
 
   /* ===== Новый день: перенос незавершённого ===== */
   .rollover{max-width:760px; margin:0 auto 20px; background:linear-gradient(180deg,rgba(201,169,106,.1),rgba(9,15,30,.4));
@@ -497,6 +500,13 @@
   .ro-primary:hover{filter:brightness(1.06)}
   .ro-ghost{color:var(--text-dim); background:var(--ink)}
   .ro-ghost:hover{border-color:var(--gold); color:var(--text)}
+  .in-chips{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px}
+  .in-chip{cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--text-muted);
+    background:var(--ink); border:1px solid var(--hair); border-radius:12px; padding:9px 14px; transition:.15s; text-align:left}
+  .in-chip:hover{border-color:var(--gold); color:var(--text)}
+  .in-chip.active{color:var(--champagne); border-color:var(--gold); background:rgba(201,169,106,.14)}
+  .in-note{display:block; width:100%; box-sizing:border-box; font-family:inherit; font-size:13px; color:var(--text);
+    background:var(--ink); border:1px solid var(--hair); border-radius:10px; padding:9px 12px; margin-bottom:12px}
 
   /* ===== Правая панель: всё второстепенное живёт здесь =====
      Слои по z-index: шапка 20 · рельс 21 · затемнение 39 · панель 40.
@@ -872,6 +882,8 @@
 
   <div class="rollover" id="rolloverBar" hidden role="region" aria-label="Новый день"></div>
 
+  <div class="rollover intention" id="intentionBar" hidden role="region" aria-label="Намерение дня"></div>
+
   <section class="focus" id="focusCard" hidden aria-live="polite" aria-label="Задача, с которой стоит начать">
     <span class="fx-ic" aria-hidden="true">▶</span>
     <div class="fx-body">
@@ -900,7 +912,11 @@
 
   <section class="route" aria-label="Маршрут дня">
     <h3>Сегодня</h3>
-    <div class="rsub">Порядок маршрута: сначала то, что горит по времени, затем важное, затем короткое, в конце — необязательное. Время, длительность, повтор и перенос правятся прямо в строке. Цветная точка слева — приоритет: нажатие открывает разбор по важности.</div>
+    <div class="mapcard" id="mapCard" hidden>
+      <p class="map-priv">🔒 Карта — единственное место SUPER DAY, где <b>адреса</b> уходят за пределы браузера: в бесплатные сервисы OpenStreetMap (поиск места и путь по дорогам).</p>
+      <div class="mapview" id="mapView" hidden aria-label="Карта дел с путём между местами"></div>
+      <p class="map-note" id="mapNote"></p>
+    </div>
     <div class="day-summary" id="daySummary" hidden aria-live="polite"></div>
     <ol class="plan" id="planList"></ol>
     <div class="empty" id="planEmpty">Пока пусто. Первая добавленная задача соберёт маршрут дня.</div>
@@ -947,21 +963,6 @@
           <div class="empty">Честно спроси: это вообще нужно?</div>
         </div>
       </section>
-    </div>
-  </section>
-  <section class="pgroup" data-sec="map">
-    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">🗺</span><span class="pg-title">Карта дел</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
-    <div class="pg-body">
-      <div class="mapcard" id="mapCard">
-        <p class="map-priv">🔒 Карта — единственное место SUPER DAY, где <b>адреса</b> уходят за пределы браузера: в бесплатные сервисы OpenStreetMap (поиск места и путь по дорогам).</p>
-        <div class="map-empty" id="mapEmpty">
-          <div class="me-dots" aria-hidden="true"><span></span><span></span><span></span></div>
-          Добавь место к делу («＋место» в строке дела) — здесь появится путь по карте.
-        </div>
-        <button type="button" class="map-go" id="mapGoBtn" hidden>Показать путь</button>
-        <div class="mapview" id="mapView" hidden aria-label="Карта дел с путём между местами"></div>
-        <p class="map-note" id="mapNote"></p>
-      </div>
     </div>
   </section>
   <section class="pgroup" data-sec="remind">
@@ -1066,6 +1067,7 @@
     <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">❔</span><span class="pg-title">Как это работает</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
     <div class="pg-body">
       <p class="pg-lead"><b>Три шага.</b> Впиши дело — или скажи голосом, можно сразу «в 15:00» и «каждый день». Приложение само раскладывает дела по важности и показывает, с чего начать. Нажми «Готово» в карточке «Начни с этого» — день сдвинулся.</p>
+      <p class="pg-lead"><b>Маршрут дня.</b> Порядок маршрута: сначала то, что горит по времени, затем важное, затем короткое, в конце — необязательное. Время, длительность, повтор и перенос правятся прямо в строке. Цветная точка слева — приоритет: нажатие открывает разбор по важности. Как только у двух и более дел на сегодня указано место, над списком появляется путь на карте.</p>
       <p class="pg-lead"><b>Матрица.</b> 🔥 срочно — горит по времени. ⭐ важно — двигает жизнь. Дело без флажков попадает в «Отложить». Переложить можно перетаскиванием за ручку ☰ в разделе «Разбор по важности».</p>
       <p class="pg-lead"><b>Где данные.</b> Только в этом браузере — ни аккаунта, ни сервера. Поэтому раз в неделю имеет смысл сохранять копию файлом в разделе «Данные». Приложение работает офлайн.</p>
       <p class="pg-lead"><b>Клавиатура.</b> Enter в поле — добавить дело. Esc — закрыть панель. Аппаратная «Назад» на телефоне тоже закрывает панель, а не страницу.</p>
@@ -1708,34 +1710,24 @@
     }, 60);
   }
 
-  // ===== Карта дел: рендер секции панели =====
+  // ===== Карта дел: премиальный маршрут на главном экране =====
   // Порядок точек — тот же planOrder(), что строит ol.plan: карта не заводит
   // вторую систему истины о порядке дня (волна 14 уже отказалась от этого для
-  // карточной раскладки списка). Секция изолирована и ничего не меняет в
-  // renderPlan()/planOrder — только читает их результат.
+  // карточной раскладки списка). Карта изолирована и ничего не меняет в
+  // renderPlan()/planOrder — только читает их результат. Появляется сама,
+  // как только у ≥2 дел на сегодня указано место; иначе экран как раньше.
   var QCOLOR = {1:"var(--q1)", 2:"var(--q2)", 3:"var(--q3)", 4:"var(--q4)"};
   var mapState = { map:null, layer:null };
   function tasksForMap(){ return planOrder().filter(function(t){ return t.loc && !t.done; }); }
   function renderMapCard(){
-    var empty=document.getElementById("mapEmpty"), go=document.getElementById("mapGoBtn"),
-        view=document.getElementById("mapView"), note=document.getElementById("mapNote");
-    if(!empty || !go || !view) return;
+    var card=document.getElementById("mapCard"), view=document.getElementById("mapView"),
+        note=document.getElementById("mapNote");
+    if(!card || !view) return;
     var pts = tasksForMap();
-    if(pts.length<2){
-      empty.style.display="block"; go.hidden=true; view.hidden=true; if(note) note.textContent="";
-      return;
-    }
-    empty.style.display="none";
-    if(view.hidden){ go.hidden=false; go.textContent="Показать путь по "+pts.length+" местам"; }
-    else if(mapState.map){ buildMapView(pts); }     // карта уже открыта — обновим при смене мест
-  }
-  function openMap(){
-    var pts = tasksForMap(); if(pts.length<2) return;
-    var view=document.getElementById("mapView"), go=document.getElementById("mapGoBtn");
-    view.hidden=false; go.hidden=true;
+    if(pts.length<2){ card.hidden=true; view.hidden=true; if(note) note.textContent=""; return; }
+    card.hidden=false; view.hidden=false;
     loadLeaflet(function(){ buildMapView(pts); }, function(){
-      view.hidden=true; go.hidden=false;
-      var note=document.getElementById("mapNote");
+      view.hidden=true;
       if(note){ note.textContent="Карту не загрузил — сеть подвела. Места остаются в списке дел."; note.className="map-note warn"; }
     });
   }
@@ -1833,6 +1825,7 @@
       if(emp) emp.style.display = counts[qi] ? "none" : "block";
     });
     renderFocus();
+    renderIntentionBar();
     updateBackupRemind();
     renderStats();
     renderPlan();
@@ -2526,6 +2519,96 @@
     render(); toast("Бюджет дня: "+fmtDur(mins));
   }
 
+  // ===== Намерение дня: выбор идентичности (Гольвитцер), паритет с мобайлом =====
+  var INTENTION_KEY="superday_intention_v1";
+  var INTENTION_SKIP_KEY="superday_intention_skip";
+  var INTENTION_PRESETS=[
+    "Тот, кто доводит важное до конца",
+    "Тот, кто выбирает важное, а не срочное",
+    "Тот, кто держит слово себе",
+    "Тот, кто первым делает трудный шаг",
+    "Тот, кто остаётся спокойным и сфокусированным",
+    "Тот, кто бережёт время на главное"
+  ];
+  function loadIntention(){
+    var v=null; try{ v=JSON.parse(localStorage.getItem(INTENTION_KEY)||"null"); }catch(e){ v=null; }
+    if(!v || typeof v!=="object" || v.date!==todayKey() || typeof v.focus!=="string") return null;
+    return v;
+  }
+  function saveIntention(focus, note){
+    var v={ date:todayKey(), focus:focus, note:(note||"").trim()||undefined };
+    try{ localStorage.setItem(INTENTION_KEY, JSON.stringify(v)); localStorage.removeItem(INTENTION_SKIP_KEY); }catch(e){}
+    return v;
+  }
+  function intentionSkippedToday(){
+    try{ return localStorage.getItem(INTENTION_SKIP_KEY)===todayKey(); }catch(e){ return false; }
+  }
+  function skipIntentionToday(){ try{ localStorage.setItem(INTENTION_SKIP_KEY, todayKey()); }catch(e){} }
+  var AFFIRMATIONS=[
+    "День прожит с намерением, а не на автопилоте — и это видно по сделанному.",
+    "Каждое закрытое дело сегодня — в русле того, кем ты выбрал(а) быть.",
+    "Слово, данное себе утром, сегодня сдержано.",
+    "Не «был занят» — двигался(лась) к тому, что для тебя важно."
+  ];
+  function dayAffirmation(n){ return AFFIRMATIONS[((n%AFFIRMATIONS.length)+AFFIRMATIONS.length)%AFFIRMATIONS.length]; }
+
+  var intentionDraft=null; // черновик открытого пикера — не сохраняется, пока не нажали «Задать намерение»
+  function renderIntentionBar(){
+    var bar=document.getElementById("intentionBar"); if(!bar) return;
+    var intent=loadIntention();
+    if(intent && !intentionDraft){
+      bar.hidden=false; bar.innerHTML="";
+      var title=document.createElement("div"); title.className="ro-title"; title.textContent="Намерение дня";
+      var text=document.createElement("div"); text.className="ro-text";
+      text.appendChild(document.createTextNode("Сегодня ты — "));
+      var b=document.createElement("b"); b.textContent="«"+intent.focus+"»"; text.appendChild(b);
+      if(intent.note) text.appendChild(document.createTextNode(" — "+intent.note));
+      var acts=document.createElement("div"); acts.className="ro-actions";
+      var edit=document.createElement("button"); edit.type="button"; edit.className="ro-ghost"; edit.textContent="Изменить";
+      edit.addEventListener("click", function(){ intentionDraft={focus:intent.focus, note:intent.note||""}; renderIntentionBar(); });
+      acts.appendChild(edit);
+      bar.appendChild(title); bar.appendChild(text); bar.appendChild(acts);
+      return;
+    }
+    if(!intent && !intentionDraft && intentionSkippedToday()){ bar.hidden=true; bar.innerHTML=""; return; }
+    var draft=intentionDraft || {focus:INTENTION_PRESETS[0], note:""};
+    bar.hidden=false; bar.innerHTML="";
+    var title=document.createElement("div"); title.className="ro-title"; title.textContent="Намерение дня";
+    var sub=document.createElement("div"); sub.className="ro-text";
+    sub.textContent="Не список дел, а один выбор о себе — кем ты сегодня будешь. Вечером итог дня напомнит его.";
+    var chips=document.createElement("div"); chips.className="in-chips";
+    chips.setAttribute("role","radiogroup"); chips.setAttribute("aria-label","Намерение дня");
+    var chipEls=[]; var noteInput=document.createElement("input"); var selectedFocus=draft.focus;
+    INTENTION_PRESETS.forEach(function(preset){
+      var chip=document.createElement("button"); chip.type="button";
+      chip.className="in-chip"+(preset===selectedFocus?" active":"");
+      chip.textContent=preset;
+      chip.setAttribute("role","radio"); chip.setAttribute("aria-checked", preset===selectedFocus?"true":"false");
+      chip.addEventListener("click", function(){
+        selectedFocus=preset;
+        chipEls.forEach(function(c){
+          var on=c===chip; c.classList.toggle("active", on); c.setAttribute("aria-checked", on?"true":"false");
+        });
+      });
+      chipEls.push(chip); chips.appendChild(chip);
+    });
+    noteInput.type="text"; noteInput.className="in-note";
+    noteInput.placeholder="Своими словами (необязательно)"; noteInput.maxLength=120; noteInput.value=draft.note||"";
+    noteInput.setAttribute("aria-label","Своя формулировка намерения (необязательно)");
+    var acts=document.createElement("div"); acts.className="ro-actions";
+    var primary=document.createElement("button"); primary.type="button"; primary.className="ro-primary";
+    primary.textContent="Задать намерение";
+    primary.addEventListener("click", function(){
+      saveIntention(selectedFocus, noteInput.value);
+      intentionDraft=null; renderIntentionBar(); renderPlan();
+      toast("Намерение дня задано");
+    });
+    var ghost=document.createElement("button"); ghost.type="button"; ghost.className="ro-ghost"; ghost.textContent="Не сегодня";
+    ghost.addEventListener("click", function(){ skipIntentionToday(); intentionDraft=null; renderIntentionBar(); });
+    acts.appendChild(primary); acts.appendChild(ghost);
+    bar.appendChild(title); bar.appendChild(sub); bar.appendChild(chips); bar.appendChild(noteInput); bar.appendChild(acts);
+  }
+
   // ===== Контекст дня: погода / пробки / топливо =====
   // Принцип: только НАСТОЯЩИЕ данные — их вводит пользователь или отдаёт
   // Open-Meteo (бесплатно, без ключа). Ничего не выдумываем.
@@ -2723,8 +2806,21 @@
     fu.setAttribute("aria-label", fu.title);
     fu.addEventListener("click", editFuel);
     row.appendChild(w); row.appendChild(tr); row.appendChild(fu);
+    box.appendChild(row);
+    var intent=loadIntention();
+    if(intent){
+      var iv=document.createElement("div"); iv.className="dv-intent";
+      iv.appendChild(document.createTextNode("Намерение дня: "));
+      var ib=document.createElement("b"); ib.textContent="«"+intent.focus+"»"; iv.appendChild(ib);
+      if(intent.note) iv.appendChild(document.createTextNode(" — "+intent.note));
+      box.appendChild(iv);
+    }
     var ph=document.createElement("div"); ph.className="dv-phrase"; ph.textContent=v.phrase;
-    box.appendChild(row); box.appendChild(ph);
+    box.appendChild(ph);
+    if(intent && v.total>0 && v.done===v.total){
+      var af=document.createElement("div"); af.className="dv-affirm"; af.textContent=dayAffirmation(v.done);
+      box.appendChild(af);
+    }
   }
 
   // ===== Новый день: мягкий перенос незавершённого (без авто-удаления) =====
@@ -3499,11 +3595,6 @@
     });
   })();
 
-  (function(){
-    var btn=document.getElementById("mapGoBtn");
-    if(btn) btn.addEventListener("click", openMap);
-  })();
-
   // ================= Живые напоминания о делах со временем =================
   // Работает, пока открыта вкладка: когда наступает время дела — уведомление
   // (если разрешено), голос и подсветка. Фоновые push при закрытом приложении —
@@ -3749,6 +3840,48 @@
       return km>600 && km<670;
     });
 
+    G("Намерение дня");
+    T("dayAffirmation: ротация по модулю", function(){
+      return dayAffirmation(0)===AFFIRMATIONS[0]
+        && dayAffirmation(AFFIRMATIONS.length)===AFFIRMATIONS[0]
+        && dayAffirmation(AFFIRMATIONS.length+1)===AFFIRMATIONS[1];
+    });
+    T("loadIntention: нет записи → null", function(){
+      var prev=localStorage.getItem(INTENTION_KEY);
+      try{ localStorage.removeItem(INTENTION_KEY); return loadIntention()===null; }
+      finally{ if(prev!==null) localStorage.setItem(INTENTION_KEY, prev); }
+    });
+    T("loadIntention: запись за чужой день → null", function(){
+      var prev=localStorage.getItem(INTENTION_KEY);
+      try{
+        localStorage.setItem(INTENTION_KEY, JSON.stringify({date:"2000-01-01", focus:"x"}));
+        return loadIntention()===null;
+      } finally{ if(prev===null) localStorage.removeItem(INTENTION_KEY); else localStorage.setItem(INTENTION_KEY, prev); }
+    });
+    T("saveIntention/loadIntention: сегодняшняя запись читается обратно, снимает «не сегодня»", function(){
+      var prevI=localStorage.getItem(INTENTION_KEY), prevS=localStorage.getItem(INTENTION_SKIP_KEY);
+      try{
+        skipIntentionToday();
+        saveIntention("Тестовое намерение", " заметка ");
+        var v=loadIntention();
+        return !!v && v.focus==="Тестовое намерение" && v.note==="заметка" && !intentionSkippedToday();
+      } finally{
+        if(prevI===null) localStorage.removeItem(INTENTION_KEY); else localStorage.setItem(INTENTION_KEY, prevI);
+        if(prevS===null) localStorage.removeItem(INTENTION_SKIP_KEY); else localStorage.setItem(INTENTION_SKIP_KEY, prevS);
+      }
+    });
+    T("skipIntentionToday: помечает сегодняшний день", function(){
+      var prevI=localStorage.getItem(INTENTION_KEY), prevS=localStorage.getItem(INTENTION_SKIP_KEY);
+      try{
+        localStorage.removeItem(INTENTION_KEY);
+        skipIntentionToday();
+        return intentionSkippedToday()===true;
+      } finally{
+        if(prevI===null) localStorage.removeItem(INTENTION_KEY); else localStorage.setItem(INTENTION_KEY, prevI);
+        if(prevS===null) localStorage.removeItem(INTENTION_SKIP_KEY); else localStorage.setItem(INTENTION_SKIP_KEY, prevS);
+      }
+    });
+
     G("Целостность DOM");
     // Самая опасная поломка этой волны — переезд секций в панель: узел уехал,
     // а скрипт продолжает искать его по id. Проверяем сам себя: вытаскиваем из
@@ -3821,7 +3954,6 @@
   var PANEL_KEY = "superday_panel_v1";
   var PANEL_SECS = [
     { id:"matrix", ic:"🧭", name:"Разбор по важности" },
-    { id:"map",    ic:"🗺", name:"Карта дел" },
     { id:"remind", ic:"🔔", name:"Напоминания и звук" },
     { id:"voice",  ic:"🎙", name:"Голос" },
     { id:"stats",  ic:"📊", name:"Неделя" },
@@ -3947,8 +4079,6 @@
     var cnt=[];
     document.querySelectorAll(".quad [data-cnt]").forEach(function(c){ cnt.push(c.textContent||"0"); });
     note("matrix", cnt.length ? cnt.join(" · ") : "");
-    var locN = tasks.filter(function(t){ return t.loc && !t.done; }).length;
-    note("map", locN ? (locN+" "+plural(locN,["место","места","мест"])) : "пока нет мест");
     var remOn=false;
     try{ remOn = localStorage.getItem("superday_remind")==="1"; }catch(e){}
     var muted=false;
