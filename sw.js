@@ -2,7 +2,7 @@
    Стратегия: навигации — network-first с офлайн-фолбэком на кэш главной;
    статика (иконки, манифест, шрифты) — cache-first. Версия в имени кэша —
    меняй CACHE при обновлении, чтобы старый кэш очистился. */
-var CACHE = "superday-v23";
+var CACHE = "superday-v24";
 var SHELL = [
   "/",
   "/index.html",
@@ -12,6 +12,7 @@ var SHELL = [
   // визите; русскому не нужен ни один.
   "/i18n.js",
   "/ux.js",
+  "/refer.js",
   "/manifest.webmanifest",
   "/assets/mark.png",
   "/assets/logo.png",
