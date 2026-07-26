@@ -208,7 +208,6 @@
     background:linear-gradient(180deg,rgba(29,44,76,.6),rgba(9,15,30,.45)); border:1px solid var(--border);
     border-radius:18px; padding:20px 22px}
   .route h3{font-family:var(--font-display); font-weight:700; font-size:22px; margin:0 0 4px}
-  .route .rsub{font-size:12px; color:var(--text-muted); margin-bottom:14px}
   ol.plan{list-style:none; counter-reset:s; margin:0; padding:0; display:flex; flex-direction:column; gap:9px}
   ol.plan li{counter-increment:s; display:flex; align-items:center; gap:13px; font-size:14px}
   ol.plan li::before{content:counter(s); flex:0 0 auto; width:26px; height:26px; border-radius:50%;
@@ -604,7 +603,7 @@
   .intro h1{line-height:1.06; letter-spacing:-.015em}
   .intro p{font-size:15px}
   .route h3,.stats-head h3,.tpl-head h3,.notes-head h3,.panel-head h2{letter-spacing:-.01em}
-  .rsub,.pg-lead,.composer-help{line-height:1.62}
+  .pg-lead,.composer-help{line-height:1.62}
 
   /* Платиновая заливка — одна декларация на все первичные действия. */
   .add-btn,.focus .fx-done,.ro-primary,.ul-ok,.tpl-list .tpl-load,.ob-close,.ds-unload,
@@ -783,15 +782,6 @@
   .map-priv{font-size:11px; color:var(--text-muted); line-height:1.55; padding-bottom:10px;
     border-bottom:1px solid var(--hair-soft); margin-bottom:11px}
   .map-priv b{color:var(--plat-dim)}
-  .map-go{width:100%; cursor:pointer; font-family:inherit; font-size:13px; font-weight:700;
-    color:var(--on-accent); background:var(--grad-gold); border:0; border-radius:12px; padding:11px 14px;
-    transition:.15s; letter-spacing:.2px}
-  .map-go:hover{filter:brightness(1.06)}
-  .map-go:disabled{opacity:.4; cursor:default; filter:none}
-  .map-empty{margin-top:2px; border:1px dashed var(--hair-soft); border-radius:14px; padding:22px 16px;
-    text-align:center; color:var(--text-muted); font-size:12.5px; line-height:1.6}
-  .map-empty .me-dots{display:flex; justify-content:center; gap:10px; margin-bottom:12px; opacity:.5}
-  .map-empty .me-dots span{width:9px; height:9px; border-radius:50%; border:1.5px dashed var(--plat-deep)}
   .map-note{font-size:11.5px; color:var(--text-muted); margin-top:9px; line-height:1.5}
   .map-note.warn{color:var(--q1)}
   .mapview{position:relative; margin-top:11px; border-radius:16px; overflow:hidden; height:280px;
@@ -3838,6 +3828,29 @@
     T("haversineKm: Москва—Петербург ≈ 600–670 км", function(){
       var km=haversineKm({lat:55.7558,lon:37.6173},{lat:59.9311,lon:30.3609});
       return km>600 && km<670;
+    });
+    // Ветка с ≥2 местами намеренно не тестируется здесь — она реально дёргает
+    // loadLeaflet()/CDN, а самотесты не должны трогать сеть.
+    T("renderMapCard: карточка скрыта при 0 местах", function(){
+      var keep=tasks.slice();
+      try{
+        tasks.length=0;
+        tasks.push({id:"stm1",text:"а",urgent:false,important:false,done:false,
+                    time:null,dur:null,defer:null,repeat:null,doneOn:null});
+        render();
+        return document.getElementById("mapCard").hidden===true;
+      } finally { tasks.length=0; keep.forEach(function(x){tasks.push(x);}); render(); }
+    });
+    T("renderMapCard: карточка скрыта при 1 месте (нужно ≥2)", function(){
+      var keep=tasks.slice();
+      try{
+        tasks.length=0;
+        tasks.push({id:"stm1",text:"а",urgent:false,important:false,done:false,
+                    time:null,dur:null,defer:null,repeat:null,doneOn:null,
+                    loc:{lat:55.75,lon:37.61,label:"Офис",addr:"Офис"}});
+        render();
+        return document.getElementById("mapCard").hidden===true;
+      } finally { tasks.length=0; keep.forEach(function(x){tasks.push(x);}); render(); }
     });
 
     G("Намерение дня");
