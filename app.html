@@ -1047,6 +1047,8 @@
         <button id="exportBtn" type="button">&#11015; Сохранить в файл</button>
         <button id="importBtn" type="button">&#11014; Загрузить из файла</button>
         <input type="file" id="importFile" accept="application/json,.json" hidden />
+        <button id="icsImportBtn" type="button" title="Загрузить файл .ics из рабочего календаря — встречи лягут в план дня" aria-label="Загрузить файл .ics из рабочего календаря — встречи лягут в план дня">&#128229; Встречи из .ics</button>
+        <input type="file" id="icsImportFile" accept="text/calendar,.ics" hidden />
         <span class="databar-note">Резервная копия задач и заметок · перенос между устройствами вручную · файл остаётся у тебя</span>
         <span class="backup-remind" id="backupRemind" hidden></span>
         <span class="databar-status" id="dataStatus" role="status" aria-live="polite"></span>
@@ -3171,6 +3173,96 @@
     if(el) el.addEventListener("click", function(){ exportICS(); });
   });
 
+  // ================= Импорт .ics обратно (встречи из рабочего календаря) =================
+  var ICS_IMPORT_KEY = "superday_ics_imported_v1"; // UID уже занесённых событий — повторный импорт не дублирует
+  function icsUnfold(text){
+    return String(text).replace(/\r\n/g,"\n").replace(/\r/g,"\n").split("\n").reduce(function(lines, line){
+      if(/^[ \t]/.test(line) && lines.length) lines[lines.length-1]+=line.slice(1);
+      else lines.push(line);
+      return lines;
+    }, []);
+  }
+  function icsUnesc(s){
+    return String(s||"").replace(/\\n/gi,"\n").replace(/\\,/g,",").replace(/\\;/g,";").replace(/\\\\/g,"\\");
+  }
+  function icsParseDT(val, allDay){
+    var m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2}))?/.exec(String(val||"").trim());
+    if(!m) return null;
+    var key = m[1]+"-"+m[2]+"-"+m[3];
+    if(allDay || !m[4]) return { key:key, time:null };
+    return { key:key, time:m[4]+":"+m[5] };
+  }
+  function parseICS(text){
+    var lines=icsUnfold(text), events=[], cur=null;
+    lines.forEach(function(line){
+      if(line==="BEGIN:VEVENT"){ cur={}; return; }
+      if(line==="END:VEVENT"){ if(cur) events.push(cur); cur=null; return; }
+      if(!cur) return;
+      var i=line.indexOf(":"); if(i<0) return;
+      var head=line.slice(0,i), val=line.slice(i+1);
+      var name=head.split(";")[0].toUpperCase();
+      var allDay=/VALUE=DATE\b/i.test(head) && !/VALUE=DATE-TIME/i.test(head);
+      if(name==="SUMMARY") cur.summary=icsUnesc(val);
+      else if(name==="UID") cur.uid=val.trim();
+      else if(name==="DTSTART") cur.dtstart=icsParseDT(val, allDay);
+      else if(name==="DTEND") cur.dtend=icsParseDT(val, allDay);
+    });
+    return events;
+  }
+  // Разовые встречи: одно VEVENT → одна задача. RRULE из чужого календаря
+  // намеренно не разворачивается в набор — честнее один раз перенести встречу,
+  // чем молча придумывать серию по неполным данным стороннего формата.
+  function icsEventsToTasks(events, seenUids, todayStr){
+    var seen={}; (seenUids||[]).forEach(function(u){ seen[u]=true; });
+    var added=[], skippedDup=0, skippedOld=0;
+    (events||[]).forEach(function(ev){
+      if(!ev || !ev.dtstart || !ev.summary || !ev.summary.trim()) return;
+      if(ev.uid && seen[ev.uid]){ skippedDup++; return; }
+      if(ev.dtstart.key < todayStr){ skippedOld++; return; }
+      var dur=null;
+      if(ev.dtstart.time && ev.dtend && ev.dtend.time){
+        var a=timeToMin(ev.dtstart.time), b=timeToMin(ev.dtend.time);
+        if(a!=null && b!=null && b>a && validDur(b-a)) dur=b-a;
+      }
+      added.push({ text:ev.summary.trim(), time:ev.dtstart.time, dur:dur,
+        defer:(ev.dtstart.key===todayStr ? null : ev.dtstart.key) });
+      if(ev.uid) seen[ev.uid]=true;
+    });
+    return { added:added, newUids:Object.keys(seen), skippedDup:skippedDup, skippedOld:skippedOld };
+  }
+  function importICS(text){
+    var events;
+    try{ events=parseICS(text); }catch(e){ toast("Не удалось прочитать файл — это не календарь .ics"); return null; }
+    if(!events.length){ toast("В файле нет событий"); return null; }
+    var seen=[]; try{ seen=JSON.parse(localStorage.getItem(ICS_IMPORT_KEY)||"[]")||[]; }catch(e){ seen=[]; }
+    var res=icsEventsToTasks(events, seen, todayKey());
+    res.added.forEach(function(a){
+      tasks.push({ id:uid(), text:a.text, urgent:false, important:false, done:false,
+        time:a.time, dur:a.dur, defer:a.defer, repeat:null, doneOn:null, remindedOn:null });
+    });
+    try{ localStorage.setItem(ICS_IMPORT_KEY, JSON.stringify(res.newUids)); }catch(e){}
+    if(res.added.length){ save(); render(); }
+    var bits=[];
+    if(res.added.length) bits.push("добавлено "+res.added.length);
+    if(res.skippedDup) bits.push("уже было "+res.skippedDup);
+    if(res.skippedOld) bits.push("пропущено прошедших "+res.skippedOld);
+    toast(bits.length ? "📥 "+bits.join(" · ") : "Ничего нового не найдено");
+    return res;
+  }
+  (function(){
+    var btn=document.getElementById("icsImportBtn");
+    var file=document.getElementById("icsImportFile");
+    if(!btn || !file) return;
+    btn.addEventListener("click", function(){ file.value=""; file.click(); });
+    file.addEventListener("change", function(){
+      var f=file.files && file.files[0]; if(!f) return;
+      var reader=new FileReader();
+      reader.onload=function(){ importICS(String(reader.result||"")); };
+      reader.onerror=function(){ toast("Ошибка чтения файла."); };
+      reader.readAsText(f);
+    });
+  })();
+
   // ================= Заметки =================
   var NOTE_KEY = "superday_notes_v1";
   var notes = [];
@@ -3801,6 +3893,46 @@
         tasks=[{id:"t9",text:"сделано",time:"09:00",done:true}];
         return buildICS(new Date(2026,6,26,12,0,0),0).text.indexOf("sd-t9@")<0;
       } finally { tasks=keep; }
+    });
+
+    G("Импорт .ics");
+    T("icsUnfold разворачивает продолжение строки", function(){
+      var raw="BEGIN:VEVENT\r\nSUMMARY:длинная стр\r\n ока\r\nEND:VEVENT";
+      var L=icsUnfold(raw);
+      return L.length===3 && L[1]==="SUMMARY:длинная строка";
+    });
+    T("icsParseDT: время и весь день", function(){
+      var t=icsParseDT("20260810T093000", false), d=icsParseDT("20260810", true);
+      return t.key==="2026-08-10" && t.time==="09:30" && d.key==="2026-08-10" && d.time===null;
+    });
+    T("parseICS: SUMMARY, UID, DTSTART/DTEND, экранирование", function(){
+      var ics="BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nUID:abc@work\r\nSUMMARY:Созвон\\, важный\r\n"+
+              "DTSTART:20260810T090000\r\nDTEND:20260810T093000\r\nEND:VEVENT\r\nEND:VCALENDAR";
+      var ev=parseICS(ics);
+      return ev.length===1 && ev[0].uid==="abc@work" && ev[0].summary==="Созвон, важный" &&
+             ev[0].dtstart.time==="09:00" && ev[0].dtend.time==="09:30";
+    });
+    T("icsEventsToTasks: длительность, дедуп по UID, прошлое пропускает", function(){
+      var events=[
+        { uid:"a@x", summary:"Встреча", dtstart:{key:"2026-08-10",time:"09:00"}, dtend:{key:"2026-08-10",time:"09:30"} },
+        { uid:"a@x", summary:"Встреча", dtstart:{key:"2026-08-10",time:"09:00"}, dtend:{key:"2026-08-10",time:"09:30"} },
+        { uid:"b@x", summary:"Старое", dtstart:{key:"2026-08-01",time:"09:00"}, dtend:null }
+      ];
+      var res=icsEventsToTasks(events, [], "2026-08-05");
+      return res.added.length===1 && res.added[0].dur===30 && res.skippedOld===1;
+    });
+    T("icsEventsToTasks: уже импортированный UID не задваивается", function(){
+      var events=[{ uid:"a@x", summary:"Встреча", dtstart:{key:"2026-08-10",time:null}, dtend:null }];
+      var res=icsEventsToTasks(events, ["a@x"], "2026-08-05");
+      return res.added.length===0 && res.skippedDup===1;
+    });
+    T("icsEventsToTasks: сегодня без переноса, будущее — с переносом", function(){
+      var events=[
+        { uid:"t1", summary:"Сегодня", dtstart:{key:"2026-08-05",time:"10:00"}, dtend:null },
+        { uid:"t2", summary:"Завтра", dtstart:{key:"2026-08-06",time:"10:00"}, dtend:null }
+      ];
+      var res=icsEventsToTasks(events, [], "2026-08-05");
+      return res.added[0].defer===null && res.added[1].defer==="2026-08-06";
     });
 
     G("Форматтеры");
