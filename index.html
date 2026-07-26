@@ -12,7 +12,7 @@
 <meta name="color-scheme" content="dark" />
 <title>SUPER DAY — умный премиальный планировщик дня</title>
 <meta name="description" content="SUPER DAY — премиальный планировщик дня: голосовой ввод, приоритеты по матрице Эйзенхауэра, AI-дебаты и озвучка плана. Создано с помощью OSGARD." />
-<meta name="theme-color" content="#101216" />
+<meta name="theme-color" content="#0B1020" />
 <link rel="icon" href="assets/mark.png" type="image/png" />
 <link rel="apple-touch-icon" href="assets/apple-touch-icon-180.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -38,7 +38,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
 <!-- ACTIVATE-ANALYTICS · P0.2 · приватная веб-аналитика без cookie-баннера (GoatCounter).
      Аккаунт заводит основатель: зарегистрируй код на https://www.goatcounter.com,
@@ -76,18 +76,24 @@
 
 <style>
   :root{
-    /* Глубокий графит (тёплый near-black, без «техно»-синевы) */
-    --bg:#101216; --bg-deep:#0A0B0E; --surface:#181A20; --surface-alt:#20232B;
-    --border:#2C303A;
+    /* Платина и глубокая синь — та же система токенов, что в app.html.
+       Синий держит контейнеры и плашки, платина — действия, золото —
+       заголовки и «горячие» состояния. */
+    --bg:#0B1020; --bg-deep:#060912; --ink:#0A1122;
+    --surface:#111A2E; --surface-alt:#17233D;
+    --border:#243252;
     /* Благородное приглушённое золото / латунь — без леденцовых бликов */
-    --gold:#C9A96A; --gold-bright:#E6D2A2; --gold-deep:#9A7B3E;
-    --champagne:#D8C69E; --platinum:#D4D8E0;
-    --text:#F2EEE6; --text-dim:#A9ADB6; --text-muted:#71757E;
-    --hair:rgba(201,169,106,0.26); --hair-soft:rgba(201,169,106,0.11);
+    --gold:#C9A96A; --gold-bright:#E8D3A4; --gold-deep:#9A7B3E;
+    --champagne:#DCCBA4; --platinum:#DEE4EE; --plat-dim:#AEB9CD; --plat-deep:#78849B;
+    --text:#EEF2F9; --text-dim:#A7B2C6; --text-muted:#6F7B92;
+    --on-accent:#080D18;
+    --hair:rgba(158,178,214,0.26); --hair-soft:rgba(158,178,214,0.11);
     /* «жидкое золото» — приглушённый матовый металлик (латунь → шампань) */
     --grad-gold:linear-gradient(120deg,#9A7B3E 0%,#C9A96A 24%,#E6D2A2 46%,#C9A96A 62%,#A98545 80%,#E6D2A2 100%);
     --grad-gold-soft:linear-gradient(120deg,var(--gold-bright),var(--gold) 52%,var(--gold-deep));
-    --shadow-lux:0 30px 70px -20px rgba(0,0,0,.68), 0 8px 24px -8px rgba(0,0,0,.55);
+    --grad-plat:linear-gradient(120deg,#7C879E 0%,#C6CFDF 22%,#F4F7FC 44%,#BFC9DA 60%,#8B96AC 78%,#E4EAF4 100%);
+    --shadow-lux:0 30px 70px -20px rgba(0,0,0,.72), 0 8px 24px -8px rgba(0,0,0,.55);
+    --font-display:"Playfair Display",Georgia,"Times New Roman",serif;
     --maxw:1120px;
   }
   *{box-sizing:border-box}
@@ -102,10 +108,10 @@
   body::before{
     content:""; position:fixed; inset:0; z-index:-2; pointer-events:none;
     background:
-      radial-gradient(720px 520px at 80% -10%, rgba(201,169,106,0.16), transparent 60%),
-      radial-gradient(620px 520px at 8% 4%, rgba(216,198,158,0.05), transparent 60%),
-      radial-gradient(760px 660px at 14% 10%, rgba(44,42,52,0.55), transparent 62%),
-      linear-gradient(180deg,#141519 0%,#0D0E12 52%,#08090C 100%);
+      radial-gradient(760px 560px at 78% -12%, rgba(126,158,226,0.18), transparent 62%),
+      radial-gradient(620px 520px at 8% 4%, rgba(201,169,106,0.07), transparent 60%),
+      radial-gradient(780px 680px at 14% 12%, rgba(30,46,80,0.55), transparent 64%),
+      linear-gradient(180deg,#0D1428 0%,#0A0F1E 52%,#060912 100%);
   }
   /* киношное зерно плёнки + мягкая виньетка (8K-ощущение глубины) */
   body::after{
@@ -118,7 +124,7 @@
   }
   a{color:inherit; text-decoration:none}
   .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px}
-  .serif{font-family:"Cormorant Garamond",Georgia,serif}
+  .serif{font-family:var(--font-display)}
   .gold-text{
     background:var(--grad-gold);
     -webkit-background-clip:text; background-clip:text; color:transparent;
@@ -157,24 +163,30 @@
     font-weight:700; font-size:14px; border-radius:999px; padding:11px 22px;
     cursor:pointer; border:1px solid transparent; transition:transform .15s, box-shadow .2s, background .2s;
   }
-  .btn-gold{
+  /* Платина = действие. Золото на лендинге осталось за заголовками и
+     акцентами, кнопки перекрашены в металл — по чему нажимать, видно сразу. */
+  .btn-plat{
     position:relative; overflow:hidden;
-    background:linear-gradient(120deg,var(--gold-bright),var(--gold) 46%,var(--gold-deep));
-    color:#1A1509; letter-spacing:.2px;
-    box-shadow:0 10px 28px -10px rgba(201,169,106,0.38), inset 0 1px 0 rgba(255,248,230,.32), inset 0 -1px 0 rgba(90,64,24,.4);
+    background:var(--grad-plat);
+    color:var(--on-accent); letter-spacing:.2px;
+    box-shadow:0 12px 30px -12px rgba(150,180,235,0.45), inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 0 rgba(60,74,102,.42);
   }
   /* скользящий блик по кнопке — мягкий, матовый (без «пластикового» глянца) */
-  .btn-gold::after{
+  .btn-plat::after{
     content:""; position:absolute; top:0; left:-60%; width:40%; height:100%;
-    background:linear-gradient(100deg,transparent,rgba(255,250,235,.35),transparent);
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.42),transparent);
     transform:skewX(-18deg); transition:left .6s cubic-bezier(.2,.7,.2,1); pointer-events:none;
   }
-  .btn-gold:hover{transform:translateY(-2px); box-shadow:0 18px 40px -12px rgba(201,169,106,0.44), inset 0 1px 0 rgba(255,248,230,.36)}
-  .btn-gold:hover::after{left:120%}
+  .btn-plat:hover{transform:translateY(-2px); box-shadow:0 20px 44px -14px rgba(150,180,235,0.5), inset 0 1px 0 rgba(255,255,255,.6)}
+  .btn-plat:hover::after{left:120%}
   .btn-ghost{background:rgba(255,255,255,.02); border-color:var(--hair); color:var(--text);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
   .btn-ghost:hover{border-color:var(--gold); color:var(--gold-bright); background:rgba(201,169,106,.06)}
   .nav .btn{padding:9px 18px}
+  /* Правило `nav.links a` специфичнее классов кнопок и перекрашивало текст CTA
+     в приглушённо-серый: на платине он почти не читался. Возвращаем цвета. */
+  nav.links a.btn-plat{color:var(--on-accent)}
+  nav.links a.btn-ghost{color:var(--text)}
   @media(max-width:760px){ nav.links a:not(.btn){display:none} .brand b{letter-spacing:2px} }
 
   /* ---------- HERO ---------- */
@@ -196,7 +208,7 @@
   a.phone-link:hover .phone{box-shadow:var(--shadow-lux), 0 0 80px -14px rgba(201,169,106,.55), inset 0 0 0 1px rgba(255,255,255,.06)}
   a.phone-link:focus-visible{outline:none}
   a.phone-link:focus-visible .phone{box-shadow:0 0 0 3px rgba(201,169,106,.7), var(--shadow-lux)}
-  .phone-open{position:relative; z-index:2; display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:600; letter-spacing:.3px; color:#1A1509; padding:9px 16px; border-radius:999px; background:linear-gradient(120deg,var(--gold-bright),var(--gold-deep)); box-shadow:0 8px 24px -10px rgba(201,169,106,.6)}
+  .phone-open{position:relative; z-index:2; display:inline-flex; align-items:center; gap:8px; font-size:12px; font-weight:600; letter-spacing:.3px; color:var(--on-accent); padding:9px 16px; border-radius:999px; background:linear-gradient(120deg,var(--gold-bright),var(--gold-deep)); box-shadow:0 8px 24px -10px rgba(201,169,106,.6)}
   .phone-glow{position:absolute; inset:-6% 10% 6% 10%; background:radial-gradient(circle at 50% 30%,rgba(201,169,106,0.30),transparent 62%); filter:blur(28px); z-index:0}
   .phone{
     position:relative; z-index:1; width:298px; border-radius:44px; padding:14px;
@@ -213,9 +225,9 @@
   .ps-top{display:flex; align-items:center; gap:10px; margin-bottom:18px}
   .ps-top img{width:26px;height:26px}
   .ps-top .t{font-size:12px; letter-spacing:3px; color:var(--gold); font-weight:700}
-  .ps-h{font-family:"Cormorant Garamond",serif; font-size:26px; font-weight:700; margin:2px 0 16px; color:var(--text)}
+  .ps-h{font-family:var(--font-display); font-size:26px; font-weight:700; margin:2px 0 16px; color:var(--text)}
   .task{
-    display:flex; align-items:center; gap:12px; background:rgba(32,35,43,.7);
+    display:flex; align-items:center; gap:12px; background:rgba(29,44,76,.7);
     border:1px solid var(--hair-soft); border-radius:16px; padding:12px 14px; margin-bottom:11px;
   }
   .task .dot{width:9px;height:9px;border-radius:50%;flex:none}
@@ -231,7 +243,7 @@
     background:linear-gradient(120deg,rgba(201,169,106,.16),rgba(201,169,106,.05));
     border:1px solid var(--hair); border-radius:999px; padding:12px 16px;
   }
-  .voice-bar .mic{width:30px;height:30px;border-radius:50%;background:linear-gradient(120deg,var(--gold-bright),var(--gold-deep));display:flex;align-items:center;justify-content:center;color:#1A1509;font-size:15px;flex:none}
+  .voice-bar .mic{width:30px;height:30px;border-radius:50%;background:linear-gradient(120deg,var(--gold-bright),var(--gold-deep));display:flex;align-items:center;justify-content:center;color:var(--on-accent);font-size:15px;flex:none}
   .voice-bar span{font-size:12px;color:var(--text-dim)}
   @media(max-width:900px){ .hero-grid{grid-template-columns:1fr; gap:36px} .phone-stage{order:-1} }
 
@@ -267,7 +279,7 @@
   /* Как это работает */
   .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:22px}
   .step{text-align:center; padding:0 10px}
-  .step .n{font-family:"Cormorant Garamond",serif; font-size:52px; font-weight:700; line-height:1}
+  .step .n{font-family:var(--font-display); font-size:52px; font-weight:700; line-height:1}
   .step h4{font-size:17px; margin:10px 0 8px}
   .step p{font-size:14px; color:var(--text-dim); margin:0}
   @media(max-width:760px){ .steps{grid-template-columns:1fr; gap:30px} }
@@ -286,7 +298,7 @@
   .plan:hover{transform:translateY(-4px); box-shadow:0 22px 48px -18px rgba(0,0,0,.5)}
   .plan.pop{
     background:
-      linear-gradient(180deg,rgba(34,37,46,.88),rgba(18,19,24,.72)) padding-box,
+      linear-gradient(180deg,rgba(34,37,46,.88),rgba(9,15,30,.72)) padding-box,
       var(--grad-gold) border-box;
     border:1.5px solid transparent;
     box-shadow:0 22px 60px -16px rgba(201,169,106,.32), inset 0 1px 0 rgba(255,255,255,.08);
@@ -298,12 +310,12 @@
   }
   .plan.pop .tag{
     position:absolute; top:-11px; left:50%; transform:translateX(-50%);
-    background:var(--grad-gold); color:#1A1509;
+    background:var(--grad-gold); color:var(--on-accent);
     font-size:10px; font-weight:800; letter-spacing:1px; padding:5px 14px; border-radius:999px;
     box-shadow:0 8px 20px -6px rgba(201,169,106,.6), inset 0 1px 0 rgba(255,255,255,.5);
   }
   .plan .pn{font-size:13px; letter-spacing:2px; text-transform:uppercase; font-weight:700; color:var(--champagne); position:relative}
-  .plan .lim{font-family:"Cormorant Garamond",serif; font-size:36px; font-weight:700; margin:4px 0; position:relative;
+  .plan .lim{font-family:var(--font-display); font-size:36px; font-weight:700; margin:4px 0; position:relative;
     background:var(--grad-gold); -webkit-background-clip:text; background-clip:text; color:transparent;}
   .plan .lim small{font-size:13px; color:var(--text-muted); font-family:"Manrope",sans-serif; display:block; letter-spacing:0}
   .plan .quota{font-size:12px; color:var(--champagne); font-weight:600; letter-spacing:.2px;
@@ -332,12 +344,12 @@
   .store .sname{font-weight:700; color:var(--text); font-size:15px; letter-spacing:.3px}
   .store .splat{display:block; font-size:11px; color:var(--text-muted); margin-top:2px; letter-spacing:1px; text-transform:uppercase}
   .store .soon{display:inline-block; margin-top:14px; font-size:10px; font-weight:800; letter-spacing:1.4px;
-    color:#1A1509; background:var(--grad-gold); padding:5px 12px; border-radius:999px}
+    color:var(--on-accent); background:var(--grad-gold); padding:5px 12px; border-radius:999px}
   .dl-how{max-width:680px; margin:40px auto 0; display:grid; grid-template-columns:repeat(3,1fr); gap:18px; counter-reset:dl}
   .dl-how li{list-style:none; position:relative; padding:20px 16px 18px; border-radius:16px;
     background:rgba(255,255,255,.02); border:1px solid var(--hair-soft); font-size:13px; color:var(--text-dim); line-height:1.5}
   .dl-how li::before{counter-increment:dl; content:counter(dl); display:flex; align-items:center; justify-content:center;
-    width:30px; height:30px; margin-bottom:12px; border-radius:50%; font-family:"Cormorant Garamond",serif; font-weight:700; font-size:18px;
+    width:30px; height:30px; margin-bottom:12px; border-radius:50%; font-family:var(--font-display); font-weight:700; font-size:18px;
     background:var(--grad-gold); -webkit-background-clip:text; background-clip:text; color:transparent; border:1px solid rgba(201,169,106,.35)}
   .dl-how b{color:var(--text); display:block; margin-bottom:4px; font-size:13.5px}
   .dl-cta{text-align:center; margin-top:34px}
@@ -346,9 +358,9 @@
     background:linear-gradient(160deg,rgba(30,32,40,.7),rgba(16,17,21,.5));
     border:1px solid var(--hair); box-shadow:var(--shadow-lux)}
   .apk-box .apk-eyebrow{font-size:11px; letter-spacing:2.4px; text-transform:uppercase; font-weight:700; color:var(--champagne)}
-  .apk-box h3{font-family:"Cormorant Garamond",serif; font-weight:700; font-size:24px; margin:8px 0 6px; color:var(--text)}
+  .apk-box h3{font-family:var(--font-display); font-weight:700; font-size:24px; margin:8px 0 6px; color:var(--text)}
   .apk-box p{color:var(--text-dim); font-size:13.5px; line-height:1.6; margin:0 auto 18px; max-width:460px}
-  .apk-box .btn-gold{padding:14px 32px}
+  .apk-box .btn-plat{padding:14px 32px}
   .apk-meta{margin-top:12px; font-size:11.5px; color:var(--text-muted); letter-spacing:.3px}
   .apk-note{margin-top:14px; font-size:11.5px; color:var(--text-muted); line-height:1.6}
   .apk-note b{color:var(--champagne); font-weight:600}
@@ -363,7 +375,7 @@
     position:relative; overflow:hidden;
   }
   .cta::after{content:""; position:absolute; inset:auto -20% -60% -20%; height:70%; background:radial-gradient(circle at 50% 100%,rgba(201,169,106,.18),transparent 60%)}
-  .cta h2{font-family:"Cormorant Garamond",serif; font-weight:700; font-size:clamp(28px,4vw,42px); margin:0 0 10px; position:relative}
+  .cta h2{font-family:var(--font-display); font-weight:700; font-size:clamp(28px,4vw,42px); margin:0 0 10px; position:relative}
   .cta p{color:var(--text-dim); margin:0 auto 26px; max-width:440px; position:relative}
   .wl{display:flex; gap:10px; max-width:440px; margin:0 auto; position:relative; flex-wrap:wrap; justify-content:center}
   .wl input{
@@ -412,7 +424,7 @@
     background:conic-gradient(from 210deg,#9A7B3E,#E6D2A2,#C9A96A,#9A7B3E,#E6D2A2,#9A7B3E);
   }
   .osgard-emblem b{
-    font-family:"Cormorant Garamond",serif; font-weight:700; font-size:21px; line-height:1;
+    font-family:var(--font-display); font-weight:700; font-size:21px; line-height:1;
     background:var(--grad-gold); -webkit-background-clip:text; background-clip:text; color:transparent;
     text-shadow:0 1px 1px rgba(0,0,0,.3);
   }
@@ -428,7 +440,7 @@
   .manifesto .wrap{max-width:880px; text-align:center}
   .m-line{width:1px; height:56px; margin:0 auto 24px; background:linear-gradient(180deg,transparent,var(--gold))}
   .manifesto blockquote{
-    margin:0; font-family:"Cormorant Garamond",serif; font-weight:600;
+    margin:0; font-family:var(--font-display); font-weight:600;
     font-size:clamp(27px,4vw,44px); line-height:1.22; letter-spacing:.3px; color:var(--text);
   }
   .manifesto blockquote em{font-style:normal; background:var(--grad-gold); -webkit-background-clip:text; background-clip:text; color:transparent}
@@ -496,7 +508,7 @@
   }
 
   /* тактильное нажатие золотой кнопки */
-  .btn-gold:active{ transform:translateY(0) scale(.98); box-shadow:0 6px 18px rgba(201,169,106,.32), inset 0 0 18px rgba(255,255,255,.25) }
+  .btn-plat:active{ transform:translateY(0) scale(.98); box-shadow:0 6px 18px rgba(201,169,106,.32), inset 0 0 18px rgba(255,255,255,.25) }
 
   /* слой кинематографичных эффектов (поверх контента, не перехватывает клики) */
   #fx-layer{position:fixed; inset:0; pointer-events:none; z-index:9998; overflow:hidden}
@@ -530,7 +542,7 @@
     position:relative; max-width:452px; margin:24px auto 0; text-align:left;
     border-radius:22px; padding:22px 22px 20px; overflow:hidden;
     background:
-      linear-gradient(180deg,rgba(32,35,43,.82),rgba(16,17,21,.72)) padding-box,
+      linear-gradient(180deg,rgba(29,44,76,.82),rgba(16,17,21,.72)) padding-box,
       linear-gradient(150deg,rgba(201,169,106,.55),rgba(201,169,106,.05) 50%,rgba(219,228,242,.18)) border-box;
     border:1px solid transparent;
     box-shadow:var(--shadow-lux), 0 0 56px -22px rgba(201,169,106,.55);
@@ -557,7 +569,7 @@
   .wlc-head{display:flex; align-items:center; gap:14px; margin-bottom:16px}
   .wlc-check{
     width:46px;height:46px;border-radius:50%; flex:none; position:relative;
-    display:flex;align-items:center;justify-content:center; color:#1A1509; font-size:22px; font-weight:800;
+    display:flex;align-items:center;justify-content:center; color:var(--on-accent); font-size:22px; font-weight:800;
     background:var(--grad-gold);
     box-shadow:0 10px 26px -8px rgba(201,169,106,.7), inset 0 1px 0 rgba(255,255,255,.6);
     animation:checkPop .5s cubic-bezier(.2,1.3,.4,1) both;
@@ -566,7 +578,7 @@
   .wlc-check::before{ content:""; position:absolute; inset:-6px; border-radius:50%;
     border:1px solid rgba(201,169,106,.4); animation:checkRing .8s ease-out .1s forwards }
   @keyframes checkRing{ 0%{transform:scale(.7); opacity:.9} 100%{transform:scale(1.25); opacity:0} }
-  .wlc-title{font-family:"Cormorant Garamond",serif; font-size:23px; font-weight:700; color:var(--text); line-height:1.15}
+  .wlc-title{font-family:var(--font-display); font-size:23px; font-weight:700; color:var(--text); line-height:1.15}
   .wlc-title small{display:block; font-family:"Manrope",sans-serif; font-size:12px; font-weight:500; color:var(--text-muted); letter-spacing:.3px; margin-top:2px}
   .wlc-mail{
     display:flex; align-items:center; gap:10px; margin-bottom:14px;
@@ -581,7 +593,7 @@
     display:flex;align-items:center;justify-content:center; font-style:normal; font-size:11px; font-weight:700;
     color:var(--gold-bright); background:rgba(201,169,106,.12); border:1px solid var(--hair-soft);
   }
-  .wl-card .btn-gold{width:100%; padding:13px}
+  .wl-card .btn-plat{width:100%; padding:13px}
   .wlc-share{margin-top:16px; padding-top:16px; border-top:1px solid var(--hair)}
   .wlc-share p{margin:0 0 10px; font-size:13px; color:var(--text-dim); line-height:1.5}
   .wlc-share p b{color:var(--champagne); font-weight:600}
@@ -604,7 +616,7 @@
     .wl-card .row{animation:none; opacity:1}
     .wlc-check{animation:none}
     .wlc-check::before{display:none}
-    .btn-gold::after{display:none}
+    .btn-plat::after{display:none}
   }
 </style>
 </head>
@@ -619,7 +631,7 @@
       <a href="#how">Как работает</a>
       <a href="#pricing">Тарифы</a>
       <a href="#faq">Вопросы</a>
-      <a class="btn btn-gold" href="#waitlist">Ранний доступ</a>
+      <a class="btn btn-plat" href="#waitlist">Ранний доступ</a>
     </nav>
   </div>
 </header>
@@ -632,12 +644,12 @@
       <div class="reveal">
         <span class="eyebrow">Ясность вместо хаоса</span>
         <h1>Дел слишком много?<br><span class="serif gold-text gold-shimmer">Начни с главного.</span></h1>
-        <p class="lead">Продиктуй голосом всё, что давит, — одним потоком. SUPER DAY разложит задачи по матрице Эйзенхауэра, рассудит приоритеты в AI-дебатах и вернёт спокойный план: что делать первым, что подождёт, что можно убрать. За секунды.</p>
+        <p class="lead">Все задачи — одним потоком, голосом или текстом. SUPER DAY распределяет их по матрице Эйзенхауэра, взвешивает приоритеты в AI-дебатах и возвращает план дня: что делать первым, что подождёт, что можно не делать вовсе. За секунды.</p>
         <div class="hero-cta">
-          <a class="btn btn-gold" href="app.html">Открыть планировщик — работает сразу →</a>
+          <a class="btn btn-plat" href="app.html">Открыть планировщик — работает сразу →</a>
           <a class="btn btn-ghost" href="#waitlist">Ранний доступ к приложению</a>
         </div>
-        <p class="hero-note">Бесплатно, без установки: открыл → назвал дела → увидел план. <b>Скоро в RuStore, Google Play и App Store.</b></p>
+        <p class="hero-note">Бесплатно и без установки: открыть → назвать дела → получить план. <b>Скоро в RuStore, Google Play и App Store.</b></p>
       </div>
 
       <a class="phone-stage reveal phone-link" href="app.html" aria-label="Открыть рабочий планировщик SUPER DAY">
@@ -655,7 +667,7 @@
             <div class="voice-bar"><span class="mic">&#9679;</span><span>«Добавь встречу в 15:00 и убери лишнее…»</span></div>
           </div>
         </div>
-        <span class="phone-open">Это живое приложение — нажми и попробуй →</span>
+        <span class="phone-open">Это рабочее приложение, а не картинка — открыть →</span>
       </a>
     </div>
   </section>
@@ -664,8 +676,8 @@
   <section class="manifesto reveal">
     <div class="wrap">
       <div class="m-line" aria-hidden="true"></div>
-      <blockquote>День — это не список задач.<br>Это <em>16 часов твоей единственной жизни.</em></blockquote>
-      <p class="m-sub">SUPER DAY возвращает ощущение контроля: меньше тревоги от хаоса дел — больше ясности в том, что действительно важно именно сегодня.</p>
+      <blockquote>День — это не список задач.<br>Это <em>16 часов единственной жизни.</em></blockquote>
+      <p class="m-sub">SUPER DAY возвращает контроль над днём: меньше тревоги от неразобранных дел — больше ясности в том, что действительно важно сегодня.</p>
     </div>
   </section>
 
@@ -718,7 +730,7 @@
         <span class="apk-eyebrow">Android · ранняя бета</span>
         <h3>Скачать для Samsung и других Android</h3>
         <p>Прямой установочный файл <b>.apk</b>. Работает на телефонах и планшетах Android 7.0 и новее.</p>
-        <a class="btn btn-gold" href="https://github.com/HADJAL001/superday-site/releases/download/android-beta/superday.apk" rel="nofollow">Скачать для Android · .apk</a>
+        <a class="btn btn-plat" href="https://github.com/HADJAL001/superday-site/releases/download/android-beta/superday.apk" rel="nofollow">Скачать для Android · .apk</a>
         <div class="apk-meta">Файл ≈ 82 МБ · версия ранней беты</div>
         <p class="apk-note">При установке Android спросит разрешение поставить приложение «из этого источника» — это нормально для беты. Нажмите <b>«Разрешить»</b> → <b>«Установить»</b>. Для iPhone файл-установка технически недоступна (ограничение Apple) — используйте веб-версию или дождитесь App Store.</p>
       </div>
@@ -794,7 +806,7 @@
         <p>Оставь e-mail — пришлём ссылку, как только приложение выйдет в сторах.</p>
         <form class="wl" id="wlForm">
           <input type="email" id="wlEmail" placeholder="you@example.com" required autocomplete="email" />
-          <button class="btn btn-gold" type="submit">В список ожидания</button>
+          <button class="btn btn-plat" type="submit">В список ожидания</button>
         </form>
         <div class="stores">
           <span class="store">&#129337; <b>RuStore</b> <small>скоро</small></span>
@@ -886,7 +898,7 @@
           '<li><i>2</i><span>Пришлём личную ссылку на скачивание в день запуска в сторах.</span></li>' +
           '<li><i>3</i><span>Ранний доступ = расширенные лимиты на старте. Это подарок первым.</span></li>' +
         '</ul>' +
-        '<a class="btn btn-gold row" href="' + mailto + '">Открыть письмо и подтвердить</a>' +
+        '<a class="btn btn-plat row" href="' + mailto + '">Открыть письмо и подтвердить</a>' +
         shareBlock;
     }
     // e-mail вставляем текстом (без HTML-инъекций)
@@ -929,7 +941,7 @@
       });
     }
 
-    var payBtn = card.querySelector(".btn-gold");
+    var payBtn = card.querySelector(".btn-plat");
     if(payBtn){
       payBtn.addEventListener("pointerdown", function(e){
         var x=e.clientX, y=e.clientY;
@@ -1110,7 +1122,7 @@
   }
 
   // Навешиваем вспышку + звук на все золотые кнопки
-  document.querySelectorAll(".btn-gold").forEach(function(btn){
+  document.querySelectorAll(".btn-plat").forEach(function(btn){
     btn.addEventListener("pointerdown", function(e){
       var x = e.clientX, y = e.clientY;
       if(x == null || (x === 0 && y === 0)){

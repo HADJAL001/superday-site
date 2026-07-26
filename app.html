@@ -11,7 +11,7 @@
 <meta name="color-scheme" content="dark" />
 <title>SUPER DAY — веб-планировщик (бета)</title>
 <meta name="description" content="Бесплатный веб-планировщик SUPER DAY: продиктуй или впиши задачи, разложи по матрице Эйзенхауэра и получи спокойный план дня. Работает офлайн, данные хранятся только в этом браузере." />
-<meta name="theme-color" content="#101216" />
+<meta name="theme-color" content="#0B1020" />
 <link rel="canonical" href="https://superday.fun/app.html" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="SUPER DAY" />
@@ -35,57 +35,73 @@
 <meta name="robots" content="index,follow" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
   :root{
-    --bg:#101216; --bg-deep:#0A0B0E; --surface:#181A20; --surface-alt:#20232B;
-    --border:#2C303A; --gold:#C9A96A; --gold-bright:#E6D2A2; --gold-deep:#9A7B3E;
-    --champagne:#D8C69E; --platinum:#D4D8E0; --text:#F2EEE6; --text-dim:#A9ADB6;
-    --text-muted:#71757E; --hair:rgba(201,169,106,0.26); --hair-soft:rgba(201,169,106,0.11);
+    /* Платина и глубокая синь. Контейнеры и плашки значков — синие, металл —
+       платиновый градиент, золото осталось акцентом заголовков и «горячих»
+       состояний. Все поверхности берут цвет отсюда: смена палитры — правка
+       только этого блока. */
+    --bg:#0B1020; --bg-deep:#060912; --ink:#0A1122;
+    --surface:#111A2E; --surface-alt:#17233D;
+    --border:#243252;
+    --gold:#C9A96A; --gold-bright:#E8D3A4; --gold-deep:#9A7B3E; --champagne:#DCCBA4;
+    --platinum:#DEE4EE; --plat-dim:#AEB9CD; --plat-deep:#78849B;
+    --text:#EEF2F9; --text-dim:#A7B2C6; --text-muted:#6F7B92;
+    --on-accent:#080D18;
+    --hair:rgba(158,178,214,0.26); --hair-soft:rgba(158,178,214,0.11);
     --grad-gold:linear-gradient(120deg,#9A7B3E 0%,#C9A96A 24%,#E6D2A2 46%,#C9A96A 62%,#A98545 80%,#E6D2A2 100%);
-    --q1:#E5766B; --q2:#C9A96A; --q3:#7FCB9B; --q4:#6E809E;
+    --grad-plat:linear-gradient(120deg,#7C879E 0%,#C6CFDF 22%,#F4F7FC 44%,#BFC9DA 60%,#8B96AC 78%,#E4EAF4 100%);
+    --q1:#F0837A; --q2:#D9B978; --q3:#79CFA6; --q4:#8FA3C8;
+    --ease-out:cubic-bezier(.22,1,.36,1);
+    /* Playfair Display — высокий контраст штриха, читается «дорого» и на мелких
+       кеглях, в отличие от прежнего Cormorant; кириллица полная. */
+    --font-display:"Playfair Display",Georgia,"Times New Roman",serif;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
   body{
     font-family:"Manrope",system-ui,sans-serif; color:var(--text);
+    font-variant-numeric:tabular-nums; letter-spacing:-.005em;
     background:
-      radial-gradient(1100px 600px at 50% -8%,rgba(201,169,106,0.10),transparent 60%),
+      radial-gradient(1200px 640px at 50% -10%,rgba(120,150,220,0.14),transparent 62%),
+      radial-gradient(760px 420px at 84% 4%,rgba(201,169,106,0.07),transparent 60%),
       linear-gradient(180deg,var(--bg),var(--bg-deep));
-    min-height:100vh; -webkit-font-smoothing:antialiased;
+    background-attachment:fixed;
+    min-height:100vh; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
   }
   a{color:inherit}
   .wrap{max-width:1080px; margin:0 auto; padding:0 22px}
 
   /* Шапка */
   header{position:sticky; top:0; z-index:20; backdrop-filter:blur(12px);
-    background:linear-gradient(180deg,rgba(16,18,22,.86),rgba(16,18,22,.55)); border-bottom:1px solid var(--hair-soft)}
+    background:linear-gradient(180deg,rgba(8,13,26,.86),rgba(8,13,26,.55)); border-bottom:1px solid var(--hair-soft)}
   .bar{display:flex; align-items:center; justify-content:space-between; height:62px}
   .brand{display:flex; align-items:center; gap:11px; text-decoration:none}
   .brand img{width:30px; height:30px}
-  .brand b{font-family:"Cormorant Garamond",serif; font-size:21px; letter-spacing:.5px; font-weight:700}
+  .brand b{font-family:var(--font-display); font-size:21px; letter-spacing:.5px; font-weight:700}
   .brand .beta{font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--champagne);
-    border:1px solid var(--hair); padding:2px 7px; border-radius:999px; margin-left:2px}
+    border:1px solid var(--hair); padding:2px 7px; border-radius:999px; margin-left:2px; white-space:nowrap}
   .back{font-size:13px; color:var(--text-dim); text-decoration:none; white-space:nowrap}
   .back:hover{color:var(--text)}
 
   /* Интро */
   .intro{padding:38px 0 8px; text-align:center}
   .intro .eyebrow{font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--text-muted)}
-  .intro h1{font-family:"Cormorant Garamond",serif; font-weight:700; font-size:clamp(28px,5vw,44px);
+  .intro h1{font-family:var(--font-display); font-weight:700; font-size:clamp(28px,5vw,44px);
     line-height:1.05; margin:12px 0 10px}
   .intro h1 .g{background:var(--grad-gold); -webkit-background-clip:text; background-clip:text; color:transparent}
   .intro p{color:var(--text-dim); font-size:14.5px; line-height:1.65; max-width:560px; margin:0 auto}
 
   /* Форма ввода */
   .composer{margin:26px auto 8px; max-width:760px;
-    background:linear-gradient(180deg,rgba(32,35,43,.7),rgba(18,19,24,.5)); border:1px solid var(--border);
+    background:linear-gradient(180deg,rgba(29,44,76,.7),rgba(9,15,30,.5)); border:1px solid var(--border);
     border-radius:18px; padding:16px}
   .composer .row1{display:flex; gap:10px; flex-wrap:wrap}
-  .composer input[type=text]{flex:1 1 260px; min-width:0; background:#0E0F13; border:1px solid var(--border);
+  .composer input[type=text]{flex:1 1 260px; min-width:0; background:var(--ink); border:1px solid var(--border);
     color:var(--text); border-radius:12px; padding:14px 15px; font-size:15px; font-family:inherit; outline:none}
   .composer input[type=text]:focus{border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,169,106,.12)}
-  .mic-btn{flex:0 0 auto; width:50px; border:1px solid var(--border); background:#0E0F13; color:var(--champagne);
+  .mic-btn{flex:0 0 auto; width:50px; border:1px solid var(--border); background:var(--ink); color:var(--champagne);
     border-radius:12px; font-size:18px; cursor:pointer; transition:.2s}
   .mic-btn:hover{border-color:var(--gold)}
   .mic-btn.rec{color:#E5766B; border-color:#E5766B; animation:pulse 1.1s infinite}
@@ -96,26 +112,26 @@
       transition-duration:.001ms !important; scroll-behavior:auto !important}
   }
   .add-btn{flex:0 0 auto; border:none; cursor:pointer; border-radius:12px; padding:0 24px; font-weight:700;
-    font-size:14px; color:#1A1509; background:linear-gradient(120deg,var(--gold-bright),var(--gold) 46%,var(--gold-deep));
+    font-size:14px; color:var(--on-accent); background:linear-gradient(120deg,var(--gold-bright),var(--gold) 46%,var(--gold-deep));
     box-shadow:0 12px 28px -12px rgba(201,169,106,.5)}
   .add-btn:active{transform:translateY(1px)}
   .toggles{display:flex; gap:9px; margin-top:12px; flex-wrap:wrap; align-items:center}
   .tg{cursor:pointer; user-select:none; font-size:12.5px; color:var(--text-dim); border:1px solid var(--border);
-    background:#0E0F13; padding:8px 14px; border-radius:999px; transition:.18s}
-  .tg[aria-pressed=true]{color:#141414; font-weight:700; border-color:transparent}
+    background:var(--ink); padding:8px 14px; border-radius:999px; transition:.18s}
+  .tg[aria-pressed=true]{color:var(--on-accent); font-weight:700; border-color:transparent}
   .tg.u[aria-pressed=true]{background:linear-gradient(120deg,#F0958B,#E5766B)}
   .tg.i[aria-pressed=true]{background:var(--grad-gold)}
   .toggles .hint{font-size:11.5px; color:var(--text-muted); margin-left:auto}
 
   /* Голосовой режим (hands-free) */
   .voicebar{max-width:760px; margin:12px auto 0; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
-    background:linear-gradient(180deg,rgba(32,35,43,.55),rgba(18,19,24,.4)); border:1px solid var(--border);
+    background:linear-gradient(180deg,rgba(29,44,76,.55),rgba(9,15,30,.4)); border:1px solid var(--border);
     border-radius:14px; padding:12px 15px}
   .vm-toggle{flex:0 0 auto; cursor:pointer; font-family:inherit; font-size:13.5px; font-weight:600;
-    color:var(--champagne); background:#0E0F13; border:1px solid var(--hair); border-radius:999px;
+    color:var(--champagne); background:var(--ink); border:1px solid var(--hair); border-radius:999px;
     padding:10px 18px; display:inline-flex; align-items:center; gap:9px; transition:.2s}
   .vm-toggle .vm-ic{font-size:15px}
-  .vm-toggle[aria-pressed=true]{color:#141414; border-color:transparent; background:var(--grad-gold)}
+  .vm-toggle[aria-pressed=true]{color:var(--on-accent); border-color:transparent; background:var(--grad-gold)}
   .vm-dot{width:9px; height:9px; border-radius:50%; background:var(--text-muted); flex:0 0 auto; transition:.2s}
   .vm-toggle[aria-pressed=true] .vm-dot{background:#E5766B; animation:pulse 1.1s infinite}
   .vm-status{flex:1; min-width:190px; font-size:12.5px; color:var(--text-dim); line-height:1.45}
@@ -124,24 +140,24 @@
   .vm-main{display:flex; align-items:center; gap:14px; flex-wrap:wrap}
   .vm-config{display:flex; align-items:center; gap:9px; flex-wrap:wrap; padding-top:11px; margin-top:2px; border-top:1px solid var(--hair-soft)}
   .vm-config label{font-size:12px; color:var(--text-dim)}
-  .vm-config input{background:#0E0F13; border:1px solid var(--border); color:var(--text); border-radius:10px;
+  .vm-config input{background:var(--ink); border:1px solid var(--border); color:var(--text); border-radius:10px;
     padding:8px 12px; font-family:inherit; font-size:13.5px; width:170px; outline:none}
   .vm-config input:focus{border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,169,106,.12)}
   .vm-config-hint{font-size:11.5px; color:var(--text-muted)}
 
   /* Заметки */
   .notes{margin:0 auto 26px; max-width:760px;
-    background:linear-gradient(180deg,rgba(32,35,43,.6),rgba(18,19,24,.45)); border:1px solid var(--border);
+    background:linear-gradient(180deg,rgba(29,44,76,.6),rgba(9,15,30,.45)); border:1px solid var(--border);
     border-radius:18px; padding:20px 22px}
-  .notes-head h3{font-family:"Cormorant Garamond",serif; font-weight:700; font-size:22px; margin:0 0 1px}
+  .notes-head h3{font-family:var(--font-display); font-weight:700; font-size:22px; margin:0 0 1px}
   .notes-head .nsub{font-size:12px; color:var(--text-muted); display:block}
   .note-add{display:flex; gap:10px; margin:12px 0 14px}
-  .note-add input{flex:1; min-width:0; background:#0E0F13; border:1px solid var(--border); color:var(--text);
+  .note-add input{flex:1; min-width:0; background:var(--ink); border:1px solid var(--border); color:var(--text);
     border-radius:12px; padding:12px 14px; font-size:14.5px; font-family:inherit; outline:none}
   .note-add input:focus{border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,169,106,.12)}
   .note-add .add-btn{padding:0 20px; font-size:20px}
   ul.notelist{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px}
-  ul.notelist li{display:flex; align-items:flex-start; gap:10px; background:#0E0F13; border:1px solid var(--border);
+  ul.notelist li{display:flex; align-items:flex-start; gap:10px; background:var(--ink); border:1px solid var(--border);
     border-radius:11px; padding:11px 12px; font-size:13.5px; line-height:1.45}
   ul.notelist li .txt{flex:1; word-break:break-word}
   ul.notelist li .del{flex:0 0 auto; cursor:pointer; color:var(--text-muted); background:none; border:none;
@@ -150,7 +166,7 @@
 
   /* Матрица */
   .matrix{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:26px 0 10px}
-  .quad{background:linear-gradient(180deg,rgba(24,26,32,.7),rgba(14,15,19,.5)); border:1px solid var(--border);
+  .quad{background:linear-gradient(180deg,rgba(17,27,48,.7),rgba(14,15,19,.5)); border:1px solid var(--border);
     border-radius:16px; padding:15px 15px 8px; min-height:150px; position:relative}
   .quad::before{content:""; position:absolute; left:0; top:14px; bottom:14px; width:3px; border-radius:3px; background:var(--qc,var(--border))}
   .quad.q1{--qc:var(--q1)} .quad.q2{--qc:var(--q2)} .quad.q3{--qc:var(--q3)} .quad.q4{--qc:var(--q4)}
@@ -158,10 +174,10 @@
   .quad .sub{font-size:11px; color:var(--text-muted); padding-left:8px; margin-bottom:10px; display:block}
   .quad .cnt{font-size:11px; color:var(--text-muted); font-weight:600; margin-left:auto}
   ul.tasks{list-style:none; margin:0; padding:0 0 4px 0; display:flex; flex-direction:column; gap:8px}
-  li.task{display:flex; align-items:flex-start; gap:10px; background:#0E0F13; border:1px solid var(--border);
+  li.task{display:flex; align-items:flex-start; gap:10px; background:var(--ink); border:1px solid var(--border);
     border-radius:11px; padding:11px 12px; font-size:13.5px; line-height:1.4}
   li.task .chk{flex:0 0 auto; width:18px; height:18px; border-radius:6px; border:1.5px solid var(--text-muted);
-    cursor:pointer; margin-top:1px; display:grid; place-items:center; color:#1A1509; font-size:12px; transition:.15s}
+    cursor:pointer; margin-top:1px; display:grid; place-items:center; color:var(--on-accent); font-size:12px; transition:.15s}
   li.task.done .chk{background:var(--grad-gold); border-color:transparent}
   li.task.done .txt{text-decoration:line-through; color:var(--text-muted)}
   li.task{flex-wrap:wrap}
@@ -177,25 +193,25 @@
     padding:2px 1px 2px 3px; margin-top:1px; opacity:.45; touch-action:none; user-select:none; letter-spacing:-1px}
   li.task .grip:hover{opacity:.9; color:var(--champagne)}
   li.task.dragging{opacity:.35}
-  .quad.drop{border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,169,106,.16); background:linear-gradient(180deg,rgba(32,35,43,.85),rgba(20,22,28,.6))}
+  .quad.drop{border-color:var(--gold); box-shadow:0 0 0 3px rgba(201,169,106,.16); background:linear-gradient(180deg,rgba(29,44,76,.85),rgba(12,20,38,.6))}
   .drag-ghost{position:fixed; z-index:50; pointer-events:none; margin:0; opacity:.94;
     border-color:var(--gold)!important; box-shadow:0 18px 40px -12px rgba(0,0,0,.6); transform:translate(-9999px,-9999px)}
   .empty{color:var(--text-muted); font-size:12.5px; padding:6px 8px 12px}
   li.task .txt, ul.notelist li .txt{cursor:text}
-  .edit-inp{flex:1; min-width:0; background:#0E0F13; border:1px solid var(--gold); color:var(--text);
+  .edit-inp{flex:1; min-width:0; background:var(--ink); border:1px solid var(--gold); color:var(--text);
     border-radius:8px; padding:6px 9px; font-size:13.5px; font-family:inherit; outline:none;
     box-shadow:0 0 0 3px rgba(201,169,106,.12)}
 
   /* Маршрут дня */
   .route{margin:22px auto 40px; max-width:760px;
-    background:linear-gradient(180deg,rgba(32,35,43,.6),rgba(18,19,24,.45)); border:1px solid var(--border);
+    background:linear-gradient(180deg,rgba(29,44,76,.6),rgba(9,15,30,.45)); border:1px solid var(--border);
     border-radius:18px; padding:20px 22px}
-  .route h3{font-family:"Cormorant Garamond",serif; font-weight:700; font-size:22px; margin:0 0 4px}
+  .route h3{font-family:var(--font-display); font-weight:700; font-size:22px; margin:0 0 4px}
   .route .rsub{font-size:12px; color:var(--text-muted); margin-bottom:14px}
   ol.plan{list-style:none; counter-reset:s; margin:0; padding:0; display:flex; flex-direction:column; gap:9px}
   ol.plan li{counter-increment:s; display:flex; align-items:center; gap:13px; font-size:14px}
   ol.plan li::before{content:counter(s); flex:0 0 auto; width:26px; height:26px; border-radius:50%;
-    display:grid; place-items:center; font-size:12px; font-weight:700; color:#1A1509; background:var(--grad-gold)}
+    display:grid; place-items:center; font-size:12px; font-weight:700; color:var(--on-accent); background:var(--grad-gold)}
   /* Строка маршрута — та же карточка дела, что и в матрице: одно дело
      редактируется в одном месте, а не показывается дважды разным кодом. */
   ol.plan li.task{align-items:center; gap:9px; flex-wrap:wrap; font-size:13.5px}
@@ -208,7 +224,7 @@
      панели и всегда переносит бейджи вниз. */
   @media(min-width:760px){ ol.plan li.task .tmeta{flex:0 1 auto; order:0; margin-top:0} }
   .route .done-line{margin-top:14px; font-size:12px; color:var(--text-muted)}
-  .route .bar-wrap{height:6px; border-radius:6px; background:#0E0F13; overflow:hidden; margin-top:8px; border:1px solid var(--border)}
+  .route .bar-wrap{height:6px; border-radius:6px; background:var(--ink); overflow:hidden; margin-top:8px; border:1px solid var(--border)}
   .route .bar-fill{height:100%; width:0; background:var(--grad-gold); transition:width .4s ease}
 
   .toolbar{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin:0 0 30px}
@@ -216,7 +232,7 @@
     padding:9px 18px; font-size:12.5px; cursor:pointer; font-family:inherit}
   .toolbar button:hover{border-color:var(--gold); color:var(--text)}
   .toolbar button.accent{color:var(--champagne); border-color:var(--hair)}
-  .toolbar button.accent:hover{color:#141414; font-weight:700; border-color:transparent; background:var(--grad-gold)}
+  .toolbar button.accent:hover{color:var(--on-accent); font-weight:700; border-color:transparent; background:var(--grad-gold)}
 
   .databar{display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; margin:0 0 34px}
   .databar button{background:none; border:1px solid var(--border); color:var(--text-dim); border-radius:999px;
@@ -239,16 +255,16 @@
 
   /* Карточка «Начни с этого» — прямое исполнение обещания «начни с главного» */
   .focus{max-width:760px; margin:22px auto 0; display:flex; align-items:center; gap:15px;
-    background:linear-gradient(120deg,rgba(201,169,106,.15),rgba(24,26,32,.6)); border:1px solid var(--hair);
+    background:linear-gradient(120deg,rgba(201,169,106,.15),rgba(17,27,48,.6)); border:1px solid var(--hair);
     border-radius:16px; padding:15px 18px}
   .focus[hidden]{display:none}
   .focus .fx-ic{flex:0 0 auto; width:40px; height:40px; border-radius:12px; display:grid; place-items:center;
-    font-size:17px; background:var(--grad-gold); color:#1A1509}
+    font-size:17px; background:var(--grad-gold); color:var(--on-accent)}
   .focus .fx-body{flex:1; min-width:0}
   .focus .fx-eyebrow{font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:var(--champagne); font-weight:700}
   .focus .fx-task{font-size:15.5px; color:var(--text); font-weight:600; margin-top:3px; word-break:break-word}
   .focus .fx-meta{font-size:11.5px; color:var(--text-muted); margin-top:2px}
-  .focus .fx-done{flex:0 0 auto; cursor:pointer; font-family:inherit; font-weight:700; font-size:13px; color:#1A1509;
+  .focus .fx-done{flex:0 0 auto; cursor:pointer; font-family:inherit; font-weight:700; font-size:13px; color:var(--on-accent);
     border:none; border-radius:999px; padding:10px 18px; background:var(--grad-gold)}
   .focus .fx-done:active{transform:translateY(1px)}
   .focus .fx-focus{flex:0 0 auto; cursor:pointer; font-family:inherit; font-weight:700; font-size:13px; color:var(--gold);
@@ -261,7 +277,7 @@
   .focustimer.paused{border-color:rgba(150,150,160,.28); filter:saturate(.55)}
   .ft-ring{flex:0 0 auto; position:relative; width:64px; height:64px; border-radius:50%; display:grid; place-items:center;
     background:conic-gradient(var(--gold) calc(var(--p,0)*360deg), rgba(255,255,255,.08) 0); transition:background .3s linear}
-  .ft-ring::before{content:""; position:absolute; inset:6px; border-radius:50%; background:#14130F}
+  .ft-ring::before{content:""; position:absolute; inset:6px; border-radius:50%; background:var(--ink)}
   .ft-ring .ft-clock{position:relative; z-index:1; font-variant-numeric:tabular-nums; font-weight:700; font-size:14.5px; color:var(--text)}
   .ft-ring.done{background:conic-gradient(#7FB88B 360deg, #7FB88B 0)}
   .ft-ring.done .ft-clock{color:#7FB88B; font-size:22px}
@@ -274,7 +290,7 @@
     background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); border-radius:10px; padding:8px 12px}
   .ft-btn:active{transform:translateY(1px)}
   .ft-btn.ft-plus{color:var(--champagne)}
-  .ft-btn.ft-done{color:#1A1509; background:linear-gradient(180deg,var(--gold),#B9924A); border-color:transparent; font-weight:700}
+  .ft-btn.ft-done{color:var(--on-accent); background:linear-gradient(180deg,var(--gold),#B9924A); border-color:transparent; font-weight:700}
 
   /* Приватность голоса + напоминание о резервной копии */
   .vm-privacy{font-size:11px; color:var(--text-muted); padding-top:9px; margin-top:2px;
@@ -288,10 +304,10 @@
   .composer-help b{color:var(--champagne); font-weight:600}
 
   /* ===== Статистика недели + серия дней ===== */
-  .stats{max-width:760px; margin:26px auto 0; background:linear-gradient(160deg,rgba(24,26,32,.72),rgba(16,18,22,.72));
+  .stats{max-width:760px; margin:26px auto 0; background:linear-gradient(160deg,rgba(17,27,48,.72),rgba(8,13,26,.72));
     border:1px solid var(--hair-soft); border-radius:18px; padding:18px 20px}
   .stats-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:14px}
-  .stats-head h3{margin:0; font-family:"Cormorant Garamond",serif; font-weight:700; font-size:22px; color:var(--text)}
+  .stats-head h3{margin:0; font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--text)}
   .streak{display:inline-flex; align-items:center; gap:7px; font-size:13px; color:var(--champagne); font-weight:600}
   .streak .flame{font-size:15px; filter:saturate(1.1)}
   .streak.cold{color:var(--text-muted)}
@@ -310,7 +326,7 @@
   /* ===== Шаблоны дня ===== */
   .templates{max-width:760px; margin:22px auto 0}
   .tpl-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:10px}
-  .tpl-head h3{margin:0; font-family:"Cormorant Garamond",serif; font-weight:700; font-size:22px; color:var(--text)}
+  .tpl-head h3{margin:0; font-family:var(--font-display); font-weight:700; font-size:22px; color:var(--text)}
   .tpl-head .tsub{font-size:11.5px; color:var(--text-muted)}
   .tpl-save{display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-family:inherit;
     font-weight:600; font-size:12.5px; color:var(--champagne); background:transparent; border:1px solid var(--hair);
@@ -323,7 +339,7 @@
   .tpl-list .tpl-meta{font-size:11px; color:var(--text-muted); margin-top:2px; font-weight:400}
   .tpl-list .tpl-load,.tpl-list .tpl-del{flex:0 0 auto; cursor:pointer; font-family:inherit; border-radius:999px;
     font-size:12px; font-weight:600; padding:7px 13px}
-  .tpl-list .tpl-load{color:#1A1509; background:var(--grad-gold); border:none}
+  .tpl-list .tpl-load{color:var(--on-accent); background:var(--grad-gold); border:none}
   .tpl-list .tpl-del{color:var(--text-dim); background:transparent; border:1px solid var(--border)}
   .tpl-list .tpl-load:active,.tpl-list .tpl-del:active{transform:translateY(1px)}
   .tpl-empty{font-size:12px; color:var(--text-muted); padding:2px 2px 0}
@@ -336,17 +352,17 @@
   .ttime:hover{border-color:var(--gold); color:var(--gold-bright)}
   .ttime.empty{color:var(--text-muted); background:none; border-style:dashed; opacity:.55}
   .ttime.empty:hover{opacity:1; color:var(--champagne)}
-  .ttime.soon{color:#1A1509; background:var(--grad-gold); border-color:transparent}
-  .ttime.now{color:#141414; background:linear-gradient(120deg,#F0958B,#E5766B); border-color:transparent; animation:pulse 1.5s infinite}
+  .ttime.soon{color:var(--on-accent); background:var(--grad-gold); border-color:transparent}
+  .ttime.now{color:var(--on-accent); background:linear-gradient(120deg,#F0958B,#E5766B); border-color:transparent; animation:pulse 1.5s infinite}
   .ttime.over{color:#E5766B; background:rgba(229,118,107,.12); border-color:rgba(229,118,107,.3)}
   li.task.done .ttime{opacity:.45; filter:saturate(.35)}
   .remindbar{max-width:760px; margin:12px auto 0; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
-    background:linear-gradient(180deg,rgba(32,35,43,.5),rgba(18,19,24,.4)); border:1px solid var(--border);
+    background:linear-gradient(180deg,rgba(29,44,76,.5),rgba(9,15,30,.4)); border:1px solid var(--border);
     border-radius:14px; padding:11px 15px}
   .remind-toggle{flex:0 0 auto; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; color:var(--champagne);
-    background:#0E0F13; border:1px solid var(--hair); border-radius:999px; padding:9px 16px; display:inline-flex;
+    background:var(--ink); border:1px solid var(--hair); border-radius:999px; padding:9px 16px; display:inline-flex;
     align-items:center; gap:8px; transition:.2s}
-  .remind-toggle[aria-pressed=true]{color:#141414; border-color:transparent; background:var(--grad-gold)}
+  .remind-toggle[aria-pressed=true]{color:var(--on-accent); border-color:transparent; background:var(--grad-gold)}
   .remind-note{flex:1; min-width:180px; font-size:11.5px; color:var(--text-muted); line-height:1.45}
   .remind-note b{color:var(--text-dim); font-weight:600}
   /* Кнопка-ссылка внутри текста: ограничение объясняется там же, где выход из него. */
@@ -355,10 +371,10 @@
   .inline-link:hover{color:var(--champagne)}
   /* Тихий режим — один переключатель на весь звук приложения */
   .mute-toggle{flex:0 0 auto; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--text-dim);
-    background:#0E0F13; border:1px solid var(--hair); border-radius:999px; padding:8px 14px; display:inline-flex;
+    background:var(--ink); border:1px solid var(--hair); border-radius:999px; padding:8px 14px; display:inline-flex;
     align-items:center; gap:7px; transition:.2s}
   .mute-toggle:hover{color:var(--champagne); border-color:var(--hair-soft)}
-  .mute-toggle[aria-pressed=true]{color:#0F1014; border-color:transparent;
+  .mute-toggle[aria-pressed=true]{color:var(--on-accent); border-color:transparent;
     background:linear-gradient(180deg,#9aa0ab,#6f747e)}
   .hint.toast-on{color:var(--gold-bright); font-weight:600}
 
@@ -375,7 +391,7 @@
     color:var(--text-muted); background:none; border:1px solid var(--hair-soft); border-style:dashed;
     border-radius:999px; padding:3px 8px; margin-top:1px; opacity:.5; transition:.15s}
   .tdef:hover{opacity:1; color:var(--champagne); border-style:solid}
-  .tdef.on{opacity:1; color:#0F1014; border-color:transparent; border-style:solid;
+  .tdef.on{opacity:1; color:var(--on-accent); border-color:transparent; border-style:solid;
     background:linear-gradient(180deg,#9aa0ab,#6f747e)}
   .task.deferred .txt,.task.offday .txt{opacity:.5}
   .task.deferred .ttime,.task.deferred .tdur,
@@ -383,7 +399,7 @@
 
   /* ===== Онбординг первого экрана (показывается один раз) ===== */
   .onboard{margin:0 0 18px; border:1px solid var(--hair); border-radius:16px; padding:16px 18px;
-    background:linear-gradient(180deg,rgba(28,29,35,.62),rgba(18,19,24,.62))}
+    background:linear-gradient(180deg,rgba(20,31,54,.62),rgba(9,15,30,.62))}
   .ob-head{font-size:15px; font-weight:700; color:var(--champagne); letter-spacing:.2px}
   .ob-steps{list-style:none; margin:11px 0 0; padding:0; display:flex; flex-direction:column; gap:7px}
   .ob-step{display:block; width:100%; text-align:left; font-family:inherit; font-size:13px; line-height:1.55;
@@ -392,7 +408,7 @@
   button.ob-step{cursor:pointer; transition:.15s}
   button.ob-step:hover{color:var(--text)}
   .ob-row{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px}
-  .ob-close{cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:700; color:#141414;
+  .ob-close{cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:700; color:var(--on-accent);
     background:var(--grad-gold); border:0; border-radius:999px; padding:8px 16px; transition:.2s}
   .ob-close:hover{filter:brightness(1.06)}
   .ob-note{font-size:11.5px; color:var(--text-muted)}
@@ -405,7 +421,7 @@
   .trep:not(.empty){opacity:.95; color:var(--champagne); border-style:solid; border-color:var(--hair)}
   .trep.off{opacity:.45; color:var(--text-muted); border-style:dashed}
   .trep.off:hover{opacity:1}
-  .ds-unload{margin-top:9px; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:700; color:#141414;
+  .ds-unload{margin-top:9px; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:700; color:var(--on-accent);
     background:var(--grad-gold); border:0; border-radius:999px; padding:9px 16px; transition:.2s}
   .ds-unload:hover{filter:brightness(1.06)}
   .ds-unload[disabled]{opacity:.5; cursor:default; filter:none}
@@ -419,16 +435,16 @@
   .ul-row{display:flex; gap:9px; flex-wrap:wrap; margin-top:11px}
   .ul-ok,.ul-no{cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; border-radius:999px;
     padding:8px 15px; transition:.2s}
-  .ul-ok{color:#141414; background:var(--grad-gold); border:0}
+  .ul-ok{color:var(--on-accent); background:var(--grad-gold); border:0}
   .ul-ok:hover{filter:brightness(1.06)}
-  .ul-no{color:var(--text-dim); background:#0E0F13; border:1px solid var(--hair)}
+  .ul-no{color:var(--text-dim); background:var(--ink); border:1px solid var(--hair)}
   .ul-no:hover{color:var(--champagne)}
   li.task.done .tdur{opacity:.4; filter:saturate(.3)}
   li.task .txt .clash-badge{display:inline-block; margin-left:8px; font-size:10.5px; font-weight:700;
     color:#E5766B; background:rgba(229,118,107,.1); border:1px solid rgba(229,118,107,.3); border-radius:999px; padding:1px 7px}
 
   /* ===== Сводка дня (бюджет времени) ===== */
-  .day-summary{max-width:760px; margin:2px auto 14px; background:linear-gradient(180deg,rgba(32,35,43,.45),rgba(18,19,24,.35));
+  .day-summary{max-width:760px; margin:2px auto 14px; background:linear-gradient(180deg,rgba(29,44,76,.45),rgba(9,15,30,.35));
     border:1px solid var(--border); border-radius:14px; padding:12px 15px}
   .day-summary[hidden]{display:none}
   .ds-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap}
@@ -448,15 +464,15 @@
   .day-verdict[hidden]{display:none}
   .dv-ctx{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:12px}
   .dv-chip{cursor:pointer; font-family:inherit; font-size:12px; font-weight:600; color:var(--text-muted);
-    background:#0E0F13; border:1px solid var(--hair); border-radius:999px; padding:7px 13px; transition:.15s; white-space:nowrap}
+    background:var(--ink); border:1px solid var(--hair); border-radius:999px; padding:7px 13px; transition:.15s; white-space:nowrap}
   .dv-chip:hover{border-color:var(--gold); color:var(--text)}
   .dv-chip.set{color:var(--champagne); border-color:var(--hair-soft); background:rgba(201,169,106,.08)}
   .dv-phrase{text-align:center; font-size:14.5px; line-height:1.5; color:var(--text); font-weight:600;
-    background:linear-gradient(180deg,rgba(32,35,43,.5),rgba(18,19,24,.4)); border:1px solid var(--border);
+    background:linear-gradient(180deg,rgba(29,44,76,.5),rgba(9,15,30,.4)); border:1px solid var(--border);
     border-radius:14px; padding:14px 18px}
 
   /* ===== Новый день: перенос незавершённого ===== */
-  .rollover{max-width:760px; margin:0 auto 20px; background:linear-gradient(180deg,rgba(201,169,106,.1),rgba(18,19,24,.4));
+  .rollover{max-width:760px; margin:0 auto 20px; background:linear-gradient(180deg,rgba(201,169,106,.1),rgba(9,15,30,.4));
     border:1px solid var(--hair-soft); border-radius:16px; padding:15px 18px}
   .rollover[hidden]{display:none}
   .ro-title{font-size:14px; font-weight:700; color:var(--gold-bright); margin-bottom:3px}
@@ -465,9 +481,9 @@
   .ro-actions{display:flex; gap:9px; flex-wrap:wrap}
   .ro-actions button{cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; border-radius:999px;
     padding:9px 15px; transition:.15s; border:1px solid var(--hair)}
-  .ro-primary{color:#1A1509; background:var(--grad-gold); border-color:transparent}
+  .ro-primary{color:var(--on-accent); background:var(--grad-gold); border-color:transparent}
   .ro-primary:hover{filter:brightness(1.06)}
-  .ro-ghost{color:var(--text-dim); background:#0E0F13}
+  .ro-ghost{color:var(--text-dim); background:var(--ink)}
   .ro-ghost:hover{border-color:var(--gold); color:var(--text)}
 
   /* ===== Правая панель: всё второстепенное живёт здесь =====
@@ -475,12 +491,12 @@
      Призрак перетаскивания (.drag-ghost) — 50, он обязан оставаться выше
      панели, иначе дело «ныряет» под неё во время переноса. */
   .panel-btn{display:inline-flex; align-items:center; gap:7px; cursor:pointer; font-family:inherit;
-    font-size:12.5px; font-weight:600; color:var(--text-dim); background:#0E0F13; border:1px solid var(--border);
+    font-size:12.5px; font-weight:600; color:var(--text-dim); background:var(--ink); border:1px solid var(--border);
     border-radius:999px; padding:8px 14px; transition:.15s; position:relative}
   .panel-btn:hover{border-color:var(--gold); color:var(--text)}
   .panel-btn .pb-ic{font-size:14px; line-height:1}
   .panel-btn .pb-dot{position:absolute; top:5px; right:6px; width:7px; height:7px; border-radius:50%;
-    background:var(--gold); box-shadow:0 0 0 2px rgba(16,18,22,.9)}
+    background:var(--gold); box-shadow:0 0 0 2px rgba(8,13,26,.9)}
   .panel-btn .pb-dot[hidden]{display:none}
   .bar .right{display:flex; align-items:center; gap:12px}
 
@@ -489,24 +505,24 @@
   .scrim.on{opacity:1; pointer-events:auto}
 
   .panel{position:fixed; top:0; right:0; bottom:0; z-index:40; width:min(560px,100vw);
-    display:flex; flex-direction:column; background:linear-gradient(180deg,#15171D,#0D0E12);
+    display:flex; flex-direction:column; background:linear-gradient(180deg,#14203A,#080D1A);
     border-left:1px solid var(--hair-soft); box-shadow:-30px 0 60px -30px rgba(0,0,0,.8);
     transform:translateX(101%); transition:transform .22s ease; will-change:transform}
   .panel.open{transform:translateX(0)}
   .panel[hidden]{display:none}
   .panel-head{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 18px 12px;
     border-bottom:1px solid var(--hair-soft); flex:0 0 auto}
-  .panel-head h2{font-family:"Cormorant Garamond",serif; font-size:22px; font-weight:700; margin:0; letter-spacing:.3px}
+  .panel-head h2{font-family:var(--font-display); font-size:22px; font-weight:700; margin:0; letter-spacing:.3px}
   .panel-head .ph-sub{display:block; font-family:"Manrope",system-ui,sans-serif; font-size:11px; letter-spacing:1.6px;
     text-transform:uppercase; color:var(--text-muted); font-weight:600; margin-top:3px}
   .panel-close{cursor:pointer; font-family:inherit; font-size:20px; line-height:1; color:var(--text-dim);
-    background:#0E0F13; border:1px solid var(--border); border-radius:12px; width:38px; height:38px; transition:.15s}
+    background:var(--ink); border:1px solid var(--border); border-radius:12px; width:38px; height:38px; transition:.15s}
   .panel-close:hover{border-color:var(--gold); color:var(--text)}
   .panel-body{flex:1 1 auto; overflow-y:auto; overscroll-behavior:contain; padding:12px 18px 40px;
     -webkit-overflow-scrolling:touch}
 
   .pgroup{border:1px solid var(--border); border-radius:14px; margin:0 0 10px;
-    background:linear-gradient(180deg,rgba(32,35,43,.42),rgba(18,19,24,.3)); overflow:hidden}
+    background:linear-gradient(180deg,rgba(29,44,76,.42),rgba(9,15,30,.3)); overflow:hidden}
   .pg-head{width:100%; display:flex; align-items:center; gap:11px; cursor:pointer; font-family:inherit;
     text-align:left; background:none; border:0; color:var(--text); padding:14px 15px; font-size:14px; font-weight:700}
   .pg-head:hover{color:var(--gold-bright)}
@@ -536,7 +552,7 @@
   /* Рельс — «корешок» панели: на широком экране разделы видны всегда. */
   .rail{position:fixed; top:50%; right:0; transform:translateY(-50%); z-index:21; display:none;
     flex-direction:column; gap:4px; padding:8px 6px; border:1px solid var(--hair-soft); border-right:0;
-    border-radius:14px 0 0 14px; background:rgba(20,22,28,.82); backdrop-filter:blur(10px)}
+    border-radius:14px 0 0 14px; background:rgba(12,20,38,.82); backdrop-filter:blur(10px)}
   .rail button{cursor:pointer; font-family:inherit; font-size:15px; line-height:1; background:none; border:0;
     color:var(--text-dim); width:34px; height:34px; border-radius:10px; transition:.15s}
   .rail button:hover{background:rgba(201,169,106,.13); color:var(--gold-bright)}
@@ -547,13 +563,119 @@
   .diag dt{color:var(--text-muted)}
   .diag dd{margin:0; color:var(--text); font-variant-numeric:tabular-nums}
   .diag-run{margin-top:13px; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600;
-    color:var(--champagne); background:#0E0F13; border:1px solid var(--hair); border-radius:999px;
+    color:var(--champagne); background:var(--ink); border:1px solid var(--hair); border-radius:999px;
     padding:9px 16px; transition:.15s}
   .diag-run:hover{border-color:var(--gold); color:var(--gold-bright)}
   .diag-out{margin-top:11px; font-size:12px; line-height:1.6; color:var(--text-dim); white-space:pre-wrap;
     font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
   .diag-out .ok{color:#7FCB9B}
   .diag-out .bad{color:#E5766B; font-weight:700}
+
+  /* ==========================================================================
+     ПЛАТИНА — материалы и иерархия
+     Платина = действие (кнопки, по которым нажимают). Золото = состояние и
+     важность (включено, «скоро», выполнено, серия). Синий контейнер = опора.
+     Разведение двух металлов по смыслу — то, что не даёт интерфейсу
+     выглядеть «ёлкой»: блестит ровно то, на что надо нажать.
+     ========================================================================== */
+  .intro .eyebrow{letter-spacing:.26em; font-weight:600; color:var(--plat-deep)}
+  .intro h1{line-height:1.06; letter-spacing:-.015em}
+  .intro p{font-size:15px}
+  .route h3,.stats-head h3,.tpl-head h3,.notes-head h3,.panel-head h2{letter-spacing:-.01em}
+  .rsub,.pg-lead,.composer-help{line-height:1.62}
+
+  /* Платиновая заливка — одна декларация на все первичные действия. */
+  .add-btn,.focus .fx-done,.ro-primary,.ul-ok,.tpl-list .tpl-load,.ob-close,.ds-unload,
+  .ft-btn.ft-done{
+    background:var(--grad-plat); color:var(--on-accent); border-color:transparent;
+    box-shadow:0 14px 30px -16px rgba(150,180,235,.6), inset 0 1px 0 rgba(255,255,255,.55);
+  }
+  .toolbar button.accent:hover{background:var(--grad-plat); color:var(--on-accent)}
+  .mute-toggle[aria-pressed=true],.tdef.on{background:var(--grad-plat); color:var(--on-accent)}
+
+  /* Плашка значка: тёмно-синий контейнер с внутренним бликом. */
+  .pg-ic{width:30px; height:30px; border-radius:9px; display:grid; place-items:center; font-size:14px;
+    background:linear-gradient(180deg,#1C2C4C,#0D1730); border:1px solid var(--hair-soft);
+    box-shadow:inset 0 1px 0 rgba(196,216,255,.12); filter:saturate(.85)}
+  .rail button{background:linear-gradient(180deg,#1C2C4C,#0D1730); border:1px solid var(--hair-soft);
+    filter:saturate(.85)}
+  .rail button:hover{background:linear-gradient(180deg,#263D68,#152444); color:var(--platinum); filter:none}
+  .panel-btn .pb-ic{opacity:.9}
+
+  /* Глубина: мягкая тень наружу + волосяной блик по верхней кромке. */
+  .composer,.route,.focus,.focustimer,.pgroup,.stats,.rollover,.day-summary{
+    box-shadow:0 26px 60px -38px rgba(0,0,0,.9), inset 0 1px 0 rgba(190,212,255,.055);
+  }
+
+  /* ==========================================================================
+     КИНЕМАТИКА СБОРКИ ДНЯ — восемь эффектов
+     Всё держится на transform/opacity/filter (композиторные свойства, 60 fps),
+     без единой библиотеки и без картинок: чистая векторная графика остаётся
+     чёткой на любом DPI. Системная настройка «уменьшить движение» глушит их
+     целиком — правило @media prefers-reduced-motion выше по файлу.
+     ========================================================================== */
+
+  /* 1 · Каскад. Строки маршрута проявляются по очереди со сдвигом и расфокусом,
+        а не возникают разом: взгляд успевает прочитать порядок дня. */
+  @keyframes rowIn{ from{opacity:0; transform:translateY(10px) scale(.985); filter:blur(5px)}
+                    to  {opacity:1; transform:none;                          filter:blur(0)} }
+  ol.plan li.rowin{animation:rowIn .44s var(--ease-out) both; animation-delay:var(--d,0ms)}
+
+  /* 2 · Луч-сканер. Один платиновый проход по карточке «Сегодня» в момент
+        пересборки — физическая метафора «день просканирован заново». */
+  @keyframes sweep{ from{transform:translateY(-130%)} to{transform:translateY(340%)} }
+  .route{position:relative}
+  .route.scan{overflow:hidden}
+  .route.scan::after{content:""; position:absolute; left:0; right:0; top:0; height:32%;
+    pointer-events:none; animation:sweep 1s var(--ease-out) 1;
+    background:linear-gradient(180deg,transparent,rgba(186,212,255,.12) 44%,rgba(240,246,255,.2) 52%,transparent)}
+
+  /* 3 · Дыхание приоритета. Точка важности первой строки коротко расцветает —
+        глаз сам находит, с чего начинать. */
+  @keyframes dotBloom{ 0%{box-shadow:0 0 0 0 rgba(230,240,255,.5)}
+                       70%{box-shadow:0 0 0 10px rgba(230,240,255,0)}
+                       100%{box-shadow:0 0 0 0 rgba(230,240,255,0)} }
+  ol.plan li.rowin:first-child button.qd{animation:dotBloom 1.15s ease-out .3s 2}
+
+  /* 4 · Живая кромка. По периметру карточки «Начни с этого» медленно ходит
+        платиновый блик. Сделан маской border-box ⊕ content-box: настоящая
+        рамка в один пиксель, а не подложка — не размывает текст.
+        Без поддержки @property угол не анимируется и остаётся статичный блик. */
+  @property --edge{ syntax:"<angle>"; inherits:false; initial-value:0deg }
+  @keyframes edgeSpin{ to{--edge:360deg} }
+  .focus{position:relative}
+  .focus::before{content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
+    pointer-events:none;
+    background:conic-gradient(from var(--edge),
+      rgba(190,212,255,.04) 0deg, rgba(255,255,255,.72) 40deg, rgba(190,212,255,.05) 120deg,
+      rgba(190,212,255,.04) 360deg);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    mask-composite:exclude; animation:edgeSpin 7s linear infinite}
+
+  /* 5 · Роллинг чисел. «Сделано N из M» не подменяется молча — цифра
+        прокручивается снизу, изменение видно боковым зрением. */
+  @keyframes rollUp{ from{opacity:0; transform:translateY(60%)} to{opacity:1; transform:none} }
+  .roll{display:inline-block; animation:rollUp .4s var(--ease-out) both}
+
+  /* 6 · Жидкий прогресс. Ширина едет с пружиной, по заливке идёт блик. */
+  .route .bar-fill{transition:width .62s var(--ease-out); position:relative; overflow:hidden}
+  .route .bar-fill::after{content:""; position:absolute; inset:0;
+    background:linear-gradient(100deg,transparent 18%,rgba(255,255,255,.5) 48%,transparent 78%);
+    transform:translateX(-100%); animation:sheen 2.8s ease-in-out infinite}
+  @keyframes sheen{ 0%{transform:translateX(-100%)} 60%,100%{transform:translateX(230%)} }
+
+  /* 7 · Искры. Закрытое дело выбрасывает горсть платиново-золотых частиц из
+        самой галочки. Canvas масштабируется по devicePixelRatio — на retina и
+        4K/8K панелях частицы остаются круглыми, а не ступенчатыми. */
+  .fxlayer{position:fixed; inset:0; z-index:60; pointer-events:none}
+
+  /* 8 · Наклон. На мыши карточка «Начни с этого» слегка поворачивается за
+        курсором — на палец и клавиатуру эффект не распространяется. */
+  @media(hover:hover) and (pointer:fine){
+    .focus.tilt{transform:perspective(900px) rotateX(var(--tx,0deg)) rotateY(var(--ty,0deg));
+      transition:transform .3s var(--ease-out); transform-style:preserve-3d}
+  }
 
   @media(max-width:640px){ .matrix{grid-template-columns:1fr} .composer .row1{flex-direction:column} .add-btn{padding:14px}
     /* В колонку flex-basis становится высотой — поле ввода раздувалось до 260px. */
@@ -584,35 +706,35 @@
 
 <main class="wrap">
   <section class="intro">
-    <span class="eyebrow">Планировщик дня · работает сразу</span>
-    <h1>Просто назови свои дела —<br><span class="g">увидишь, что делать первым.</span></h1>
-    <p>Впиши дело и нажми «Добавить». Или нажми 🎙 и скажи вслух. <button type="button" class="inline-link" id="introHelp">Как это работает</button> · всё остальное — в <button type="button" class="inline-link" id="introPanel">Панели</button>.</p>
+    <span class="eyebrow">Планировщик дня · без регистрации</span>
+    <h1>Список дел превращается<br><span class="g">в порядок действий.</span></h1>
+    <p>Задачи — текстом или голосом. Приложение расставит их по важности и срочности, соберёт маршрут дня и покажет, во что день не помещается. <button type="button" class="inline-link" id="introHelp">Как это устроено</button> · остальные разделы — в <button type="button" class="inline-link" id="introPanel">Панели</button>.</p>
   </section>
 
   <section class="onboard" id="onboard" hidden aria-label="Как это работает">
-    <div class="ob-head">Три шага — и день разложен</div>
+    <div class="ob-head">Три шага до готового плана</div>
     <ol class="ob-steps">
-      <li><button type="button" class="ob-step" id="obStep1"><b>1.</b> Впиши дело в поле ниже</button></li>
-      <li><span class="ob-step ob-static"><b>2.</b> Или нажми 🎙 и скажи вслух — можно сразу «в 15:00» или «каждый день»</span></li>
-      <li><span class="ob-step ob-static"><b>3.</b> Нажми «Готово» в карточке «Начни с этого» — и день сдвинулся</span></li>
+      <li><button type="button" class="ob-step" id="obStep1"><b>1.</b> Внести задачу в поле ниже</button></li>
+      <li><span class="ob-step ob-static"><b>2.</b> Или продиктовать через 🎙 — время и повтор понимаются из речи: «в 15:00», «каждый день»</span></li>
+      <li><span class="ob-step ob-static"><b>3.</b> Отметить «Готово» в карточке «Начни с этого» — маршрут пересоберётся</span></li>
     </ol>
     <div class="ob-row">
       <button type="button" class="ob-close" id="obClose">Понятно</button>
-      <span class="ob-note">Настраивать нечего · данные остаются в этом браузере</span>
+      <span class="ob-note">Настройка не требуется · данные остаются в этом браузере</span>
     </div>
   </section>
 
   <section class="composer" aria-label="Добавить задачу">
     <div class="row1">
-      <input type="text" id="taskInput" placeholder="Назови дело: например, «позвонить маме»…" autocomplete="off" />
-      <button class="mic-btn" id="micBtn" type="button" title="Нажми и скажи дело" aria-label="Сказать дело голосом">&#127908;</button>
+      <input type="text" id="taskInput" placeholder="Задача — например, «позвонить маме»…" autocomplete="off" />
+      <button class="mic-btn" id="micBtn" type="button" title="Продиктовать задачу голосом" aria-label="Продиктовать задачу голосом">&#127908;</button>
       <button class="add-btn" id="addBtn" type="button">Добавить</button>
     </div>
-    <div class="composer-help">Одно дело — одна строка. Нажми <b>Добавить</b> или <b>🎙</b> и продиктуй. Скажи время прямо в деле — «позвонить маме <b>в 15:00</b>» — и оно встанет в расписание. Повтор тоже понимает: «зарядка <b>каждый день</b> в 7 утра». Флажки ниже — по желанию.</div>
+    <div class="composer-help">Одна задача — одна строка. Время и повтор указываются прямо в тексте и распознаются автоматически: «позвонить маме <b>в 15:00</b>», «зарядка <b>каждый день</b> в 7 утра», «отчёт <b>на 2 часа</b>». Флажки ниже нужны, только если приоритет хочется задать вручную.</div>
     <div class="toggles">
       <span class="tg u" id="tgUrgent" role="button" tabindex="0" aria-pressed="false">🔥 Срочно</span>
       <span class="tg i" id="tgImportant" role="button" tabindex="0" aria-pressed="false">⭐ Важно</span>
-      <span class="hint" id="quadHint">→ решим за тебя</span>
+      <span class="hint" id="quadHint">→ приоритет определится сам</span>
     </div>
   </section>
 
@@ -648,15 +770,16 @@
 
   <section class="route" aria-label="Маршрут дня">
     <h3>Сегодня</h3>
-    <div class="rsub">Порядок: сначала «сейчас», потом важное, затем быстрое, в конце — необязательное. Время, длительность, повтор и перенос правятся прямо в строке; цветная точка слева — важность.</div>
+    <div class="rsub">Порядок маршрута: сначала то, что горит по времени, затем важное, затем короткое, в конце — необязательное. Время, длительность, повтор и перенос правятся прямо в строке. Цветная точка слева — приоритет: нажатие открывает разбор по важности.</div>
     <div class="day-summary" id="daySummary" hidden aria-live="polite"></div>
     <ol class="plan" id="planList"></ol>
-    <div class="empty" id="planEmpty">Добавь задачи — и здесь появится спокойный маршрут дня.</div>
+    <div class="empty" id="planEmpty">Пока пусто. Первая добавленная задача соберёт маршрут дня.</div>
     <div class="bar-wrap"><div class="bar-fill" id="barFill"></div></div>
     <div class="done-line" id="doneLine">0 из 0 выполнено</div>
     <div class="day-verdict" id="dayVerdict" hidden aria-live="polite"></div>
   </section>
 </main>
+<canvas class="fxlayer" id="fxLayer" aria-hidden="true"></canvas>
 <div class="scrim" id="scrim" aria-hidden="true"></div>
 <aside class="panel" id="panel" hidden role="dialog" aria-modal="true" aria-labelledby="panelTitle">
   <div class="panel-head">
@@ -1224,7 +1347,7 @@
 
   function refreshHint(){
     var q = quadOf({urgent:pend.urgent, important:pend.important});
-    quadHint.textContent = (pend.urgent||pend.important) ? QUAD_NAME[q] : "→ решим за тебя";
+    quadHint.textContent = (pend.urgent||pend.important) ? QUAD_NAME[q] : "→ приоритет определится сам";
   }
   function togglePend(key, el){
     pend[key] = !pend[key];
@@ -1281,8 +1404,8 @@
       var chk = document.createElement("span"); chk.className="chk"; chk.setAttribute("role","checkbox");
       chk.setAttribute("aria-checked", t.done?"true":"false"); chk.innerHTML = t.done ? "&#10003;" : "";
       chk.tabIndex = 0; chk.setAttribute("aria-label", "Отметить выполненной: "+t.text);
-      chk.addEventListener("click", function(){ toggleDone(t); });
-      chk.addEventListener("keydown", function(e){ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); toggleDone(t); } });
+      chk.addEventListener("click", function(){ if(!t.done) fxSpark(chk); toggleDone(t); });
+      chk.addEventListener("keydown", function(e){ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); if(!t.done) fxSpark(chk); toggleDone(t); } });
       var tx = document.createElement("span"); tx.className="txt"; tx.textContent = t.text;
       tx.title = "Нажми, чтобы изменить";
       tx.addEventListener("click", function(){
@@ -1442,7 +1565,7 @@
       var card=document.getElementById("focusCard"); var id=card&&card.__id;
       if(!id) return;
       var t=tasks.filter(function(x){return x.id===id;})[0];
-      if(t && !t.done){ markDone(t); save(); render(); }
+      if(t && !t.done){ fxSpark(fd, 34); markDone(t); save(); render(); }
     });
   })();
 
@@ -1550,6 +1673,139 @@
       render();
     });
   })();
+
+  // ===== Кинематика сборки дня: восемь эффектов =====
+  // Единственное место, где живёт «красота». Логика приложения о ней ничего не
+  // знает: render-функции только зовут fxPlanBuilt() / fxRoll() / fxSpark().
+  // Вырежи этот блок — приложение продолжит работать ровно так же, просто тихо.
+  // Правило: анимация никогда не задерживает данные. Сначала DOM верен, потом
+  // он красиво проявляется.
+  function fxReduce(){
+    try{ return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }
+    catch(e){ return false; }
+  }
+  var fxCv=null, fxCtx=null, fxParts=[], fxRaf=null;
+  var FX_COL=["#F4F8FF","#DEE4EE","#C9A96A","#E8D3A4","#AEB9CD"];
+  function fxResize(){
+    if(!fxCv) return;
+    // Отрисовка по физическим пикселям: на retina / 4K / 8K частица остаётся
+    // круглой, а не ступенчатой. Потолок 3 — выше глаз уже не видит, а
+    // площадь буфера растёт квадратично.
+    var dpr=Math.min(3, window.devicePixelRatio||1);
+    var w=window.innerWidth, h=window.innerHeight;
+    fxCv.width=Math.round(w*dpr); fxCv.height=Math.round(h*dpr);
+    fxCv.style.width=w+"px"; fxCv.style.height=h+"px";
+    if(fxCtx) fxCtx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  function fxInit(){
+    fxCv=document.getElementById("fxLayer");
+    if(!fxCv || !fxCv.getContext) { fxCv=null; return; }
+    try{ fxCtx=fxCv.getContext("2d"); }catch(e){ fxCtx=null; return; }
+    fxResize();
+    window.addEventListener("resize", fxResize);
+    // Вкладку свернули посреди полёта частиц: rAF замирает, и при возврате на
+    // экране висела бы застывшая горсть искр. Гасим холст на уходе.
+    document.addEventListener("visibilitychange", function(){
+      if(!document.hidden) return;
+      fxParts.length=0;
+      if(fxCtx) fxCtx.clearRect(0,0,window.innerWidth,window.innerHeight);
+    });
+  }
+  // Эффект 7 — искры из конкретного элемента (галочки, кнопки «Готово»).
+  function fxSpark(el, n){
+    if(fxReduce() || !fxCtx || !el || !el.getBoundingClientRect) return;
+    var r=el.getBoundingClientRect();
+    if(!r.width && !r.height) return;
+    var cx=r.left+r.width/2, cy=r.top+r.height/2;
+    n = n || 26; if(n>48) n=48;                 // потолок, чтобы кадр не просел
+    for(var i=0;i<n;i++){
+      var a=Math.random()*Math.PI*2, sp=1.1+Math.random()*3.3;
+      fxParts.push({ x:cx, y:cy, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-1.15,
+                     life:1, dec:0.016+Math.random()*0.02, r:0.9+Math.random()*1.9,
+                     c:FX_COL[(Math.random()*FX_COL.length)|0] });
+    }
+    if(fxParts.length>260) fxParts.splice(0, fxParts.length-260);
+    fxLoop();
+  }
+  function fxLoop(){ if(fxRaf) return; fxRaf=requestAnimationFrame(fxTick); }
+  function fxTick(){
+    fxRaf=null;
+    if(!fxCtx) return;
+    var w=window.innerWidth, h=window.innerHeight;
+    fxCtx.clearRect(0,0,w,h);
+    var alive=[];
+    for(var i=0;i<fxParts.length;i++){
+      var p=fxParts[i];
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.075; p.vx*=0.985; p.life-=p.dec;
+      if(p.life<=0 || p.y>h+30) continue;
+      fxCtx.globalAlpha=p.life<0?0:(p.life>1?1:p.life);
+      fxCtx.fillStyle=p.c;
+      fxCtx.beginPath(); fxCtx.arc(p.x, p.y, p.r*p.life+0.3, 0, Math.PI*2); fxCtx.fill();
+      alive.push(p);
+    }
+    fxCtx.globalAlpha=1;
+    fxParts=alive;
+    if(fxParts.length) fxLoop();
+  }
+  // Эффекты 1–3 — каскад строк, луч-сканер и дыхание точки приоритета.
+  // Проигрываются, только когда состав маршрута реально изменился: иначе
+  // каждая мелкая перерисовка дёргала бы экран.
+  var fxPlanSig=null;
+  function fxPlanSignature(ol){
+    var rows=ol.querySelectorAll("li.task"), out=[];
+    for(var i=0;i<rows.length;i++){
+      out.push(rows[i].getAttribute("data-id")+(rows[i].className.indexOf(" done")>-1?"!":""));
+    }
+    return out.join(",");
+  }
+  function fxPlanBuilt(ol){
+    if(!ol) return;
+    var sig=fxPlanSignature(ol);
+    var changed = sig!==fxPlanSig;
+    fxPlanSig=sig;
+    if(!changed || fxReduce()) return;
+    var rows=ol.querySelectorAll("li.task");
+    if(!rows.length) return;
+    for(var i=0;i<rows.length;i++){
+      rows[i].style.setProperty("--d", (i*45)+"ms");
+      rows[i].classList.add("rowin");
+    }
+    var route=document.querySelector(".route");
+    if(route){
+      // Перезапуск анимации: снять класс, форсировать пересчёт стилей, вернуть.
+      // Через offsetWidth, а не rAF — кадр мог прийти уже после следующей
+      // перерисовки (тот же урок, что с открытием панели в волне 10).
+      route.classList.remove("scan"); void route.offsetWidth; route.classList.add("scan");
+      setTimeout(function(){ route.classList.remove("scan"); }, 1150);
+    }
+  }
+  // Эффект 5 — прокрутка изменившегося числа.
+  function fxRoll(el, txt){
+    if(!el) return;
+    if(el.textContent===txt) return;
+    el.textContent=txt;
+    if(fxReduce()) return;
+    el.classList.remove("roll"); void el.offsetWidth; el.classList.add("roll");
+  }
+  // Эффект 8 — наклон карточки «Начни с этого» за курсором. Только мышь:
+  // на пальце это мешает, на клавиатуре бессмысленно.
+  function fxTilt(){
+    var card=document.getElementById("focusCard"); if(!card) return;
+    var fine=false;
+    try{ fine = !!(window.matchMedia && window.matchMedia("(hover:hover) and (pointer:fine)").matches); }catch(e){}
+    if(!fine) return;
+    card.classList.add("tilt");
+    card.addEventListener("pointermove", function(e){
+      if(fxReduce()) return;
+      var r=card.getBoundingClientRect(); if(!r.width) return;
+      var px=(e.clientX-r.left)/r.width-0.5, py=(e.clientY-r.top)/r.height-0.5;
+      card.style.setProperty("--ty", (px*3.4).toFixed(2)+"deg");
+      card.style.setProperty("--tx", (-py*2.6).toFixed(2)+"deg");
+    });
+    card.addEventListener("pointerleave", function(){
+      card.style.setProperty("--ty","0deg"); card.style.setProperty("--tx","0deg");
+    });
+  }
 
   // ===== Выполнение задачи + учёт для статистики =====
   function toggleDone(t){
@@ -1846,8 +2102,9 @@
     });
     planEmpty.style.display = order.length ? "none" : "block";
     var done = order.filter(function(t){return t.done;}).length;
-    document.getElementById("doneLine").textContent = done + " из " + order.length + " выполнено";
+    fxRoll(document.getElementById("doneLine"), done + " из " + order.length + " выполнено");
     document.getElementById("barFill").style.width = order.length ? (done/order.length*100)+"%" : "0";
+    fxPlanBuilt(ol);
     renderDaySummary(order, conflict);
     renderVerdict(order, conflict);
   }
@@ -2040,11 +2297,11 @@
     if(ctx.fuel && ctx.fuel.unit==="₽" && ctx.fuel.amount>=1500) load+=0.5;
     var allDone = total>0 && doneN===total;
     var phrase;
-    if(allDone && load>=2) phrase="Мда, денёк был не из лёгких — но мы справились. 💪 Всё закрыто.";
-    else if(allDone && total>0) phrase="Супер лёгкий день — и по-другому быть не могло. ✨ Всё сделано.";
-    else if(load>=2) phrase="День тяжёлый. Сделано "+doneN+" из "+total+" — часть спокойно перенеси на завтра, это нормально.";
-    else if(load<=0 && total>0) phrase="Лёгкий день, без перегруза. Держи темп — успеешь всё.";
-    else phrase="Рабочий день в меру. Сделано "+doneN+" из "+total+" — ты в графике.";
+    if(allDone && load>=2) phrase="Тяжёлый день закрыт полностью — "+total+" из "+total+".";
+    else if(allDone && total>0) phrase="День закрыт полностью, без перегруза.";
+    else if(load>=2) phrase="Нагрузка выше обычной. Сделано "+doneN+" из "+total+"; остаток разумно перенести на завтра.";
+    else if(load<=0 && total>0) phrase="Низкая нагрузка, день умещается в бюджет.";
+    else phrase="Умеренная нагрузка. Сделано "+doneN+" из "+total+" — график соблюдается.";
     return { phrase:phrase, ctx:ctx, load:load, done:doneN, total:total };
   }
 
@@ -3447,6 +3704,8 @@
   // регистрация service worker для офлайна
   if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(function(){}); }
 
+  fxInit();               // холст для искр (до первого render, чтобы не мигнуло)
+  fxTilt();               // наклон карточки «Начни с этого» — только мышь
   clearStaleDefer();      // наступило завтра — вернуть отложенные в сегодняшний день
   resetRepeats();         // регулярные дела нового дня — снова невыполненные
   askPersistentStorage(); // попросить браузер не стирать данные (не блокирует запуск)
@@ -3471,5 +3730,8 @@
     }
   })();
 </script>
+<!-- Язык интерфейса по настройкам браузера (волна 11). Внешний слой: переводит
+     живой DOM, нормализует ввод перед парсерами и ставит переключатель в панель. -->
+<script src="i18n.js"></script>
 </body>
 </html>
