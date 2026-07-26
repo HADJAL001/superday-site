@@ -333,6 +333,9 @@
   .ctxseg.ctx-untagged{background:var(--hair)}
   .ctxbal-legend{display:flex; flex-wrap:wrap; gap:9px; justify-content:center; margin-top:9px;
     font-size:11.5px; color:var(--text-dim)}
+  .weekpeak{margin-top:15px; padding-top:14px; border-top:1px solid var(--hair-soft)}
+  .weekpeak-head{font-size:12px; font-weight:700; color:var(--champagne); text-align:center; margin-bottom:6px}
+  .weekpeak-phrase{text-align:center; font-size:12.5px; color:var(--text-dim); font-style:italic; line-height:1.5}
 
   /* ===== Шаблоны дня ===== */
   .templates{max-width:760px; margin:22px auto 0}
@@ -1019,6 +1022,7 @@
         <div class="week" id="weekBars"></div>
         <div class="stats-foot" id="statsFoot"></div>
         <div class="ctxbal" id="ctxBalance" aria-label="Баланс недели по сферам жизни"></div>
+        <div class="weekpeak" id="weekPeak" aria-live="polite" hidden></div>
       </section>
     </div>
   </section>
@@ -2307,6 +2311,7 @@
     document.getElementById("statsFoot").textContent =
       digest + "Сегодня выполнено: "+todayV+" · всего за всё время: "+total+". Данные считаются только в этом браузере.";
     renderCtxBalance();
+    renderWeekPeak();
   }
   // Баланс недели по сферам жизни: отвечает «на что уходит жизнь», а не
   // только «что успел» (readStats/renderStats выше — про число дел, не про их
@@ -2366,6 +2371,55 @@
     if(n10===1 && n100!==11) return forms[0];
     if(n10>=2 && n10<=4 && (n100<10||n100>=20)) return forms[1];
     return forms[2];
+  }
+
+  // Недельный Peak-End (Канеман): итоговая оценка недели по проценту закрытых
+  // дел за 7 дней, отдельно от дневной аффирмации (dayAffirmation — волна 19).
+  // Детерминированная ротация по проценту (не Math.random()), чтобы повторный
+  // показ той же недели давал ту же фразу. Источник данных — dlog (readDayLog,
+  // {load, done, total} по дням), уже собирается для панели нагрузки недели.
+  var WEEK_PEAK_HIGH=[
+    "Неделя закрыта почти полностью — так живут по своему слову, а не по настроению.",
+    "Большая часть недели прошла по плану — это не везение, а решения, которые ты принимал(а) каждый день.",
+    "Редко у кого неделя настолько собрана. Это результат, а не случайность."
+  ];
+  var WEEK_PEAK_MID=[
+    "Неделя вышла неровной, но больше половины — сделано. Это тоже движение вперёд.",
+    "Не идеально, но по сути — на своей стороне. Продолжай в том же духе.",
+    "Часть недели пошла не по плану — и часть всё равно закрыта. Это честный баланс."
+  ];
+  var WEEK_PEAK_LOW=[
+    "Неделя была тяжёлой — закрытое пусть небольшое, но оно настоящее.",
+    "Даже в трудную неделю кое-что сделано. Это не ноль.",
+    "Неделя не задалась, но это ещё не приговор следующей."
+  ];
+  function weekPeakEnd(dlog, todayStr){
+    var endDate = new Date(todayStr+"T00:00:00");
+    var done=0, total=0, days=0;
+    for(var i=0;i<7;i++){
+      var d = new Date(endDate); d.setDate(d.getDate()-i);
+      var e = (dlog||{})[dayKeyOf(d)];
+      if(e && typeof e.total==="number" && e.total>0){
+        done += e.done; total += e.total; days++;
+      }
+    }
+    if(!days || !total) return null;
+    var pct = Math.round(done/total*100);
+    var pool = pct>=80 ? WEEK_PEAK_HIGH : (pct>=40 ? WEEK_PEAK_MID : WEEK_PEAK_LOW);
+    var phrase = pool[((pct%pool.length)+pool.length)%pool.length];
+    return { done:done, total:total, pct:pct, days:days, phrase:phrase };
+  }
+  function renderWeekPeak(){
+    var wrap=document.getElementById("weekPeak"); if(!wrap) return;
+    var r = weekPeakEnd(readDayLog(), todayKey());
+    wrap.innerHTML="";
+    if(!r){ wrap.hidden=true; return; }
+    wrap.hidden=false;
+    var head=document.createElement("div"); head.className="weekpeak-head";
+    head.textContent = "Итог недели: "+r.done+" из "+r.total+" ("+r.pct+"%)";
+    wrap.appendChild(head);
+    var ph=document.createElement("div"); ph.className="weekpeak-phrase"; ph.textContent=r.phrase;
+    wrap.appendChild(ph);
   }
 
   // ===== Напоминание сделать резервную копию (если давно не экспортировал) =====
@@ -4125,6 +4179,26 @@
       return dayAffirmation(0)===AFFIRMATIONS[0]
         && dayAffirmation(AFFIRMATIONS.length)===AFFIRMATIONS[0]
         && dayAffirmation(AFFIRMATIONS.length+1)===AFFIRMATIONS[1];
+    });
+    T("weekPeakEnd: считает только дни с total>0 за 7 дней, high-пул на 80%+", function(){
+      var dlog={
+        "2026-08-05":{load:1, done:5, total:5},
+        "2026-08-04":{load:0, done:3, total:3},
+        "2026-07-28":{load:2, done:0, total:1}
+      };
+      var r=weekPeakEnd(dlog, "2026-08-05");
+      return r.done===8 && r.total===8 && r.pct===100 && r.days===2
+        && WEEK_PEAK_HIGH.indexOf(r.phrase)!==-1;
+    });
+    T("weekPeakEnd: mid-пул на 40-79%, low-пул ниже 40%", function(){
+      var mid=weekPeakEnd({"2026-08-05":{load:1, done:5, total:10}}, "2026-08-05");
+      var low=weekPeakEnd({"2026-08-05":{load:1, done:1, total:10}}, "2026-08-05");
+      return mid.pct===50 && WEEK_PEAK_MID.indexOf(mid.phrase)!==-1
+        && low.pct===10 && WEEK_PEAK_LOW.indexOf(low.phrase)!==-1;
+    });
+    T("weekPeakEnd: нет дней с total>0 в окне → null", function(){
+      return weekPeakEnd({"2026-07-20":{load:0, done:1, total:1}}, "2026-08-05")===null
+        && weekPeakEnd({}, "2026-08-05")===null;
     });
     T("loadIntention: нет записи → null", function(){
       var prev=localStorage.getItem(INTENTION_KEY);
