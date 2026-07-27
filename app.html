@@ -507,6 +507,12 @@
   .dv-intent b{color:var(--champagne)}
   .dv-affirm{text-align:center; font-size:12.5px; color:var(--text-dim); font-style:italic; line-height:1.5; margin-top:10px}
 
+  .day-constellation{max-width:760px; margin:10px auto 2px; text-align:center}
+  .day-constellation[hidden]{display:none}
+  .cst-line{fill:none; stroke:var(--hair); stroke-width:1}
+  .cst-star{fill:var(--text-dim); opacity:.55}
+  .cst-star.cst-full{fill:var(--gold); opacity:1}
+
   /* ===== Новый день: перенос незавершённого ===== */
   .rollover{max-width:760px; margin:0 auto 20px; background:linear-gradient(180deg,rgba(201,169,106,.1),rgba(9,15,30,.4));
     border:1px solid var(--hair-soft); border-radius:16px; padding:15px 18px}
@@ -941,6 +947,7 @@
     <div class="bar-wrap"><div class="bar-fill" id="barFill"></div></div>
     <div class="done-line" id="doneLine">0 из 0 выполнено</div>
     <div class="day-verdict" id="dayVerdict" hidden aria-live="polite"></div>
+    <div class="day-constellation" id="dayConstellation" hidden aria-label="Созвездие дней — история закрытых дней"></div>
   </section>
 </main>
 <canvas class="fxlayer" id="fxLayer" aria-hidden="true"></canvas>
@@ -1194,11 +1201,14 @@
   function uid(){ return "t" + (tasks.reduce(function(m,t){return Math.max(m, +String(t.id).slice(1)||0);},0) + 1) + "_" + tasks.length; }
   // Короткое подтверждение действия в подсказке композера (потом восстанавливается).
   var _toastTimer=null;
-  function toast(msg){
+  function toast(msg, type){
     var el=document.getElementById("quadHint"); if(!el) return;
-    el.textContent=msg; el.classList.add("toast-on");
+    var isError = type==="error";
+    el.textContent=(isError?"⚠ ":"")+msg;
+    el.classList.toggle("toast-error", isError);
+    el.classList.add("toast-on");
     clearTimeout(_toastTimer);
-    _toastTimer=setTimeout(function(){ el.classList.remove("toast-on"); if(typeof refreshHint==="function") refreshHint(); }, 2600);
+    _toastTimer=setTimeout(function(){ el.classList.remove("toast-on","toast-error"); if(typeof refreshHint==="function") refreshHint(); }, isError?4200:2600);
   }
   // ===== Тихий режим — одна кнопка на весь звук приложения =====
   // Звук раньше шёл из трёх независимых мест (сигнал голосового режима,
@@ -2545,6 +2555,7 @@
     fxPlanBuilt(ol);
     renderDaySummary(order, conflict);
     renderVerdict(order, conflict);
+    renderConstellation();
   }
 
   // ===== Сводка дня: сколько времени запланировано и влезает ли в бюджет =====
@@ -2789,12 +2800,12 @@
       fetch("https://api.open-meteo.com/v1/forecast?latitude="+la+"&longitude="+lo+"&current=temperature_2m,weather_code")
         .then(function(r){ return r.json(); })
         .then(function(j){
-          var cu=j&&j.current; if(!cu){ toast("Погоду не получил — задай вручную"); manual(); return; }
+          var cu=j&&j.current; if(!cu){ toast("Погоду не получил — задай вручную", "error"); manual(); return; }
           var t=Math.round(cu.temperature_2m); var code=cu.weather_code;
           var c=loadDayCtx(); c.weather={ temp:t, code:code, label:(WCODE[code]||"") };
           saveDayCtx(c); render(); toast("Погода: "+t+"° · "+(WCODE[code]||tempWord(t)));
         })
-        .catch(function(){ toast("Сеть недоступна — задай погоду вручную"); manual(); });
+        .catch(function(){ toast("Сеть недоступна — задай погоду вручную", "error"); manual(); });
     }, function(){ manual(); }, {timeout:8000, maximumAge:1800000});
   }
   function manualWeather(){
@@ -2851,10 +2862,10 @@
     if(ans===""){ t.loc = null; save(); render(); return; }
     toast("Ищу место…");
     geocodePlace(ans, function(found){
-      if(found===undefined){ toast("Сеть недоступна — попробуй позже"); return; }
+      if(found===undefined){ toast("Сеть недоступна — попробуй позже", "error"); return; }
       if(found===null){ toast("Это место не нашёл — попробуй проще: «улица, город»"); return; }
       var ok = window.confirm("Нашёл: " + found.addr + " — сохранить как место дела?");
-      if(!ok){ toast("Не сохранил — попробуй ввести точнее"); return; }
+      if(!ok){ toast("Не сохранил — попробуй ввести точнее", "error"); return; }
       var label = ans.split(",")[0].trim().slice(0,40) || ans.slice(0,40);
       t.loc = { lat:found.lat, lon:found.lon, label:label, addr:found.addr };
       save(); render(); toast("Место сохранено: " + label);
@@ -2951,6 +2962,30 @@
       localStorage.setItem(DAYLOG_KEY, JSON.stringify(log));
     }catch(e){}
   }
+  // ===== Созвездие дня: история закрытых дней рядом с сегодняшним прогресс-баром =====
+  // Не заменяет #barFill/#doneLine (те — про сегодня), а дополняет их историей;
+  // источник данных — уже существующий readDayLog(), новый ключ не заводим.
+  function renderConstellation(){
+    var el=document.getElementById("dayConstellation"); if(!el) return;
+    var log=readDayLog();
+    var keys=Object.keys(log).sort();
+    var recent=keys.slice(-21);
+    if(!recent.length){ el.hidden=true; el.innerHTML=""; return; }
+    el.hidden=false;
+    var step=18, pad=8, cy=14, h=28;
+    var w=pad*2+(recent.length-1)*step;
+    var pts=[], circles="";
+    recent.forEach(function(k,i){
+      var d=log[k]||{};
+      var full = d.total>0 && d.done===d.total;
+      var cx=pad+i*step;
+      pts.push(cx+","+cy);
+      circles += '<circle cx="'+cx+'" cy="'+cy+'" r="'+(full?4:2)+'" class="cst-star'+(full?" cst-full":"")+'"><title>'+k+(full?" — день закрыт полностью":"")+'</title></circle>';
+    });
+    el.innerHTML = '<svg viewBox="0 0 '+w+' '+h+'" width="100%" height="'+h+'" preserveAspectRatio="xMidYMid meet" aria-hidden="true">'
+      + '<polyline points="'+pts.join(" ")+'" class="cst-line"/>' + circles + '</svg>';
+  }
+
   function renderVerdict(order, conflict){
     var box=document.getElementById("dayVerdict"); if(!box) return;
     if(!order.length){ box.hidden=true; box.innerHTML=""; return; }
@@ -3343,7 +3378,7 @@
         ok=true;
       }
     }catch(e){ ok=false; }
-    if(!ok){ toast("Не удалось создать файл календаря в этом браузере"); return null; }
+    if(!ok){ toast("Не удалось создать файл календаря в этом браузере", "error"); return null; }
     var bits=[];
     if(res.counts.timed) bits.push(res.counts.timed+" "+plural(res.counts.timed,["дело","дела","дел"])+" со временем");
     if(res.counts.repeating) bits.push(res.counts.repeating+" "+plural(res.counts.repeating,["регулярное","регулярных","регулярных"]));
@@ -3418,7 +3453,7 @@
   }
   function importICS(text){
     var events;
-    try{ events=parseICS(text); }catch(e){ toast("Не удалось прочитать файл — это не календарь .ics"); return null; }
+    try{ events=parseICS(text); }catch(e){ toast("Не удалось прочитать файл — это не календарь .ics", "error"); return null; }
     if(!events.length){ toast("В файле нет событий"); return null; }
     var seen=[]; try{ seen=JSON.parse(localStorage.getItem(ICS_IMPORT_KEY)||"[]")||[]; }catch(e){ seen=[]; }
     var res=icsEventsToTasks(events, seen, todayKey());
@@ -3444,7 +3479,7 @@
       var f=file.files && file.files[0]; if(!f) return;
       var reader=new FileReader();
       reader.onload=function(){ importICS(String(reader.result||"")); };
-      reader.onerror=function(){ toast("Ошибка чтения файла."); };
+      reader.onerror=function(){ toast("Ошибка чтения файла.", "error"); };
       reader.readAsText(f);
     });
   })();
@@ -3850,7 +3885,7 @@
   (function(){
     var btn=document.getElementById("tplSave"); if(!btn) return;
     btn.addEventListener("click", function(){
-      if(!tasks.length){ alert("Сначала добавь дела — потом их можно сохранить как шаблон дня."); return; }
+      if(!tasks.length){ toast("Сначала добавь дела — потом их можно сохранить как шаблон дня.", "error"); return; }
       var name=prompt("Название шаблона (например «Рабочий день», «Тренировка»):","");
       if(name===null) return; name=name.trim(); if(!name) return;
       var snap=tasks.map(function(t){ return { text:t.text, urgent:!!t.urgent, important:!!t.important, time:t.time||null, dur:(validDur(t.dur)?t.dur:null), repeat:normRepeat(t.repeat) }; });
