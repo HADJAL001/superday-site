@@ -3256,12 +3256,15 @@
   function buildICS(now, seq){
     now = now || new Date();
     seq = seq || 0;
-    var stamp=icsStampUTC(now), timed=[], untimed=[], repeating=0;
+    var stamp=icsStampUTC(now), timed=[], untimed=[], repeating=0, defaultDur=0;
     (tasks||[]).forEach(function(t){
       if(!t || !t.text) return;
       var rep=isRepeating(t);
       if(t.done && !rep) return;                       // разовое выполненное уехало бы мусором
-      if(validTime(t.time)){ timed.push(t); if(rep) repeating++; }
+      if(validTime(t.time)){
+        timed.push(t); if(rep) repeating++;
+        if(!validDur(t.dur)) defaultDur++;             // честно: конец события — угадан, не введён
+      }
       else if(isToday(t)) untimed.push(t);             // без времени — только сегодняшние
     });
     var L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//SUPER DAY//app//RU",
@@ -3307,7 +3310,7 @@
     }
     L.push("END:VCALENDAR");
     return { text: L.map(icsFold).join("\r\n")+"\r\n",
-             counts: { timed:timed.length, repeating:repeating, untimed:untimed.length } };
+             counts: { timed:timed.length, repeating:repeating, untimed:untimed.length, defaultDur:defaultDur } };
   }
   function icsSeqNext(){
     var v=0; try{ v=parseInt(localStorage.getItem(ICS_SEQ_KEY)||"0",10)||0; }catch(e){ v=0; }
@@ -3345,7 +3348,10 @@
     if(res.counts.timed) bits.push(res.counts.timed+" "+plural(res.counts.timed,["дело","дела","дел"])+" со временем");
     if(res.counts.repeating) bits.push(res.counts.repeating+" "+plural(res.counts.repeating,["регулярное","регулярных","регулярных"]));
     if(res.counts.untimed) bits.push(res.counts.untimed+" без времени — заметкой на день");
-    toast("📅 "+bits.join(" · ")+". Открой файл — календарь напомнит сам.");
+    var note=res.counts.defaultDur
+      ? " Из них "+res.counts.defaultDur+" без длительности — календарь поставил "+ICS_DEFAULT_DUR+" мин по умолчанию."
+      : "";
+    toast("📅 "+bits.join(" · ")+". Открой файл — календарь напомнит сам."+note);
     return res;
   }
   ["icsBtn","icsFromRemind"].forEach(function(id){
@@ -4072,6 +4078,15 @@
       try{
         tasks=[{id:"t9",text:"сделано",time:"09:00",done:true}];
         return buildICS(new Date(2026,6,26,12,0,0),0).text.indexOf("sd-t9@")<0;
+      } finally { tasks=keep; }
+    });
+    T("buildICS: честный счётчик дел с угаданной длительностью", function(){
+      var keep=tasks;
+      try{
+        tasks=[{id:"t1",text:"с длительностью",time:"09:00",dur:45,done:false},
+               {id:"t2",text:"без длительности",time:"10:00",done:false},
+               {id:"t3",text:"нулевая — тоже угадана",time:"11:00",dur:0,done:false}];
+        return buildICS(new Date(2026,6,26,8,0,0),0).counts.defaultDur===2;
       } finally { tasks=keep; }
     });
 
