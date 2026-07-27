@@ -391,6 +391,7 @@
   .mute-toggle[aria-pressed=true]{color:var(--on-accent); border-color:transparent;
     background:linear-gradient(180deg,#9aa0ab,#6f747e)}
   .hint.toast-on{color:var(--gold-bright); font-weight:600}
+  .hint.toast-on.toast-error{color:var(--q1)}
 
   /* ===== Длительность дел / таймбоксинг ===== */
   .tdur{flex:0 0 auto; display:inline-flex; align-items:center; gap:4px; cursor:pointer; font-size:11px;
@@ -2699,6 +2700,23 @@
   ];
   function dayAffirmation(n){ return AFFIRMATIONS[((n%AFFIRMATIONS.length)+AFFIRMATIONS.length)%AFFIRMATIONS.length]; }
 
+  // Озвучка вечерней аффирмации — один раз в день (дедуп по дате), тот же
+  // идиом cancel-then-speak, что и в focusSay/speakRemind; гейтится общим
+  // тихим режимом isMuted() — отдельный тумблер не заводим.
+  var AFFIRM_SPOKEN_KEY="superday_affirm_spoken_date";
+  function speakAffirmation(txt){
+    if(typeof isMuted==="function" && isMuted()) return;
+    try{
+      var today=todayKey(), last=null;
+      try{ last=localStorage.getItem(AFFIRM_SPOKEN_KEY); }catch(e){}
+      if(last===today) return;
+      if(!window.speechSynthesis) return;
+      var u=new SpeechSynthesisUtterance(txt); u.lang="ru-RU"; u.rate=0.98; u.pitch=0.96;
+      window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
+      try{ localStorage.setItem(AFFIRM_SPOKEN_KEY, today); }catch(e){}
+    }catch(e){}
+  }
+
   var intentionDraft=null; // черновик открытого пикера — не сохраняется, пока не нажали «Задать намерение»
   function renderIntentionBar(){
     var bar=document.getElementById("intentionBar"); if(!bar) return;
@@ -2987,8 +3005,10 @@
     var ph=document.createElement("div"); ph.className="dv-phrase"; ph.textContent=v.phrase;
     box.appendChild(ph);
     if(intent && v.total>0 && v.done===v.total){
-      var af=document.createElement("div"); af.className="dv-affirm"; af.textContent=dayAffirmation(v.done);
+      var affTxt=dayAffirmation(v.done);
+      var af=document.createElement("div"); af.className="dv-affirm"; af.textContent=affTxt;
       box.appendChild(af);
+      speakAffirmation(affTxt);
     }
   }
 
