@@ -872,7 +872,7 @@
   <section class="intro">
     <span class="eyebrow">Планировщик дня · без регистрации</span>
     <h1>Список дел превращается<br><span class="g">в порядок действий.</span></h1>
-    <p>Задачи — текстом или голосом. Приложение расставит их по важности и срочности, соберёт маршрут дня и покажет, во что день не помещается. <button type="button" class="inline-link" id="introHelp">Как это устроено</button> · остальные разделы — в <button type="button" class="inline-link" id="introPanel">Панели</button>.</p>
+    <p>Задачи — текстом или голосом. Приложение расставит их по важности. <button type="button" class="inline-link" id="introHelp">Как это устроено</button> · остальные разделы — в <button type="button" class="inline-link" id="introPanel">Панели</button>.</p>
   </section>
 
   <section class="onboard" id="onboard" hidden aria-label="Как это работает">
@@ -894,7 +894,7 @@
       <button class="mic-btn" id="micBtn" type="button" title="Продиктовать задачу голосом" aria-label="Продиктовать задачу голосом" aria-pressed="false">&#127908;</button>
       <button class="add-btn" id="addBtn" type="button">Добавить</button>
     </div>
-    <div class="composer-help">Одна задача — одна строка. Время и повтор указываются прямо в тексте и распознаются автоматически: «позвонить маме <b>в 15:00</b>», «зарядка <b>каждый день</b> в 7 утра», «отчёт <b>на 2 часа</b>». Флажки ниже нужны, только если приоритет хочется задать вручную.</div>
+    <div class="composer-help">Время и повтор пишутся прямо в тексте: «позвонить маме <b>в 15:00</b>».</div>
     <div class="toggles">
       <span class="tg u" id="tgUrgent" role="button" tabindex="0" aria-pressed="false">🔥 Срочно</span>
       <span class="tg i" id="tgImportant" role="button" tabindex="0" aria-pressed="false">⭐ Важно</span>
@@ -937,7 +937,7 @@
   <section class="route" aria-label="Маршрут дня">
     <h3>Сегодня</h3>
     <div class="mapcard" id="mapCard" hidden>
-      <p class="map-priv">🔒 Карта — единственное место SUPER DAY, где <b>адреса</b> уходят за пределы браузера: в бесплатные сервисы OpenStreetMap (поиск места и путь по дорогам).</p>
+      <p class="map-priv">🔒 Только здесь <b>адреса</b> уходят за пределы браузера — в OpenStreetMap, для построения маршрута.</p>
       <div class="mapview" id="mapView" hidden aria-label="Карта дел с путём между местами"></div>
       <p class="map-note" id="mapNote"></p>
     </div>
@@ -1013,14 +1013,14 @@
           <button class="vm-toggle" id="vmToggle" type="button" aria-pressed="false">
             <span class="vm-dot"></span><span class="vm-ic">🎙</span><span id="vmLabel">Управлять голосом</span>
           </button>
-          <span class="vm-status" id="vmStatus" aria-live="polite">Хочешь управлять без рук? Включи, скажи «супер день» — и назови дело. Оно ответит голосом. (Для простого ввода это не нужно — просто жми 🎙 у поля выше.)</span>
+          <span class="vm-status" id="vmStatus" aria-live="polite">Включи, скажи «супер день» — и назови дело. Оно ответит голосом.</span>
         </div>
         <div class="vm-config">
           <label for="wakeInput">Своё слово-обращение (по желанию):</label>
           <input id="wakeInput" type="text" autocomplete="off" maxlength="24" placeholder="Супер день" />
           <span class="vm-config-hint">— произнеси его, и оно откликнется</span>
         </div>
-        <p class="vm-privacy">🔒 Задачи и заметки не покидают этот браузер. Но само <b>распознавание речи</b> обрабатывается облачным сервисом браузера (например, Google) — как в любой веб-диктовке. Текстовый ввод полностью офлайн.</p>
+        <p class="vm-privacy">🔒 Задачи не покидают браузер. <b>Распознавание речи</b> — через облачный сервис браузера, как в любой диктовке.</p>
       </section>
     </div>
   </section>
@@ -1047,7 +1047,7 @@
           <h3>Шаблоны дня</h3>
           <button class="tpl-save" id="tplSave" type="button">＋ Сохранить текущий день</button>
         </div>
-        <div class="tpl-head"><span class="tsub">Повторяющиеся наборы задач — рабочий день, тренировка, уборка. Загрузка добавляет задачи, не затирая текущие.</span></div>
+        <div class="tpl-head"><span class="tsub">Повторяющиеся наборы задач — рабочий день, тренировка, уборка.</span></div>
         <ul class="tpl-list" id="tplList"></ul>
         <div class="tpl-empty" id="tplEmpty">Пока нет шаблонов. Разложи типовой день по задачам и нажми «Сохранить текущий день».</div>
       </section>
@@ -1076,7 +1076,7 @@
       <p class="pg-lead">Планом можно поделиться текстом, а день — выгрузить в системный календарь: события лягут с будильниками и сработают при закрытом приложении.</p>
       <div class="toolbar">
         <button id="copyPlan" class="accent" type="button">Поделиться планом</button>
-        <button id="icsBtn" type="button" title="Скачать день файлом .ics — события лягут в системный календарь с будильниками" aria-label="Скачать день файлом .ics — события лягут в системный календарь с будильниками">&#128197; В календарь</button>
+        <button id="icsBtn" type="button" title="Скачать файлом .ics" aria-label="Скачать день файлом .ics — события лягут в системный календарь с будильниками">&#128197; В календарь</button>
         <button id="clearDone" type="button">Убрать выполненные</button>
         <button id="clearAll" type="button">Очистить всё</button>
       </div>
@@ -1084,7 +1084,7 @@
         <button id="exportBtn" type="button">&#11015; Сохранить в файл</button>
         <button id="importBtn" type="button">&#11014; Загрузить из файла</button>
         <input type="file" id="importFile" accept="application/json,.json" hidden />
-        <button id="icsImportBtn" type="button" title="Загрузить файл .ics из рабочего календаря — встречи лягут в план дня" aria-label="Загрузить файл .ics из рабочего календаря — встречи лягут в план дня">&#128229; Встречи из .ics</button>
+        <button id="icsImportBtn" type="button" title="Загрузить файл .ics" aria-label="Загрузить файл .ics из рабочего календаря — встречи лягут в план дня">&#128229; Встречи из .ics</button>
         <input type="file" id="icsImportFile" accept="text/calendar,.ics" hidden />
         <span class="databar-note">Резервная копия задач и заметок · перенос между устройствами вручную · файл остаётся у тебя</span>
         <span class="backup-remind" id="backupRemind" hidden></span>
@@ -1095,11 +1095,9 @@
   <section class="pgroup" data-sec="help">
     <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">❔</span><span class="pg-title">Как это работает</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
     <div class="pg-body">
-      <p class="pg-lead"><b>Три шага.</b> Впиши дело — или скажи голосом, можно сразу «в 15:00» и «каждый день». Приложение само раскладывает дела по важности и показывает, с чего начать. Нажми «Готово» в карточке «Начни с этого» — день сдвинулся.</p>
-      <p class="pg-lead"><b>Маршрут дня.</b> Порядок маршрута: сначала то, что горит по времени, затем важное, затем короткое, в конце — необязательное. Время, длительность, повтор и перенос правятся прямо в строке. Цветная точка слева — приоритет: нажатие открывает разбор по важности. Как только у двух и более дел на сегодня указано место, над списком появляется путь на карте.</p>
-      <p class="pg-lead"><b>Матрица.</b> 🔥 срочно — горит по времени. ⭐ важно — двигает жизнь. Дело без флажков попадает в «Отложить». Переложить можно перетаскиванием за ручку ☰ в разделе «Разбор по важности».</p>
-      <p class="pg-lead"><b>Где данные.</b> Только в этом браузере — ни аккаунта, ни сервера. Поэтому раз в неделю имеет смысл сохранять копию файлом в разделе «Данные». Приложение работает офлайн.</p>
-      <p class="pg-lead"><b>Клавиатура.</b> Enter в поле — добавить дело. Esc — закрыть панель. Аппаратная «Назад» на телефоне тоже закрывает панель, а не страницу.</p>
+      <p class="pg-lead"><b>Маршрут дня.</b> Сначала то, что горит по времени, затем важное. Цветная точка слева — приоритет, нажатие открывает разбор по важности.</p>
+      <p class="pg-lead"><b>Матрица.</b> 🔥 срочно — горит по времени. ⭐ важно — двигает жизнь. Переложить можно перетаскиванием за ручку ☰.</p>
+      <p class="pg-lead"><b>Где данные.</b> Только в этом браузере — ни аккаунта, ни сервера. Работает офлайн.</p>
     </div>
   </section>
   <section class="pgroup" data-sec="diag">
