@@ -63,15 +63,12 @@
   body{
     font-family:"Manrope",system-ui,sans-serif; color:var(--text);
     font-variant-numeric:tabular-nums; letter-spacing:-.005em;
-    background:
-      radial-gradient(1200px 640px at 50% -10%,rgba(120,150,220,0.14),transparent 62%),
-      radial-gradient(760px 420px at 84% 4%,rgba(201,169,106,0.07),transparent 60%),
-      linear-gradient(180deg,var(--bg),var(--bg-deep));
-    background-attachment:fixed;
+    background:var(--bg-deep);
     min-height:100vh; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
   }
   a{color:inherit}
   .wrap{max-width:1080px; margin:0 auto; padding:0 22px}
+  main.wrap,footer.wrap{position:relative; z-index:1}
 
   /* Шапка */
   header{position:sticky; top:0; z-index:20; backdrop-filter:blur(12px);
@@ -86,7 +83,7 @@
   .back:hover{color:var(--text)}
 
   /* Интро */
-  .intro{padding:38px 0 8px; text-align:center}
+  .intro{padding:38px 0 8px; text-align:center; text-shadow:0 2px 18px rgba(6,10,26,.9)}
   .intro .eyebrow{font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--text-muted)}
   .intro h1{font-family:var(--font-display); font-weight:700; font-size:clamp(28px,5vw,44px);
     line-height:1.05; margin:12px 0 10px}
@@ -95,8 +92,8 @@
 
   /* Форма ввода */
   .composer{margin:26px auto 8px; max-width:760px;
-    background:linear-gradient(180deg,rgba(29,44,76,.7),rgba(9,15,30,.5)); border:1px solid var(--border);
-    border-radius:18px; padding:16px}
+    background:linear-gradient(180deg,rgba(29,44,76,.82),rgba(9,15,30,.72)); border:1px solid var(--border);
+    border-radius:18px; padding:16px; backdrop-filter:blur(14px)}
   .composer .row1{display:flex; gap:10px; flex-wrap:wrap}
   .composer input[type=text]{flex:1 1 260px; min-width:0; background:var(--ink); border:1px solid var(--border);
     color:var(--text); border-radius:12px; padding:14px 15px; font-size:15px; font-family:inherit; outline:none}
@@ -147,8 +144,8 @@
 
   /* Заметки */
   .notes{margin:0 auto 26px; max-width:760px;
-    background:linear-gradient(180deg,rgba(29,44,76,.6),rgba(9,15,30,.45)); border:1px solid var(--border);
-    border-radius:18px; padding:20px 22px}
+    background:linear-gradient(180deg,rgba(29,44,76,.78),rgba(9,15,30,.68)); border:1px solid var(--border);
+    border-radius:18px; padding:20px 22px; backdrop-filter:blur(14px)}
   .notes-head h3{font-family:var(--font-display); font-weight:700; font-size:22px; margin:0 0 1px}
   .notes-head .nsub{font-size:12px; color:var(--text-muted); display:block}
   .note-add{display:flex; gap:10px; margin:12px 0 14px}
@@ -205,8 +202,8 @@
 
   /* Маршрут дня */
   .route{margin:22px auto 40px; max-width:760px;
-    background:linear-gradient(180deg,rgba(29,44,76,.6),rgba(9,15,30,.45)); border:1px solid var(--border);
-    border-radius:18px; padding:20px 22px}
+    background:linear-gradient(180deg,rgba(29,44,76,.78),rgba(9,15,30,.68)); border:1px solid var(--border);
+    border-radius:18px; padding:20px 22px; backdrop-filter:blur(14px)}
   .route h3{font-family:var(--font-display); font-weight:700; font-size:22px; margin:0 0 4px}
   ol.plan{list-style:none; counter-reset:s; margin:0; padding:0; display:flex; flex-direction:column; gap:9px}
   ol.plan li{counter-increment:s; display:flex; align-items:center; gap:13px; font-size:14px}
@@ -828,26 +825,17 @@
   .leaflet-control-attribution a{text-decoration:none}
   .leaflet-control-attribution svg{display:inline; vertical-align:baseline}
 
-  /* ===== Карта дел — премиальная тема поверх нейтрального Leaflet ===== */
-  .mapcard{margin-top:13px}
-  .map-priv{font-size:11px; color:var(--text-muted); line-height:1.55; padding-bottom:10px;
-    border-bottom:1px solid var(--hair-soft); margin-bottom:11px}
-  .map-priv b{color:var(--plat-dim)}
-  .map-note{font-size:11.5px; color:var(--text-muted); margin-top:9px; line-height:1.5}
-  .map-note.warn{color:var(--q1)}
-  .mapview{position:relative; margin-top:11px; border-radius:16px; overflow:hidden; height:280px;
-    border:1px solid var(--border); background:var(--ink)}
-  .mapview[hidden] + .map-note{display:block; padding:34px 16px; margin-top:11px; text-align:center;
-    border-radius:16px; border:1px dashed var(--gold-deep);
-    background:radial-gradient(120% 140% at 50% 20%, rgba(46,74,140,.28), rgba(10,17,34,.6) 70%); color:var(--plat-dim)}
+  /* ===== Карта — премиум-синий фон всего главного экрана, не карточка ===== */
+  .mapcard{position:fixed; inset:0; z-index:0; height:100vh; overflow:hidden; background:var(--ink)}
+  .mapview{position:absolute; inset:0; width:100%; height:100%; background:var(--ink)}
   .mapview .leaflet-container{width:100%; height:100%; background:var(--ink); font-family:inherit}
-  .mapview .leaflet-tile-pane{filter:brightness(.8) contrast(1.15) saturate(1.25) hue-rotate(152deg)}
-  .mapview::after{content:""; position:absolute; inset:0; pointer-events:none; z-index:450;
-    box-shadow:inset 0 0 46px 6px rgba(8,14,36,.7);
-    background:radial-gradient(120% 90% at 50% 38%, transparent 55%, rgba(8,14,36,.4) 100%)}
+  .mapview .leaflet-tile-pane{filter:brightness(.62) contrast(1.12) saturate(.7) hue-rotate(178deg)}
+  .mapcard::after{content:""; position:absolute; inset:0; pointer-events:none; z-index:450;
+    box-shadow:inset 0 0 90px 20px rgba(6,10,26,.85);
+    background:radial-gradient(120% 90% at 50% 30%, rgba(10,20,48,.35) 0%, rgba(6,10,26,.82) 100%)}
   .mapview .leaflet-bar a{background:var(--ink); color:var(--plat-dim); border-bottom:1px solid var(--border)}
-  .mapview .leaflet-bar a:hover{background:var(--surface-alt); color:var(--gold-bright)}
-  .mapview .leaflet-control-attribution{background:rgba(10,17,34,.72); color:var(--text-muted);
+  .mapview .leaflet-bar a:hover{background:var(--surface-alt); color:var(--plat-bright,var(--platinum))}
+  .mapview .leaflet-control-attribution{background:rgba(6,10,26,.72); color:var(--text-muted);
     border-radius:8px 0 0 0; padding:2px 7px}
   .mapview .leaflet-control-attribution a{color:var(--plat-dim)}
   .mapview .leaflet-popup-content-wrapper{background:var(--surface); color:var(--text);
@@ -859,15 +847,14 @@
   .mp-pop .mp-num{display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px;
     border-radius:50%; font-size:10px; font-weight:700; color:var(--on-accent); margin-right:6px}
   .mp-pop .mp-text{font-size:13px; font-weight:600; color:var(--text)}
-  .mp-pop .mp-time{display:block; margin-top:4px; font-size:11px; color:var(--champagne)}
+  .mp-pop .mp-time{display:block; margin-top:4px; font-size:11px; color:var(--platinum)}
   .mp-pop .mp-addr{display:block; margin-top:3px; font-size:11px; color:var(--text-muted); line-height:1.4}
   .mp-pop .mp-nav{display:inline-block; margin-top:8px; font-size:11.5px; font-weight:600;
-    color:var(--gold-bright); text-decoration:none; border-bottom:1px dashed var(--gold-deep)}
-  .mp-pop .mp-nav:hover{color:var(--champagne)}
+    color:var(--plat-dim); text-decoration:none; border-bottom:1px dashed var(--plat-deep)}
+  .mp-pop .mp-nav:hover{color:var(--platinum)}
   .mp-marker{width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-    font-size:11px; font-weight:700; color:var(--on-accent); border:2px solid rgba(255,255,255,.75);
-    box-shadow:0 2px 10px rgba(0,0,0,.5), 0 0 14px 2px rgba(201,169,106,.55); animation:rowIn .38s var(--ease-out) both}
-  @media(max-width:640px){ .mapview{height:220px} }
+    font-size:11px; font-weight:700; color:var(--ink); border:2px solid rgba(255,255,255,.85);
+    box-shadow:0 2px 10px rgba(0,0,0,.5), 0 0 14px 2px rgba(222,228,238,.55); animation:rowIn .38s var(--ease-out) both}
 </style>
 </head>
 <body>
@@ -892,6 +879,10 @@
   </div>
   <div class="layout-pop" id="layoutPop" hidden role="menu" aria-label="Блоки на главном экране"></div>
 </header>
+
+<div class="mapcard" id="mapCard" aria-hidden="true">
+  <div class="mapview" id="mapView" aria-label="Карта — фон приложения по геолокации"></div>
+</div>
 
 <main class="wrap">
   <section class="intro">
@@ -931,6 +922,8 @@
 
   <div class="rollover" id="rolloverBar" hidden role="region" aria-label="Новый день"></div>
 
+  <div class="rollover" id="planSuggest" hidden role="region" aria-label="Маршрут по геолокации"></div>
+
   <div class="rollover intention" id="intentionBar" hidden role="region" aria-label="Намерение дня"></div>
 
   <section class="focus" id="focusCard" hidden aria-live="polite" aria-label="Задача, с которой стоит начать">
@@ -961,11 +954,7 @@
 
   <section class="route" aria-label="Маршрут дня">
     <h3>Сегодня</h3>
-    <div class="mapcard" id="mapCard" hidden>
-      <p class="map-priv">🔒 Только здесь <b>адреса</b> уходят за пределы браузера — в OpenStreetMap, для построения маршрута.</p>
-      <div class="mapview" id="mapView" hidden aria-label="Карта дел с путём между местами"></div>
-      <p class="map-note" id="mapNote"></p>
-    </div>
+    <p class="map-note" id="mapNote" hidden></p>
     <div class="day-summary" id="daySummary" hidden aria-live="polite"></div>
     <ol class="plan" id="planList"></ol>
     <div class="empty" id="planEmpty">Пока пусто. Первая добавленная задача соберёт маршрут дня.</div>
@@ -1786,34 +1775,39 @@
     }, 60);
   }
 
-  // ===== Карта дел: премиальный маршрут на главном экране =====
+  // ===== Карта: фон всего главного экрана, не карточка в потоке =====
   // Порядок точек — тот же planOrder(), что строит ol.plan: карта не заводит
   // вторую систему истины о порядке дня (волна 14 уже отказалась от этого для
   // карточной раскладки списка). Карта изолирована и ничего не меняет в
-  // renderPlan()/planOrder — только читает их результат. Карточка теперь
-  // видна на экране всегда; сама карта (и сетевой запрос к Leaflet) грузится
-  // только когда есть хотя бы одно место — при 0 местах вместо неё premium-
-  // заглушка, чтобы самотесты (они гоняют этот же render() на живом DOM) не
-  // дёргали CDN. Маркеры — все одного золотого тона (единый премиальный
-  // маршрут); приоритет дела уже виден цветом в самом списке слева.
-  var mapState = { map:null, layer:null };
+  // renderPlan()/planOrder — только читает их результат. Фон грузится один раз
+  // (mapState.booted) и не переинициализируется на каждый render(), иначе
+  // самотесты, гоняющие render() десятками на живом DOM, били бы по CDN и
+  // по геолокации на каждый вызов. Маркеры — платиновые (не золото — золото
+  // держится за приоритет дела в самом списке слева, у карты свой акцент).
+  var mapState = { map:null, layer:null, userLoc:null, booted:false };
+  var IS_SELFTEST = /[?&]selftest=1/.test(location.search||"");
   function tasksForMap(){ return planOrder().filter(function(t){ return t.loc && !t.done; }); }
   function renderMapCard(){
-    var card=document.getElementById("mapCard"), view=document.getElementById("mapView"),
-        note=document.getElementById("mapNote");
+    var card=document.getElementById("mapCard"), view=document.getElementById("mapView");
     if(!card || !view) return;
-    var pts = tasksForMap();
-    card.hidden=false;
-    if(pts.length<1){
-      view.hidden=true;
-      if(note){ note.textContent="Укажи место у дела — здесь появится маршрут."; note.className="map-note"; }
+    // Карта — постоянный фон экрана, самотесты гоняют render() десятки раз на
+    // живом DOM и не должны трогать сеть/Leaflet при каждом вызове — фон
+    // инициализируется один раз (см. mapState.booted), дальше только точки.
+    if(IS_SELFTEST) return;
+    if(!mapState.booted){
+      mapState.booted = true;
+      loadLeaflet(function(){
+        buildMapView(tasksForMap());
+        requestUserLocation(function(loc){
+          mapState.userLoc = loc;
+          if(loc && mapState.map){ try{ mapState.map.panTo([loc.lat, loc.lon]); }catch(e){} }
+          renderMapCard();
+          if(typeof suggestDayPlan==="function") suggestDayPlan();
+        });
+      }, function(){ toast("Карту не загрузил — сеть подвела. Места остаются в списке дел.", "error"); });
       return;
     }
-    view.hidden=false;
-    loadLeaflet(function(){ buildMapView(pts); }, function(){
-      view.hidden=true;
-      if(note){ note.textContent="Карту не загрузил — сеть подвела. Места остаются в списке дел."; note.className="map-note warn"; }
-    });
+    if(mapState.map) buildMapView(tasksForMap());
   }
   function loadLeaflet(ok, fail){
     if(window.L){ ok(); return; }
@@ -1839,10 +1833,11 @@
     return wrap;
   }
   function buildMapView(pts){
-    var view=document.getElementById("mapView"), note=document.getElementById("mapNote");
+    var view=document.getElementById("mapView");
     if(!view || !window.L) return;
     if(!mapState.map){
-      mapState.map = L.map(view, { attributionControl:true });
+      mapState.map = L.map(view, { attributionControl:true, zoomControl:true });
+      mapState.map.setView(mapState.userLoc ? [mapState.userLoc.lat, mapState.userLoc.lon] : [20,10], mapState.userLoc?12:2);
       L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png", {
         subdomains:"abcd", maxZoom:19,
         attribution:'&copy; OpenStreetMap, &copy; CARTO'
@@ -1851,12 +1846,15 @@
     } else {
       mapState.layer.clearLayers();
     }
-    if(note){ note.textContent="Строю путь…"; note.className="map-note"; }
+    if(pts.length<1){
+      setTimeout(function(){ if(mapState.map) mapState.map.invalidateSize(); }, 60);
+      return;
+    }
     buildRoute(pts, function(route){
       mapState.layer.clearLayers();
       var bounds=[];
       pts.forEach(function(t, i){
-        var color = "linear-gradient(135deg,var(--gold-bright),var(--gold) 55%,var(--gold-deep))";
+        var color = "var(--grad-plat)";
         var icon = L.divIcon({ className:"mp-marker-wrap", html:'<div class="mp-marker" style="background:'+color+'">'+(i+1)+'</div>', iconSize:[26,26], iconAnchor:[13,13] });
         var mk = L.marker([t.loc.lat, t.loc.lon], { icon:icon }).addTo(mapState.layer);
         mk.bindPopup(mapPopup(t, i, color));
@@ -1864,20 +1862,14 @@
         bounds.push([t.loc.lat, t.loc.lon]);
       });
       if(route){
-        var style = route.mode==="osrm" ? { color:"#C9A96A", weight:3, opacity:.85 }
-                                         : { color:"#C9A96A", weight:2, opacity:.6, dashArray:"2 8" };
+        var style = route.mode==="osrm" ? { color:"#AEB9CD", weight:3, opacity:.9 }
+                                         : { color:"#AEB9CD", weight:2, opacity:.65, dashArray:"2 8" };
         L.polyline(route.coords, style).addTo(mapState.layer);
         if(route.coords.length) bounds = route.coords;
-        if(note){
-          if(route.mode==="osrm"){
-            note.textContent = "Путь собран — "+pts.length+" мест, "+route.km+" км"+(route.mins!==null?(", ~"+route.mins+" мин в пути"):"");
-            note.className="map-note";
-          } else {
-            note.textContent = route.km+" км по прямой, без учёта дорог — путь по дорогам сейчас недоступен";
-            note.className="map-note warn";
-          }
+        if(route.mode!=="osrm"){
+          toast(route.km+" км по прямой, без учёта дорог — путь по дорогам сейчас недоступен", "error");
         }
-      } else if(note){ note.textContent=""; }
+      }
       if(bounds.length){ try{ mapState.map.fitBounds(bounds, {padding:[26,26]}); }catch(e){} }
       setTimeout(function(){ if(mapState.map) mapState.map.invalidateSize(); }, 60);
     });
@@ -1915,6 +1907,7 @@
     renderPlan();
     renderFocusTimer();
     renderMapCard();
+    if(typeof suggestDayPlan==="function") suggestDayPlan();
     if(typeof updatePanelDot==="function") updatePanelDot();
     applyLayoutPrefs();
   }
@@ -2865,6 +2858,32 @@
   // ===== Карта дел: места задач, геокод, путь =====
   // Тот же принцип, что у погоды: только НАСТОЯЩИЕ данные, найденное — всегда
   // подтверждается пользователем, недоступность сервиса — честный текст, не тишина.
+  // ===== Геолокация пользователя (фон карты + старт маршрута) =====
+  // Браузерный Geolocation API, не IP-геосервис: точнее и не требует стороннего
+  // платного провайдера. Результат кэшируется на 2 часа — повторный визит не
+  // переспрашивает разрешение, а отказ не спрашивает снова эту же сессию.
+  var USERLOC_KEY = "superday_userloc_v1";
+  var USERLOC_TTL_MS = 2*60*60*1000;
+  function loadUserLocCache(){
+    try{ return JSON.parse(localStorage.getItem(USERLOC_KEY)||"null"); }catch(e){ return null; }
+  }
+  function saveUserLocCache(loc){
+    try{ localStorage.setItem(USERLOC_KEY, JSON.stringify({loc:loc, at:Date.now()})); }catch(e){}
+  }
+  function requestUserLocation(cb){
+    var cached = loadUserLocCache();
+    if(cached && cached.at && (Date.now()-cached.at)<USERLOC_TTL_MS){ cb(cached.loc); return; }
+    if(!("geolocation" in navigator)){ cb(null); return; }
+    navigator.geolocation.getCurrentPosition(
+      function(pos){
+        var loc = { lat:pos.coords.latitude, lon:pos.coords.longitude };
+        saveUserLocCache(loc);
+        cb(loc);
+      },
+      function(){ saveUserLocCache(null); cb(null); },
+      { enableHighAccuracy:false, timeout:8000, maximumAge:USERLOC_TTL_MS }
+    );
+  }
   var GEOCACHE_KEY = "superday_geocache_v1";
   function geoCacheKey(q){ return String(q||"").trim().toLowerCase().replace(/\s+/g," "); }
   function loadGeoCache(){ try{ return JSON.parse(localStorage.getItem(GEOCACHE_KEY)||"{}")||{}; }catch(e){ return {}; } }
@@ -2951,6 +2970,60 @@
         cache[key]=result; saveRouteCache(cache); cb(result);
       })
       .catch(function(){ var fb=buildFallbackRoute(pts); cb(fb); });
+  }
+
+  // ===== Маршрут по геолокации: с чего лучше начать =====
+  // Не вызов внешнего ИИ (у сайта нет бэкенда/ключей) — честная эвристика:
+  // среди дел без времени и одного приоритетного веса выбираем ближайшее к
+  // пользователю по геолокации браузера. Приоритет (🔥⭐) остаётся главным —
+  // геооптимизация только внутри одной группы квадранта. Ничего не переставляем
+  // без явного согласия — только предлагаем, кнопкой можно принять или закрыть.
+  var PLANSUGGEST_KEY = "superday_plansuggest_dismissed";
+  function suggestDayPlan(){
+    var box=document.getElementById("planSuggest");
+    if(!box || IS_SELFTEST) return;
+    if(!mapState.userLoc){ if(box) box.hidden=true; return; }
+    var candidates = planOrder().filter(function(t){ return t.loc && !t.done && timeToMin(t.time)===null; });
+    if(candidates.length<2){ box.hidden=true; return; }
+    var topQ = Math.min.apply(null, candidates.map(quadOf));
+    var tier = candidates.filter(function(t){ return quadOf(t)===topQ; });
+    if(tier.length<2){ box.hidden=true; return; }
+    var nearest = tier[0], best = haversineKm(mapState.userLoc, tier[0].loc);
+    tier.forEach(function(t){
+      var d = haversineKm(mapState.userLoc, t.loc);
+      if(d<best){ best=d; nearest=t; }
+    });
+    if(nearest.id === tier[0].id){ box.hidden=true; return; }
+    var dismissKey = nearest.id + "|" + new Date().toDateString();
+    var dismissed = null; try{ dismissed = localStorage.getItem(PLANSUGGEST_KEY); }catch(e){}
+    if(dismissed === dismissKey){ box.hidden=true; return; }
+    box.hidden=false; box.innerHTML="";
+    var head=document.createElement("div"); head.className="ro-head";
+    var ic=document.createElement("span"); ic.className="pg-ic"; ic.setAttribute("aria-hidden","true"); ic.textContent="🧭";
+    var title=document.createElement("span"); title.className="ro-title pg-title"; title.textContent="Маршрут по геолокации";
+    head.appendChild(ic); head.appendChild(title);
+    var text=document.createElement("div"); text.className="ro-text";
+    text.appendChild(document.createTextNode("Предлагаю начать с «"));
+    var b=document.createElement("b"); b.textContent=nearest.text; text.appendChild(b);
+    text.appendChild(document.createTextNode("» — так короче путь от твоего места."));
+    var acts=document.createElement("div"); acts.className="ro-actions";
+    var primary=document.createElement("button"); primary.type="button"; primary.className="ro-primary";
+    primary.textContent="Начать с этого";
+    primary.addEventListener("click", function(){
+      var idx = tasks.indexOf(nearest);
+      if(idx>=0){ tasks.splice(idx,1); tasks.unshift(nearest); }
+      nearest.time = null;
+      save(); box.hidden=true; render();
+      toast("Порядок обновлён — начинаем с «"+nearest.text+"»");
+    });
+    var ghost=document.createElement("button"); ghost.type="button"; ghost.className="ro-ghost";
+    ghost.textContent="Оставить как есть";
+    ghost.addEventListener("click", function(){
+      try{ localStorage.setItem(PLANSUGGEST_KEY, dismissKey); }catch(e){}
+      box.hidden=true;
+    });
+    acts.appendChild(primary); acts.appendChild(ghost);
+    box.appendChild(head); box.appendChild(text); box.appendChild(acts);
   }
 
   // Вердикт дня — по РЕАЛЬНОЙ нагрузке (дела, бюджет, наложения, контекст).
@@ -4252,18 +4325,11 @@
     });
     // Ветка с реальным маршрутом намеренно не тестируется здесь — она дёргает
     // loadLeaflet()/CDN, а самотесты не должны трогать сеть.
-    T("renderMapCard: карточка видна и при 0 местах, но карта/сеть не запускаются", function(){
-      var keep=tasks.slice();
-      try{
-        tasks.length=0;
-        tasks.push({id:"stm1",text:"а",urgent:false,important:false,done:false,
-                    time:null,dur:null,defer:null,repeat:null,doneOn:null});
-        render();
-        var card=document.getElementById("mapCard"), view=document.getElementById("mapView");
-        return card.hidden===false && view.hidden===true;
-      } finally { tasks.length=0; keep.forEach(function(x){tasks.push(x);}); render(); }
+    T("renderMapCard: карта — статичный фон в разметке, а не карточка со скрытием", function(){
+      var card=document.getElementById("mapCard"), view=document.getElementById("mapView");
+      return !!card && !!view && card.hasAttribute("hidden")===false;
     });
-    T("renderMapCard: карточка видна при 1 месте", function(){
+    T("renderMapCard: в режиме самотеста карта/сеть/геолокация не запускаются", function(){
       var keep=tasks.slice();
       try{
         tasks.length=0;
@@ -4271,7 +4337,7 @@
                     time:null,dur:null,defer:null,repeat:null,doneOn:null,
                     loc:{lat:55.75,lon:37.61,label:"Офис",addr:"Офис"}});
         render();
-        return document.getElementById("mapCard").hidden===false;
+        return IS_SELFTEST===true && mapState.booted===false && mapState.map===null;
       } finally { tasks.length=0; keep.forEach(function(x){tasks.push(x);}); render(); }
     });
 
