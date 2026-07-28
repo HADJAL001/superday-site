@@ -4781,8 +4781,33 @@
     }
   })();
 
-  // регистрация service worker для офлайна
-  if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(function(){}); }
+  // Регистрация service worker для офлайна + автообновление. Без этого блока
+  // уже открытая вкладка/установленное PWA годами показывает код на момент
+  // первого открытия: SW ставит новый кэш в фоне, но activate/clients.claim
+  // не перезагружают уже открытых клиентов сами — обновление начинает
+  // действовать только со следующей навигации. Здесь — принудительный один
+  // раз reload, как только браузер реально сменил активный SW.
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("sw.js").then(function(reg){
+      if(reg.waiting){ reg.waiting.postMessage("skipWaiting"); }
+      reg.addEventListener("updatefound", function(){
+        var nw=reg.installing;
+        if(!nw) return;
+        nw.addEventListener("statechange", function(){
+          if(nw.state==="installed" && navigator.serviceWorker.controller){
+            nw.postMessage("skipWaiting");
+          }
+        });
+      });
+      setInterval(function(){ reg.update().catch(function(){}); }, 60*60*1000);
+    }).catch(function(){});
+    var reloaded=false;
+    navigator.serviceWorker.addEventListener("controllerchange", function(){
+      if(reloaded) return;
+      reloaded=true;
+      location.reload();
+    });
+  }
 
   fxInit();               // холст для искр (до первого render, чтобы не мигнуло)
   fxTilt();               // наклон карточки «Начни с этого» — только мышь
