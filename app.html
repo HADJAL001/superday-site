@@ -554,6 +554,23 @@
   .panel-btn .pb-dot[hidden]{display:none}
   .bar .right{display:flex; align-items:center; gap:12px}
 
+  .layout-pop{position:absolute; top:64px; right:16px; z-index:41; width:250px; padding:12px;
+    border-radius:14px; border:1px solid var(--border); background:var(--panel-bg,var(--ink));
+    box-shadow:0 18px 40px rgba(0,0,0,.5); display:flex; flex-direction:column; gap:4px}
+  .layout-pop[hidden]{display:none}
+  .lp-title{font-size:11.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase;
+    color:var(--text-dim); padding:2px 6px 8px}
+  .lp-item{display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer;
+    font-family:inherit; font-size:13.5px; color:var(--text); background:transparent; border:none;
+    border-radius:9px; padding:8px 6px; text-align:left; width:100%}
+  .lp-item:hover{background:rgba(255,255,255,.05)}
+  .lp-sw{position:relative; flex:0 0 auto; width:34px; height:20px; border-radius:999px;
+    border:1px solid var(--border); background:var(--ink2,rgba(255,255,255,.06)); transition:.15s}
+  .lp-sw::after{content:""; position:absolute; top:1px; left:1px; width:16px; height:16px; border-radius:50%;
+    background:var(--text-dim); transition:.15s}
+  .lp-item[aria-pressed=true] .lp-sw{background:var(--grad-gold); border-color:transparent}
+  .lp-item[aria-pressed=true] .lp-sw::after{left:15px; background:var(--on-accent)}
+
   .scrim{position:fixed; inset:0; z-index:39; background:rgba(6,7,9,.62); backdrop-filter:blur(2px);
     opacity:0; pointer-events:none; transition:opacity .22s ease}
   .scrim.on{opacity:1; pointer-events:auto}
@@ -820,11 +837,14 @@
   .map-note.warn{color:var(--q1)}
   .mapview{position:relative; margin-top:11px; border-radius:16px; overflow:hidden; height:280px;
     border:1px solid var(--border); background:var(--ink)}
+  .mapview[hidden] + .map-note{display:block; padding:34px 16px; margin-top:11px; text-align:center;
+    border-radius:16px; border:1px dashed var(--gold-deep);
+    background:radial-gradient(120% 140% at 50% 20%, rgba(46,74,140,.28), rgba(10,17,34,.6) 70%); color:var(--plat-dim)}
   .mapview .leaflet-container{width:100%; height:100%; background:var(--ink); font-family:inherit}
-  .mapview .leaflet-tile-pane{filter:brightness(.82) contrast(1.12) saturate(1.35) sepia(.4) hue-rotate(-8deg)}
+  .mapview .leaflet-tile-pane{filter:brightness(.8) contrast(1.15) saturate(1.25) hue-rotate(152deg)}
   .mapview::after{content:""; position:absolute; inset:0; pointer-events:none; z-index:450;
-    box-shadow:inset 0 0 46px 6px rgba(6,9,18,.65);
-    background:radial-gradient(120% 90% at 50% 38%, transparent 55%, rgba(6,9,18,.34) 100%)}
+    box-shadow:inset 0 0 46px 6px rgba(8,14,36,.7);
+    background:radial-gradient(120% 90% at 50% 38%, transparent 55%, rgba(8,14,36,.4) 100%)}
   .mapview .leaflet-bar a{background:var(--ink); color:var(--plat-dim); border-bottom:1px solid var(--border)}
   .mapview .leaflet-bar a:hover{background:var(--surface-alt); color:var(--gold-bright)}
   .mapview .leaflet-control-attribution{background:rgba(10,17,34,.72); color:var(--text-muted);
@@ -846,7 +866,7 @@
   .mp-pop .mp-nav:hover{color:var(--champagne)}
   .mp-marker{width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
     font-size:11px; font-weight:700; color:var(--on-accent); border:2px solid rgba(255,255,255,.75);
-    box-shadow:0 2px 10px rgba(0,0,0,.5); animation:rowIn .38s var(--ease-out) both}
+    box-shadow:0 2px 10px rgba(0,0,0,.5), 0 0 14px 2px rgba(201,169,106,.55); animation:rowIn .38s var(--ease-out) both}
   @media(max-width:640px){ .mapview{height:220px} }
 </style>
 </head>
@@ -859,6 +879,10 @@
     </a>
     <div class="right">
       <a class="back" href="index.html">← На сайт</a>
+      <button class="panel-btn" id="layoutBtn" type="button" aria-expanded="false" aria-controls="layoutPop"
+              title="Выбери, какие блоки видны на главном экране">
+        <span class="pb-ic" aria-hidden="true">🧩</span><span>Блоки</span>
+      </button>
       <button class="panel-btn" id="panelBtn" type="button" aria-expanded="false" aria-controls="panel"
               title="Настройки, матрица, неделя, шаблоны, заметки и данные">
         <span class="pb-ic" aria-hidden="true">☰</span><span>Панель</span>
@@ -866,6 +890,7 @@
       </button>
     </div>
   </div>
+  <div class="layout-pop" id="layoutPop" hidden role="menu" aria-label="Блоки на главном экране"></div>
 </header>
 
 <main class="wrap">
@@ -1765,9 +1790,12 @@
   // Порядок точек — тот же planOrder(), что строит ol.plan: карта не заводит
   // вторую систему истины о порядке дня (волна 14 уже отказалась от этого для
   // карточной раскладки списка). Карта изолирована и ничего не меняет в
-  // renderPlan()/planOrder — только читает их результат. Появляется сама,
-  // как только у ≥2 дел на сегодня указано место; иначе экран как раньше.
-  var QCOLOR = {1:"var(--q1)", 2:"var(--q2)", 3:"var(--q3)", 4:"var(--q4)"};
+  // renderPlan()/planOrder — только читает их результат. Карточка теперь
+  // видна на экране всегда; сама карта (и сетевой запрос к Leaflet) грузится
+  // только когда есть хотя бы одно место — при 0 местах вместо неё premium-
+  // заглушка, чтобы самотесты (они гоняют этот же render() на живом DOM) не
+  // дёргали CDN. Маркеры — все одного золотого тона (единый премиальный
+  // маршрут); приоритет дела уже виден цветом в самом списке слева.
   var mapState = { map:null, layer:null };
   function tasksForMap(){ return planOrder().filter(function(t){ return t.loc && !t.done; }); }
   function renderMapCard(){
@@ -1775,8 +1803,13 @@
         note=document.getElementById("mapNote");
     if(!card || !view) return;
     var pts = tasksForMap();
-    if(pts.length<2){ card.hidden=true; view.hidden=true; if(note) note.textContent=""; return; }
-    card.hidden=false; view.hidden=false;
+    card.hidden=false;
+    if(pts.length<1){
+      view.hidden=true;
+      if(note){ note.textContent="Укажи место у дела — здесь появится маршрут."; note.className="map-note"; }
+      return;
+    }
+    view.hidden=false;
     loadLeaflet(function(){ buildMapView(pts); }, function(){
       view.hidden=true;
       if(note){ note.textContent="Карту не загрузил — сеть подвела. Места остаются в списке дел."; note.className="map-note warn"; }
@@ -1823,7 +1856,7 @@
       mapState.layer.clearLayers();
       var bounds=[];
       pts.forEach(function(t, i){
-        var color = QCOLOR[quadOf(t)] || "var(--gold)";
+        var color = "linear-gradient(135deg,var(--gold-bright),var(--gold) 55%,var(--gold-deep))";
         var icon = L.divIcon({ className:"mp-marker-wrap", html:'<div class="mp-marker" style="background:'+color+'">'+(i+1)+'</div>', iconSize:[26,26], iconAnchor:[13,13] });
         var mk = L.marker([t.loc.lat, t.loc.lon], { icon:icon }).addTo(mapState.layer);
         mk.bindPopup(mapPopup(t, i, color));
@@ -1883,6 +1916,7 @@
     renderFocusTimer();
     renderMapCard();
     if(typeof updatePanelDot==="function") updatePanelDot();
+    applyLayoutPrefs();
   }
 
   // ===== «Начни с этого» — одна первая задача по приоритету =====
@@ -4216,19 +4250,20 @@
       var km=haversineKm({lat:55.7558,lon:37.6173},{lat:59.9311,lon:30.3609});
       return km>600 && km<670;
     });
-    // Ветка с ≥2 местами намеренно не тестируется здесь — она реально дёргает
+    // Ветка с реальным маршрутом намеренно не тестируется здесь — она дёргает
     // loadLeaflet()/CDN, а самотесты не должны трогать сеть.
-    T("renderMapCard: карточка скрыта при 0 местах", function(){
+    T("renderMapCard: карточка видна и при 0 местах, но карта/сеть не запускаются", function(){
       var keep=tasks.slice();
       try{
         tasks.length=0;
         tasks.push({id:"stm1",text:"а",urgent:false,important:false,done:false,
                     time:null,dur:null,defer:null,repeat:null,doneOn:null});
         render();
-        return document.getElementById("mapCard").hidden===true;
+        var card=document.getElementById("mapCard"), view=document.getElementById("mapView");
+        return card.hidden===false && view.hidden===true;
       } finally { tasks.length=0; keep.forEach(function(x){tasks.push(x);}); render(); }
     });
-    T("renderMapCard: карточка скрыта при 1 месте (нужно ≥2)", function(){
+    T("renderMapCard: карточка видна при 1 месте", function(){
       var keep=tasks.slice();
       try{
         tasks.length=0;
@@ -4236,7 +4271,7 @@
                     time:null,dur:null,defer:null,repeat:null,doneOn:null,
                     loc:{lat:55.75,lon:37.61,label:"Офис",addr:"Офис"}});
         render();
-        return document.getElementById("mapCard").hidden===true;
+        return document.getElementById("mapCard").hidden===false;
       } finally { tasks.length=0; keep.forEach(function(x){tasks.push(x);}); render(); }
     });
 
@@ -4611,6 +4646,80 @@
     if(/^#panel/.test(location.hash)) openPanel(hashSec(), true);
     else openSection(panelPrefs().sec || "matrix", false);
     updatePanelDot();
+  })();
+
+  // ===== Блоки на главном экране: пользователь сам выбирает, что видно =====
+  // Ядро экрана (список дел, прогресс) не переключается — только необязательные
+  // карточки. Хранится отдельным ключом, по умолчанию всё включено — для уже
+  // существующих пользователей ничего не меняется, пока они не откроют панель.
+  var LAYOUT_KEY = "superday_layout_v1";
+  var LAYOUT_BLOCKS = [
+    { id:"mapCard", name:"Карта дел" },
+    { id:"rolloverBar", name:"Новый день" },
+    { id:"intentionBar", name:"Намерение дня" },
+    { id:"focusCard", name:"Начни с этого" }
+  ];
+  function layoutPrefs(){
+    var out={};
+    LAYOUT_BLOCKS.forEach(function(b){ out[b.id]=true; });
+    try{
+      var saved=JSON.parse(localStorage.getItem(LAYOUT_KEY)||"{}");
+      LAYOUT_BLOCKS.forEach(function(b){ if(saved[b.id]===false) out[b.id]=false; });
+    }catch(e){}
+    return out;
+  }
+  function saveLayoutPrefs(p){
+    try{ localStorage.setItem(LAYOUT_KEY, JSON.stringify(p)); }catch(e){}
+  }
+  // Финальный фильтр видимости: применяется последним в render(), поверх уже
+  // вычисленной логики каждого блока — если блок выключен в настройках,
+  // форсирует hidden=true, ничего в самой логике показа не меняя.
+  function applyLayoutPrefs(){
+    var p=layoutPrefs();
+    LAYOUT_BLOCKS.forEach(function(b){
+      if(p[b.id]===false){
+        var el=document.getElementById(b.id);
+        if(el) el.hidden=true;
+      }
+    });
+  }
+  (function initLayoutPop(){
+    var btn=document.getElementById("layoutBtn"), pop=document.getElementById("layoutPop");
+    if(!btn || !pop) return;
+    function buildPop(){
+      pop.innerHTML="";
+      var title=document.createElement("div");
+      title.className="lp-title"; title.textContent="Блоки на главном экране";
+      pop.appendChild(title);
+      var p=layoutPrefs();
+      LAYOUT_BLOCKS.forEach(function(b){
+        var item=document.createElement("button");
+        item.type="button"; item.className="lp-item"; item.setAttribute("role","menuitemcheckbox");
+        item.setAttribute("aria-pressed", p[b.id]!==false ? "true" : "false");
+        var label=document.createElement("span"); label.textContent=b.name;
+        var sw=document.createElement("span"); sw.className="lp-sw"; sw.setAttribute("aria-hidden","true");
+        item.appendChild(label); item.appendChild(sw);
+        item.addEventListener("click", function(){
+          var cur=layoutPrefs();
+          cur[b.id]=!(cur[b.id]!==false);
+          saveLayoutPrefs(cur);
+          item.setAttribute("aria-pressed", cur[b.id] ? "true" : "false");
+          render();
+        });
+        pop.appendChild(item);
+      });
+    }
+    function openPop(){ buildPop(); pop.hidden=false; btn.setAttribute("aria-expanded","true"); }
+    function closePop(){ pop.hidden=true; btn.setAttribute("aria-expanded","false"); }
+    btn.addEventListener("click", function(){ pop.hidden ? openPop() : closePop(); });
+    document.addEventListener("click", function(e){
+      if(pop.hidden) return;
+      if(e.target===btn || btn.contains(e.target) || pop.contains(e.target)) return;
+      closePop();
+    });
+    document.addEventListener("keydown", function(e){
+      if(e.key==="Escape" && !pop.hidden) closePop();
+    });
   })();
 
   function hashSec(){

@@ -1,18 +1,18 @@
-/* SUPER DAY — слой интуитивности (волна 11).
+/* SUPER DAY — слой интуитивности (волна 11, волна «карта+чистый экран» правит п.2).
 
-   Пять вещей, которых в приложении не было, и все они делаются снаружи —
-   ни одной правки в логике app.html:
+   Всё делается снаружи — ни одной правки в логике app.html:
 
    1. Живой разбор ввода. Пока человек печатает, под полем зажигаются чипы:
       что понято как время, длительность, повтор, перенос. Раньше синтаксис
       объяснялся текстом подсказки — теперь он виден ДО добавления.
-   2. Кликабельные примеры вместо пустого экрана: первая задача в одно нажатие.
-   3. Отмена разрушительного действия. «Очистить всё» и «Убрать выполненные»
+   2. Отмена разрушительного действия. «Очистить всё» и «Убрать выполненные»
       получают снимок состояния и кнопку «Отменить» — страх нажать исчезает.
-   4. Куда попадёт дело — видно заранее, и без выдумок: показывается настоящий
+   3. Куда попадёт дело — видно заранее, и без выдумок: показывается настоящий
       квадрант по текущим флажкам, а слова-маркеры («срочно», «urgent») лишь
       ПРЕДЛАГАЮТ поставить флажок, а не ставят его сами.
-   5. Клавиатура: «/» — в поле ввода, «?» — «Как это работает».
+   4. Клавиатура: «/» — в поле ввода, «?» — «Как это работает». (Кликабельные
+      примеры-подсказки под списком дел — убраны по требованию пользователя:
+      отвлекали на главном экране.)
 
    Разбор ввода зовёт глобальные парсеры приложения (parseTime, parseDuration,
    parseRepeatPhrase, parseDay). Если подключён i18n.js, они уже обёрнуты и
@@ -65,32 +65,6 @@
       ru: "Вернул как было", en: "Restored", es: "Restaurado",
       de: "Wiederhergestellt", fr: "Rétabli", zh: "已恢复"
     },
-    tryTitle: {
-      ru: "Попробуй так — нажми, и фраза попадёт в поле:",
-      en: "Try one — tap and the phrase goes into the field:",
-      es: "Prueba uno — al pulsar, la frase va al campo:",
-      de: "Probier eines — ein Tipp setzt den Satz ins Feld:",
-      fr: "Essaie — un appui met la phrase dans le champ :",
-      zh: "试试看——点击后短语会填入输入框："
-    },
-    keysHint: {
-      ru: "Клавиши: / — в поле ввода, ? — как это работает",
-      en: "Keys: / — jump to the field, ? — how it works",
-      es: "Teclas: / — ir al campo, ? — cómo funciona",
-      de: "Tasten: / — ins Feld, ? — so funktioniert es",
-      fr: "Touches : / — aller au champ, ? — comment ça marche",
-      zh: "快捷键：/ 跳到输入框，? 查看用法"
-    }
-  };
-
-  // Примеры показывают ровно тот синтаксис, который понимают парсеры этого языка.
-  var EXAMPLES = {
-    ru: ["позвонить маме в 15:00", "зарядка каждый день в 7 утра", "отчёт на 2 часа"],
-    en: ["call mom at 3pm", "workout every day at 7am", "report for 2 hours"],
-    es: ["llamar a mamá a las 15:00", "ejercicio todos los días a las 7", "informe durante 2 horas"],
-    de: ["Mama anrufen um 15:00", "Sport jeden Tag um 7", "Bericht 2 Stunden"],
-    fr: ["appeler maman à 15:00", "sport tous les jours à 7h", "rapport 2 heures"],
-    zh: ["给妈妈打电话 15:00", "锻炼 每天 早上7点", "报告 2小时"]
   };
 
   // Слова-маркеры: они НЕ меняют приоритет сами, а лишь предлагают флажок.
@@ -225,45 +199,6 @@
     });
   }
 
-  // ===== 2. Кликабельные примеры вместо пустого экрана =====
-  function mountExamples() {
-    var empty = $("planEmpty");
-    if (!empty || $("uxExamples")) return;
-    var box = document.createElement("div");
-    box.id = "uxExamples";
-    box.className = "ux-examples";
-    var title = document.createElement("div");
-    title.className = "ux-ex-title";
-    title.textContent = pick(TXT.tryTitle);
-    box.appendChild(title);
-    (EXAMPLES[lang()] || EXAMPLES.en).forEach(function (phrase) {
-      var b = document.createElement("button");
-      b.type = "button";
-      b.className = "ux-ex";
-      b.textContent = phrase;
-      b.addEventListener("click", function () {
-        var input = $("taskInput");
-        if (!input) return;
-        input.value = phrase;
-        input.focus();
-        buildChips();
-      });
-      box.appendChild(b);
-    });
-    var keys = document.createElement("div");
-    keys.className = "ux-ex-keys";
-    keys.textContent = pick(TXT.keysHint);
-    box.appendChild(keys);
-    empty.parentNode.insertBefore(box, empty.nextSibling);
-
-    // Примеры живут ровно там же, где подсказка пустого состояния.
-    function syncVisibility() { box.hidden = !!empty.hidden; }
-    syncVisibility();
-    if (window.MutationObserver) {
-      new MutationObserver(syncVisibility).observe(empty, { attributes: true, attributeFilter: ["hidden"] });
-    }
-  }
-
   // ===== 3. Отмена разрушительного действия =====
   var toastBox = null, toastTimer = null;
 
@@ -367,12 +302,6 @@
       ".ux-chip-pop{animation:uxChipPop .3s ease}" +
       "@keyframes uxChipPop{0%{transform:scale(1)}35%{transform:scale(1.14);" +
       "background:rgba(212,175,55,.34);border-style:solid}100%{transform:scale(1)}}" +
-      ".ux-examples{margin:11px 0 0;display:flex;flex-direction:column;gap:7px;align-items:flex-start}" +
-      ".ux-ex-title{font-size:12.5px;opacity:.66}" +
-      ".ux-ex{padding:7px 12px;border-radius:10px;border:1px dashed rgba(212,175,55,.4);" +
-      "background:rgba(255,255,255,.03);color:inherit;font:inherit;font-size:13px;cursor:pointer;text-align:left}" +
-      ".ux-ex:hover{background:rgba(212,175,55,.12);border-style:solid}" +
-      ".ux-ex-keys{font-size:11.5px;opacity:.45;margin-top:2px}" +
       ".ux-undo{position:fixed;left:12px;right:12px;bottom:12px;z-index:9998;display:none;align-items:center;" +
       "gap:10px;padding:11px 13px;border-radius:12px;border:1px solid rgba(212,175,55,.35);" +
       "background:rgba(16,18,22,.96);color:#eee;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.45)}" +
@@ -380,10 +309,8 @@
       ".ux-undo span{flex:1;min-width:0}" +
       ".ux-undo-btn{padding:6px 12px;border-radius:9px;border:1px solid rgba(212,175,55,.5);" +
       "background:rgba(212,175,55,.14);color:#f0d98a;font:inherit;cursor:pointer}" +
-      "@media(min-width:760px){.ux-undo{left:auto;right:18px;bottom:18px;max-width:420px}" +
-      ".ux-examples{flex-direction:row;flex-wrap:wrap;align-items:center}" +
-      ".ux-ex-title{width:100%}}" +
-      "@media (prefers-reduced-motion: reduce){.ux-chip,.ux-ex,#taskInput{transition:none}" +
+      "@media(min-width:760px){.ux-undo{left:auto;right:18px;bottom:18px;max-width:420px}}" +
+      "@media (prefers-reduced-motion: reduce){.ux-chip,#taskInput{transition:none}" +
       ".ux-chip-pop{animation:none}}";
     (document.head || document.documentElement).appendChild(css);
   }
@@ -392,7 +319,6 @@
     if (!$("taskInput") && !$("planEmpty")) return;   // не страница приложения
     style();
     mountChips();
-    mountExamples();
     guard("clearDone", TXT.undoneDone);
     guard("clearAll", TXT.undoneAll);
     keys();
