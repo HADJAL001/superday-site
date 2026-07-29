@@ -297,10 +297,6 @@
   .backup-remind{flex-basis:100%; text-align:center; font-size:11.5px; color:var(--champagne); margin-top:3px; line-height:1.4}
   .backup-remind[hidden]{display:none}
 
-  /* Подсказка «как пользоваться» под полем ввода */
-  .composer-help{margin-top:10px; font-size:12px; color:var(--text-dim); line-height:1.5}
-  .composer-help b{color:var(--champagne); font-weight:600}
-
   /* ===== Статистика недели + серия дней ===== */
   .stats{max-width:760px; margin:26px auto 0; background:linear-gradient(160deg,rgba(17,27,48,.72),rgba(8,13,26,.72));
     border:1px solid var(--hair-soft); border-radius:18px; padding:18px 20px}
@@ -650,7 +646,7 @@
   .intro h1{line-height:1.06; letter-spacing:-.015em}
   .intro p{font-size:15px}
   .route h3,.stats-head h3,.tpl-head h3,.notes-head h3,.panel-head h2{letter-spacing:-.01em}
-  .pg-lead,.composer-help{line-height:1.62}
+  .pg-lead{line-height:1.62}
 
   /* Платиновая заливка — одна декларация на все первичные действия. */
   .add-btn,.focus .fx-done,.ro-primary,.ul-ok,.tpl-list .tpl-load,.ob-close,.ds-unload,
@@ -825,13 +821,19 @@
   .leaflet-control-attribution a{text-decoration:none}
   .leaflet-control-attribution svg{display:inline; vertical-align:baseline}
 
-  /* ===== Карта — карточка в потоке, как .route (не фон всего экрана) ===== */
-  .mapcard{position:relative; height:320px; border-radius:16px; overflow:hidden;
-    border:1px solid var(--border); background:var(--ink); margin:0 0 14px}
+  /* ===== Карта — фон всего главного экрана (как волна 31), не карточка ===== */
+  .mapcard{position:fixed; inset:0; z-index:0; height:100vh; overflow:hidden; background:var(--ink)}
   .mapview{position:absolute; inset:0; width:100%; height:100%; background:var(--ink)}
   .mapview .leaflet-container{width:100%; height:100%; background:var(--ink); font-family:inherit}
+  .mapview .leaflet-tile-pane{filter:brightness(.62) contrast(1.12) saturate(.7) hue-rotate(178deg)}
+  .mapcard::after{content:""; position:absolute; inset:0; pointer-events:none; z-index:450;
+    box-shadow:inset 0 0 90px 20px rgba(6,10,26,.85);
+    background:radial-gradient(120% 90% at 50% 30%, rgba(10,20,48,.35) 0%, rgba(6,10,26,.82) 100%)}
   .map-stats{margin:0 0 14px; font-size:12.5px; color:var(--text-dim); display:flex; gap:14px; flex-wrap:wrap}
   .map-stats b{color:var(--text); font-weight:700}
+  .mapview .leaflet-control-attribution{background:rgba(6,10,26,.72); color:var(--text-muted);
+    border-radius:8px 0 0 0; padding:2px 7px}
+  .mapview .leaflet-control-attribution a{color:var(--plat-dim)}
   .mapview .leaflet-bar a{background:var(--ink); color:var(--plat-dim); border-bottom:1px solid var(--border)}
   .mapview .leaflet-bar a:hover{background:var(--surface-alt); color:var(--plat-bright,var(--platinum))}
   .mapview .leaflet-popup-content-wrapper{background:var(--surface); color:var(--text);
@@ -854,6 +856,9 @@
 </style>
 </head>
 <body>
+<div class="mapcard" id="mapCard" aria-hidden="true">
+  <div class="mapview" id="mapView" aria-label="Карта дня — точки дел и маршрут"></div>
+</div>
 <header>
   <div class="wrap bar">
     <a class="brand" href="index.html">
@@ -880,7 +885,7 @@
   <section class="intro">
     <span class="eyebrow">Планировщик дня · без регистрации</span>
     <h1>Список дел превращается<br><span class="g">в порядок действий.</span></h1>
-    <p>Задачи — текстом или голосом. Приложение расставит их по важности. <button type="button" class="inline-link" id="introHelp">Как это устроено</button> · остальные разделы — в <button type="button" class="inline-link" id="introPanel">Панели</button>.</p>
+    <p><button type="button" class="inline-link" id="introHelp">Как это устроено</button> · <button type="button" class="inline-link" id="introPanel">Панели</button></p>
   </section>
 
   <section class="onboard" id="onboard" hidden aria-label="Как это работает">
@@ -902,11 +907,10 @@
       <button class="mic-btn" id="micBtn" type="button" title="Продиктовать задачу голосом" aria-label="Продиктовать задачу голосом" aria-pressed="false">&#127908;</button>
       <button class="add-btn" id="addBtn" type="button">Добавить</button>
     </div>
-    <div class="composer-help">Время и повтор пишутся прямо в тексте: «позвонить маме <b>в 15:00</b>».</div>
     <div class="toggles">
       <span class="tg u" id="tgUrgent" role="button" tabindex="0" aria-pressed="false">🔥 Срочно</span>
       <span class="tg i" id="tgImportant" role="button" tabindex="0" aria-pressed="false">⭐ Важно</span>
-      <span class="hint" id="quadHint" role="status" aria-live="polite">→ приоритет определится сам</span>
+      <span class="hint" id="quadHint" role="status" aria-live="polite"></span>
     </div>
   </section>
 
@@ -946,15 +950,12 @@
 
   <section class="route" aria-label="Маршрут дня">
     <h3>Сегодня</h3>
-    <div class="mapcard" id="mapCard" aria-hidden="true">
-      <div class="mapview" id="mapView" aria-label="Карта дня — точки дел и маршрут"></div>
-    </div>
     <p class="map-stats" id="mapStats" hidden></p>
     <div class="day-summary" id="daySummary" hidden aria-live="polite"></div>
     <ol class="plan" id="planList"></ol>
-    <div class="empty" id="planEmpty">Пока пусто. Первая добавленная задача соберёт маршрут дня.</div>
+    <div class="empty" id="planEmpty">Пока пусто</div>
     <div class="bar-wrap"><div class="bar-fill" id="barFill"></div></div>
-    <div class="done-line" id="doneLine">0 из 0 выполнено</div>
+    <div class="done-line" id="doneLine">0 / 0</div>
     <div class="day-verdict" id="dayVerdict" hidden aria-live="polite"></div>
     <div class="day-constellation" id="dayConstellation" hidden aria-label="Созвездие дней — история закрытых дней"></div>
   </section>
@@ -1586,7 +1587,7 @@
 
   function refreshHint(){
     var q = quadOf({urgent:pend.urgent, important:pend.important});
-    quadHint.textContent = (pend.urgent||pend.important) ? QUAD_NAME[q] : "→ приоритет определится сам";
+    quadHint.textContent = (pend.urgent||pend.important) ? QUAD_NAME[q] : "";
   }
   function togglePend(key, el){
     pend[key] = !pend[key];
@@ -1672,7 +1673,7 @@
         tm.title = (rel? rel+" · ":"") + "Нажми, чтобы изменить время";
         tm.setAttribute("aria-label","Время дела "+t.time+(et?", до "+et:"")+(rel?", "+rel:"")+". Нажми, чтобы изменить.");
       } else {
-        tm.textContent = "＋время";
+        tm.textContent = "🕐";
         tm.title = "Задать время дела";
         tm.setAttribute("aria-label","Задать время дела");
       }
@@ -1684,7 +1685,7 @@
         dr.title = fmtDur(t.dur)+" · нажми, чтобы изменить длительность";
         dr.setAttribute("aria-label","Длительность "+fmtDur(t.dur)+". Нажми, чтобы изменить.");
       } else {
-        dr.textContent = "＋длительность";
+        dr.textContent = "⏳";
         dr.title = "Задать длительность дела";
         dr.setAttribute("aria-label","Задать длительность дела");
       }
@@ -1697,14 +1698,14 @@
         rp.title = (off ? "Сегодня не по расписанию — дело ждёт своего дня. " : "")+"Нажми, чтобы изменить повтор";
         rp.setAttribute("aria-label","Повтор: "+repLbl+(off?", сегодня не по расписанию":"")+". Нажми, чтобы изменить.");
       } else {
-        rp.textContent = "＋повтор";
+        rp.textContent = "🔁";
         rp.title = "Сделать дело регулярным — каждый день, по будням или в выбранные дни";
         rp.setAttribute("aria-label","Сделать дело регулярным");
       }
       rp.addEventListener("click", function(){ editTaskRepeat(t); });
       var df = document.createElement("button"); df.type="button";
       df.className = "tdef" + (def ? " on" : "");
-      df.textContent = def ? ("→ "+(fmtDefer(t.defer)||"перенесено")) : "→ завтра";
+      df.textContent = def ? ("→ "+(fmtDefer(t.defer)||"перенесено")) : "📅";
       df.title = def ? "Перенесено на "+t.defer+" · нажми, чтобы выбрать другой день или вернуть сегодня"
                      : "Перенести на завтра — уйдёт из сегодняшнего маршрута и бюджета, но не потеряется";
       df.setAttribute("aria-label", (def?"Перенесено на "+t.defer+". Нажми, чтобы выбрать другой день или вернуть сегодня: ":"Перенести на завтра: ")+t.text);
@@ -1719,7 +1720,7 @@
         lc.title = (t.loc.addr && t.loc.addr!==t.loc.label ? t.loc.addr+" · " : "")+"Нажми, чтобы изменить место";
         lc.setAttribute("aria-label","Место: "+t.loc.label+". Нажми, чтобы изменить.");
       } else {
-        lc.textContent = "＋место";
+        lc.textContent = "📍";
         lc.title = "Задать место дела — появится на карте дел";
         lc.setAttribute("aria-label","Задать место дела");
       }
@@ -1732,7 +1733,7 @@
         cx.title = "Сфера жизни: "+CTX_LABEL[ctxVal]+" · нажми, чтобы сменить";
         cx.setAttribute("aria-label","Сфера жизни: "+CTX_LABEL[ctxVal]+". Нажми, чтобы сменить.");
       } else {
-        cx.textContent = "＋сфера";
+        cx.textContent = "🌐";
         cx.title = "Отметить сферу жизни — работа, дом или здоровье (для баланса недели)";
         cx.setAttribute("aria-label","Отметить сферу жизни дела");
       }
@@ -1805,8 +1806,8 @@
     }, 60);
   }
 
-  // ===== Карта: карточка в потоке внутри «Маршрут дня» (волна 32 вернула её
-  // из полноэкранного фона волны 31 — основатель прямо это потребовал) =====
+  // ===== Карта: фон всего главного экрана (волна 33 вернула фон волны 31 —
+  // основатель прямо это потребовал; волна 32 держала её карточкой в потоке) =====
   // Порядок точек — тот же planOrder(), что строит ol.plan: карта не заводит
   // вторую систему истины о порядке дня (волна 14 уже отказалась от этого для
   // карточной раскладки списка). Карта изолирована и ничего не меняет в
@@ -1867,8 +1868,12 @@
     var view=document.getElementById("mapView");
     if(!view || !window.L) return;
     if(!mapState.map){
-      mapState.map = L.map(view, { attributionControl:false, zoomControl:true });
+      mapState.map = L.map(view, { attributionControl:true, zoomControl:true });
       mapState.map.setView(mapState.userLoc ? [mapState.userLoc.lat, mapState.userLoc.lon] : [20,10], mapState.userLoc?12:2);
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png", {
+        subdomains:"abcd", maxZoom:19,
+        attribution:'&copy; OpenStreetMap, &copy; CARTO'
+      }).addTo(mapState.map);
       mapState.layer = L.layerGroup().addTo(mapState.map);
     } else {
       mapState.layer.clearLayers();
@@ -2621,7 +2626,7 @@
     });
     planEmpty.style.display = order.length ? "none" : "block";
     var done = order.filter(function(t){return t.done;}).length;
-    fxRoll(document.getElementById("doneLine"), done + " из " + order.length + " выполнено");
+    fxRoll(document.getElementById("doneLine"), done + " / " + order.length);
     document.getElementById("barFill").style.width = order.length ? (done/order.length*100)+"%" : "0";
     fxPlanBuilt(ol);
     renderDaySummary(order, conflict);
@@ -2795,7 +2800,6 @@
       var chev=document.createElement("span"); chev.className="pg-chev"; chev.setAttribute("aria-hidden","true"); chev.textContent="▶";
       head.appendChild(ic); head.appendChild(title); head.appendChild(chev);
       var text=document.createElement("div"); text.className="ro-text";
-      text.appendChild(document.createTextNode("Сегодня ты — "));
       var b=document.createElement("b"); b.textContent="«"+intent.focus+"»"; text.appendChild(b);
       if(intent.note) text.appendChild(document.createTextNode(" — "+intent.note));
       var acts=document.createElement("div"); acts.className="ro-actions";
@@ -2812,8 +2816,6 @@
     var ic=document.createElement("span"); ic.className="pg-ic"; ic.setAttribute("aria-hidden","true"); ic.textContent="🎯";
     var title=document.createElement("span"); title.className="ro-title pg-title"; title.textContent="Намерение дня";
     head.appendChild(ic); head.appendChild(title);
-    var sub=document.createElement("div"); sub.className="ro-text";
-    sub.textContent="Не список дел, а один выбор о себе — кем ты сегодня будешь. Вечером итог дня напомнит его.";
     var chips=document.createElement("div"); chips.className="in-chips";
     chips.setAttribute("role","radiogroup"); chips.setAttribute("aria-label","Намерение дня");
     var chipEls=[]; var noteInput=document.createElement("input"); var selectedFocus=draft.focus;
@@ -2844,7 +2846,7 @@
     var ghost=document.createElement("button"); ghost.type="button"; ghost.className="ro-ghost"; ghost.textContent="Не сегодня";
     ghost.addEventListener("click", function(){ skipIntentionToday(); intentionDraft=null; renderIntentionBar(); });
     acts.appendChild(primary); acts.appendChild(ghost);
-    bar.appendChild(head); bar.appendChild(sub); bar.appendChild(chips); bar.appendChild(noteInput); bar.appendChild(acts);
+    bar.appendChild(head); bar.appendChild(chips); bar.appendChild(noteInput); bar.appendChild(acts);
   }
 
   // ===== Контекст дня: погода / пробки / топливо =====
@@ -3072,9 +3074,7 @@
     var title=document.createElement("span"); title.className="ro-title pg-title"; title.textContent="Маршрут по геолокации";
     head.appendChild(ic); head.appendChild(title);
     var text=document.createElement("div"); text.className="ro-text";
-    text.appendChild(document.createTextNode("Предлагаю начать с «"));
-    var b=document.createElement("b"); b.textContent=nearest.text; text.appendChild(b);
-    text.appendChild(document.createTextNode("» — так короче путь от твоего места."));
+    var b=document.createElement("b"); b.textContent="«"+nearest.text+"»"; text.appendChild(b);
     var acts=document.createElement("div"); acts.className="ro-actions";
     var primary=document.createElement("button"); primary.type="button"; primary.className="ro-primary";
     primary.textContent="Начать с этого";
@@ -3227,9 +3227,6 @@
     var ic=document.createElement("span"); ic.className="pg-ic"; ic.setAttribute("aria-hidden","true"); ic.textContent="🔄";
     var title=document.createElement("span"); title.className="ro-title pg-title"; title.textContent="Новый день ✨";
     head.appendChild(ic); head.appendChild(title);
-    var text=document.createElement("div"); text.className="ro-text";
-    text.innerHTML = "С прошлого дня осталось <b>"+undone+" "+plural(undone,["незавершённое дело","незавершённых дела","незавершённых дел"])+"</b>"
-      + (done? " и <b>"+done+" выполненных</b>":"") + ". Перенести незавершённые на сегодня и начать с чистого листа?";
     var acts=document.createElement("div"); acts.className="ro-actions";
     var primary=document.createElement("button"); primary.type="button"; primary.className="ro-primary";
     primary.textContent = done ? ("Перенести "+undone+", убрать выполненные") : "Начать новый день";
@@ -3245,7 +3242,7 @@
     ghost.textContent="Оставить всё как есть";
     ghost.addEventListener("click", function(){ advanceDay(); bar.hidden=true; bar.innerHTML=""; });
     acts.appendChild(primary); acts.appendChild(ghost);
-    bar.appendChild(head); bar.appendChild(text); bar.appendChild(acts);
+    bar.appendChild(head); bar.appendChild(acts);
   }
 
   // ===== Перетаскивание задач между квадрантами (мышь + палец) =====
@@ -4394,11 +4391,11 @@
     });
     // Ветка с реальным маршрутом намеренно не тестируется здесь — она дёргает
     // loadLeaflet()/CDN, а самотесты не должны трогать сеть.
-    T("renderMapCard: карта — карточка в потоке (волна 32 вернула из fixed-фона)", function(){
+    T("renderMapCard: карта — фон главного экрана (волна 33 вернула fixed-фон)", function(){
       var card=document.getElementById("mapCard"), view=document.getElementById("mapView");
       if(!card || !view) return false;
-      var pos = getComputedStyle(card).position;
-      return card.hasAttribute("hidden")===false && pos!=="fixed";
+      var cs = getComputedStyle(card);
+      return card.hasAttribute("hidden")===false && cs.position==="fixed" && cs.zIndex==="0";
     });
     T("renderMapCard: в режиме самотеста карта/сеть/геолокация не запускаются", function(){
       var keep=tasks.slice();
