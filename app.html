@@ -52,6 +52,7 @@
     --hair:rgba(158,178,214,0.26); --hair-soft:rgba(158,178,214,0.11);
     --grad-gold:linear-gradient(120deg,#9A7B3E 0%,#C9A96A 24%,#E6D2A2 46%,#C9A96A 62%,#A98545 80%,#E6D2A2 100%);
     --grad-plat:linear-gradient(120deg,#7C879E 0%,#C6CFDF 22%,#F4F7FC 44%,#BFC9DA 60%,#8B96AC 78%,#E4EAF4 100%);
+    --grad-red:linear-gradient(120deg,#F0958B,#E5766B);
     --q1:#F0837A; --q2:#D9B978; --q3:#79CFA6; --q4:#8FA3C8;
     --ease-out:cubic-bezier(.22,1,.36,1);
     /* Playfair Display — высокий контраст штриха, читается «дорого» и на мелких
@@ -90,10 +91,15 @@
   .intro h1 .g{background:var(--grad-gold); -webkit-background-clip:text; background-clip:text; color:transparent}
   .intro p{color:var(--text-dim); font-size:14.5px; line-height:1.65; max-width:560px; margin:0 auto}
 
-  /* Форма ввода */
-  .composer{margin:26px auto 8px; max-width:760px;
-    background:linear-gradient(180deg,rgba(29,44,76,.82),rgba(9,15,30,.72)); border:1px solid var(--border);
-    border-radius:18px; padding:16px; backdrop-filter:blur(14px)}
+  /* Форма ввода — плавающая панель поверх карты-фона, зафиксирована снизу
+     экрана (волна 35): карта теперь основа всего домашнего экрана, и ввод
+     дела должен быть достижим без прокрутки контента поверх неё. */
+  .composer{position:fixed; left:0; right:0; bottom:0; z-index:30; margin:0 auto;
+    max-width:760px; width:calc(100% - 24px);
+    background:linear-gradient(180deg,rgba(29,44,76,.92),rgba(9,15,30,.9)); border:1px solid var(--border);
+    border-radius:18px 18px 0 0; padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));
+    backdrop-filter:blur(16px); box-shadow:0 -18px 40px -14px rgba(0,0,0,.55)}
+  main.wrap{padding-bottom:132px}
   .composer .row1{display:flex; gap:10px; flex-wrap:wrap}
   .composer input[type=text]{flex:1 1 260px; min-width:0; background:var(--ink); border:1px solid var(--border);
     color:var(--text); border-radius:12px; padding:14px 15px; font-size:15px; font-family:inherit; outline:none}
@@ -200,11 +206,20 @@
     border-radius:8px; padding:6px 9px; font-size:13.5px; font-family:inherit; outline:none;
     box-shadow:0 0 0 3px rgba(201,169,106,.12)}
 
-  /* Маршрут дня */
-  .route{margin:22px auto 40px; max-width:760px;
-    background:linear-gradient(180deg,rgba(29,44,76,.78),rgba(9,15,30,.68)); border:1px solid var(--border);
-    border-radius:18px; padding:20px 22px; backdrop-filter:blur(14px)}
-  .route h3{font-family:var(--font-display); font-weight:700; font-size:22px; margin:0 0 4px}
+  /* Маршрут дня — окно дел: модалка, появляется по клику на маркер карты или
+     фокусу композера (волна 35), а не постоянная карточка в потоке. */
+  .route{position:fixed; left:0; right:0; bottom:0; z-index:42; margin:0 auto; max-width:760px; width:100%;
+    max-height:78vh; overflow-y:auto;
+    background:linear-gradient(180deg,rgba(29,44,76,.94),rgba(9,15,30,.92)); border:1px solid var(--border);
+    border-radius:20px 20px 0 0; padding:18px 22px calc(18px + env(safe-area-inset-bottom,0px));
+    backdrop-filter:blur(16px); box-shadow:0 -20px 50px -14px rgba(0,0,0,.6);
+    transform:translateY(102%); transition:transform .26s var(--ease-out); will-change:transform}
+  .route.open{transform:translateY(0)}
+  .route-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:4px}
+  .route-close{flex:0 0 auto; width:32px; height:32px; border-radius:50%; border:1px solid var(--border);
+    background:var(--ink); color:var(--text-dim); font-size:18px; line-height:1; cursor:pointer}
+  .route-close:hover{color:var(--text); border-color:var(--hair)}
+  .route h3{font-family:var(--font-display); font-weight:700; font-size:22px; margin:0}
   ol.plan{list-style:none; counter-reset:s; margin:0; padding:0; display:flex; flex-direction:column; gap:9px}
   ol.plan li{counter-increment:s; display:flex; align-items:center; gap:13px; font-size:14px}
   ol.plan li::before{content:counter(s); flex:0 0 auto; width:26px; height:26px; border-radius:50%;
@@ -249,7 +264,7 @@
   /* Доступность: видимый фокус для клавиатуры */
   :focus-visible{outline:2px solid var(--gold-bright); outline-offset:2px; border-radius:8px}
   .tg:focus-visible, .vm-toggle:focus-visible, li.task .chk:focus-visible, li.task .grip:focus-visible,
-  li.task .txt:focus-visible, ul.notelist li .txt:focus-visible, .in-chip:focus-visible{outline-offset:3px}
+  li.task .txt:focus-visible, ul.notelist li .txt:focus-visible{outline-offset:3px}
 
   /* ===== Волна 34: клавиатура и одна рука =====
      Ссылка «к содержимому» — первая остановка Tab; видна только под фокусом,
@@ -525,10 +540,6 @@
   .dv-phrase{text-align:center; font-size:14.5px; line-height:1.5; color:var(--text); font-weight:600;
     background:linear-gradient(180deg,rgba(29,44,76,.5),rgba(9,15,30,.4)); border:1px solid var(--border);
     border-radius:14px; padding:14px 18px}
-  .dv-intent{text-align:center; font-size:12.5px; color:var(--text-dim); line-height:1.5; margin-bottom:8px}
-  .dv-intent b{color:var(--champagne)}
-  .dv-affirm{text-align:center; font-size:12.5px; color:var(--text-dim); font-style:italic; line-height:1.5; margin-top:10px}
-
   .day-constellation{max-width:760px; margin:10px auto 2px; text-align:center}
   .day-constellation[hidden]{display:none}
   .cst-line{fill:none; stroke:var(--hair); stroke-width:1}
@@ -554,13 +565,6 @@
   .ro-primary:hover{filter:brightness(1.06)}
   .ro-ghost{color:var(--text-dim); background:var(--ink)}
   .ro-ghost:hover{border-color:var(--gold); color:var(--text)}
-  .in-chips{display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:12px}
-  .in-chip{cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--text-muted);
-    background:var(--ink); border:1px solid var(--hair); border-radius:12px; padding:9px 14px; transition:.15s; text-align:left}
-  .in-chip:hover{border-color:var(--gold); color:var(--text)}
-  .in-chip.active{color:var(--champagne); border-color:var(--gold); background:rgba(201,169,106,.14)}
-  .in-note{display:block; width:100%; box-sizing:border-box; font-family:inherit; font-size:13px; color:var(--text);
-    background:var(--ink); border:1px solid var(--hair); border-radius:10px; padding:9px 12px; margin-bottom:12px}
 
   /* ===== Правая панель: всё второстепенное живёт здесь =====
      Слои по z-index: шапка 20 · рельс 21 · затемнение 39 · панель 40.
@@ -695,8 +699,11 @@
   .rail button:hover{background:linear-gradient(180deg,#263D68,#152444); color:var(--platinum); filter:none}
   .panel-btn .pb-ic{opacity:.9}
 
-  /* Глубина: мягкая тень наружу + волосяной блик по верхней кромке. */
-  .composer,.route,.focus,.focustimer,.pgroup,.stats,.rollover,.day-summary{
+  /* Глубина: мягкая тень наружу + волосяной блик по верхней кромке.
+     .composer и .route исключены: это плавающие панели, зафиксированные снизу
+     экрана (волна 35), у них своя тень вверх — общая тень «наружу вниз» её бы
+     перекрыла (более поздний селектор в каскаде той же специфичности). */
+  .focus,.focustimer,.pgroup,.stats,.rollover,.day-summary{
     box-shadow:0 26px 60px -38px rgba(0,0,0,.9), inset 0 1px 0 rgba(190,212,255,.055);
   }
 
@@ -717,7 +724,8 @@
   /* 2 · Луч-сканер. Один платиновый проход по карточке «Сегодня» в момент
         пересборки — физическая метафора «день просканирован заново». */
   @keyframes sweep{ from{transform:translateY(-130%)} to{transform:translateY(340%)} }
-  .route{position:relative}
+  /* .route уже position:fixed (волна 35) — тоже создаёт контекст позиционирования
+     для ::after ниже, отдельная position:relative тут раньше её бы перекрыла. */
   .route.scan{overflow:hidden}
   .route.scan::after{content:""; position:absolute; left:0; right:0; top:0; height:32%;
     pointer-events:none; animation:sweep 1s var(--ease-out) 1;
@@ -786,8 +794,7 @@
     .focus{flex-wrap:wrap} .focus .fx-done{width:100%} .focus .fx-focus{flex:1; margin-right:0}
     .focustimer{flex-wrap:wrap} .ft-actions{width:100%; justify-content:stretch} .ft-actions .ft-btn{flex:1}
     .day .col{height:52px} .day .lbl{font-size:9px}
-    .tpl-head{flex-wrap:wrap}
-    .in-chips{grid-template-columns:1fr} }
+    .tpl-head{flex-wrap:wrap} }
 
   /* ===== Leaflet — минимальный необходимый набор, инлайн (CSP: style-src без внешних источников).
         Урезано до того, что реально используется (свои div-иконки, свои попапы) — полный leaflet.css
@@ -862,9 +869,9 @@
   .map-stats b{color:var(--text); font-weight:700}
   .mapview .leaflet-control-attribution{background:rgba(6,10,26,.72); color:var(--text-muted);
     border-radius:8px 0 0 0; padding:2px 7px}
-  .mapview .leaflet-control-attribution a{color:var(--plat-dim)}
-  .mapview .leaflet-bar a{background:var(--ink); color:var(--plat-dim); border-bottom:1px solid var(--border)}
-  .mapview .leaflet-bar a:hover{background:var(--surface-alt); color:var(--plat-bright,var(--platinum))}
+  .mapview .leaflet-control-attribution a{color:var(--text-muted)}
+  .mapview .leaflet-bar a{background:var(--ink); color:var(--text-dim); border-bottom:1px solid var(--border)}
+  .mapview .leaflet-bar a:hover{background:var(--surface-alt); color:var(--text)}
   .mapview .leaflet-popup-content-wrapper{background:var(--surface); color:var(--text);
     border:1px solid var(--border); box-shadow:0 10px 30px rgba(0,0,0,.45)}
   .mapview .leaflet-popup-tip{background:var(--surface); border:1px solid var(--border)}
@@ -874,14 +881,19 @@
   .mp-pop .mp-num{display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px;
     border-radius:50%; font-size:10px; font-weight:700; color:var(--on-accent); margin-right:6px}
   .mp-pop .mp-text{font-size:13px; font-weight:600; color:var(--text)}
-  .mp-pop .mp-time{display:block; margin-top:4px; font-size:11px; color:var(--platinum)}
+  .mp-pop .mp-time{display:block; margin-top:4px; font-size:11px; color:var(--text-dim)}
   .mp-pop .mp-addr{display:block; margin-top:3px; font-size:11px; color:var(--text-muted); line-height:1.4}
   .mp-pop .mp-nav{display:inline-block; margin-top:8px; font-size:11.5px; font-weight:600;
-    color:var(--plat-dim); text-decoration:none; border-bottom:1px dashed var(--plat-deep)}
-  .mp-pop .mp-nav:hover{color:var(--platinum)}
+    color:#E5766B; text-decoration:none; border-bottom:1px dashed rgba(229,118,107,.4)}
+  .mp-pop .mp-nav:hover{color:#F0958B}
+  .mp-marker-wrap{animation:pulse 1.6s infinite}
   .mp-marker{width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
     font-size:11px; font-weight:700; color:var(--ink); border:2px solid rgba(255,255,255,.85);
-    box-shadow:0 2px 10px rgba(0,0,0,.5), 0 0 14px 2px rgba(222,228,238,.55); animation:rowIn .38s var(--ease-out) both}
+    box-shadow:0 2px 10px rgba(0,0,0,.5), 0 0 14px 2px rgba(229,118,107,.55); animation:rowIn .38s var(--ease-out) both}
+  .mp-me-wrap{animation:pulse 1s infinite; z-index:1000 !important}
+  .mp-me{width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:15px; background:var(--grad-red); border:2px solid rgba(255,255,255,.9);
+    box-shadow:0 2px 10px rgba(0,0,0,.5)}
 </style>
 </head>
 <body>
@@ -928,26 +940,9 @@
     </div>
   </section>
 
-  <section class="composer" aria-label="Добавить задачу">
-    <div class="row1">
-      <input type="text" id="taskInput" placeholder="Задача — например, «позвонить маме»…" autocomplete="off" />
-      <button class="mic-btn" id="micBtn" type="button" title="Продиктовать задачу голосом" aria-label="Продиктовать задачу голосом" aria-pressed="false">&#127908;</button>
-      <button class="add-btn" id="addBtn" type="button">Добавить</button>
-    </div>
-    <div class="toggles">
-      <span class="tg u" id="tgUrgent" role="button" tabindex="0" aria-pressed="false">🔥 Срочно</span>
-      <span class="tg i" id="tgImportant" role="button" tabindex="0" aria-pressed="false">⭐ Важно</span>
-      <span class="hint" id="quadHint" role="status" aria-live="polite"></span>
-    </div>
-  </section>
-
-
-
   <div class="rollover" id="rolloverBar" hidden role="region" aria-label="Новый день"></div>
 
   <div class="rollover" id="planSuggest" hidden role="region" aria-label="Маршрут по геолокации"></div>
-
-  <div class="rollover intention" id="intentionBar" hidden role="region" aria-label="Намерение дня"></div>
 
   <section class="focus" id="focusCard" hidden aria-live="polite" aria-label="Задача, с которой стоит начать">
     <span class="fx-ic" aria-hidden="true">▶</span>
@@ -975,20 +970,35 @@
     </div>
   </section>
 
-  <section class="route" aria-label="Маршрут дня">
-    <h3>Сегодня</h3>
-    <p class="map-stats" id="mapStats" hidden></p>
-    <div class="day-summary" id="daySummary" hidden aria-live="polite"></div>
-    <ol class="plan" id="planList"></ol>
-    <div class="empty" id="planEmpty">Пока пусто</div>
-    <div class="bar-wrap"><div class="bar-fill" id="barFill"></div></div>
-    <div class="done-line" id="doneLine">0 / 0</div>
-    <div class="day-verdict" id="dayVerdict" hidden aria-live="polite"></div>
-    <div class="day-constellation" id="dayConstellation" hidden aria-label="Созвездие дней — история закрытых дней"></div>
-  </section>
 </main>
+<section class="composer" id="composer" aria-label="Добавить задачу">
+  <div class="row1">
+    <input type="text" id="taskInput" placeholder="Задача — например, «позвонить маме»…" autocomplete="off" />
+    <button class="mic-btn" id="micBtn" type="button" title="Продиктовать задачу голосом" aria-label="Продиктовать задачу голосом" aria-pressed="false">&#127908;</button>
+    <button class="add-btn" id="addBtn" type="button">Добавить</button>
+  </div>
+  <div class="toggles">
+    <span class="tg u" id="tgUrgent" role="button" tabindex="0" aria-pressed="false">🔥 Срочно</span>
+    <span class="tg i" id="tgImportant" role="button" tabindex="0" aria-pressed="false">⭐ Важно</span>
+    <span class="hint" id="quadHint" role="status" aria-live="polite"></span>
+  </div>
+</section>
 <canvas class="fxlayer" id="fxLayer" aria-hidden="true"></canvas>
 <div class="scrim" id="scrim" aria-hidden="true"></div>
+<section class="route" id="routeSheet" hidden role="dialog" aria-modal="true" aria-labelledby="routeTitle" aria-label="Маршрут дня">
+  <div class="route-head">
+    <h3 id="routeTitle">Сегодня</h3>
+    <button class="route-close" id="routeClose" type="button" aria-label="Закрыть окно дел">&times;</button>
+  </div>
+  <p class="map-stats" id="mapStats" hidden></p>
+  <div class="day-summary" id="daySummary" hidden aria-live="polite"></div>
+  <ol class="plan" id="planList"></ol>
+  <div class="empty" id="planEmpty">Пока пусто</div>
+  <div class="bar-wrap"><div class="bar-fill" id="barFill"></div></div>
+  <div class="done-line" id="doneLine">0 / 0</div>
+  <div class="day-verdict" id="dayVerdict" hidden aria-live="polite"></div>
+  <div class="day-constellation" id="dayConstellation" hidden aria-label="Созвездие дней — история закрытых дней"></div>
+</section>
 <aside class="panel" id="panel" hidden role="dialog" aria-modal="true" aria-labelledby="panelTitle">
   <div class="panel-head">
     <h2 id="panelTitle">Панель<span class="ph-sub">всё, что не нужно каждую минуту</span></h2>
@@ -1849,8 +1859,9 @@
   // renderPlan()/planOrder — только читает их результат. Инициализируется один
   // раз (mapState.booted) и не переинициализируется на каждый render(), иначе
   // самотесты, гоняющие render() десятками на живом DOM, били бы по CDN и
-  // по геолокации на каждый вызов. Маркеры — платиновые, линия маршрута —
-  // асфальтовая (см. buildMapView) — маркеры не путать с дорогой.
+  // по геолокации на каждый вызов. Маркеры дел — красные и мигающие, линия
+  // маршрута — асфальтовая (см. buildMapView) — маркеры не путать с дорогой.
+  // Своя геолокация — отдельный красный мигающий значок человека (drawUserLoc).
   var mapState = { map:null, layer:null, userLoc:null, booted:false };
   var IS_SELFTEST = /[?&]selftest=1/.test(location.search||"");
   function tasksForMap(){ return planOrder().filter(function(t){ return t.loc && !t.done; }); }
@@ -1899,6 +1910,14 @@
     nav.textContent="Проложить туда →"; wrap.appendChild(nav);
     return wrap;
   }
+  // Свой значок геолокации — человек, отдельно от нумерованных дел, чтобы
+  // не путать «где я» с «куда ехать». Перерисовывается вместе с
+  // mapState.layer.clearLayers(), поэтому вызывается после каждой очистки слоя.
+  function drawUserLoc(){
+    if(!mapState.userLoc || !mapState.layer) return;
+    var icon = L.divIcon({ className:"mp-me-wrap", html:'<div class="mp-me">🧍</div>', iconSize:[30,30], iconAnchor:[15,15] });
+    L.marker([mapState.userLoc.lat, mapState.userLoc.lon], { icon:icon, interactive:false, keyboard:false, zIndexOffset:1000 }).addTo(mapState.layer);
+  }
   function buildMapView(pts){
     var view=document.getElementById("mapView");
     if(!view || !window.L) return;
@@ -1913,23 +1932,25 @@
     } else {
       mapState.layer.clearLayers();
     }
+    drawUserLoc();
     if(pts.length<1){
       setTimeout(function(){ if(mapState.map) mapState.map.invalidateSize(); }, 60);
       return;
     }
     buildRoute(pts, function(route){
       mapState.layer.clearLayers();
+      drawUserLoc();
       var bounds=[];
       pts.forEach(function(t, i){
-        var color = "var(--grad-plat)";
+        var color = "var(--grad-red)";
         var icon = L.divIcon({ className:"mp-marker-wrap", html:'<div class="mp-marker" style="background:'+color+'">'+(i+1)+'</div>', iconSize:[26,26], iconAnchor:[13,13] });
         var mk = L.marker([t.loc.lat, t.loc.lon], { icon:icon }).addTo(mapState.layer);
         mk.bindPopup(mapPopup(t, i, color));
-        mk.on("click", function(){ spotTask(t.id); });
+        mk.on("click", function(){ openTasksSheet(t.id); });
         bounds.push([t.loc.lat, t.loc.lon]);
       });
       if(route){
-        // Асфальт, не платина — маркеры мест платиновые, дорога должна читаться как дорога
+        // Асфальт — маркеры мест красные, дорога должна читаться как дорога
         var style = route.mode==="google" ? { color:"#3A3F47", weight:4, opacity:.95 }
                                            : { color:"#3A3F47", weight:2, opacity:.6, dashArray:"2 8" };
         L.polyline(route.coords, style).addTo(mapState.layer);
@@ -1987,7 +2008,6 @@
       if(emp) emp.style.display = counts[qi] ? "none" : "block";
     });
     renderFocus();
-    renderIntentionBar();
     updateBackupRemind();
     renderStats();
     renderPlan();
@@ -2501,8 +2521,7 @@
   }
 
   // Недельный Peak-End (Канеман): итоговая оценка недели по проценту закрытых
-  // дел за 7 дней, отдельно от дневной аффирмации (dayAffirmation — волна 19).
-  // Детерминированная ротация по проценту (не Math.random()), чтобы повторный
+  // дел за 7 дней. Детерминированная ротация по проценту (не Math.random()), чтобы повторный
   // показ той же недели давал ту же фразу. Источник данных — dlog (readDayLog,
   // {load, done, total} по дням), уже собирается для панели нагрузки недели.
   var WEEK_PEAK_HIGH=[
@@ -2786,102 +2805,6 @@
     if(!mins || mins<30 || mins>1440){ toast("Введи от 0.5 до 24 часов"); return; }
     try{ localStorage.setItem(DAYBUDGET_KEY, String(mins)); }catch(e){}
     render(); toast("Бюджет дня: "+fmtDur(mins));
-  }
-
-  // ===== Намерение дня: выбор идентичности (Гольвитцер), паритет с мобайлом =====
-  var INTENTION_KEY="superday_intention_v1";
-  var INTENTION_SKIP_KEY="superday_intention_skip";
-  var INTENTION_PRESETS=[
-    "Тот, кто доводит важное до конца",
-    "Тот, кто выбирает важное, а не срочное",
-    "Тот, кто держит слово себе",
-    "Тот, кто первым делает трудный шаг",
-    "Тот, кто остаётся спокойным и сфокусированным",
-    "Тот, кто бережёт время на главное"
-  ];
-  function loadIntention(){
-    var v=null; try{ v=JSON.parse(localStorage.getItem(INTENTION_KEY)||"null"); }catch(e){ v=null; }
-    if(!v || typeof v!=="object" || v.date!==todayKey() || typeof v.focus!=="string") return null;
-    return v;
-  }
-  function saveIntention(focus, note){
-    var v={ date:todayKey(), focus:focus, note:(note||"").trim()||undefined };
-    try{ localStorage.setItem(INTENTION_KEY, JSON.stringify(v)); localStorage.removeItem(INTENTION_SKIP_KEY); }catch(e){}
-    return v;
-  }
-  function intentionSkippedToday(){
-    try{ return localStorage.getItem(INTENTION_SKIP_KEY)===todayKey(); }catch(e){ return false; }
-  }
-  function skipIntentionToday(){ try{ localStorage.setItem(INTENTION_SKIP_KEY, todayKey()); }catch(e){} }
-  var AFFIRMATIONS=[
-    "День прожит с намерением, а не на автопилоте — и это видно по сделанному.",
-    "Каждое закрытое дело сегодня — в русле того, кем ты выбрал(а) быть.",
-    "Слово, данное себе утром, сегодня сдержано.",
-    "Не «был занят» — двигался(лась) к тому, что для тебя важно."
-  ];
-  function dayAffirmation(n){ return AFFIRMATIONS[((n%AFFIRMATIONS.length)+AFFIRMATIONS.length)%AFFIRMATIONS.length]; }
-
-  var intentionDraft=null; // черновик открытого пикера — не сохраняется, пока не нажали «Задать намерение»
-  function renderIntentionBar(){
-    var bar=document.getElementById("intentionBar"); if(!bar) return;
-    var intent=loadIntention();
-    function openIntentionEditor(){ intentionDraft={focus:intent.focus, note:intent.note||""}; renderIntentionBar(); }
-    if(intent && !intentionDraft){
-      bar.hidden=false; bar.innerHTML="";
-      var head=document.createElement("button"); head.type="button"; head.className="ro-head ro-head-btn";
-      head.addEventListener("click", openIntentionEditor);
-      var ic=document.createElement("span"); ic.className="pg-ic"; ic.setAttribute("aria-hidden","true"); ic.textContent="🎯";
-      var title=document.createElement("span"); title.className="ro-title pg-title"; title.textContent="Намерение дня";
-      var chev=document.createElement("span"); chev.className="pg-chev"; chev.setAttribute("aria-hidden","true"); chev.textContent="▶";
-      head.appendChild(ic); head.appendChild(title); head.appendChild(chev);
-      var text=document.createElement("div"); text.className="ro-text";
-      var b=document.createElement("b"); b.textContent="«"+intent.focus+"»"; text.appendChild(b);
-      if(intent.note) text.appendChild(document.createTextNode(" — "+intent.note));
-      var acts=document.createElement("div"); acts.className="ro-actions";
-      var edit=document.createElement("button"); edit.type="button"; edit.className="ro-ghost"; edit.textContent="Изменить";
-      edit.addEventListener("click", openIntentionEditor);
-      acts.appendChild(edit);
-      bar.appendChild(head); bar.appendChild(text); bar.appendChild(acts);
-      return;
-    }
-    if(!intent && !intentionDraft && intentionSkippedToday()){ bar.hidden=true; bar.innerHTML=""; return; }
-    var draft=intentionDraft || {focus:INTENTION_PRESETS[0], note:""};
-    bar.hidden=false; bar.innerHTML="";
-    var head=document.createElement("div"); head.className="ro-head";
-    var ic=document.createElement("span"); ic.className="pg-ic"; ic.setAttribute("aria-hidden","true"); ic.textContent="🎯";
-    var title=document.createElement("span"); title.className="ro-title pg-title"; title.textContent="Намерение дня";
-    head.appendChild(ic); head.appendChild(title);
-    var chips=document.createElement("div"); chips.className="in-chips";
-    chips.setAttribute("role","radiogroup"); chips.setAttribute("aria-label","Намерение дня");
-    var chipEls=[]; var noteInput=document.createElement("input"); var selectedFocus=draft.focus;
-    INTENTION_PRESETS.forEach(function(preset){
-      var chip=document.createElement("button"); chip.type="button";
-      chip.className="in-chip"+(preset===selectedFocus?" active":"");
-      chip.textContent=preset;
-      chip.setAttribute("role","radio"); chip.setAttribute("aria-checked", preset===selectedFocus?"true":"false");
-      chip.addEventListener("click", function(){
-        selectedFocus=preset;
-        chipEls.forEach(function(c){
-          var on=c===chip; c.classList.toggle("active", on); c.setAttribute("aria-checked", on?"true":"false");
-        });
-      });
-      chipEls.push(chip); chips.appendChild(chip);
-    });
-    noteInput.type="text"; noteInput.className="in-note";
-    noteInput.placeholder="Своими словами (необязательно)"; noteInput.maxLength=120; noteInput.value=draft.note||"";
-    noteInput.setAttribute("aria-label","Своя формулировка намерения (необязательно)");
-    var acts=document.createElement("div"); acts.className="ro-actions";
-    var primary=document.createElement("button"); primary.type="button"; primary.className="ro-primary";
-    primary.textContent="Задать намерение";
-    primary.addEventListener("click", function(){
-      saveIntention(selectedFocus, noteInput.value);
-      intentionDraft=null; renderIntentionBar(); renderPlan();
-      toast("Намерение дня задано");
-    });
-    var ghost=document.createElement("button"); ghost.type="button"; ghost.className="ro-ghost"; ghost.textContent="Не сегодня";
-    ghost.addEventListener("click", function(){ skipIntentionToday(); intentionDraft=null; renderIntentionBar(); });
-    acts.appendChild(primary); acts.appendChild(ghost);
-    bar.appendChild(head); bar.appendChild(chips); bar.appendChild(noteInput); bar.appendChild(acts);
   }
 
   // ===== Контекст дня: погода / пробки / топливо =====
@@ -3220,20 +3143,8 @@
     fu.addEventListener("click", editFuel);
     row.appendChild(w); row.appendChild(tr); row.appendChild(fu);
     box.appendChild(row);
-    var intent=loadIntention();
-    if(intent){
-      var iv=document.createElement("div"); iv.className="dv-intent";
-      iv.appendChild(document.createTextNode("Намерение дня: "));
-      var ib=document.createElement("b"); ib.textContent="«"+intent.focus+"»"; iv.appendChild(ib);
-      if(intent.note) iv.appendChild(document.createTextNode(" — "+intent.note));
-      box.appendChild(iv);
-    }
     var ph=document.createElement("div"); ph.className="dv-phrase"; ph.textContent=v.phrase;
     box.appendChild(ph);
-    if(intent && v.total>0 && v.done===v.total){
-      var af=document.createElement("div"); af.className="dv-affirm"; af.textContent=dayAffirmation(v.done);
-      box.appendChild(af);
-    }
   }
 
   // ===== Новый день: мягкий перенос незавершённого (без авто-удаления) =====
@@ -4521,12 +4432,55 @@
       return ok;
     });
 
-    G("Намерение дня");
-    T("dayAffirmation: ротация по модулю", function(){
-      return dayAffirmation(0)===AFFIRMATIONS[0]
-        && dayAffirmation(AFFIRMATIONS.length)===AFFIRMATIONS[0]
-        && dayAffirmation(AFFIRMATIONS.length+1)===AFFIRMATIONS[1];
+    // ===== Волна 35: окно дел — модалка по клику на маркер / фокусу композера =====
+    T("routeSheet скрыт по умолчанию и живёт вне <main> (иначе сработал бы setBackdropInert)", function(){
+      var el=document.getElementById("routeSheet");
+      return !!el && el.hidden===true && el.parentElement===document.body;
     });
+    T("composer живёт вне <main> и исключён из setBackdropInert (иначе фокус #taskInput сбивался бы при открытии окна дел)", function(){
+      var el=document.getElementById("composer");
+      if(!el || el.parentElement!==document.body) return false;
+      var was=routeSheetOpen;
+      try{
+        openTasksSheet();
+        var exempt = !el.inert && el.getAttribute("aria-hidden")!=="true";
+        return exempt;
+      } finally { if(was) openTasksSheet(); else closeTasksSheet(); }
+    });
+    T("openTasksSheet/closeTasksSheet переключают .open, closeTasksSheet — не ломается на уже закрытом", function(){
+      var was=routeSheetOpen;
+      try{
+        closeTasksSheet();                    // привести к известному состоянию
+        var el=routeEl;
+        if(!el || el.classList.contains("open")) return false;
+        openTasksSheet();
+        var openedOk = el.classList.contains("open") && el.hidden===false;
+        closeTasksSheet();
+        return openedOk && !el.classList.contains("open");
+      } finally { if(was) openTasksSheet(); else closeTasksSheet(); }
+    });
+    T("openTasksSheet(id) подсвечивает нужную строку в #planList и снимает подсветку с прежней", function(){
+      var was=routeSheetOpen, keep=tasks.slice();
+      try{
+        tasks.length=0;
+        tasks.push({id:"sh1",text:"а",urgent:false,important:false,done:false,time:null,dur:null,defer:null,repeat:null,doneOn:null});
+        tasks.push({id:"sh2",text:"б",urgent:false,important:false,done:false,time:null,dur:null,defer:null,repeat:null,doneOn:null});
+        render();
+        openTasksSheet("sh1");
+        var r1=document.querySelector('#planList li.task[data-id="sh1"]');
+        var r2=document.querySelector('#planList li.task[data-id="sh2"]');
+        var firstOk = !!r1 && r1.classList.contains("spot") && !r2.classList.contains("spot");
+        openTasksSheet("sh2");
+        var switchedOk = !r1.classList.contains("spot") && r2.classList.contains("spot");
+        closeTasksSheet();
+        return firstOk && switchedOk;
+      } finally {
+        tasks.length=0; keep.forEach(function(x){ tasks.push(x); }); render();
+        if(was) openTasksSheet(); else closeTasksSheet();
+      }
+    });
+
+    G("Итог недели");
     T("weekPeakEnd: считает только дни с total>0 за 7 дней, high-пул на 80%+", function(){
       var dlog={
         "2026-08-05":{load:1, done:5, total:5},
@@ -4547,42 +4501,6 @@
       return weekPeakEnd({"2026-07-20":{load:0, done:1, total:1}}, "2026-08-05")===null
         && weekPeakEnd({}, "2026-08-05")===null;
     });
-    T("loadIntention: нет записи → null", function(){
-      var prev=localStorage.getItem(INTENTION_KEY);
-      try{ localStorage.removeItem(INTENTION_KEY); return loadIntention()===null; }
-      finally{ if(prev!==null) localStorage.setItem(INTENTION_KEY, prev); }
-    });
-    T("loadIntention: запись за чужой день → null", function(){
-      var prev=localStorage.getItem(INTENTION_KEY);
-      try{
-        localStorage.setItem(INTENTION_KEY, JSON.stringify({date:"2000-01-01", focus:"x"}));
-        return loadIntention()===null;
-      } finally{ if(prev===null) localStorage.removeItem(INTENTION_KEY); else localStorage.setItem(INTENTION_KEY, prev); }
-    });
-    T("saveIntention/loadIntention: сегодняшняя запись читается обратно, снимает «не сегодня»", function(){
-      var prevI=localStorage.getItem(INTENTION_KEY), prevS=localStorage.getItem(INTENTION_SKIP_KEY);
-      try{
-        skipIntentionToday();
-        saveIntention("Тестовое намерение", " заметка ");
-        var v=loadIntention();
-        return !!v && v.focus==="Тестовое намерение" && v.note==="заметка" && !intentionSkippedToday();
-      } finally{
-        if(prevI===null) localStorage.removeItem(INTENTION_KEY); else localStorage.setItem(INTENTION_KEY, prevI);
-        if(prevS===null) localStorage.removeItem(INTENTION_SKIP_KEY); else localStorage.setItem(INTENTION_SKIP_KEY, prevS);
-      }
-    });
-    T("skipIntentionToday: помечает сегодняшний день", function(){
-      var prevI=localStorage.getItem(INTENTION_KEY), prevS=localStorage.getItem(INTENTION_SKIP_KEY);
-      try{
-        localStorage.removeItem(INTENTION_KEY);
-        skipIntentionToday();
-        return intentionSkippedToday()===true;
-      } finally{
-        if(prevI===null) localStorage.removeItem(INTENTION_KEY); else localStorage.setItem(INTENTION_KEY, prevI);
-        if(prevS===null) localStorage.removeItem(INTENTION_SKIP_KEY); else localStorage.setItem(INTENTION_SKIP_KEY, prevS);
-      }
-    });
-
     G("Целостность DOM");
     // Самая опасная поломка этой волны — переезд секций в панель: узел уехал,
     // а скрипт продолжает искать его по id. Проверяем сам себя: вытаскиваем из
@@ -4665,6 +4583,8 @@
     { id:"diag",   ic:"🔧", name:"Под капотом" }
   ];
   var panelEl, scrimEl, panelBtn, panelOpen=false, panelPushed=false, panelReturn=null;
+  var routeEl, routeSheetOpen=false, routeReturn=null;
+  var composerEl;
 
   function panelPrefs(){
     try{ return JSON.parse(localStorage.getItem(PANEL_KEY)||"{}") || {}; }catch(e){ return {}; }
@@ -4703,7 +4623,7 @@
   // Фон под панелью не должен быть достижим ни мышью, ни клавиатурой.
   function setBackdropInert(on){
     Array.prototype.forEach.call(document.body.children, function(el){
-      if(el===panelEl || el===scrimEl) return;
+      if(el===panelEl || el===scrimEl || el===routeEl || el===composerEl) return;
       if(on){
         if("inert" in HTMLElement.prototype) el.inert=true;
         el.setAttribute("aria-hidden","true");
@@ -4894,6 +4814,60 @@
     updatePanelDot();
   })();
 
+  // ===== Окно дел: модалка поверх карты (волна 35) =====
+  // Список «Сегодня» раньше жил постоянной карточкой в потоке; теперь карта —
+  // фон всего экрана, и список открывается по требованию: клик по маркеру
+  // карты (с подсветкой конкретного дела) или фокус на поле ввода композера.
+  // Использует общий #scrim с панелью настроек — обе модалки взаимоисключающие.
+  function openTasksSheet(spotId){
+    if(!routeEl) return;
+    if(panelOpen) doClosePanel();
+    if(!routeSheetOpen){
+      routeReturn = document.activeElement;
+      if(!routeReturn || routeReturn===document.body) routeReturn=null;
+      routeEl.hidden=false;
+      void routeEl.offsetWidth;
+      routeEl.classList.add("open");
+      scrimEl.classList.add("on");
+      setBackdropInert(true);
+      routeSheetOpen=true;
+      document.body.style.overflow="hidden";
+    }
+    document.querySelectorAll("#planList li.task.spot").forEach(function(li){ li.classList.remove("spot"); });
+    if(spotId){
+      var row=document.querySelector('#planList li.task[data-id="'+spotId+'"]');
+      if(row){
+        row.classList.add("spot");
+        try{ row.scrollIntoView({block:"center", behavior:"smooth"}); }catch(e){ row.scrollIntoView(); }
+      }
+    }
+  }
+  function closeTasksSheet(){
+    if(!routeSheetOpen) return;
+    routeEl.classList.remove("open");
+    scrimEl.classList.remove("on");
+    setBackdropInert(false);
+    routeSheetOpen=false;
+    document.body.style.overflow="";
+    var el=routeEl;
+    setTimeout(function(){ if(!routeSheetOpen) el.hidden=true; }, 280);
+    if(routeReturn && routeReturn.focus) try{ routeReturn.focus(); }catch(e){}
+    routeReturn=null;
+  }
+  (function initRouteSheet(){
+    routeEl=document.getElementById("routeSheet");
+    composerEl=document.getElementById("composer");
+    var closeBtn=document.getElementById("routeClose");
+    var input=document.getElementById("taskInput");
+    if(!routeEl || !scrimEl) return;
+    if(closeBtn) closeBtn.addEventListener("click", function(){ closeTasksSheet(); });
+    scrimEl.addEventListener("click", function(){ closeTasksSheet(); });
+    if(input) input.addEventListener("focus", function(){ openTasksSheet(); });
+    document.addEventListener("keydown", function(e){
+      if(e.key==="Escape" && routeSheetOpen){ e.preventDefault(); closeTasksSheet(); }
+    });
+  })();
+
   // ===== Блоки на главном экране: пользователь сам выбирает, что видно =====
   // Ядро экрана (список дел, прогресс) не переключается — только необязательные
   // карточки. Хранится отдельным ключом, по умолчанию всё включено — для уже
@@ -4904,7 +4878,6 @@
   var LAYOUT_KEY = "superday_layout_v1";
   var LAYOUT_BLOCKS = [
     { id:"rolloverBar", name:"Новый день" },
-    { id:"intentionBar", name:"Намерение дня" },
     { id:"focusCard", name:"Начни с этого" }
   ];
   function layoutPrefs(){
