@@ -3168,7 +3168,7 @@
     bar.hidden=false; bar.innerHTML="";
     var head=document.createElement("div"); head.className="ro-head";
     var ic=document.createElement("span"); ic.className="pg-ic"; ic.setAttribute("aria-hidden","true"); ic.textContent="🔄";
-    var title=document.createElement("span"); title.className="ro-title pg-title"; title.textContent="Новый день ✨";
+    var title=document.createElement("span"); title.className="ro-title pg-title"; title.textContent="Новый день";
     head.appendChild(ic); head.appendChild(title);
     var acts=document.createElement("div"); acts.className="ro-actions";
     var primary=document.createElement("button"); primary.type="button"; primary.className="ro-primary";
@@ -3835,39 +3835,46 @@
     function armAwakeTimeout(){
       clearTimeout(awakeTimer);
       awakeTimer=setTimeout(function(){ if(awake){ awake=false;
-        setStatus("Скажи «<b>"+wname()+"</b>», затем задачу или «заметка …»."); } }, 9000);
+        setStatus("Скажи «<b>"+wname()+"</b>», затем задачу или «заметка …»."); } }, 12000);
+    }
+    // — после ответа диалог не обрывается: имя-обращение не нужно повторять
+    //   для каждой следующей команды, пока не истечёт пауза молчания —
+    function keepListening(){
+      awake=true;
+      setStatus("<b>Слушаю…</b> можно продолжать без «<b>"+wname()+"</b>».");
+      armAwakeTimeout();
     }
 
-    function speakPlan(){
+    function speakPlan(cb){
       var full=planOrder();
       var order=full.filter(function(t){return !t.done;});
-      if(!order.length){ speak(tasks.length?"Все задачи выполнены. Отличная работа.":"Список задач пуст."); return; }
+      if(!order.length){ speak(tasks.length?"Все задачи выполнены. Отличная работа.":"Список задач пуст.", cb); return; }
       var parts=order.map(function(t,i){
         var tm = t.time ? ("в "+t.time.replace(":"," ")+", ") : "";
         var dd = validDur(t.dur) ? (", "+fmtDur(t.dur)) : "";
         return (i+1)+". "+tm+t.text+dd;
       });
       var verdict=dayVerdict(full, findOverlaps(full)).phrase.replace(/[💪✨]/g,"").replace(/\s+/g," ").trim();
-      speak("Твой план на сегодня. "+parts.join(". ")+". "+verdict); setStatus("Читаю план…");
+      speak("Твой план на сегодня. "+parts.join(". ")+". "+verdict, cb); setStatus("Читаю план…");
     }
-    function speakNotes(){
-      if(!notes.length){ speak("Заметок пока нет."); return; }
+    function speakNotes(cb){
+      if(!notes.length){ speak("Заметок пока нет.", cb); return; }
       var parts=notes.slice(0,10).map(function(n,i){ return (i+1)+". "+n.text; });
-      speak("Твои заметки. "+parts.join(". ")); setStatus("Читаю заметки…");
+      speak("Твои заметки. "+parts.join(". "), cb); setStatus("Читаю заметки…");
     }
 
     function handleCommand(text){
       text=(text||"").trim();
       if(!text){ awake=true; setStatus("<b>Слушаю…</b> продиктуй задачу или скажи «заметка …»"); armAwakeTimeout(); return; }
       var low=text.toLowerCase();
-      if(/прочит.*заметк|озвуч.*заметк|мои заметк|какие заметк/.test(low)){ awake=false; speakNotes(); return; }
-      if(/прочит|озвуч|мой план|план на сегодн|что у меня|какой план/.test(low)){ awake=false; speakPlan(); return; }
-      if(/очист.*выполн|убери выполн|удали выполн/.test(low)){ awake=false; clearDoneBtn.click(); speak("Убрал выполненные."); setStatus("Готово. Скажи «<b>"+wname()+"</b>» дальше."); return; }
+      if(/прочит.*заметк|озвуч.*заметк|мои заметк|какие заметк/.test(low)){ speakNotes(keepListening); return; }
+      if(/прочит|озвуч|мой план|план на сегодн|что у меня|какой план/.test(low)){ speakPlan(keepListening); return; }
+      if(/очист.*выполн|убери выполн|удали выполн/.test(low)){ clearDoneBtn.click(); speak("Убрал выполненные.", keepListening); return; }
       if(/^(запиши\s+)?заметк/.test(low)){
         var ntext=text.replace(/^(запиши\s+)?заметк[ауи]?[:,]?\s*/i,"").trim();
-        if(ntext){ addNote(cap(ntext)); speak("Записал заметку."); setStatus("Заметка сохранена: «<b>"+escapeHtml(cap(ntext))+"</b>». Скажи «<b>"+wname()+"</b>» дальше."); }
-        else { setStatus("Не расслышал заметку. Повтори."); }
-        awake=false; return;
+        if(ntext){ addNote(cap(ntext)); setStatus("Заметка сохранена: «<b>"+escapeHtml(cap(ntext))+"</b>»."); speak("Записал заметку.", keepListening); }
+        else { awake=false; setStatus("Не расслышал заметку. Скажи «<b>"+wname()+"</b>» и повтори."); }
+        return;
       }
       var urgent=/(^|\s)(срочно|срочная|срочное|горит)(\s|$)/i.test(low);
       var important=/(^|\s)(важно|важная|важное)(\s|$)/i.test(low);
@@ -3881,9 +3888,8 @@
       save(); render();
       var q=quadOf({urgent:urgent,important:important});
       var QN={1:"сделать сейчас",2:"запланировать",3:"быстро закрыть",4:"на потом"};
-      speak("Добавил: "+tmClean+(rp?", "+fmtRepeat(rp):"")+(tm?", в "+tm.replace(":"," "):"")+(du?", "+fmtDur(du):""));
-      setStatus("Добавлено: «<b>"+escapeHtml(cap(tmClean))+"</b>»"+(rp?" 🔁 "+escapeHtml(fmtRepeat(rp)):"")+(tm?" ⏱ "+tm:"")+(du?" ⏳ "+fmtDurShort(du):"")+" → "+QN[q]+". Скажи «<b>"+wname()+"</b>» для следующей.");
-      awake=false;
+      setStatus("Добавлено: «<b>"+escapeHtml(cap(tmClean))+"</b>»"+(rp?" 🔁 "+escapeHtml(fmtRepeat(rp)):"")+(tm?" ⏱ "+tm:"")+(du?" ⏳ "+fmtDurShort(du):"")+" → "+QN[q]+".");
+      speak("Добавил: "+tmClean+(rp?", "+fmtRepeat(rp):"")+(tm?", в "+tm.replace(":"," "):"")+(du?", "+fmtDur(du):""), keepListening);
     }
 
     function processFinal(tr){
