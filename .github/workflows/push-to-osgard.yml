@@ -1,0 +1,72 @@
+# Задание 3.14 (вариант «б»): источник истины остаётся на GitHub, но о новом
+# коммите наша платформа узнаёт СРАЗУ, а не опросом зеркала.
+#
+# Зачем это вообще. Раньше репозиторий в нашем Forgejo был pull-mirror: Forgejo
+# сам ходил за коммитами по расписанию с интервалом 600 с. Измеренная сквозная
+# доставка «коммит → прод» была 6–16 минут при бюджете 3 минуты, и сократить её
+# было нечем: лаг зеркала один съедал весь бюджет. Теперь push идёт сразу
+# отсюда, репозиторий перестал быть зеркалом, и у него работает вебхук —
+# control-plane запускает сборку по событию, а не по таймеру.
+#
+# Права намеренно минимальные: отдельный deploy-ключ, у которого есть запись
+# ровно в один репозиторий (osgard-admin/superday-site) и больше ни в один.
+# Токенов пользователя здесь нет — утечка секрета из этого workflow не даёт
+# доступа ни к чему, кроме этого же репозитория.
+name: Доставка в OSGARD
+
+on:
+  push:
+    branches: ['**']
+  delete:
+
+concurrency:
+  # Два push подряд не должны драться за один и тот же remote: второй ждёт
+  # первого, иначе Forgejo увидит их в произвольном порядке и запустит сборку
+  # уже неактуального коммита.
+  group: osgard-delivery
+  cancel-in-progress: false
+
+jobs:
+  deliver:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Полная история: Forgejo — не зеркало, а обычный репозиторий, и
+          # мелкий (shallow) клон он принять не сможет.
+          fetch-depth: 0
+
+      - name: Ключ и known_hosts
+        env:
+          KEY: ${{ secrets.OSGARD_FORGEJO_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # Хост прописан отпечатком, а не StrictHostKeyChecking=no: иначе
+          # первый же подменённый ответ на пути увёл бы наш push чужому серверу.
+          printf '%s\n' '[64.177.120.183]:2222 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDMpvWYVzBMK8VU3+IsIrJ0KnHKK4XMdwJxzHY3HO/uL' > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Push ветки в Forgejo
+        if: github.event_name == 'push'
+        run: |
+          set -eu
+          git remote add osgard ssh://git@64.177.120.183:2222/osgard-admin/superday-site.git
+          # Пушим ровно текущую ветку, а НЕ --mirror: зеркальный push удалил бы
+          # в Forgejo всё, чего нет здесь, включая ветки, заведённые на нашей
+          # стороне. Источник истины — GitHub, но не тиран.
+          git push osgard "HEAD:refs/heads/${GITHUB_REF_NAME}"
+          echo "доставлено: ${GITHUB_SHA} -> ${GITHUB_REF_NAME}"
+
+      - name: Удаление ветки в Forgejo
+        if: github.event_name == 'delete' && github.event.ref_type == 'branch'
+        env:
+          GONE: ${{ github.event.ref }}
+        run: |
+          set -eu
+          git remote add osgard ssh://git@64.177.120.183:2222/osgard-admin/superday-site.git
+          # Удаление ветки здесь обязано доехать туда же: иначе preview-окружение
+          # удалённой ветки останется жить, а его адрес — отвечать 200 на код,
+          # которого в источнике истины уже нет.
+          git push osgard --delete "refs/heads/${GONE}" || echo "ветки ${GONE} в Forgejo не было — нечего удалять"
