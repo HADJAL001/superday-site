@@ -2065,7 +2065,11 @@
       setTimeout(function(){ try{ ac.close(); }catch(e){} }, 1400);
     }catch(e){}
   }
-  function focusSay(txt){ if(typeof isMuted==="function" && isMuted()) return; try{ if(!window.speechSynthesis) return; var u=new SpeechSynthesisUtterance(txt); u.lang="ru-RU"; u.rate=0.98; u.pitch=0.96; window.speechSynthesis.speak(u); }catch(e){} }
+  function focusSay(txt){
+    if(typeof isMuted==="function" && isMuted()) return;
+    if(typeof window.__ttsSpeak==="function"){ try{ window.__ttsSpeak(txt); return; }catch(e){} }
+    try{ if(!window.speechSynthesis) return; var u=new SpeechSynthesisUtterance(txt); u.lang="ru-RU"; u.rate=0.98; u.pitch=0.96; window.speechSynthesis.speak(u); }catch(e){}
+  }
   function startFocusInterval(){ if(focusInt) return; focusInt=setInterval(focusTick, 250); }
   function stopFocusInterval(){ if(focusInt){ clearInterval(focusInt); focusInt=null; } }
   function focusRemaining(){ if(!focusState) return 0; if(focusState.paused) return focusState.remainingMs; return focusState.endTs - Date.now(); }
@@ -3793,9 +3797,12 @@
     if(window.speechSynthesis && typeof window.speechSynthesis.onvoiceschanged!=="undefined"){
       window.speechSynthesis.onvoiceschanged=function(){ chooseVoice(); };
     }
-    function speak(t, cb){
-      // Тихий режим: молчим, но цепочку не рвём — ответ остаётся на экране (setStatus).
-      if(typeof isMuted==="function" && isMuted()){ speaking=false; cb&&cb(); return; }
+    // — живой голос: сперва пробуем нейросетевой TTS (Yandex SpeechKit) через
+    //   свой бэкенд, а если он не настроен/недоступен — тихо откатываемся на
+    //   голос браузера (Web Speech API), чтобы приложение не немело —
+    var TTS_API = API_BASE + "/tts";
+    var ttsAudio = null;
+    function speakBrowser(t, cb){
       if(!window.speechSynthesis){ cb&&cb(); return; }
       try{
         if(!pickedVoice) chooseVoice();
@@ -3803,12 +3810,37 @@
         if(pickedVoice) u.voice=pickedVoice;
         // Спокойный премиальный тон: чуть медленнее и ниже — читается разборчиво.
         u.rate=0.98; u.pitch=0.96; u.volume=1;
-        speaking=true;
         u.onend=function(){ speaking=false; cb&&cb(); };
         u.onerror=function(){ speaking=false; cb&&cb(); };
         window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
       }catch(e){ speaking=false; cb&&cb(); }
     }
+    function speak(t, cb){
+      // Тихий режим: молчим, но цепочку не рвём — ответ остаётся на экране (setStatus).
+      if(typeof isMuted==="function" && isMuted()){ speaking=false; cb&&cb(); return; }
+      speaking=true;
+      var done=false;
+      function finish(){ if(done) return; done=true; speaking=false; cb&&cb(); }
+      var ctrl=(typeof AbortController!=="undefined") ? new AbortController() : null;
+      var timer=setTimeout(function(){ try{ ctrl&&ctrl.abort(); }catch(e){} }, 6000);
+      fetch(TTS_API, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({text:t}), signal: ctrl?ctrl.signal:undefined
+      }).then(function(r){ clearTimeout(timer); if(!r.ok) throw new Error("tts_"+r.status); return r.blob(); })
+        .then(function(blob){
+          if(done) return;
+          var url=URL.createObjectURL(blob);
+          if(ttsAudio){ try{ ttsAudio.pause(); }catch(e){} }
+          ttsAudio=new Audio(url);
+          ttsAudio.onended=function(){ URL.revokeObjectURL(url); finish(); };
+          ttsAudio.onerror=function(){ URL.revokeObjectURL(url); speakBrowser(t, finish); };
+          ttsAudio.play().catch(function(){ URL.revokeObjectURL(url); speakBrowser(t, finish); });
+        })
+        .catch(function(){ clearTimeout(timer); if(!done) speakBrowser(t, finish); });
+    }
+    // Открываем наружу — чтобы все места приложения (не только команды
+    // голосового режима) звучали одним и тем же премиальным голосом.
+    window.__ttsSpeak = speak;
     // — короткий сигнал «слушаю» —
     function chime(){
       if(typeof isMuted==="function" && isMuted()) return;   // тихий режим
