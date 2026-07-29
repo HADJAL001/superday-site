@@ -251,6 +251,35 @@
   .tg:focus-visible, .vm-toggle:focus-visible, li.task .chk:focus-visible, li.task .grip:focus-visible,
   li.task .txt:focus-visible, ul.notelist li .txt:focus-visible, .in-chip:focus-visible{outline-offset:3px}
 
+  /* ===== Волна 34: клавиатура и одна рука =====
+     Ссылка «к содержимому» — первая остановка Tab; видна только под фокусом,
+     поэтому на чистом экране волны 33 ничего не появляется. */
+  .skip-link{position:absolute; left:-9999px; top:0; z-index:60; padding:10px 16px; border-radius:0 0 12px 0;
+    background:var(--grad-gold); color:var(--on-accent); font-weight:700; font-size:14px; text-decoration:none}
+  .skip-link:focus{left:0}
+  main.wrap:focus{outline:none}
+
+  /* Зона нажатия шире значка: сам значок не меняется, растёт только область
+     попадания пальцем (::after поверх, клик достаётся родителю). 24px — минимум
+     WCAG 2.5.8; для дельного пальца этого хватает, а вид экрана не сдвигается. */
+  li.task .chk, ol.plan li button.qd, li.task .del, ul.notelist li .del{position:relative}
+  li.task .chk::after, ol.plan li button.qd::after,
+  li.task .del::after, ul.notelist li .del::after{content:""; position:absolute; left:50%; top:50%;
+    transform:translate(-50%,-50%); width:24px; height:24px; border-radius:8px}
+  /* Текст дела — тоже кнопка (тап = правка). Ширины хватает, добираем высоту. */
+  li.task .txt, ul.notelist li .txt{position:relative}
+  li.task .txt::after, ul.notelist li .txt::after{content:""; position:absolute; left:0; right:0;
+    top:50%; transform:translateY(-50%); height:24px}
+
+  /* Бейджи строки дела — до минимальных 24px по высоте, без прыжка вёрстки. */
+  .ttime, .tdur, .trep, .tdef, .tloc, .tctx{min-height:24px; display:inline-flex;
+    align-items:center; justify-content:center}
+
+  /* Главные действия — под большой палец (44px, WCAG 2.5.5). */
+  .mic-btn, .composer .add-btn{min-height:44px}
+  .focus .fx-done, .focus .fx-focus{min-height:44px}
+  .back{display:inline-flex; align-items:center; min-height:24px}
+
   /* Карточка «Начни с этого» — прямое исполнение обещания «начни с главного» */
   .focus{max-width:760px; margin:22px auto 0; display:flex; align-items:center; gap:15px;
     background:linear-gradient(120deg,rgba(201,169,106,.15),rgba(17,27,48,.6)); border:1px solid var(--hair);
@@ -856,9 +885,7 @@
 </style>
 </head>
 <body>
-<div class="mapcard" id="mapCard" aria-hidden="true">
-  <div class="mapview" id="mapView" aria-label="Карта дня — точки дел и маршрут"></div>
-</div>
+<a class="skip-link" href="#main">К содержимому</a>
 <header>
   <div class="wrap bar">
     <a class="brand" href="index.html">
@@ -881,7 +908,7 @@
   <div class="layout-pop" id="layoutPop" hidden role="menu" aria-label="Блоки на главном экране"></div>
 </header>
 
-<main class="wrap">
+<main class="wrap" id="main" tabindex="-1">
   <section class="intro">
     <span class="eyebrow">Планировщик дня · без регистрации</span>
     <h1>Список дел превращается<br><span class="g">в порядок действий.</span></h1>
@@ -1128,6 +1155,14 @@
   <div class="offline-note"><span class="d"></span> Работает офлайн · данные только в этом браузере</div>
   <p style="margin:16px 0 0">Это ранняя веб-версия. Полное приложение с голосом и AI-дебатами — <a href="index.html#waitlist">в списке ожидания</a>.<br>Создано с помощью <a href="https://osgardnewworld.com/?utm_source=superday_web&utm_medium=app&utm_campaign=built_with_osgard" target="_blank" rel="noopener">OSGARD</a>.</p>
 </footer>
+
+<!-- Карта — фон всего экрана (position:fixed; z-index:0), поэтому её место в DOM
+     на картинку не влияет: весь контент позиционирован с z-index ≥ 1. Стоит
+     последней намеренно — тогда Tab идёт по приложению, а не начинается с шести
+     остановок внутри карты (её контейнер, маркеры, зум, атрибуция). Волна 34. -->
+<div class="mapcard" id="mapCard" role="region" aria-label="Карта дня">
+  <div class="mapview" id="mapView" aria-label="Карта дня — точки дел и маршрут"></div>
+</div>
 
 <script>
   var STORE_KEY = "superday_tasks_v1";
@@ -4407,6 +4442,55 @@
         render();
         return IS_SELFTEST===true && mapState.booted===false && mapState.map===null;
       } finally { tasks.length=0; keep.forEach(function(x){tasks.push(x);}); render(); }
+    });
+    // ===== Волна 34: клавиатура и одна рука =====
+    // Проба зоны нажатия строится на живых правилах CSS: временный узел с тем же
+    // классом кладётся за экран, замеряется его ::after и сразу убирается.
+    function hitBox(html, sel){
+      var host=document.createElement("div");
+      host.style.cssText="position:absolute; left:-9999px; top:0";
+      host.innerHTML=html;
+      document.body.appendChild(host);
+      var el=host.querySelector(sel);
+      var cs=el?getComputedStyle(el,"::after"):null;
+      var r=cs?{w:cs.width,h:cs.height}:null;
+      document.body.removeChild(host);
+      return r;
+    }
+    T("Ссылка «к содержимому» ведёт на <main>, и туда можно поставить фокус", function(){
+      var a=document.querySelector("a.skip-link"), m=document.getElementById("main");
+      return !!a && !!m && a.getAttribute("href")==="#main"
+             && m.tagName==="MAIN" && m.getAttribute("tabindex")==="-1";
+    });
+    T("Карта-фон идёт после подвала в DOM — Tab начинается с приложения", function(){
+      var card=document.getElementById("mapCard"), foot=document.querySelector("footer.wrap");
+      if(!card || !foot || card.parentElement!==document.body) return false;
+      // 4 = DOCUMENT_POSITION_FOLLOWING: карта расположена ПОСЛЕ подвала.
+      return (foot.compareDocumentPosition(card) & 4) === 4;
+    });
+    // Карта — не декорация: внутри живут зум, маркеры и атрибуция, поэтому
+    // aria-hidden на ней держаться не должен. Единственное законное исключение —
+    // открытая панель (setBackdropInert гасит весь фон). На экране ?selftest=1
+    // панель как раз открыта, поэтому тест снимает инертность, проверяет и
+    // возвращает как было — иначе он проверял бы состояние панели, а не карты.
+    T("Карта-фон доступна чтению с экрана: role/label есть, aria-hidden не залипает", function(){
+      var card=document.getElementById("mapCard");
+      if(!card) return false;
+      if(card.getAttribute("role")!=="region" || !card.getAttribute("aria-label")) return false;
+      var wasOpen = panelOpen;
+      setBackdropInert(false);
+      var free = card.getAttribute("aria-hidden")===null && card.inert!==true;
+      if(wasOpen) setBackdropInert(true);
+      return free;
+    });
+    T("Флажок дела: зона нажатия 24×24 при значке 18×18", function(){
+      var r=hitBox('<ul class="tasks"><li class="task"><span class="chk"></span></li></ul>',".chk");
+      return !!r && r.w==="24px" && r.h==="24px";
+    });
+    T("Точка квадранта и «×»: зона нажатия 24×24", function(){
+      var q=hitBox('<ol class="plan"><li class="task"><button class="qd"></button></li></ol>',".qd");
+      var d=hitBox('<ul class="tasks"><li class="task"><button class="del">×</button></li></ul>',".del");
+      return !!q && !!d && q.w==="24px" && q.h==="24px" && d.w==="24px" && d.h==="24px";
     });
     T("parsePlacePhrase: «встреча на Тверской 1» → место «Тверской 1»", function(){
       var r = parsePlacePhrase("встреча на Тверской 1");
