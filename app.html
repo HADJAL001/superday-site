@@ -35,7 +35,7 @@
 <meta name="robots" content="index,follow" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" />
 <style>
   :root{
     /* Платина и глубокая синь. Контейнеры и плашки значков — синие, металл —
@@ -62,7 +62,7 @@
   *{box-sizing:border-box}
   html,body{margin:0}
   body{
-    font-family:"Manrope",system-ui,sans-serif; color:var(--text);
+    font-family:"Segoe UI",system-ui,sans-serif; color:var(--text);
     font-variant-numeric:tabular-nums; letter-spacing:-.005em;
     background:var(--bg-deep);
     min-height:100vh; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
@@ -618,8 +618,8 @@
   .panel-body{flex:1 1 auto; overflow-y:auto; overscroll-behavior:contain; padding:12px 18px 40px;
     -webkit-overflow-scrolling:touch}
 
-  .pgroup{border:1px solid var(--border); border-radius:14px; margin:0 0 10px;
-    background:linear-gradient(180deg,rgba(29,44,76,.42),rgba(9,15,30,.3)); overflow:hidden}
+  .pgroup{border:1px solid var(--border); margin:0 0 10px;
+    background:rgba(29,44,76,.12); overflow:hidden}
   .pg-head{width:100%; display:flex; align-items:center; gap:11px; cursor:pointer; font-family:inherit;
     text-align:left; background:none; border:0; color:var(--text); padding:14px 15px; font-size:14px; font-weight:700}
   .pg-head:hover{color:var(--gold-bright)}
@@ -649,9 +649,9 @@
   /* Рельс — «корешок» панели: на широком экране разделы видны всегда. */
   .rail{position:fixed; top:50%; right:0; transform:translateY(-50%); z-index:21; display:none;
     flex-direction:column; gap:4px; padding:8px 6px; border:1px solid var(--hair-soft); border-right:0;
-    border-radius:14px 0 0 14px; background:rgba(12,20,38,.82); backdrop-filter:blur(10px)}
+    background:rgba(12,20,38,.82); backdrop-filter:blur(10px)}
   .rail button{cursor:pointer; font-family:inherit; font-size:15px; line-height:1; background:none; border:0;
-    color:var(--text-dim); width:34px; height:34px; border-radius:10px; transition:.15s}
+    color:var(--text-dim); width:34px; height:34px; transition:.15s}
   .rail button:hover{background:rgba(201,169,106,.13); color:var(--gold-bright)}
   @media(min-width:1024px){ .rail{display:flex} .panel{width:min(520px,38vw)} }
 
@@ -1868,21 +1868,18 @@
   function renderMapCard(){
     var card=document.getElementById("mapCard"), view=document.getElementById("mapView");
     if(!card || !view) return;
-    // Самотесты гоняют render() десятки раз на живом DOM и не должны трогать
-    // сеть/Leaflet при каждом вызове — карта инициализируется один раз
-    // (см. mapState.booted), дальше только точки.
     if(IS_SELFTEST) return;
     if(!mapState.booted){
       mapState.booted = true;
       loadLeaflet(function(){
         buildMapView(tasksForMap());
-        requestUserLocation(function(loc){
-          mapState.userLoc = loc;
-          if(loc && mapState.map){ try{ mapState.map.panTo([loc.lat, loc.lon]); }catch(e){} }
-          renderMapCard();
-          if(typeof suggestDayPlan==="function") suggestDayPlan();
-        });
-      }, function(){ toast("Карту не загрузил — сеть подвела. Места остаются в списке дел.", "error"); });
+        if(typeof suggestDayPlan==="function") suggestDayPlan();
+      }, function(){ });
+      // Геолокация запрашивается параллельно, не блокирует карту
+      requestUserLocation(function(loc){
+        mapState.userLoc = loc;
+        if(loc && mapState.map){ try{ mapState.map.panTo([loc.lat, loc.lon]); }catch(e){} }
+      });
       return;
     }
     if(mapState.map) buildMapView(tasksForMap());
