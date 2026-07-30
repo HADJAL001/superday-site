@@ -505,7 +505,11 @@ window.__i18nDict("en", {
       "The browser may clear the data after a long idle spell — keep a copy in a file.",
     "нет — браузер может очистить": "no — the browser may clear it",
     "В панели есть что посмотреть: напоминания или резервная копия":
-      "There’s something to see in the panel: reminders or a backup"
+      "There’s something to see in the panel: reminders or a backup",
+
+    /* Волна 44: текст, рождающийся по действиям (toast/confirm/alert) */
+    "Спор не состоялся — приоритет остаётся вашим": "The debate didn’t happen — priority stays as is",
+    "Приоритет уточнён": "Priority is set"
   },
 
   /* ===== Шаблоны с числами ===== */
@@ -672,7 +676,17 @@ window.__i18nDict("en", {
     ["^([^\\wА-Яа-яЁё\\s]{1,3}) (.+)$", function (all, sign, rest) {
       var out = __i18nTR(rest);
       return out === rest ? all : sign + " " + out;
-    }]
+    }],
+
+    /* ===== Волна 44: текст, рождающийся по действиям ===== */
+    ["^🧠 Разобрано: (\\d+) (?:дело|дела|дел)(?: · без модели, по словам-маркерам)?(?: · спорных: (\\d+))?(.*)$",
+      function (all, n, spor, tail) {
+        var result = "🧠 Done: " + n + " task" + (+n === 1 ? "" : "s");
+        if (all.includes(" · без модели")) result += " · no model, by keywords";
+        if (spor) result += " · disputed: " + spor;
+        if (tail) result += __i18nTR(tail);
+        return result;
+      }]
   ],
 
   /* ===== Нормализация ввода: английская фраза → русская форма ===== */

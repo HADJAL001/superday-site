@@ -430,7 +430,11 @@ window.__i18nDict("de", {
       "Der Browser kann die Daten nach langer Pause löschen — halte eine Kopie als Datei bereit.",
     "нет — браузер может очистить": "nein — der Browser kann sie löschen",
     "В панели есть что посмотреть: напоминания или резервная копия":
-      "Im Panel gibt es etwas zu sehen: Erinnerungen oder eine Sicherung"
+      "Im Panel gibt es etwas zu sehen: Erinnerungen oder eine Sicherung",
+
+    /* Волна 44: текст, рождающийся по действиям */
+    "Спор не состоялся — приоритет остаётся вашим": "Die Debatte fand nicht statt — die Priorität bleibt wie sie ist",
+    "Приоритет уточнён": "Priorität festgelegt"
   },
 
   re: [
@@ -567,6 +571,14 @@ window.__i18nDict("de", {
     ["^На прошлой неделе было (\\d+) — впереди новый ряд\\.$", "Letzte Woche waren es $1 — eine neue Reihe liegt vor dir."],
     ["^⏳ сгорит через (\\d+) (?:час|часа|часов)$",
       function (all, n) { return "⏳ verfällt in " + n + (+n === 1 ? " Stunde" : " Stunden"); }],
+    ["^🧠 Разобрано: (\\d+) (?:дело|дела|дел)(?: · без модели, по словам-маркерам)?(?: · спорных: (\\d+))?(.*)$",
+      function (all, n, spor, tail) {
+        var result = "🧠 Erledigt: " + n + (+n === 1 ? " Aufgabe" : " Aufgaben");
+        if (all.includes(" · без модели")) result += " · ohne Modell, nach Schlüsselwörtern";
+        if (spor) result += " · umstritten: " + spor;
+        if (tail) result += __i18nTR(tail);
+        return result;
+      }],
     /* Последним: ведущий значок отделяется, а остаток переводится словарём.
        Не нашлось — строка возвращается как была, ничего не портится. */
     ["^([^\\wА-Яа-яЁё\\s]{1,3}) (.+)$", function (all, sign, rest) {

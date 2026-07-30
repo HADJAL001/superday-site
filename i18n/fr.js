@@ -430,7 +430,11 @@ window.__i18nDict("fr", {
       "Le navigateur peut effacer les données après une longue inactivité — garde une copie dans un fichier.",
     "нет — браузер может очистить": "non — le navigateur peut les effacer",
     "В панели есть что посмотреть: напоминания или резервная копия":
-      "Il y a de quoi voir dans le panneau : rappels ou sauvegarde"
+      "Il y a de quoi voir dans le panneau : rappels ou sauvegarde",
+
+    /* Волна 44: текст, рождающийся по действиям */
+    "Спор не состоялся — приоритет остаётся вашим": "Le débat n'a pas eu lieu — la priorité reste la même",
+    "Приоритет уточнён": "Priorité définie"
   },
 
   re: [
@@ -567,6 +571,14 @@ window.__i18nDict("fr", {
     ["^На прошлой неделе было (\\d+) — впереди новый ряд\\.$", "La semaine dernière c’était $1 — une nouvelle rangée t’attend."],
     ["^⏳ сгорит через (\\d+) (?:час|часа|часов)$",
       function (all, n) { return "⏳ expire dans " + n + (+n === 1 ? " heure" : " heures"); }],
+    ["^🧠 Разобрано: (\\d+) (?:дело|дела|дел)(?: · без модели, по словам-маркерам)?(?: · спорных: (\\d+))?(.*)$",
+      function (all, n, spor, tail) {
+        var result = "🧠 Fait : " + n + (+n === 1 ? " tâche" : " tâches");
+        if (all.includes(" · без модели")) result += " · sans modèle, par mots-clés";
+        if (spor) result += " · contestées : " + spor;
+        if (tail) result += __i18nTR(tail);
+        return result;
+      }],
     /* Последним: ведущий значок отделяется, а остаток переводится словарём.
        Не нашлось — строка возвращается как была, ничего не портится. */
     ["^([^\\wА-Яа-яЁё\\s]{1,3}) (.+)$", function (all, sign, rest) {
