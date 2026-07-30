@@ -3644,6 +3644,7 @@
     head.appendChild(ic); head.appendChild(title);
     var text=document.createElement("div"); text.className="ro-text";
     var b=document.createElement("b"); b.textContent="«"+nearest.text+"»"; text.appendChild(b);
+    text.appendChild(document.createTextNode(" — ближе всего по прямой, без учёта дорог."));
     var acts=document.createElement("div"); acts.className="ro-actions";
     var primary=document.createElement("button"); primary.type="button"; primary.className="ro-primary";
     primary.textContent="Начать с этого";
