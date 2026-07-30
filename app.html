@@ -344,6 +344,34 @@
   .backup-remind{flex-basis:100%; text-align:center; font-size:11.5px; color:var(--champagne); margin-top:3px; line-height:1.4}
   .backup-remind[hidden]{display:none}
 
+  /* ===== Разбор списком =====
+     Лист лежит поверх фона как окно дел: пока идёт разбор, квадранты за ним
+     подсвечиваются по очереди — ожидание перестаёт читаться как зависание. */
+  .bulk-btn{flex:0 0 auto; width:42px; height:42px; border-radius:12px; cursor:pointer; font-size:18px;
+    background:var(--surface-alt); border:1px solid var(--hair-soft); color:var(--champagne); transition:.15s}
+  .bulk-btn:hover{border-color:var(--gold); color:var(--gold-bright)}
+  .bulk{position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:62; width:min(92vw,620px);
+    background:linear-gradient(160deg,rgba(19,30,56,.98),rgba(8,13,26,.98)); border:1px solid var(--hair);
+    border-radius:20px; padding:18px 20px 16px; box-shadow:0 30px 80px rgba(0,0,0,.62)}
+  .bulk[hidden]{display:none}
+  .bulk-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
+  .bulk-head h3{margin:0; font-family:var(--font-display); font-weight:700; font-size:21px; color:var(--text)}
+  .bulk-note{font-size:12.5px; color:var(--text-dim); line-height:1.55; margin:6px 0 11px}
+  .bulk textarea{width:100%; box-sizing:border-box; resize:vertical; font:inherit; font-size:14px; line-height:1.6;
+    color:var(--text); background:var(--surface-alt); border:1px solid var(--hair-soft); border-radius:12px; padding:11px 13px}
+  .bulk textarea:focus{outline:none; border-color:var(--gold)}
+  .bulk-actions{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:11px}
+  .bulk-state{font-size:12px; color:var(--text-muted); line-height:1.45}
+  .quad.parsing{border-color:var(--gold); box-shadow:0 0 0 1px var(--gold) inset, 0 0 26px rgba(201,169,106,.16)}
+  /* Черновик помечается тильдой у минут, а не отдельной строкой: лишняя строка
+     съела бы слот на карточке, а тильда читается сразу. */
+  .tdur.draft::before{content:"~"; opacity:.8}
+  .task.draft{opacity:.82}
+  .tdebate{flex:0 0 auto; display:inline-flex; align-items:center; gap:4px; cursor:pointer; font-size:10.5px;
+    font-weight:600; color:var(--text-muted); background:none; border:1px dashed var(--hair-soft);
+    border-radius:999px; padding:2px 7px; margin-top:1px; white-space:nowrap; transition:.15s}
+  .tdebate:hover{border-style:solid; border-color:var(--gold); color:var(--gold-bright)}
+
   /* ===== Арка дня: намерение утром, итог вечером =====
      Намерение формулируется от лица «тот, кто…»: выбирается не задача, а кем
      человек будет сегодня — и вечером ему возвращают именно этот выбор. */
@@ -1051,12 +1079,29 @@
   <div class="row1">
     <input type="text" id="taskInput" placeholder="Задача — например, «позвонить маме»…" autocomplete="off" />
     <button class="mic-btn" id="micBtn" type="button" title="Продиктовать задачу голосом" aria-label="Продиктовать задачу голосом" aria-pressed="false">&#127908;</button>
+    <button class="bulk-btn" id="bulkBtn" type="button" title="Наговорить или вставить сразу весь список дел — ИИ разложит по важности" aria-label="Разобрать список дел">&#129504;</button>
     <button class="add-btn" id="addBtn" type="button">Добавить</button>
   </div>
   <div class="toggles">
     <span class="tg u" id="tgUrgent" role="button" tabindex="0" aria-pressed="false">🔥 Срочно</span>
     <span class="tg i" id="tgImportant" role="button" tabindex="0" aria-pressed="false">⭐ Важно</span>
     <span class="hint" id="quadHint" role="status" aria-live="polite"></span>
+  </div>
+</section>
+<!-- Разбор списком: человек выкладывает всё как думает, приоритеты расставляет
+     ИИ. Черновик показывается мгновенно по локальным маркерам, а ответ модели
+     заменяет группу целиком: модель вправе разбить или склеить дела, поштучное
+     сопоставление невозможно. -->
+<section class="bulk" id="bulkSheet" hidden role="dialog" aria-modal="true" aria-labelledby="bulkTitle">
+  <div class="bulk-head">
+    <h3 id="bulkTitle">Весь список сразу</h3>
+    <button class="route-close" id="bulkClose" type="button" aria-label="Закрыть разбор списком">&times;</button>
+  </div>
+  <p class="bulk-note">Пишите как думаете — по строкам, через запятую или потоком. Приоритеты по матрице расставит ИИ, а вы поправите одним касанием.</p>
+  <textarea id="bulkText" rows="7" placeholder="позвонить клиенту срочно&#10;отчёт на 2 часа&#10;купить хлеб&#10;записаться к врачу"></textarea>
+  <div class="bulk-actions">
+    <span class="bulk-state" id="bulkState" aria-live="polite"></span>
+    <button class="add-btn" id="bulkRun" type="button">Разобрать</button>
   </div>
 </section>
 <canvas class="fxlayer" id="fxLayer" aria-hidden="true"></canvas>
@@ -1908,6 +1953,17 @@
         xpb.title = d.label + " · " + d.xp + " XP за закрытие";
         meta.appendChild(xpb);
       }
+      // Черновик разбора: тильда у минут вместо отдельной строки.
+      if(t.provisional){ dr.classList.add("draft"); li.classList.add("draft"); }
+      // Спорное дело — то, в приоритете которого модель сама не уверена.
+      // Кнопка предлагает спор, но не навязывает: приоритет остаётся за человеком.
+      if(!t.done && !t.debated && typeof t.aiConf==="number" && t.aiConf>0 && t.aiConf<0.7){
+        var dbt = document.createElement("button"); dbt.type="button"; dbt.className="tdebate";
+        dbt.textContent="⚖️ уточнить приоритет";
+        dbt.title=(t.aiReason ? t.aiReason+" " : "")+"Модель не уверена — можно устроить спор двух точек зрения.";
+        dbt.addEventListener("click", function(e){ e.stopPropagation(); askDebate(t); });
+        meta.appendChild(dbt);
+      }
       li.appendChild(meta);
       li.appendChild(del);
       if(!plan){
@@ -2567,6 +2623,152 @@
       setTimeout(function(){ toast("🔥 "+text); }, 400);
     }catch(e){}
   }
+
+  // ===== Разбор списка дел моделью =====
+  // Человек выкладывает всё как думает, приоритеты по матрице расставляет ИИ.
+  // Черновик по локальным маркерам появляется мгновенно, ответ модели заменяет
+  // группу целиком по batchId. Если модель недоступна — черновик остаётся
+  // рабочим планом, а не пропадает: разбор не имеет права оставить человека ни
+  // с чем.
+  var PARSE_API = "https://superday-api.netlify.app/api/parse";
+  var DEBATE_API = "https://superday-api.netlify.app/api/debate";
+  var PARSE_TIMEOUT_MS = 20000;
+
+  function quadFlags(q){
+    return { urgent: q===1 || q===3, important: q===1 || q===2 };
+  }
+  function taskFromParsed(p, batchId){
+    var f = quadFlags(+p.quadrant || +p.quadrantNumber || 2);
+    return { id:uid(), text:String(p.title||p.text||"").trim(), urgent:f.urgent, important:f.important,
+             done:false, time:null, dur: validDur(+p.minutes) ? +p.minutes : 30, defer:null, repeat:null,
+             doneOn:null, remindedOn:null, batchId:batchId, provisional:!!p.provisional,
+             aiConf: (typeof p.confidence==="number" ? p.confidence : null),
+             aiReason: p.reasoning ? String(p.reasoning) : null };
+  }
+  function dropBatch(batchId){
+    for(var i=tasks.length-1;i>=0;i--){ if(tasks[i].batchId===batchId) tasks.splice(i,1); }
+  }
+  // Пока модель считает, квадранты подсвечиваются по очереди: матрица
+  // усваивается без объяснений, на своём материале.
+  function parseGlow(on){
+    var quads=document.querySelectorAll(".quad");
+    if(parseGlow._t){ clearInterval(parseGlow._t); parseGlow._t=null; }
+    quads.forEach(function(q){ q.classList.remove("parsing"); });
+    if(!on) return;
+    var i=0;
+    parseGlow._t=setInterval(function(){
+      quads.forEach(function(q){ q.classList.remove("parsing"); });
+      if(quads[i % quads.length]) quads[i % quads.length].classList.add("parsing");
+      i++;
+    }, 260);
+  }
+  function bulkState(msg){ var el=document.getElementById("bulkState"); if(el) el.textContent=msg||""; }
+
+  function runBulkParse(){
+    var ta=document.getElementById("bulkText");
+    var text=(ta && ta.value || "").trim();
+    if(!text){ bulkState("Впишите дела — хоть одной строкой."); return; }
+    var runBtn=document.getElementById("bulkRun");
+    var batchId="b"+Date.now();
+    var draft = window.SDGrowth ? SDGrowth.quickParse(text, batchId) : [];
+    draft.forEach(function(p){ tasks.push(taskFromParsed(p, batchId)); });
+    save(); render();
+    if(runBtn) runBtn.disabled=true;
+    bulkState(draft.length ? "Черновик готов, модель уточняет приоритеты…" : "Разбираю…");
+    parseGlow(true);
+
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, PARSE_TIMEOUT_MS);
+    fetch(PARSE_API, {
+      method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ raw_text: text }),
+      signal: ctrl ? ctrl.signal : undefined
+    }).then(function(r){
+      if(!r.ok) throw new Error("http_"+r.status);
+      return r.json();
+    }).then(function(data){
+      clearTimeout(timer);
+      var list = (data && data.tasks) || [];
+      if(!list.length) throw new Error("empty");
+      dropBatch(batchId);
+      list.forEach(function(p){
+        var t=taskFromParsed(p, batchId);
+        t.provisional=false;
+        tasks.push(t);
+      });
+      save(); render();
+      parseGlow(false);
+      closeBulk();
+      var spor=(data.needs_debate||[]).length;
+      toast("🧠 Разобрано: "+list.length+" "+plural(list.length,["дело","дела","дел"])
+        + (data.source==="fallback_heuristic" ? " · без модели, по словам-маркерам" : "")
+        + (spor ? " · спорных: "+spor : ""));
+    }).catch(function(){
+      clearTimeout(timer);
+      parseGlow(false);
+      // Черновик уже в плане и остаётся рабочим: молчаливая отмена выглядела бы
+      // как потеря дел.
+      if(draft.length){
+        closeBulk();
+        toast("Модель не ответила — дела разложены по словам-маркерам, поправьте вручную", "warn");
+      } else {
+        bulkState("Модель не ответила и разобрать нечего — попробуйте по строкам.");
+      }
+    }).then(function(){ if(runBtn) runBtn.disabled=false; });
+  }
+
+  // Спор двух точек зрения о приоритете спорного дела.
+  function askDebate(t){
+    if(!t) return;
+    toast("🧠 Спорю о приоритете…");
+    fetch(DEBATE_API, {
+      method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ task_title: t.text })
+    }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+      if(!d || !d.verdict){ toast("Спор не состоялся — приоритет остаётся вашим", "warn"); return; }
+      var f=quadFlags(+d.verdict.quadrantNumber || 2);
+      t.urgent=f.urgent; t.important=f.important;
+      t.aiConf=d.verdict.confidence; t.aiReason=d.verdict.reasoning;
+      // Дебат — тоже достижение: он засчитывается один раз за дело.
+      if(window.SDGrowth && !t.debated){
+        t.debated=true;
+        try{ var l=SDGrowth.readLedger(); l.debated+=1; localStorage.setItem("superday_growth_v1", JSON.stringify(l)); }catch(e){}
+      }
+      save(); render();
+      toast("⚖️ "+(d.verdict.reasoning || "Приоритет уточнён"));
+    }).catch(function(){ toast("Спор не состоялся — приоритет остаётся вашим", "warn"); });
+  }
+
+  function openBulk(){
+    var sheet=document.getElementById("bulkSheet"); if(!sheet) return;
+    sheet.hidden=false;
+    if(scrimEl) scrimEl.classList.add("on");
+    bulkState("");
+    var ta=document.getElementById("bulkText");
+    if(ta) setTimeout(function(){ try{ ta.focus(); }catch(e){} }, 30);
+  }
+  function closeBulk(){
+    var sheet=document.getElementById("bulkSheet"); if(!sheet) return;
+    sheet.hidden=true;
+    if(scrimEl && !routeSheetOpen && !panelOpen) scrimEl.classList.remove("on");
+    var ta=document.getElementById("bulkText"); if(ta) ta.value="";
+    bulkState("");
+  }
+  (function initBulk(){
+    var open=document.getElementById("bulkBtn");
+    var close=document.getElementById("bulkClose");
+    var run=document.getElementById("bulkRun");
+    if(open) open.addEventListener("click", openBulk);
+    if(close) close.addEventListener("click", closeBulk);
+    if(run) run.addEventListener("click", runBulkParse);
+    document.addEventListener("keydown", function(e){
+      var sheet=document.getElementById("bulkSheet");
+      if(!sheet || sheet.hidden) return;
+      if(e.key==="Escape"){ e.preventDefault(); closeBulk(); }
+      // Ctrl/Cmd+Enter — привычный способ отправить длинный текст.
+      if(e.key==="Enter" && (e.ctrlKey||e.metaKey)){ e.preventDefault(); runBulkParse(); }
+    });
+  })();
 
   // ===== Арка дня: утром намерение, вечером итог =====
   // Один слот, два лица. Порог вечера — 18:00 либо момент, когда день закрыт
@@ -5106,6 +5308,70 @@
                     defer:null,repeat:null,doneOn:null});
         return xpEarnedToday()===30;
       } finally { tasks.length=0; keep.forEach(function(x){ tasks.push(x); }); render(); }
+    });
+    T("черновик разбора: режет список и по умолчанию ставит важное", function(){
+      var d=SDGrowth.quickParse("срочно к врачу\nпозвонить клиенту; купить хлеб", "b1");
+      if(d.length!==3) throw new Error("кусков "+d.length);
+      // Дефолт «важно, не срочно»: спрятать дело в угол опаснее, чем переоценить,
+      // поэтому кусок без единого маркера уходит во второй квадрант, а не в четвёртый.
+      return d[0].quadrant===1 && d[1].quadrant===2 && d[2].quadrant===2
+        && d.every(function(x){ return x.provisional===true && x.confidence===0 && x.minutes===30; });
+    });
+    T("черновик разделяет только срочное, если важности не видно", function(){
+      return SDGrowth.quickParse("сегодня забрать посылку","b2")[0].quadrant===3;
+    });
+    T("черновик отбрасывает обрывки короче трёх букв", function(){
+      return SDGrowth.quickParse("да\nох\nсходить в банк","b3").length===1;
+    });
+    T("номер квадранта разворачивается в флаги задачи", function(){
+      function f(q){ var t=taskFromParsed({title:"а",quadrant:q,minutes:30},"b"); return (t.urgent?"U":"")+(t.important?"I":""); }
+      return f(1)==="UI" && f(2)==="I" && f(3)==="U" && f(4)==="";
+    });
+    T("замена группы разбора трогает только свою партию", function(){
+      var keep=tasks.slice();
+      try{
+        tasks.length=0;
+        tasks.push(taskFromParsed({title:"чужое",quadrant:2,minutes:30},"other"));
+        tasks.push(taskFromParsed({title:"своё-1",quadrant:1,minutes:30},"mine"));
+        tasks.push(taskFromParsed({title:"своё-2",quadrant:3,minutes:30},"mine"));
+        dropBatch("mine");
+        return tasks.length===1 && tasks[0].text==="чужое";
+      } finally { tasks.length=0; keep.forEach(function(x){ tasks.push(x); }); render(); }
+    });
+    T("спорное дело получает кнопку спора, уверенное — нет", function(){
+      var keep=tasks.slice();
+      try{
+        tasks.length=0;
+        var low=taskFromParsed({title:"спорное",quadrant:2,minutes:30,confidence:0.4},"b");
+        var high=taskFromParsed({title:"ясное",quadrant:2,minutes:30,confidence:0.95},"b");
+        tasks.push(low); tasks.push(high);
+        render();
+        var rows=document.querySelectorAll('.quad[data-q="2"] ul.tasks li.task');
+        var withBtn=0;
+        Array.prototype.forEach.call(rows, function(li){ if(li.querySelector(".tdebate")) withBtn++; });
+        if(withBtn!==1) throw new Error("кнопок спора "+withBtn+" вместо одной");
+        // Уже разобранное спором дело больше не предлагает спорить.
+        low.debated=true; render();
+        return document.querySelectorAll('.quad[data-q="2"] .tdebate').length===0;
+      } finally { tasks.length=0; keep.forEach(function(x){ tasks.push(x); }); render(); }
+    });
+    T("черновик помечен тильдой, уточнённое дело — нет", function(){
+      var keep=tasks.slice();
+      try{
+        tasks.length=0;
+        tasks.push(taskFromParsed({title:"черновик",quadrant:2,minutes:40,provisional:true},"b"));
+        render();
+        if(!document.querySelector('.quad[data-q="2"] .tdur.draft')) throw new Error("черновик не помечен");
+        tasks[0].provisional=false; render();
+        return !document.querySelector('.quad[data-q="2"] .tdur.draft');
+      } finally { tasks.length=0; keep.forEach(function(x){ tasks.push(x); }); render(); }
+    });
+    T("окно разбора открывается и закрывается", function(){
+      var sheet=document.getElementById("bulkSheet");
+      openBulk();
+      if(sheet.hidden) throw new Error("не открылось");
+      closeBulk();
+      return sheet.hidden===true && document.getElementById("bulkText").value==="";
     });
     T("склонение русских числительных", function(){
       var f=["день","дня","дней"];

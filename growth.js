@@ -640,6 +640,35 @@
     return { days: days, points: points, uniquePlaces: unique, label: label };
   }
 
+  /* ===================== Мгновенный черновик разбора =====================
+   * Показывает дела сразу, пока модель ещё думает: ожидание не должно читаться
+   * как зависание. Потом группа заменяется целиком по batchId — модель вправе
+   * разбить или склеить дела, поштучное сопоставление невозможно.
+   * Дефолт «важно, не срочно»: ошибиться в сторону важности безопаснее, чем
+   * спрятать дело в угол. */
+  var SPLIT_PATTERN = /[\n;]+|,(?=\s)/;
+  var URGENT_MARKERS = ["срочно","сегодня","сейчас","немедленно","до вечера","горит","дедлайн"];
+  var IMPORTANT_MARKERS = ["важно","обязательно","врач","здоровье","отчёт","отчет","договор","налог","суд","экзамен"];
+  function quickParse(text, batchId){
+    var parts = String(text||"").split(SPLIT_PATTERN);
+    var out = [];
+    for(var i=0;i<parts.length;i++){
+      var s = parts[i].replace(/^[-—•*]\s*/,"").trim();
+      if(s.length < 3) continue;
+      var low = s.toLowerCase();
+      var urgent = false, important = false;
+      for(var u=0;u<URGENT_MARKERS.length;u++){ if(low.indexOf(URGENT_MARKERS[u])!==-1){ urgent = true; break; } }
+      for(var v=0;v<IMPORTANT_MARKERS.length;v++){ if(low.indexOf(IMPORTANT_MARKERS[v])!==-1){ important = true; break; } }
+      var quad;
+      if(urgent && important) quad = 1;
+      else if(urgent) quad = 3;
+      else quad = 2;
+      out.push({ id: batchId + ":" + out.length, title: s, minutes: 30, quadrant: quad,
+                 confidence: 0, provisional: true });
+    }
+    return out;
+  }
+
   /* ===================== Учёт закрытия дела ===================== */
   /* Единственная точка, где журнал меняется. Возвращает всё, что нужно
    * показать: выпавшую награду и был ли переход уровня. */
@@ -709,6 +738,8 @@
     markMicroStepStarted: markMicroStepStarted, hasMicroStepStarted: hasMicroStepStarted,
     // бюджет внимания
     selectAdvice: selectAdvice, pendingAdviceCount: pendingAdviceCount,
+    // мгновенный черновик разбора
+    quickParse: quickParse,
     // карта прожитых дней
     appendTrailPoint: appendTrailPoint, summarizeTrail: summarizeTrail
   };
