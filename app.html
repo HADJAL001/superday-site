@@ -257,9 +257,12 @@
 
   footer{border-top:1px solid var(--hair-soft); padding:22px 0 34px; text-align:left; color:var(--text-muted); font-size:12px}
   footer a{color:var(--champagne); text-decoration:none}
-  .offline-note{display:inline-flex; align-items:center; gap:7px; font-size:11.5px; color:var(--text-muted);
-    border:1px solid var(--hair-soft); border-radius:999px; padding:6px 13px}
-  .offline-note .d{width:7px; height:7px; border-radius:50%; background:var(--q3)}
+  .offline-note{display:inline-flex; align-items:center; gap:8px; font-family:var(--font-display); font-size:12.5px;
+    letter-spacing:.3px; color:var(--platinum); background:linear-gradient(135deg,rgba(222,228,238,.1),rgba(120,132,155,.04));
+    border:1px solid var(--plat-deep); border-radius:999px; padding:7px 15px;
+    box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 4px 14px -6px rgba(0,0,0,.5)}
+  .offline-note .d{width:7px; height:7px; border-radius:50%; background:var(--platinum);
+    box-shadow:0 0 6px 1px rgba(222,228,238,.6)}
 
   /* Доступность: видимый фокус для клавиатуры */
   :focus-visible{outline:2px solid var(--gold-bright); outline-offset:2px; border-radius:8px}
@@ -1163,7 +1166,6 @@
 
 <footer class="wrap">
   <div class="offline-note"><span class="d"></span> Работает офлайн · данные только в этом браузере</div>
-  <p style="margin:16px 0 0">Это ранняя веб-версия. Полное приложение с голосом и AI-дебатами — <a href="index.html#waitlist">в списке ожидания</a>.<br>Создано с помощью <a href="https://osgardnewworld.com/?utm_source=superday_web&utm_medium=app&utm_campaign=built_with_osgard" target="_blank" rel="noopener">OSGARD</a>.</p>
 </footer>
 
 <!-- Карта — фон всего экрана (position:fixed; z-index:0), поэтому её место в DOM
