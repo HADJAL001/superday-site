@@ -292,23 +292,23 @@
     css.textContent =
       ".ux-chips{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0 0}" +
       ".ux-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;" +
-      "font-size:12.5px;line-height:1.2;border:1px solid rgba(212,175,55,.32);background:rgba(212,175,55,.10);" +
-      "color:#f0d98a;font-family:inherit}" +
+      "font-size:12.5px;line-height:1.2;border:1px solid rgba(200,214,240,.32);background:rgba(200,214,240,.10);" +
+      "color:#E8EDF6;font-family:inherit}" +
       "button.ux-chip{cursor:pointer}" +
-      "button.ux-chip:hover{background:rgba(212,175,55,.2)}" +
+      "button.ux-chip:hover{background:rgba(200,214,240,.2)}" +
       ".ux-chip-sugg{border-style:dashed;opacity:.92}" +
       ".ux-chip-dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 0 1px rgba(0,0,0,.25) inset}" +
       "#taskInput{transition:box-shadow .15s ease}" +
       ".ux-chip-pop{animation:uxChipPop .3s ease}" +
       "@keyframes uxChipPop{0%{transform:scale(1)}35%{transform:scale(1.14);" +
-      "background:rgba(212,175,55,.34);border-style:solid}100%{transform:scale(1)}}" +
+      "background:rgba(200,214,240,.34);border-style:solid}100%{transform:scale(1)}}" +
       ".ux-undo{position:fixed;left:12px;right:12px;bottom:12px;z-index:9998;display:none;align-items:center;" +
-      "gap:10px;padding:11px 13px;border-radius:12px;border:1px solid rgba(212,175,55,.35);" +
+      "gap:10px;padding:11px 13px;border-radius:12px;border:1px solid rgba(200,214,240,.35);" +
       "background:rgba(16,18,22,.96);color:#eee;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.45)}" +
       ".ux-undo.on{display:flex}" +
       ".ux-undo span{flex:1;min-width:0}" +
-      ".ux-undo-btn{padding:6px 12px;border-radius:9px;border:1px solid rgba(212,175,55,.5);" +
-      "background:rgba(212,175,55,.14);color:#f0d98a;font:inherit;cursor:pointer}" +
+      ".ux-undo-btn{padding:6px 12px;border-radius:9px;border:1px solid rgba(200,214,240,.5);" +
+      "background:rgba(200,214,240,.14);color:#E8EDF6;font:inherit;cursor:pointer}" +
       "@media(min-width:760px){.ux-undo{left:auto;right:18px;bottom:18px;max-width:420px}}" +
       "@media (prefers-reduced-motion: reduce){.ux-chip,#taskInput{transition:none}" +
       ".ux-chip-pop{animation:none}}";

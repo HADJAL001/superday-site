@@ -488,23 +488,23 @@
     css.id = "referStyle";
     css.textContent =
       ".refer-link{margin:10px 0 8px;padding:9px 11px;border-radius:10px;font-size:12.5px;word-break:break-all;" +
-      "border:1px dashed rgba(212,175,55,.35);background:rgba(255,255,255,.03);opacity:.9}" +
+      "border:1px dashed rgba(200,214,240,.35);background:rgba(255,255,255,.03);opacity:.9}" +
       ".refer-btn{display:block;width:100%;margin:0 0 9px;padding:10px 13px;border-radius:10px;cursor:pointer;" +
-      "font:inherit;font-size:13.5px;border:1px solid rgba(212,175,55,.5);background:rgba(212,175,55,.16);color:#f0d98a}" +
-      ".refer-btn:hover{background:rgba(212,175,55,.24)}" +
+      "font:inherit;font-size:13.5px;border:1px solid rgba(200,214,240,.5);background:rgba(200,214,240,.16);color:#E8EDF6}" +
+      ".refer-btn:hover{background:rgba(200,214,240,.24)}" +
       ".refer-btn-ghost{background:rgba(255,255,255,.03);color:inherit}" +
       ".refer-row{display:flex;gap:8px;margin-bottom:9px}" +
       ".refer-row .refer-btn{width:auto;margin:0;white-space:nowrap}" +
       ".refer-input{flex:1;min-width:0;padding:10px 12px;border-radius:10px;font:inherit;font-size:13.5px;" +
-      "border:1px solid rgba(212,175,55,.3);background:rgba(255,255,255,.04);color:inherit}" +
+      "border:1px solid rgba(200,214,240,.3);background:rgba(255,255,255,.04);color:inherit}" +
       ".refer-fine{font-size:11.5px;opacity:.6;line-height:1.5;margin-bottom:8px}" +
       ".refer-note{position:fixed;left:12px;right:12px;bottom:12px;z-index:9997;display:none;align-items:center;" +
-      "gap:10px;padding:11px 13px;border-radius:12px;border:1px solid rgba(212,175,55,.35);" +
+      "gap:10px;padding:11px 13px;border-radius:12px;border:1px solid rgba(200,214,240,.35);" +
       "background:rgba(16,18,22,.96);color:#eee;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.45)}" +
       ".refer-note.on{display:flex}" +
       ".refer-note span{flex:1;min-width:0}" +
-      ".refer-note-btn{padding:6px 12px;border-radius:9px;border:1px solid rgba(212,175,55,.5);" +
-      "background:rgba(212,175,55,.14);color:#f0d98a;font:inherit;cursor:pointer;white-space:nowrap}" +
+      ".refer-note-btn{padding:6px 12px;border-radius:9px;border:1px solid rgba(200,214,240,.5);" +
+      "background:rgba(200,214,240,.14);color:#E8EDF6;font:inherit;cursor:pointer;white-space:nowrap}" +
       ".refer-note-x{background:none;border:0;color:inherit;opacity:.6;font-size:18px;line-height:1;cursor:pointer}" +
       "@media(min-width:760px){.refer-note{left:auto;right:18px;bottom:18px;max-width:440px}}";
     (document.head || document.documentElement).appendChild(css);

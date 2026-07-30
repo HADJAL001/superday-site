@@ -553,17 +553,32 @@
     var css = document.createElement("style");
     css.id = "i18nStyle";
     css.textContent =
-      ".i18n-select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(212,175,55,.35);" +
-      "background:rgba(255,255,255,.04);color:inherit;font:inherit;cursor:pointer}" +
+      /* Селектор языка — родной <select> без сброса appearance рисуется
+         системным «белым пластиком» и выбивался из платиновой гаммы.
+         Гасим системную отрисовку, подкладываем стекло и свою галочку. */
+      ".i18n-select{width:100%;padding:10px 34px 10px 13px;border-radius:12px;" +
+      "border:1px solid rgba(200,214,240,.26);color:#E8EDF6;font:inherit;cursor:pointer;" +
+      "-webkit-appearance:none;-moz-appearance:none;appearance:none;color-scheme:dark;" +
+      "background-color:rgba(12,16,24,.72);" +
+      "background-image:linear-gradient(45deg,transparent 50%,rgba(232,237,246,.8) 50%)," +
+      "linear-gradient(135deg,rgba(232,237,246,.8) 50%,transparent 50%);" +
+      "background-position:calc(100% - 17px) calc(50% - 1px),calc(100% - 12px) calc(50% - 1px);" +
+      "background-size:5px 5px,5px 5px;background-repeat:no-repeat;" +
+      "box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 10px 24px -16px rgba(0,0,0,.9);" +
+      "-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}" +
+      ".i18n-select:hover{border-color:rgba(200,214,240,.5)}" +
+      ".i18n-select option{background:#0B1018;color:#E8EDF6}" +
       ".i18n-note{margin-top:9px;font-size:12px;opacity:.62;line-height:1.5}" +
       ".i18n-inline{display:inline-flex;margin-left:10px}" +
-      ".i18n-inline .i18n-select{width:auto;padding:6px 9px;font-size:13px}" +
+      /* Правый отступ обязателен: иначе своя галочка ложится на текст */
+      ".i18n-inline .i18n-select{width:auto;padding:7px 30px 7px 12px;font-size:13px;" +
+      "background-position:calc(100% - 15px) calc(50% - 1px),calc(100% - 10px) calc(50% - 1px)}" +
       ".i18n-bar{position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;display:flex;align-items:center;" +
-      "gap:10px;padding:11px 13px;border-radius:12px;border:1px solid rgba(212,175,55,.35);" +
+      "gap:10px;padding:11px 13px;border-radius:12px;border:1px solid rgba(200,214,240,.35);" +
       "background:rgba(16,18,22,.96);color:#eee;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.45)}" +
       ".i18n-bar span{flex:1;min-width:0}" +
-      ".i18n-bar-btn{padding:6px 12px;border-radius:9px;border:1px solid rgba(212,175,55,.5);" +
-      "background:rgba(212,175,55,.14);color:#f0d98a;font:inherit;cursor:pointer}" +
+      ".i18n-bar-btn{padding:6px 12px;border-radius:9px;border:1px solid rgba(200,214,240,.5);" +
+      "background:rgba(200,214,240,.14);color:#E8EDF6;font:inherit;cursor:pointer}" +
       ".i18n-bar-x{background:none;border:0;color:inherit;opacity:.6;font-size:18px;line-height:1;cursor:pointer}" +
       "@media(min-width:760px){.i18n-bar{left:auto;right:18px;bottom:18px;max-width:420px}}";
     (document.head || document.documentElement).appendChild(css);
