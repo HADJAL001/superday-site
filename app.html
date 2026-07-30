@@ -2695,8 +2695,8 @@
   // группу целиком по batchId. Если модель недоступна — черновик остаётся
   // рабочим планом, а не пропадает: разбор не имеет права оставить человека ни
   // с чем.
-  var PARSE_API = "https://superday-api.netlify.app/api/parse";
-  var DEBATE_API = "https://superday-api.netlify.app/api/debate";
+  var PARSE_API = "https://superday-api.osgard.cloud/api/parse";
+  var DEBATE_API = "https://superday-api.osgard.cloud/api/debate";
   var PARSE_TIMEOUT_MS = 20000;
 
   function quadFlags(q){
@@ -3505,7 +3505,7 @@
   // своим ключом с жёсткими ограничениями (2 API) + кэш в Netlify Blobs.
   // Никакой статики/эвристики вместо реальных данных — прямое требование
   // основателя (волна 32): «НИКАКОЙ СТАТИКИ, ПИШИ ПОЛНОЦЕННЫЙ БЕКЭНД».
-  var API_BASE = "https://superday-api.netlify.app/api";
+  var API_BASE = "https://superday-api.osgard.cloud/api";
   var GEOCACHE_KEY = "superday_geocache_v1";
   function geoCacheKey(q){ return String(q||"").trim().toLowerCase().replace(/\s+/g," "); }
   function loadGeoCache(){ try{ return JSON.parse(localStorage.getItem(GEOCACHE_KEY)||"{}")||{}; }catch(e){ return {}; } }
