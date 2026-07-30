@@ -344,6 +344,30 @@
   .backup-remind{flex-basis:100%; text-align:center; font-size:11.5px; color:var(--champagne); margin-top:3px; line-height:1.4}
   .backup-remind[hidden]{display:none}
 
+  /* ===== Арка дня: намерение утром, итог вечером =====
+     Намерение формулируется от лица «тот, кто…»: выбирается не задача, а кем
+     человек будет сегодня — и вечером ему возвращают именно этот выбор. */
+  .dayarc{max-width:760px; margin:14px auto 0; background:linear-gradient(160deg,rgba(24,38,72,.62),rgba(10,16,32,.72));
+    border:1px solid var(--hair-soft); border-radius:16px; padding:14px 16px}
+  .dayarc[hidden]{display:none}
+  .da-eyebrow{font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:var(--champagne); font-weight:700}
+  .da-head{font-family:var(--font-display); font-size:18px; font-weight:700; color:var(--text); margin:4px 0 2px; line-height:1.3}
+  .da-note{font-size:12.5px; color:var(--text-dim); line-height:1.5}
+  .da-opts{display:flex; flex-wrap:wrap; gap:7px; margin-top:11px}
+  .da-opt{font-size:12px; color:var(--text-dim); background:var(--surface-alt); border:1px solid var(--hair-soft);
+    border-radius:999px; padding:6px 11px; cursor:pointer; transition:.15s; text-align:left; line-height:1.35}
+  .da-opt:hover{border-color:var(--gold); color:var(--text)}
+  .da-opt.on{border-color:var(--gold); color:var(--gold-bright); background:rgba(201,169,106,.1)}
+  .da-votes{font-size:11.5px; color:var(--champagne); margin-top:9px; line-height:1.45}
+  .da-sum{display:flex; flex-wrap:wrap; gap:6px 16px; font-size:12.5px; color:var(--text-dim); margin-top:8px}
+  .da-sum b{color:var(--text); font-weight:600}
+  .da-affirm{font-size:13px; color:var(--champagne); margin-top:10px; padding-top:10px;
+    border-top:1px solid var(--hair-soft); line-height:1.55}
+  .da-echo{font-size:12px; color:var(--text-muted); margin-top:7px; line-height:1.5; font-style:italic}
+  .da-reset{background:none; border:none; color:var(--text-muted); font-size:11.5px; cursor:pointer;
+    padding:4px 0 0; text-decoration:underline; text-underline-offset:2px}
+  .da-reset:hover{color:var(--champagne)}
+
   /* ===== Рост: уровень, опыт, достижения, недельный ритм =====
      Показывается «N из M» и одно ближайшее достижение, а не весь список:
      открытая петля работает на одной цели, на шести — вырождается в шум. */
@@ -988,6 +1012,11 @@
   </section>
 
   <div class="rollover" id="rolloverBar" hidden role="region" aria-label="Новый день"></div>
+
+  <!-- Арка дня — один слот с двумя лицами: утром вопрос о намерении, вечером
+       итог, в котором это намерение всплывает. Двумя карточками это было бы
+       нарушением бюджета внимания: на экране одна подсказка за раз. -->
+  <section class="dayarc" id="dayArc" hidden aria-live="polite" aria-label="Намерение и итог дня"></section>
 
   <div class="rollover" id="planSuggest" hidden role="region" aria-label="Маршрут по геолокации"></div>
 
@@ -2084,6 +2113,7 @@
     updateBackupRemind();
     renderStats();
     renderGrowth();
+    renderDayArc();
     renderPlan();
     renderFocusTimer();
     renderMapCard();
@@ -2536,6 +2566,96 @@
       localStorage.setItem(MILESTONE_KEY, text);
       setTimeout(function(){ toast("🔥 "+text); }, 400);
     }catch(e){}
+  }
+
+  // ===== Арка дня: утром намерение, вечером итог =====
+  // Один слот, два лица. Порог вечера — 18:00 либо момент, когда день закрыт
+  // полностью: итог должен приходить на пике, а не по часам.
+  var DAY_ARC_EVENING_HOUR = 18;
+  function todayTasks(){ return (tasks||[]).filter(function(t){ return isToday(t); }); }
+  function xpEarnedToday(){
+    var k=todayKey(), sum=0;
+    (tasks||[]).forEach(function(t){ if(t.done && t.doneOn===k) sum += (+t.bonusXp || 0); });
+    return sum;
+  }
+  function dayArcPhase(){
+    var list=todayTasks();
+    var done=list.filter(function(t){ return t.done; }).length;
+    var allDone = list.length>0 && done===list.length;
+    if(allDone) return "evening";
+    return (new Date()).getHours() >= DAY_ARC_EVENING_HOUR ? "evening" : "morning";
+  }
+  function renderDayArc(){
+    var box=document.getElementById("dayArc"); if(!box) return;
+    if(!window.SDGrowth){ box.hidden=true; return; }
+    var prefs = (typeof layoutPrefs==="function") ? layoutPrefs() : {};
+    if(prefs.dayArc===false){ box.hidden=true; return; }
+    var phase=dayArcPhase();
+    var intention=SDGrowth.getIntention();
+    box.hidden=false;
+    box.innerHTML="";
+    if(phase==="morning"){ paintArcMorning(box, intention); }
+    else { paintArcEvening(box, intention); }
+  }
+  function arcEl(tag, cls, text){
+    var e=document.createElement(tag); if(cls) e.className=cls; if(text!==undefined) e.textContent=text; return e;
+  }
+  function paintArcMorning(box, intention){
+    box.appendChild(arcEl("div","da-eyebrow","Намерение дня"));
+    box.appendChild(arcEl("div","da-head", intention ? "Сегодня ты — " + intention.focus.toLowerCase() : "Каким будет твой день?"));
+    box.appendChild(arcEl("div","da-note", intention
+      ? "Вечером этот выбор вернётся в итоге дня."
+      : "Выбери не задачу, а кем будешь сегодня. Это меняет то, что кажется важным."));
+    if(intention){
+      var votes=SDGrowth.identityVotes(intention.focus);
+      if(votes>1){
+        box.appendChild(arcEl("div","da-votes", votes + " " + SDGrowth.plural(votes,["раз","раза","раз"]) +
+          " ты выбрал этот путь — он становится тобой."));
+      }
+      var m=SDGrowth.identityMilestone();
+      if(m) box.appendChild(arcEl("div","da-echo", m.title + " · " + m.note));
+      var reset=arcEl("button","da-reset","Выбрать другое");
+      reset.type="button";
+      reset.addEventListener("click", function(){ SDGrowth.setIntention(null); renderDayArc(); });
+      box.appendChild(reset);
+      return;
+    }
+    var opts=arcEl("div","da-opts");
+    SDGrowth.INTENTION_PRESETS.forEach(function(p){
+      var b=arcEl("button","da-opt",p); b.type="button";
+      b.addEventListener("click", function(){
+        SDGrowth.setIntention(p);
+        renderDayArc();
+        toast("🧭 " + p);
+      });
+      opts.appendChild(b);
+    });
+    box.appendChild(opts);
+  }
+  function paintArcEvening(box, intention){
+    var list=todayTasks();
+    var done=list.filter(function(t){ return t.done; }).length;
+    var byQuad={1:0,2:0,3:0,4:0};
+    list.forEach(function(t){ if(t.done) byQuad[quadOf(t)]++; });
+    var stats=readStats();
+    var st=SDGrowth.streakState(stats);
+    var s=SDGrowth.buildDaySummary({
+      done: done, total: list.length, streak: st.current, activeToday: st.activeToday,
+      doneByQuad: byQuad, xpEarned: xpEarnedToday(),
+      intentionFocus: intention ? intention.focus : null
+    });
+    box.appendChild(arcEl("div","da-eyebrow","Итог дня"));
+    box.appendChild(arcEl("div","da-head", s.headline));
+    var row=arcEl("div","da-sum");
+    if(s.xpEarned) row.appendChild(arcEl("span",null,"+"+s.xpEarned+" XP за день"));
+    if(s.focusQuadrantLabel) row.appendChild(arcEl("span",null,"Фокус: "+s.focusQuadrantLabel));
+    row.appendChild(arcEl("span",null,s.streakLine));
+    box.appendChild(row);
+    box.appendChild(arcEl("div","da-affirm", s.affirmation));
+    // Утреннее намерение всплывает вечером — петля закрывается там же, где
+    // открылась, иначе утренний выбор остался бы без последствий.
+    if(s.intentionFocus) box.appendChild(arcEl("div","da-echo","Утром ты выбрал быть тем, кто " +
+      s.intentionFocus.replace(/^Тот,\s*кто\s*/i,"") + "."));
   }
 
   // ===== Рост: уровень, опыт, ближайшее достижение, недельный ритм =====
@@ -4911,6 +5031,82 @@
         tasks.length=0; keep.forEach(function(x){ tasks.push(x); }); render();
       }
     });
+    T("арка дня: утром спрашивает намерение, шесть путей на выбор", function(){
+      var IK="superday_intention_v1", snap=localStorage.getItem(IK);
+      var keep=tasks.slice();
+      try{
+        localStorage.removeItem(IK);
+        tasks.length=0;
+        // День не закрыт полностью → фаза зависит от часа; ставим незакрытое дело.
+        tasks.push({id:"da1",text:"дело",urgent:false,important:true,done:false,
+                    time:null,dur:30,defer:null,repeat:null,doneOn:null});
+        var box=document.getElementById("dayArc");
+        box.innerHTML="";
+        paintArcMorning(box, null);
+        var opts=box.querySelectorAll(".da-opt");
+        if(opts.length!==6) throw new Error("путей "+opts.length+" вместо шести");
+        if(box.querySelector(".da-head").textContent!=="Каким будет твой день?") throw new Error("не тот вопрос");
+        // Выбор запоминается и в тот же день возвращается человеку.
+        SDGrowth.setIntention(SDGrowth.INTENTION_PRESETS[2]);
+        box.innerHTML="";
+        paintArcMorning(box, SDGrowth.getIntention());
+        if(box.querySelector(".da-head").textContent.indexOf("Сегодня ты — ")!==0) throw new Error("намерение не отражено");
+        return true;
+      } finally {
+        if(snap===null) localStorage.removeItem(IK); else localStorage.setItem(IK, snap);
+        tasks.length=0; keep.forEach(function(x){ tasks.push(x); }); render();
+      }
+    });
+    T("арка дня: вечером итог поднимает утреннее намерение", function(){
+      var IK="superday_intention_v1", snap=localStorage.getItem(IK);
+      var keep=tasks.slice();
+      try{
+        tasks.length=0;
+        tasks.push({id:"da2",text:"сделано",urgent:false,important:true,done:true,
+                    time:null,dur:60,defer:null,repeat:null,doneOn:todayKey(),bonusXp:40});
+        SDGrowth.setIntention("Тот, кто держит слово себе");
+        var box=document.getElementById("dayArc");
+        box.innerHTML="";
+        paintArcEvening(box, SDGrowth.getIntention());
+        var head=box.querySelector(".da-head").textContent;
+        if(head!=="День закрыт полностью 🎯") throw new Error("итог: "+head);
+        if(box.textContent.indexOf("+40 XP за день")===-1) throw new Error("XP за день не показаны");
+        var echo=box.querySelector(".da-echo");
+        if(!echo || echo.textContent.indexOf("держит слово себе")===-1) throw new Error("утренний выбор не вернулся вечером");
+        if(!box.querySelector(".da-affirm").textContent) throw new Error("нет аффирмации");
+        return true;
+      } finally {
+        if(snap===null) localStorage.removeItem(IK); else localStorage.setItem(IK, snap);
+        tasks.length=0; keep.forEach(function(x){ tasks.push(x); }); render();
+      }
+    });
+    T("арка дня: закрытый полностью день переключает фазу, не дожидаясь вечера", function(){
+      var keep=tasks.slice();
+      try{
+        tasks.length=0;
+        tasks.push({id:"da3",text:"одно",urgent:false,important:true,done:true,
+                    time:null,dur:30,defer:null,repeat:null,doneOn:todayKey()});
+        if(dayArcPhase()!=="evening") throw new Error("день закрыт, а фаза "+dayArcPhase());
+        tasks.push({id:"da4",text:"второе",urgent:false,important:true,done:false,
+                    time:null,dur:30,defer:null,repeat:null,doneOn:null});
+        var expected = (new Date()).getHours() >= 18 ? "evening" : "morning";
+        if(dayArcPhase()!==expected) throw new Error("незакрытый день дал фазу "+dayArcPhase());
+        return true;
+      } finally { tasks.length=0; keep.forEach(function(x){ tasks.push(x); }); render(); }
+    });
+    T("XP за день считаются только по закрытым сегодня", function(){
+      var keep=tasks.slice();
+      try{
+        tasks.length=0;
+        tasks.push({id:"x1",text:"сегодня",urgent:false,important:true,done:true,time:null,dur:30,
+                    defer:null,repeat:null,doneOn:todayKey(),bonusXp:30});
+        tasks.push({id:"x2",text:"вчера",urgent:false,important:true,done:true,time:null,dur:30,
+                    defer:null,repeat:null,doneOn:SDGrowth.shiftDayKey(todayKey(),-1),bonusXp:100});
+        tasks.push({id:"x3",text:"открыто",urgent:false,important:true,done:false,time:null,dur:30,
+                    defer:null,repeat:null,doneOn:null});
+        return xpEarnedToday()===30;
+      } finally { tasks.length=0; keep.forEach(function(x){ tasks.push(x); }); render(); }
+    });
     T("склонение русских числительных", function(){
       var f=["день","дня","дней"];
       return SDGrowth.plural(1,f)==="день" && SDGrowth.plural(3,f)==="дня" && SDGrowth.plural(11,f)==="дней"
@@ -5306,6 +5502,7 @@
   var LAYOUT_KEY = "superday_layout_v1";
   var LAYOUT_BLOCKS = [
     { id:"rolloverBar", name:"Новый день" },
+    { id:"dayArc", name:"Намерение и итог дня" },
     { id:"focusCard", name:"Начни с этого" }
   ];
   function layoutPrefs(){
