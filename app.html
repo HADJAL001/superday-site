@@ -441,9 +441,11 @@
     box-shadow:0 18px 50px rgba(0,0,0,.5); max-width:min(86vw,420px)}
   .triumph.show{opacity:1}
   .triumph.leave{opacity:0; transform:translate(-50%,-44px)}
-  .triumph .tr-kicker{font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#C49A3F; font-weight:700}
-  .triumph .tr-value{font-family:var(--font-display); font-size:52px; font-weight:900; color:#F6E3A8; line-height:1.05; margin:2px 0}
-  .triumph .tr-note{font-size:13px; color:#F6E3A8; opacity:.9; line-height:1.5; margin-top:4px}
+  /* Золото здесь — «состояние» (награда), поэтому берём его из :root: иначе
+     смена палитры перекрасит приложение, а карточку триумфа — нет. */
+  .triumph .tr-kicker{font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--gold); font-weight:700}
+  .triumph .tr-value{font-family:var(--font-display); font-size:52px; font-weight:900; color:var(--gold-bright); line-height:1.05; margin:2px 0}
+  .triumph .tr-note{font-size:13px; color:var(--gold-bright); opacity:.9; line-height:1.5; margin-top:4px}
   @media (prefers-reduced-motion:reduce){
     .triumph{transition:opacity .2s ease}
     .triumph.leave{transform:translate(-50%,0)}
@@ -1422,6 +1424,35 @@
     el.classList.add("toast-on");
     clearTimeout(_toastTimer);
     _toastTimer=setTimeout(function(){ el.classList.remove("toast-on","toast-error"); if(typeof refreshHint==="function") refreshHint(); }, isError?4200:2600);
+    uiChime(type);
+  }
+  // ===== Звуковой язык интерфейса — раунд 2 п.2 =====
+  // 4 коротких различимых тона (success/error/warn/progress), те же партитуры,
+  // что в asgard-redesign lib/feedback/uiSound.ts — межплатформенное созвучие.
+  // Отдельный тумблер НЕ заводим: в SUPER DAY уже есть «одна кнопка на весь
+  // звук приложения» (isMuted() ниже) — это просто ещё один источник звука,
+  // подчинённый тому же тумблеру, как голосовой режим/напоминания/таймбокс.
+  var UI_CHIME_SCORES = {
+    success: [ {f:659.25,at:0,   dur:0.09,type:"sine",    peak:0.07 }, {f:880.0, at:0.07,dur:0.14,type:"sine",    peak:0.06 } ],
+    error:   [ {f:329.63,at:0,   dur:0.10,type:"square",  peak:0.045}, {f:220.0, at:0.08,dur:0.16,type:"square",  peak:0.045} ],
+    warn:    [ {f:480.0, at:0,   dur:0.08,type:"triangle",peak:0.07 }, {f:480.0, at:0.14,dur:0.08,type:"triangle",peak:0.07 } ],
+    progress:[ {f:520.0, at:0,   dur:0.05,type:"sine",    peak:0.035} ]
+  };
+  function uiChime(kind){
+    var score = UI_CHIME_SCORES[kind]; if(!score) return;
+    if(typeof isMuted==="function" && isMuted()) return;
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return; var ac=new AC(); var maxEnd=0;
+      score.forEach(function(b){
+        var o=ac.createOscillator(), g=ac.createGain(), t0=ac.currentTime+b.at;
+        o.type=b.type; o.frequency.setValueAtTime(b.f,t0);
+        g.gain.setValueAtTime(0.0001,t0); g.gain.linearRampToValueAtTime(b.peak,t0+0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001,t0+b.dur);
+        o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0+b.dur+0.02);
+        if(b.at+b.dur>maxEnd) maxEnd=b.at+b.dur;
+      });
+      setTimeout(function(){ try{ ac.close(); }catch(e){} }, (maxEnd+0.5)*1000);
+    }catch(e){}
   }
   // ===== Тихий режим — одна кнопка на весь звук приложения =====
   // Звук раньше шёл из трёх независимых мест (сигнал голосового режима,
@@ -2566,7 +2597,12 @@
     var hold = (res.levelUp || r.insight) ? 2300 : 1000;
     triumph._t1 = setTimeout(function(){ box.classList.add("leave"); box.classList.remove("show"); }, hold);
     triumph._t2 = setTimeout(function(){ box.hidden = true; box.classList.remove("leave"); }, hold + 460);
-    if(navigator.vibrate){
+    // Вибрацию без предшествующего касания браузер отклоняет и пишет ошибку в
+    // консоль — а триумф прилетает и по таймеру (напоминание, автозакрытие дела),
+    // не только по нажатию. Спрашиваем об активации заранее: где её нет —
+    // молчим, где нет и самого userActivation (Safari) — ведём себя как прежде.
+    var act = navigator.userActivation;
+    if(navigator.vibrate && (!act || act.hasBeenActive)){
       try{ navigator.vibrate(res.levelUp || r.kind === "critical" ? [18,40,26] : 14); }catch(e){}
     }
   }
@@ -2767,7 +2803,7 @@
       var spor=(data.needs_debate||[]).length;
       toast("🧠 Разобрано: "+list.length+" "+plural(list.length,["дело","дела","дел"])
         + (data.source==="fallback_heuristic" ? " · без модели, по словам-маркерам" : "")
-        + (spor ? " · спорных: "+spor : ""));
+        + (spor ? " · спорных: "+spor : ""), "success");
     }).catch(function(){
       clearTimeout(timer);
       parseGlow(false);
@@ -2800,7 +2836,7 @@
         try{ var l=SDGrowth.readLedger(); l.debated+=1; localStorage.setItem("superday_growth_v1", JSON.stringify(l)); }catch(e){}
       }
       save(); render();
-      toast("⚖️ "+(d.verdict.reasoning || "Приоритет уточнён"));
+      toast("⚖️ "+(d.verdict.reasoning || "Приоритет уточнён"), "success");
     }).catch(function(){ toast("Спор не состоялся — приоритет остаётся вашим", "warn"); });
   }
 
