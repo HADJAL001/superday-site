@@ -344,6 +344,21 @@
   .backup-remind{flex-basis:100%; text-align:center; font-size:11.5px; color:var(--champagne); margin-top:3px; line-height:1.4}
   .backup-remind[hidden]{display:none}
 
+  /* ===== Сверка времени =====
+     Не приговор себе, а поправка: подпись объясняет, что план начнёт считаться
+     по человеку, а не по учебнику. */
+  .timecheck{max-width:760px; margin:12px auto 0; background:rgba(24,38,72,.55);
+    border:1px solid var(--hair-soft); border-radius:14px; padding:11px 14px}
+  .timecheck[hidden]{display:none}
+  .tc-q{font-size:13px; color:var(--text); line-height:1.5}
+  .tc-q b{color:var(--champagne); font-weight:600}
+  .tc-opts{display:flex; flex-wrap:wrap; gap:6px; margin-top:9px}
+  .tc-opt{font-size:12px; color:var(--text-dim); background:var(--surface-alt); border:1px solid var(--hair-soft);
+    border-radius:999px; padding:5px 11px; cursor:pointer; transition:.15s}
+  .tc-opt:hover{border-color:var(--gold); color:var(--text)}
+  .tc-skip{background:none; border:none; color:var(--text-muted); font-size:11.5px; cursor:pointer; padding:5px 4px}
+  .tc-skip:hover{color:var(--champagne)}
+
   /* ===== Разбор списком =====
      Лист лежит поверх фона как окно дел: пока идёт разбор, квадранты за ним
      подсвечиваются по очереди — ожидание перестаёт читаться как зависание. */
@@ -1045,6 +1060,11 @@
        итог, в котором это намерение всплывает. Двумя карточками это было бы
        нарушением бюджета внимания: на экране одна подсказка за раз. -->
   <section class="dayarc" id="dayArc" hidden aria-live="polite" aria-label="Намерение и итог дня"></section>
+
+  <!-- Сверка времени: один короткий вопрос сразу после закрытия длинного дела, пока
+       ответ дёшев. Не чаще двух раз в день, а когда оценка уже уверенная —
+       одного: вопрос не должен превращать победу в анкету. -->
+  <div class="timecheck" id="timeCheck" hidden role="region" aria-label="Сверка времени"></div>
 
   <div class="rollover" id="planSuggest" hidden role="region" aria-label="Маршрут по геолокации"></div>
 
@@ -2513,6 +2533,8 @@
       t.rewardKind = res.reward.kind;
       if(t.loc && typeof t.loc.lat === "number") SDGrowth.appendTrailPoint(t.id, t.loc.lat, t.loc.lon);
       triumph(res);
+      // Вопрос о времени — после триумфа, а не вместо него: сначала победа.
+      setTimeout(function(){ askTimeCheck(t); }, 900);
     }catch(e){}
   }
   function revokeFor(t){
@@ -2622,6 +2644,49 @@
       localStorage.setItem(MILESTONE_KEY, text);
       setTimeout(function(){ toast("🔥 "+text); }, 400);
     }catch(e){}
+  }
+
+  // ===== Сверка времени: личный коэффициент =====
+  // Спрашиваем сразу после закрытия длинного дела — тогда ответ дёшев и точен.
+  // Медиана вместо среднего и усадка к единице считаются в growth.js: один
+  // аномальный вечер не должен переписать человека.
+  function askTimeCheck(t){
+    if(!window.SDGrowth || !t) return;
+    if(!SDGrowth.shouldAskAboutTime(validDur(t.dur) ? t.dur : null)) return;
+    var box=document.getElementById("timeCheck"); if(!box) return;
+    box.innerHTML="";
+    box.hidden=false;
+    // Текст дела пишет человек — собираем узлами, а не строкой разметки.
+    var q=document.createElement("div"); q.className="tc-q";
+    q.appendChild(document.createTextNode("«"+t.text+"» закладывалось на "));
+    var strong=document.createElement("b"); strong.textContent=SDGrowth.formatMinutes(t.dur);
+    q.appendChild(strong);
+    q.appendChild(document.createTextNode(". Как вышло на самом деле?"));
+    box.appendChild(q);
+    var opts=document.createElement("div"); opts.className="tc-opts";
+    ["faster","asExpected","longer","muchLonger"].forEach(function(v){
+      var b=document.createElement("button"); b.type="button"; b.className="tc-opt";
+      b.textContent=SDGrowth.VERDICT_LABEL[v];
+      b.addEventListener("click", function(){
+        var c=SDGrowth.recordTimeVerdict(v);
+        box.hidden=true; box.innerHTML="";
+        renderGrowth();
+        render();
+        var lbl=SDGrowth.calibrationLabel();
+        toast("⏱ "+(lbl ? lbl.headline : "Учтено") + (c.confident ? " · поправка ×"+c.factor : ""));
+      });
+      opts.appendChild(b);
+    });
+    var skip=document.createElement("button"); skip.type="button"; skip.className="tc-skip";
+    skip.textContent="Пропустить";
+    // Пропуск считается так же, как ответ: иначе вопрос возвращался бы снова и
+    // снова к тому, кто уже показал, что отвечать не хочет.
+    skip.addEventListener("click", function(){
+      SDGrowth.recordTimeQuestionSkipped();
+      box.hidden=true; box.innerHTML="";
+    });
+    opts.appendChild(skip);
+    box.appendChild(opts);
   }
 
   // ===== Разбор списка дел моделью =====
@@ -2888,6 +2953,15 @@
       if(dig.next) html += " · дальше: <b>" + dig.next.title + "</b> — " + dig.next.desc;
       else html += " · все открыты 🏆";
       ach.innerHTML = html;
+    }
+    // Личная поправка ко времени живёт рядом с уровнем: это тоже про рост, а
+    // не про настройки. Пока данных мало — видно, сколько ответов осталось.
+    var cal = SDGrowth.calibrationLabel();
+    if(cal && ach){
+      var cl=document.createElement("div");
+      cl.style.marginTop="7px";
+      cl.textContent="⏱ " + cal.headline + (cal.progress ? " · " + cal.progress : " · поправка ×" + cal.factor);
+      ach.appendChild(cl);
     }
     var rh = SDGrowth.weeklyRhythm(readStats());
     var rhEl = document.getElementById("grRhythm");
@@ -3177,6 +3251,17 @@
     var v=480; try{ v=parseInt(localStorage.getItem(DAYBUDGET_KEY)||"480",10)||480; }catch(e){ v=480; }
     if(v<30) v=30; if(v>1440) v=1440; return v;
   }
+  // Личная поправка ко времени применяется одинаково везде, где считаются
+  // минуты. Если применить её только к сумме, числа в одной карточке разъедутся
+  // и это прочитается как ошибка счёта, а не как поправка.
+  function timeFactor(){
+    if(!window.SDGrowth) return 1;
+    try{ var c=SDGrowth.computeCalibration(); return c.confident ? c.factor : 1; }catch(e){ return 1; }
+  }
+  function plannedMinutes(list){
+    var raw=(list||[]).reduce(function(s,t){ return s + (validDur(t.dur) ? t.dur : 0); }, 0);
+    return Math.round(raw * timeFactor());
+  }
   // Пары дел со временем и длительностью, чьи интервалы пересекаются (по соседству в хроно-порядке).
   function findOverlaps(order){
     var timed=order.filter(function(t){ return !t.done && timeToMin(t.time)!==null; });
@@ -3216,7 +3301,7 @@
     var active=order.filter(function(t){ return !t.done; });
     var withDur=active.filter(function(t){ return validDur(t.dur); });
     if(!withDur.length){ box.hidden=true; box.innerHTML=""; return; }
-    var planned=withDur.reduce(function(s,t){ return s+t.dur; },0);
+    var planned=plannedMinutes(withDur);
     var budget=dayBudget();
     var noDur=active.length-withDur.length;
     var over=planned>budget;
@@ -3225,7 +3310,11 @@
     box.innerHTML="";
     var head=document.createElement("div"); head.className="ds-head";
     var lead=document.createElement("span"); lead.className="ds-lead";
-    lead.textContent="Запланировано "+fmtDur(planned)+" в "+withDur.length+" "+plural(withDur.length,["деле","делах","делах"]);
+    // Если минуты пересчитаны по человеку, это сказано вслух: иначе цифра
+    // разошлась бы с суммой длительностей и читалась как ошибка счёта.
+    var tf=timeFactor();
+    lead.textContent="Запланировано "+fmtDur(planned)+" в "+withDur.length+" "+plural(withDur.length,["деле","делах","делах"])
+      + (tf!==1 ? " (с вашей поправкой ×"+tf+")" : "");
     var budBtn=document.createElement("button"); budBtn.type="button"; budBtn.className="ds-budget";
     budBtn.textContent="бюджет дня: "+fmtDur(budget);
     budBtn.title="Нажми, чтобы изменить бюджет дня";
@@ -3581,7 +3670,7 @@
     var doneN=order.filter(function(t){return t.done;}).length;
     var total=order.length;
     var withDur=order.filter(function(t){return validDur(t.dur);});
-    var planned=withDur.reduce(function(s,t){return s+t.dur;},0);
+    var planned=plannedMinutes(withDur);
     var budget=dayBudget();
     var load=0;
     if(planned>budget) load+=2; else if(planned>budget*0.75) load+=1;
@@ -5372,6 +5461,69 @@
       if(sheet.hidden) throw new Error("не открылось");
       closeBulk();
       return sheet.hidden===true && document.getElementById("bulkText").value==="";
+    });
+    T("сверка времени: спрашивает про длинные дела и не чаще двух раз в день", function(){
+      var CK="superday_calib_v1", snap=localStorage.getItem(CK);
+      try{
+        localStorage.removeItem(CK);
+        // Короткое дело вопросом не сопровождается: цена вопроса выше пользы.
+        if(SDGrowth.shouldAskAboutTime(15)!==false) throw new Error("спросил про короткое дело");
+        if(SDGrowth.shouldAskAboutTime(60)!==true) throw new Error("не спросил про длинное дело");
+        SDGrowth.recordTimeQuestionSkipped();
+        if(SDGrowth.shouldAskAboutTime(60)!==true) throw new Error("второй вопрос за день должен быть можно");
+        SDGrowth.recordTimeQuestionSkipped();
+        if(SDGrowth.shouldAskAboutTime(60)!==false) throw new Error("третий вопрос за день лишний");
+        return true;
+      } finally { if(snap===null) localStorage.removeItem(CK); else localStorage.setItem(CK, snap); }
+    });
+    T("сверка времени: медиана с усадкой, а не среднее", function(){
+      var CK="superday_calib_v1", snap=localStorage.getItem(CK);
+      try{
+        localStorage.removeItem(CK);
+        // Один ответ «сильно дольше» (2.5) при доверии 1/5 сдвигает всего до 1.3.
+        var c1=SDGrowth.recordTimeVerdict("muchLonger");
+        if(c1.factor!==1.3) throw new Error("после одного ответа фактор "+c1.factor);
+        if(c1.confident!==false) throw new Error("уверенность на одном ответе");
+        localStorage.removeItem(CK);
+        for(var i=0;i<5;i++) SDGrowth.recordTimeVerdict("longer");
+        var c2=SDGrowth.computeCalibration();
+        if(c2.factor!==1.5 || c2.confident!==true) throw new Error("после пяти ответов "+c2.factor+"/"+c2.confident);
+        // Один выброс не переписывает человека: медиана держит.
+        SDGrowth.recordTimeVerdict("muchLonger");
+        if(SDGrowth.computeCalibration().factor!==1.5) throw new Error("выброс сдвинул медиану");
+        return true;
+      } finally { if(snap===null) localStorage.removeItem(CK); else localStorage.setItem(CK, snap); }
+    });
+    T("поправка применяется к сумме минут дня", function(){
+      var CK="superday_calib_v1", snap=localStorage.getItem(CK);
+      var keep=tasks.slice();
+      try{
+        localStorage.removeItem(CK);
+        tasks.length=0;
+        var list=[{dur:60},{dur:60}];
+        if(plannedMinutes(list)!==120) throw new Error("без поправки "+plannedMinutes(list));
+        for(var i=0;i<5;i++) SDGrowth.recordTimeVerdict("longer");
+        if(timeFactor()!==1.5) throw new Error("фактор "+timeFactor());
+        if(plannedMinutes(list)!==180) throw new Error("с поправкой "+plannedMinutes(list));
+        return true;
+      } finally {
+        if(snap===null) localStorage.removeItem(CK); else localStorage.setItem(CK, snap);
+        tasks.length=0; keep.forEach(function(x){ tasks.push(x); }); render();
+      }
+    });
+    T("подпись поправки не врёт про направление ошибки", function(){
+      var CK="superday_calib_v1", snap=localStorage.getItem(CK);
+      try{
+        localStorage.removeItem(CK);
+        for(var i=0;i<5;i++) SDGrowth.recordTimeVerdict("longer");
+        var slow=SDGrowth.calibrationLabel();
+        localStorage.removeItem(CK);
+        for(var j=0;j<5;j++) SDGrowth.recordTimeVerdict("faster");
+        var fast=SDGrowth.calibrationLabel();
+        return slow.headline.indexOf("недооцениваете")!==-1
+          && fast.headline.indexOf("больше, чем нужно")!==-1
+          && slow.progress===null;
+      } finally { if(snap===null) localStorage.removeItem(CK); else localStorage.setItem(CK, snap); }
     });
     T("склонение русских числительных", function(){
       var f=["день","дня","дней"];
