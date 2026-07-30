@@ -344,6 +344,45 @@
   .backup-remind{flex-basis:100%; text-align:center; font-size:11.5px; color:var(--champagne); margin-top:3px; line-height:1.4}
   .backup-remind[hidden]{display:none}
 
+  /* ===== Рост: уровень, опыт, достижения, недельный ритм =====
+     Показывается «N из M» и одно ближайшее достижение, а не весь список:
+     открытая петля работает на одной цели, на шести — вырождается в шум. */
+  .growth{max-width:760px; margin:26px auto 0; background:linear-gradient(160deg,rgba(17,27,48,.72),rgba(8,13,26,.72));
+    border:1px solid var(--hair-soft); border-radius:18px; padding:18px 20px}
+  .gr-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:10px}
+  .gr-lvl{font-family:var(--font-display); font-weight:700; font-size:20px; color:var(--text)}
+  .gr-xp{font-size:12.5px; color:var(--text-dim); font-variant-numeric:tabular-nums}
+  .gr-bar{height:10px; border-radius:6px; background:var(--surface-alt); border:1px solid var(--hair-soft); overflow:hidden}
+  .gr-bar i{display:block; height:100%; width:0; background:var(--grad-gold); border-radius:5px;
+    transition:width .6s cubic-bezier(.22,.8,.3,1)}
+  .gr-next{font-size:12.5px; color:var(--champagne); margin-top:8px; line-height:1.45}
+  .gr-ach{font-size:12.5px; color:var(--text-dim); margin-top:10px; padding-top:10px;
+    border-top:1px solid var(--hair-soft); line-height:1.5}
+  .gr-ach b{color:var(--text); font-weight:600}
+  .gr-rhythm{display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:12px; color:var(--text-muted); margin-top:10px; line-height:1.5}
+  .gr-dots{display:inline-flex; gap:5px}
+  .gr-dot{width:9px; height:9px; border-radius:50%; background:var(--surface-alt); border:1px solid var(--hair-soft)}
+  .gr-dot.on{background:var(--grad-gold); border-color:transparent}
+  .gr-dot.frozen{background:rgba(120,170,255,.35); border-color:rgba(120,170,255,.5)}
+  .gr-dot.today{box-shadow:0 0 0 2px var(--hair)}
+
+  /* Триумф: удержание короткое, уход с подъёмом — пик впечатления, а не
+     модальное окно, которое надо закрывать. Клики не перехватывает. */
+  .triumph{position:fixed; left:50%; top:38%; transform:translate(-50%,0); z-index:70; pointer-events:none;
+    background:rgba(18,36,74,.96); border:1px solid rgba(231,197,110,.4); border-radius:16px;
+    padding:16px 24px; text-align:center; opacity:0; transition:opacity .22s ease, transform .42s ease;
+    box-shadow:0 18px 50px rgba(0,0,0,.5); max-width:min(86vw,420px)}
+  .triumph.show{opacity:1}
+  .triumph.leave{opacity:0; transform:translate(-50%,-44px)}
+  .triumph .tr-kicker{font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#C49A3F; font-weight:700}
+  .triumph .tr-value{font-family:var(--font-display); font-size:52px; font-weight:900; color:#F6E3A8; line-height:1.05; margin:2px 0}
+  .triumph .tr-note{font-size:13px; color:#F6E3A8; opacity:.9; line-height:1.5; margin-top:4px}
+  @media (prefers-reduced-motion:reduce){
+    .triumph{transition:opacity .2s ease}
+    .triumph.leave{transform:translate(-50%,0)}
+    .gr-bar i{transition:none}
+  }
+
   /* ===== Статистика недели + серия дней ===== */
   .stats{max-width:760px; margin:26px auto 0; background:linear-gradient(160deg,rgba(17,27,48,.72),rgba(8,13,26,.72));
     border:1px solid var(--hair-soft); border-radius:18px; padding:18px 20px}
@@ -439,6 +478,11 @@
   .tdur:hover{border-color:var(--gold); color:var(--gold-bright)}
   .tdur.empty{color:var(--text-muted); background:none; border-style:dashed; opacity:.5}
   .tdur.empty:hover{opacity:1; color:var(--champagne)}
+  /* Предпросмотр награды — самый тихий бейдж в строке: он подсказывает, а не
+     торгуется. Кликать нечего, поэтому и курсор обычный. */
+  .txp{flex:0 0 auto; display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:600;
+    color:var(--text-muted); border:1px solid var(--hair-soft); border-radius:999px; padding:2px 7px;
+    margin-top:1px; white-space:nowrap; opacity:.72}
 
   /* ===== Перенос дела на завтра + разгрузка дня ===== */
   .tdef{flex:0 0 auto; cursor:pointer; font-family:inherit; font-size:11px; font-weight:600; white-space:nowrap;
@@ -1089,6 +1133,21 @@
       </section>
     </div>
   </section>
+  <section class="pgroup" data-sec="growth">
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">🏅</span><span class="pg-title">Рост</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <div class="pg-body">
+      <section class="growth" id="growthCard" aria-label="Уровень и достижения">
+        <div class="gr-head">
+          <span class="gr-lvl" id="grLevel">Уровень 1</span>
+          <span class="gr-xp" id="grXp"></span>
+        </div>
+        <div class="gr-bar" role="progressbar" aria-labelledby="grLevel" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="grBar"><i id="grFill"></i></div>
+        <div class="gr-next" id="grNext" aria-live="polite"></div>
+        <div class="gr-ach" id="grAch"></div>
+        <div class="gr-rhythm" id="grRhythm"></div>
+      </section>
+    </div>
+  </section>
   <section class="pgroup" data-sec="tpl">
     <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">🗂</span><span class="pg-title">Шаблоны дня</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
     <div class="pg-body">
@@ -1176,6 +1235,11 @@
   <div class="mapview" id="mapView" aria-label="Карта дня — точки дел и маршрут"></div>
 </div>
 
+<div class="triumph" id="triumphBox" aria-live="polite" hidden></div>
+
+<!-- Движок роста грузится до основного скрипта: рендер обращается к SDGrowth
+     синхронно, а не по событию загрузки. -->
+<script src="growth.js"></script>
 <script>
   var STORE_KEY = "superday_tasks_v1";
   var tasks = [];
@@ -1805,6 +1869,16 @@
       // сжимается в столбик из двух букв, а он тут главное.
       var meta = document.createElement("span"); meta.className="tmeta";
       meta.appendChild(tm); meta.appendChild(dr); meta.appendChild(rp); meta.appendChild(df); meta.appendChild(lc); meta.appendChild(cx);
+      // Предпросмотр награды — до закрытия дела, а не после: цена усилия должна
+      // быть видна в момент выбора, чем заняться. Максимум даёт квадрант
+      // «важно, не срочно» — награда тянет туда, где рост.
+      if(window.SDGrowth && !t.done){
+        var d = SDGrowth.difficultyOf(validDur(t.dur) ? t.dur : null, quadOf(t));
+        var xpb = document.createElement("span"); xpb.className = "txp";
+        xpb.textContent = d.emoji + " +" + d.xp + " XP";
+        xpb.title = d.label + " · " + d.xp + " XP за закрытие";
+        meta.appendChild(xpb);
+      }
       li.appendChild(meta);
       li.appendChild(del);
       if(!plan){
@@ -2009,6 +2083,7 @@
     renderFocus();
     updateBackupRemind();
     renderStats();
+    renderGrowth();
     renderPlan();
     renderFocusTimer();
     renderMapCard();
@@ -2287,7 +2362,7 @@
 
   // ===== Выполнение задачи + учёт для статистики =====
   function toggleDone(t){
-    if(t.done){ t.done=false; t.doneOn=null; }
+    if(t.done){ t.done=false; t.doneOn=null; revokeFor(t); }
     else { markDone(t); }
     save(); render();
   }
@@ -2331,7 +2406,61 @@
   // ставился вручную (карточка «Начни с этого», кнопка «Готово» таймера).
   function markDone(t){
     if(!t || t.done) return false;
-    t.done=true; t.doneOn=todayKey(); recordCompletion(); return true;
+    t.done=true; t.doneOn=todayKey(); recordCompletion();
+    awardFor(t);
+    return true;
+  }
+  // Начисление вынесено из markDone, чтобы отметка «выполнено» не зависела от
+  // движка роста: если growth.js не загрузился, дело всё равно закрывается.
+  function awardFor(t){
+    if(!window.SDGrowth) return;
+    try{
+      var doneToday = (readStats()[todayKey()] || 0);
+      var res = SDGrowth.registerCompletion({
+        minutes: typeof t.dur === "number" ? t.dur : null,
+        quadrant: quadOf(t),
+        doneToday: doneToday
+      });
+      // Исход броска фиксируется на задаче: иначе XP «дышал» бы между
+      // перерисовками, а снятие галочки забирало бы не то, что дало.
+      t.bonusXp = res.reward.xp;
+      t.rewardKind = res.reward.kind;
+      if(t.loc && typeof t.loc.lat === "number") SDGrowth.appendTrailPoint(t.id, t.loc.lat, t.loc.lon);
+      triumph(res);
+    }catch(e){}
+  }
+  function revokeFor(t){
+    if(!window.SDGrowth) return;
+    try{ SDGrowth.revokeCompletion(t.bonusXp, quadOf(t)); }catch(e){}
+    t.bonusXp = null; t.rewardKind = null;
+  }
+
+  // ===== Триумф: пик впечатления вместо тоста =====
+  // Держится дольше, когда есть что прочитать (инсайт или новый уровень), и
+  // уходит сам — закрывать нечего, кликам не мешает.
+  function triumph(res){
+    var box = document.getElementById("triumphBox");
+    if(!box) return;
+    var r = res.reward;
+    var kicker = res.levelUp ? "Новый уровень" : (r.kind === "critical" ? "Критический успех" : r.difficulty.label);
+    var value = res.levelUp ? String(res.level) : ("+" + r.xp);
+    var note = res.levelUp ? ("Уровень " + res.level + " — " + r.difficulty.emoji + " +" + r.xp + " XP")
+                           : (r.insight || (r.difficulty.emoji + " " + r.difficulty.label));
+    box.innerHTML = '<div class="tr-kicker"></div><div class="tr-value"></div><div class="tr-note"></div>';
+    box.querySelector(".tr-kicker").textContent = kicker;
+    box.querySelector(".tr-value").textContent = value;
+    box.querySelector(".tr-note").textContent = note;
+    box.hidden = false;
+    box.classList.remove("leave");
+    if(triumph._t1) clearTimeout(triumph._t1);
+    if(triumph._t2) clearTimeout(triumph._t2);
+    requestAnimationFrame(function(){ box.classList.add("show"); });
+    var hold = (res.levelUp || r.insight) ? 2300 : 1000;
+    triumph._t1 = setTimeout(function(){ box.classList.add("leave"); box.classList.remove("show"); }, hold);
+    triumph._t2 = setTimeout(function(){ box.hidden = true; box.classList.remove("leave"); }, hold + 460);
+    if(navigator.vibrate){
+      try{ navigator.vibrate(res.levelUp || r.kind === "critical" ? [18,40,26] : 14); }catch(e){}
+    }
   }
   // Убрать выполненные, НЕ убивая правила повтора: регулярное дело остаётся и
   // просто становится невыполненным. Иначе «Убрать выполненные» стирало бы зарядку.
@@ -2398,6 +2527,61 @@
     toast("🔁 "+fmtRepeat(rep) + (isOffDay(t) ? " · сегодня не по расписанию" : ""));
   }
 
+  // Веха серии объявляется один раз: повтор при каждой перерисовке превратил бы
+  // награду в навязчивое уведомление.
+  var MILESTONE_KEY = "superday_milestone_v1";
+  function toastMilestone(text){
+    try{
+      if(localStorage.getItem(MILESTONE_KEY) === text) return;
+      localStorage.setItem(MILESTONE_KEY, text);
+      setTimeout(function(){ toast("🔥 "+text); }, 400);
+    }catch(e){}
+  }
+
+  // ===== Рост: уровень, опыт, ближайшее достижение, недельный ритм =====
+  function renderGrowth(){
+    if(!window.SDGrowth) return;
+    var card = document.getElementById("growthCard"); if(!card) return;
+    var p = SDGrowth.computeProgress();
+    var lvl = document.getElementById("grLevel");
+    var xp = document.getElementById("grXp");
+    var bar = document.getElementById("grBar");
+    var fill = document.getElementById("grFill");
+    var next = document.getElementById("grNext");
+    if(lvl) lvl.textContent = "Уровень " + p.level;
+    if(xp) xp.textContent = p.xp + " XP всего";
+    var pct = Math.max(0, Math.min(100, Math.round(p.barIntoLevel / p.barForNextLevel * 100)));
+    if(fill) fill.style.width = pct + "%";
+    if(bar) bar.setAttribute("aria-valuenow", String(pct));
+    if(next){
+      // Goal-gradient: чем ближе цель, тем настойчивее подпись.
+      var tail = p.xpToNext <= 20 ? " — один рывок!" : "";
+      var endow = p.endowed ? " · 🎁 " + p.endowed + " XP аванс уже в счёт" : "";
+      next.textContent = "Ещё " + p.xpToNext + " XP до уровня " + (p.level + 1) + tail + endow;
+    }
+    var dig = SDGrowth.achievementDigest(SDGrowth.achievements(null, (tasks||[]).length));
+    var ach = document.getElementById("grAch");
+    if(ach){
+      var html = "<b>" + dig.unlocked + " из " + dig.total + "</b> достижений";
+      if(dig.next) html += " · дальше: <b>" + dig.next.title + "</b> — " + dig.next.desc;
+      else html += " · все открыты 🏆";
+      ach.innerHTML = html;
+    }
+    var rh = SDGrowth.weeklyRhythm(readStats());
+    var rhEl = document.getElementById("grRhythm");
+    if(rhEl){
+      var dots = '<span class="gr-dots">';
+      rh.days.forEach(function(d){
+        dots += '<i class="gr-dot' + (d.active ? " on" : "") + (d.frozen ? " frozen" : "") + (d.today ? " today" : "") + '"></i>';
+      });
+      dots += "</span>";
+      rhEl.innerHTML = dots + "<span>" + rh.label + "</span>";
+    }
+    var note = card.closest ? card.closest(".pgroup") : null;
+    var noteEl = note ? note.querySelector("[data-note]") : null;
+    if(noteEl) noteEl.textContent = "ур. " + p.level + " · " + p.xp + " XP";
+  }
+
   function readStats(){ try{ return JSON.parse(localStorage.getItem("superday_stats_v1")||"{}")||{}; }catch(e){ return {}; } }
   function recordCompletion(){
     try{ var s=readStats(); var k=todayKey(); s[k]=(s[k]||0)+1; localStorage.setItem("superday_stats_v1", JSON.stringify(s)); }catch(e){}
@@ -2437,13 +2621,26 @@
       col.appendChild(num); col.appendChild(bar); col.appendChild(lbl);
       wrap.appendChild(col);
     });
-    // серия: сколько дней подряд заканчивая сегодняшним (или вчерашним) было ≥1
-    var streak=0; var dd=new Date();
-    function pk(x){ function p(n){return n<10?"0"+n:""+n;} return x.getFullYear()+"-"+p(x.getMonth()+1)+"-"+p(x.getDate()); }
-    if(!(s[todayK]>0)) dd.setDate(dd.getDate()-1); // сегодня ещё можно наверстать — считаем от вчера
-    while(s[pk(dd)]>0){ streak++; dd.setDate(dd.getDate()-1); }
+    // Серия: длина, вехи и заморозки считаются в growth.js. Заморозки
+    // применяются до отрисовки — иначе человек успел бы увидеть разрыв,
+    // который система через миг залатала.
+    var st = null;
+    if(window.SDGrowth){
+      try{ SDGrowth.applyFreezeIfNeeded(s); st = SDGrowth.streakState(s); }catch(e){ st = null; }
+    }
     var stEl=document.getElementById("streak");
-    if(streak>0){ stEl.className="streak"; stEl.innerHTML='<span class="flame">🔥</span> Серия: '+streak+' '+plural(streak,["день","дня","дней"]); }
+    var streak = st ? st.current : 0;
+    if(streak>0){
+      stEl.className="streak";
+      var line = '<span class="flame">🔥</span> Серия: '+streak+' '+plural(streak,["день","дня","дней"]);
+      // Неприятие потери работает только когда потеря конкретна: не «не потеряй
+      // серию», а сколько часов осталось.
+      if(st.atRisk) line += ' · ⏳ сгорит через '+st.hoursLeft+' '+plural(st.hoursLeft,["час","часа","часов"]);
+      stEl.innerHTML = line;
+      stEl.title = (st.milestone ? st.milestone+" " : "")
+        + "Лучшая серия: "+st.longest+". Заморозок в запасе: "+st.freezeAvailable+".";
+      if(st.milestone) toastMilestone(st.milestone);
+    }
     else { stEl.className="streak cold"; stEl.textContent="Начни серию — закрой сегодня хотя бы одно дело"; }
     var total=Object.keys(s).reduce(function(m,k){return m+(s[k]||0);},0);
     var todayV=s[todayK]||0;
@@ -4538,6 +4735,188 @@
       return weekPeakEnd({"2026-07-20":{load:0, done:1, total:1}}, "2026-08-05")===null
         && weekPeakEnd({}, "2026-08-05")===null;
     });
+    G("Рост: награды, уровни, серия");
+    // Формулы перенесены из мобильного «Оптимизатора дня» — тесты стерегут
+    // именно их, а не обёртку: разъедется формула — разъедется мотивация.
+    T("движок роста подключён", function(){ return !!window.SDGrowth; });
+    T("сложность: коротко и неважно → быстрая победа 20 XP", function(){
+      var d=SDGrowth.difficultyOf(10, 4); return d.tier==="quick" && d.xp===20;
+    });
+    T("сложность: 2 ч в «важно, не срочно» → эпик 60 XP", function(){
+      var d=SDGrowth.difficultyOf(120, 2); return d.tier==="epic" && d.xp===60;
+    });
+    T("сопротивление даёт +1 только важным квадрантам", function(){
+      // 60 мин = усилие 2. Важный → 3 (трудная), неважный → 2 (крепкое).
+      return SDGrowth.difficultyOf(60,1).tier==="hard" && SDGrowth.difficultyOf(60,3).tier==="solid";
+    });
+    T("длительность не задана → считаем как 30 мин", function(){
+      return SDGrowth.difficultyOf(null,4).tier===SDGrowth.difficultyOf(30,4).tier;
+    });
+    T("награда: xp всегда кратен базе сложности", function(){
+      for(var i=0;i<40;i++){
+        var r=SDGrowth.rollReward(120,2,i);
+        if(r.xp!==60 && r.xp!==120) return false;
+        if(r.kind==="critical" && r.xp!==120) return false;
+      }
+      return true;
+    });
+    T("уровень и остаток: 250 XP → 3-й уровень, 50 до следующего", function(){
+      var p=SDGrowth.computeProgress({xp:250, totalDone:0, quads:{}, bestDay:0, debated:0});
+      return p.level===3 && p.xpIntoLevel===50 && p.xpToNext===50 && p.endowed===0;
+    });
+    T("аванс раздувает и бар, и цель — но не уровень", function(){
+      var p=SDGrowth.computeProgress({xp:0, totalDone:0, quads:{}, bestDay:0, debated:0});
+      return p.level===1 && p.barIntoLevel===20 && p.barForNextLevel===120 && p.xp===0;
+    });
+    T("аванс исчезает со второго уровня", function(){
+      return SDGrowth.computeProgress({xp:100,totalDone:0,quads:{},bestDay:0,debated:0}).endowed===0;
+    });
+    T("достижения: хозяин матрицы только при всех четырёх квадрантах", function(){
+      function has(l){ return SDGrowth.achievements(l,0).filter(function(a){return a.id==="quadrant_master";})[0].unlocked; }
+      return has({xp:0,totalDone:4,quads:{1:1,2:1,3:1,4:1},bestDay:0,debated:0})===true
+          && has({xp:0,totalDone:3,quads:{1:1,2:1,3:1,4:0},bestDay:0,debated:0})===false;
+    });
+    T("дайджест: одно ближайшее незакрытое, не список", function(){
+      var d=SDGrowth.achievementDigest(SDGrowth.achievements({xp:0,totalDone:1,quads:{1:1,2:0,3:0,4:0},bestDay:0,debated:0}, 1));
+      return d.unlocked===2 && d.total===6 && d.next && d.next.id==="quadrant_master";
+    });
+    T("сдвиг дня переживает переход на летнее время", function(){
+      return SDGrowth.shiftDayKey("2026-03-29",-1)==="2026-03-28"
+          && SDGrowth.shiftDayKey("2026-10-25",1)==="2026-10-26"
+          && SDGrowth.shiftDayKey("2026-01-01",-1)==="2025-12-31";
+    });
+    T("серия: льгота — сегодня пусто, но вчера закрыто", function(){
+      var a={"2026-07-28":true,"2026-07-29":true};
+      return SDGrowth.computeCurrentStreak(a,{},"2026-07-30")===2;
+    });
+    T("серия рвётся, если пусто и сегодня, и вчера", function(){
+      return SDGrowth.computeCurrentStreak({"2026-07-28":true},{},"2026-07-30")===0;
+    });
+    T("заморозка держит непрерывность, но в длину не идёт", function(){
+      var a={"2026-07-28":true,"2026-07-30":true};
+      return SDGrowth.computeCurrentStreak(a,{"2026-07-29":true},"2026-07-30")===2;
+    });
+    T("заморозок: 2 базовых + 1 за каждые 7 активных дней", function(){
+      return SDGrowth.earnedFreezes(0)===2 && SDGrowth.earnedFreezes(7)===3 && SDGrowth.earnedFreezes(20)===4;
+    });
+    T("разрыв длиннее двух дней не латается — серия рвётся честно", function(){
+      var a={"2026-07-26":true};
+      return SDGrowth.planFreezeRepair(a,{},"2026-07-30").length===0;
+    });
+    T("разрыв в один день латается одной заморозкой", function(){
+      var a={"2026-07-28":true,"2026-07-30":true};
+      return eq(SDGrowth.planFreezeRepair(a,{},"2026-07-30"),["2026-07-29"]);
+    });
+    T("вехи серии объявляются только на своих числах", function(){
+      return SDGrowth.streakMilestone(7)==="Неделя без пропусков — 7 дней подряд."
+          && SDGrowth.streakMilestone(8)===null
+          && SDGrowth.streakMilestone(3)==="3 дня подряд — ритм пойман.";
+    });
+    T("часы до полуночи считаются по локальному времени", function(){
+      return SDGrowth.hoursUntilMidnight(new Date(2026,6,30,22,30))===1
+          && SDGrowth.hoursUntilMidnight(new Date(2026,6,30,0,5))===23;
+    });
+    T("недельный ритм: рост хвалит, спад не винит", function(){
+      var s={}; s[SDGrowth.shiftDayKey(SDGrowth.todayKey(),0)]=1;
+      var r=SDGrowth.weeklyRhythm(s);
+      return r.days.length===7 && typeof r.label==="string" && r.label.length>0;
+    });
+    T("итог дня детерминирован и поднимает утреннее намерение", function(){
+      var a=SDGrowth.buildDaySummary({done:3,total:5,streak:4,activeToday:true,intentionFocus:"Тот, кто держит слово себе"});
+      var b=SDGrowth.buildDaySummary({done:3,total:5,streak:4,activeToday:true,intentionFocus:"Тот, кто держит слово себе"});
+      return a.headline==="Сделано 3 из 5" && a.affirmation===b.affirmation
+        && a.streakLine.indexOf("4 подряд")!==-1 && a.intentionFocus==="Тот, кто держит слово себе";
+    });
+    T("итог дня: серия на кону, если сегодня пусто", function(){
+      var r=SDGrowth.buildDaySummary({done:0,total:3,streak:6,activeToday:false});
+      return r.streakLine.indexOf("на кону")!==-1 && r.affirmation.indexOf("Даже открыть план")===0;
+    });
+    T("честный день: первое дело остаётся даже если не влезает", function(){
+      var now=new Date(2026,6,30,21,0);   // остаток дня 60 мин
+      var r=SDGrowth.planHonestDay([{id:"a",minutes:120,quadrant:1}],1,[],now);
+      return r.keep.length===1 && r.move.length===0 && r.stillTight===true
+        && r.headline.indexOf("разбить на шаги")!==-1;
+    });
+    T("честный день: внутри квадранта первым уезжает длинное", function(){
+      var now=new Date(2026,6,30,20,0);   // остаток 120 мин
+      var r=SDGrowth.planHonestDay([
+        {id:"short",minutes:30,quadrant:1},{id:"long",minutes:100,quadrant:1},{id:"mid",minutes:60,quadrant:1}
+      ],1,[],now);
+      // Длинное остаётся первым, а уезжает всё, что уже не влезает в остаток.
+      return r.keep[0].id==="long" && r.keep.length===1 && r.move.length===2 && r.freedMinutes===90;
+    });
+    T("честный день: личный коэффициент множит и сумму, и каждое дело", function(){
+      var now=new Date(2026,6,30,20,0);
+      var l=SDGrowth.estimateDayLoad([{minutes:60},{minutes:60}],1.5,now);
+      return l.plannedMinutes===180 && l.availableMinutes===120 && l.overloaded===true;
+    });
+    T("минуты в человеческий вид", function(){
+      return SDGrowth.formatMinutes(45)==="45 мин" && SDGrowth.formatMinutes(90)==="1 ч 30 мин"
+        && SDGrowth.formatMinutes(120)==="2 ч";
+    });
+    T("бюджет внимания: одна подсказка, остальные — счётчиком", function(){
+      var ctx={ carryOver:true, honestDay:true, welcome:true };
+      return SDGrowth.selectAdvice(ctx)==="carryOver" && SDGrowth.pendingAdviceCount(ctx)===2
+        && SDGrowth.selectAdvice({})===null && SDGrowth.pendingAdviceCount({})===0;
+    });
+    T("бюджет внимания: гео и сверка времени вперёд разбора", function(){
+      return SDGrowth.selectAdvice({carryOver:true,timeCheck:true})==="timeCheck"
+        && SDGrowth.selectAdvice({timeCheck:true,geoNudge:true})==="geoNudge";
+    });
+    T("зомби-задача — с третьего переноса", function(){
+      return SDGrowth.isZombie(2)===false && SDGrowth.isZombie(3)===true;
+    });
+    T("вехи идентичности растут по голосам за один и тот же путь", function(){
+      return SDGrowth.identityMilestone(0)===null
+        && SDGrowth.identityMilestone(1).title==="Первый голос"
+        && SDGrowth.identityMilestone(21).title==="Это уже ты"
+        && SDGrowth.identityMilestone(50).title==="Ядро личности";
+    });
+    T("сквозной путь: закрыл дело → выросли XP, снял галочку → вернулись", function(){
+      // Формулы проверены выше по отдельности; здесь проверяется именно связка
+      // markDone → журнал → карточка «Рост», которую формулы не стерегут.
+      var LK="superday_growth_v1", snapshot=localStorage.getItem(LK);
+      var keep=tasks.slice();
+      try{
+        localStorage.removeItem(LK);
+        tasks.length=0;
+        var t={id:"xp1",text:"проверка начисления",urgent:false,important:true,done:false,
+               time:null,dur:120,defer:null,repeat:null,doneOn:null};
+        tasks.push(t);
+        // Предпросмотр награды виден до закрытия дела и уходит после: цена
+        // усилия нужна в момент выбора, а не как отчёт о прошлом.
+        render();
+        var badge=document.querySelector('.quad[data-q="2"] ul.tasks .txp');
+        if(!badge) throw new Error("нет предпросмотра награды на карточке дела");
+        if(badge.textContent.indexOf("+60 XP")===-1) throw new Error("предпросмотр показывает "+badge.textContent+" вместо +60 XP");
+        markDone(t);
+        render();
+        if(document.querySelector('.quad[data-q="2"] ul.tasks .txp')) throw new Error("предпросмотр остался на закрытом деле");
+        var afterDone=SDGrowth.readLedger();
+        if(afterDone.totalDone!==1) throw new Error("дело не попало в журнал");
+        if(!(afterDone.xp===60 || afterDone.xp===120)) throw new Error("начислено "+afterDone.xp+" вместо 60/120");
+        if(t.bonusXp!==afterDone.xp) throw new Error("исход броска не зафиксирован на задаче");
+        if(afterDone.quads["2"]!==1) throw new Error("квадрант не учтён");
+        renderGrowth();
+        if(document.getElementById("grLevel").textContent.indexOf("Уровень")!==0) throw new Error("карточка роста не нарисовалась");
+        var bonus=t.bonusXp;
+        t.done=false; t.doneOn=null; revokeFor(t);
+        var afterUndo=SDGrowth.readLedger();
+        if(afterUndo.xp!==afterDone.xp-bonus) throw new Error("снятие галочки забрало не то, что дало");
+        if(afterUndo.totalDone!==0 || afterUndo.quads["2"]!==0) throw new Error("счётчики не откатились");
+        if(t.bonusXp) throw new Error("награда осталась на задаче после отката");
+        return true;
+      } finally {
+        if(snapshot===null) localStorage.removeItem(LK); else localStorage.setItem(LK, snapshot);
+        tasks.length=0; keep.forEach(function(x){ tasks.push(x); }); render();
+      }
+    });
+    T("склонение русских числительных", function(){
+      var f=["день","дня","дней"];
+      return SDGrowth.plural(1,f)==="день" && SDGrowth.plural(3,f)==="дня" && SDGrowth.plural(11,f)==="дней"
+        && SDGrowth.plural(21,f)==="день" && SDGrowth.plural(25,f)==="дней";
+    });
+
     G("Целостность DOM");
     // Самая опасная поломка этой волны — переезд секций в панель: узел уехал,
     // а скрипт продолжает искать его по id. Проверяем сам себя: вытаскиваем из
@@ -4613,6 +4992,7 @@
     { id:"remind", ic:"🔔", name:"Напоминания и звук" },
     { id:"voice",  ic:"🎙", name:"Голос" },
     { id:"stats",  ic:"📊", name:"Неделя" },
+    { id:"growth", ic:"🏅", name:"Рост" },
     { id:"tpl",    ic:"🗂", name:"Шаблоны дня" },
     { id:"notes",  ic:"✍️", name:"Заметки" },
     { id:"data",   ic:"💾", name:"Данные и календарь" },
@@ -4659,8 +5039,19 @@
 
   // Фон под панелью не должен быть достижим ни мышью, ни клавиатурой.
   function setBackdropInert(on){
+    // Исключённые узлы не просто пропускаются, а расчищаются: если панель
+    // успела открыться до инициализации (composerEl тогда ещё пуст), композер
+    // получал inert и оставался недоступным навсегда — ввод дел молча умирал.
+    // Узлы ищутся по id, а не по переменным, чтобы порядок инициализации не
+    // решал, доступен ли пользователю ввод.
+    var exempt = [panelEl, scrimEl, routeEl, composerEl,
+                  document.getElementById("composer"), document.getElementById("routeSheet")];
     Array.prototype.forEach.call(document.body.children, function(el){
-      if(el===panelEl || el===scrimEl || el===routeEl || el===composerEl) return;
+      if(exempt.indexOf(el) !== -1){
+        if("inert" in HTMLElement.prototype) el.inert=false;
+        el.removeAttribute("aria-hidden");
+        return;
+      }
       if(on){
         if("inert" in HTMLElement.prototype) el.inert=true;
         el.setAttribute("aria-hidden","true");
