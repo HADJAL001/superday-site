@@ -1,11 +1,21 @@
 /* SUPER DAY — diccionario español (ola 11).
    Interfaz completa; el análisis de frases cubre hora numérica, días de la
    semana y expresiones simples de repetición (así se declara en la propia app). */
+/* Перевод вставки внутри правила: подпись квадранта, сферы жизни или нагрузки
+   лежит в t отдельной строкой — правилу достаточно сослаться на неё. */
+function __i18nTR(s) {
+  var api = window.SuperDayI18n;
+  return (api && api.tr) ? api.tr(s) : s;
+}
 window.__i18nDict("es", {
   locale: "es-ES",
   speech: "es-ES",
   wake: "súper día",
   noticeText: "Idioma cambiado a español según tu navegador.",
+
+  /* Единицы времени собираются в коде из чисел — движок заменяет их по форме.
+     hm/min/h — обычная запись, ch/cm — компактная для узких бейджей. */
+  units: { hm: "$1 h $2 min", min: "$1 min", h: "$1 h", ch: "$1h$2", cm: "$1m" },
 
   ui: {
     langTitle: "Idioma / Language",
@@ -279,10 +289,162 @@ window.__i18nDict("es", {
     "комфортно": "agradable", "прохладно": "fresco", "холодно": "frío", "мороз": "helada",
     "Все задачи выполнены. Отличная работа.": "Todas las tareas están hechas. Buen trabajo.",
     "Список задач пуст.": "La lista de tareas está vacía.",
-    "Удалить все задачи? Это действие нельзя отменить.": "¿Borrar todas las tareas? Esto no se puede deshacer."
+    "Удалить все задачи? Это действие нельзя отменить.": "¿Borrar todas las tareas? Esto no se puede deshacer.",
+
+    /* ===== Волна 42: строки, пришедшие с волнами 14–41 ===== */
+    "К содержимому": "Ir al contenido",
+    "Блоки": "Bloques",
+    "Выбери, какие блоки видны на главном экране": "Elige qué bloques se ven en la pantalla principal",
+    "Блоки на главном экране": "Bloques de la pantalla principal",
+    "Намерение дня": "Intención del día",
+    "Намерение и итог дня": "Intención y balance del día",
+    "Каким будет твой день?": "¿Cómo será tu día?",
+    "Выбери не задачу, а кем будешь сегодня. Это меняет то, что кажется важным.": "Elige no una tarea, sino quién serás hoy. Eso cambia lo que parece importante.",
+    "Тот, кто доводит важное до конца": "Alguien que termina lo importante",
+    "Тот, кто выбирает важное, а не срочное": "Alguien que elige lo importante antes que lo urgente",
+    "Тот, кто держит слово себе": "Alguien que cumple su palabra consigo mismo",
+    "Тот, кто первым делает трудный шаг": "Alguien que da primero el paso difícil",
+    "Тот, кто остаётся спокойным и сфокусированным": "Alguien que se mantiene tranquilo y concentrado",
+    "Тот, кто бережёт время на главное": "Alguien que cuida el tiempo para lo esencial",
+    "Сверка времени": "Comprobación del tiempo",
+    "Маршрут по геолокации": "Ruta por geolocalización",
+    "Карта дня": "Mapa del día",
+    "Карта дня — точки дел и маршрут": "Mapa del día — puntos de las tareas y ruta",
+    "Закрыть окно дел": "Cerrar la ventana de tareas",
+    "Созвездие дней — история закрытых дней": "Constelación de días — historial de días cerrados",
+    "Баланс недели по сферам жизни": "Balance de la semana por áreas de la vida",
+    "Отметь сферу дела («＋сфера» у строки), чтобы увидеть баланс недели.": "Marca el área de la tarea («＋área» junto a la línea) para ver el balance de la semana.",
+
+    "Весь список сразу": "Toda la lista de una vez",
+    "Наговорить или вставить сразу весь список дел — ИИ разложит по важности": "Dicta o pega toda la lista de tareas — la IA las ordenará por importancia",
+    "Пишите как думаете — по строкам, через запятую или потоком. Приоритеты по матрице расставит ИИ, а вы поправите одним касанием.": "Escribe como piensas: por líneas, con comas o de un tirón. La IA las coloca en la matriz y tú lo corriges con un toque.",
+    "позвонить клиенту срочно отчёт на 2 часа купить хлеб записаться к врачу": "llamar al cliente urgente informe 2 horas comprar pan pedir cita médica",
+    "Разобрать": "Ordenar",
+    "Разобрать список дел": "Ordenar la lista de tareas",
+    "Закрыть разбор списком": "Cerrar la vista de lista",
+
+    "Пока пусто": "Vacío por ahora",
+    "Включи, скажи «супер день» — и назови дело. Оно ответит голосом.": "Actívalo, di «super día» y nombra una tarea. Responderá con voz.",
+    "🔒 Задачи не покидают браузер.": "🔒 Las tareas no salen de este navegador.",
+    "Распознавание речи": "El reconocimiento de voz",
+    "— через облачный сервис браузера, как в любой диктовке.": "— pasa por el servicio en la nube del navegador, como en cualquier dictado.",
+
+    "Рост": "Progreso",
+    "Уровень и достижения": "Nivel y logros",
+    "достижений · дальше:": "logros · siguiente:",
+    "Первый шаг": "Primer paso",
+    "— Добавить хотя бы одно дело": "— Añadir al menos una tarea",
+    "Добавить хотя бы одно дело": "Añadir al menos una tarea",
+    "Есть результат": "Hay resultado",
+    "Закрыть первое дело": "Cerrar la primera tarea",
+    "Хозяин матрицы": "Dueño de la matriz",
+    "Закрыть дела во всех четырёх квадрантах": "Cerrar tareas en los cuatro cuadrantes",
+    "Плотный день": "Día intenso",
+    "Закрыть 5 дел за один день": "Cerrar 5 tareas en un día",
+    "Спорщик": "Polemista",
+    "Разобрать спорное дело ИИ-дебатом": "Resolver una tarea dudosa con un debate de IA",
+    "Ветеран": "Veterano",
+    "Закрыть 25 дел": "Cerrar 25 tareas",
+    "Первая активность на этой неделе сделает ряд ярче.": "La primera actividad de esta semana hará más brillante la fila.",
+
+    "Повторяющиеся наборы задач — рабочий день, тренировка, уборка.": "Conjuntos de tareas que se repiten: jornada laboral, entrenamiento, limpieza.",
+    "📥 Встречи из .ics": "📥 Reuniones desde .ics",
+    "Скачать файлом .ics": "Descargar como archivo .ics",
+    "Загрузить файл .ics": "Subir un archivo .ics",
+    "Загрузить файл .ics из рабочего календаря — встречи лягут в план дня": "Sube un archivo .ics del calendario del trabajo — las reuniones entrarán en el plan del día",
+
+    "Маршрут дня.": "La ruta del día.",
+    "Сначала то, что горит по времени, затем важное. Цветная точка слева — приоритет, нажатие открывает разбор по важности.": "Primero lo que aprieta por la hora, luego lo importante. El punto de color de la izquierda es la prioridad; al pulsarlo se abre el desglose por importancia.",
+    "🔥 срочно — горит по времени. ⭐ важно — двигает жизнь. Переложить можно перетаскиванием за ручку ☰.": "🔥 urgente — aprieta por la hora. ⭐ importante — mueve la vida. Se mueve arrastrando por el asa ☰.",
+    "Только в этом браузере — ни аккаунта, ни сервера. Работает офлайн.": "Solo en este navegador: sin cuenta y sin servidor. Funciona sin conexión.",
+
+    /* ===== Волна 42, проход 3: то, что видно только на прожитом дне =====
+       Подписи-вставки (квадрант, сфера жизни, нагрузка, сложность) стоят
+       отдельными строками: правила ссылаются на них через __i18nTR, поэтому
+       сочетания не приходится перечислять. */
+    "Работа": "Trabajo",
+    "Дом": "Casa",
+    "Здоровье": "Salud",
+    "лёгкий день": "día ligero",
+    "в меру": "moderado",
+    "тяжёлый день": "día duro",
+    "Нажми, чтобы изменить бюджет дня": "Pulsa para cambiar el presupuesto del día",
+    "Перенести на завтра — уйдёт из сегодняшнего маршрута и бюджета, но не потеряется":
+      "Aplazar a mañana: sale de la ruta y del presupuesto de hoy, pero no se pierde",
+    "Определить погоду (Open-Meteo) или ввести вручную": "Detectar el tiempo (Open-Meteo) o introducirlo a mano",
+    "Оцени пробки за день (нажимай по кругу)": "Valora el tráfico del día (pulsa para ir cambiando)",
+    "Сколько ушло на дорогу/топливо": "Cuánto se fue en trayecto/combustible",
+    "Быстрая победа": "Victoria rápida",
+    "Крепкое дело": "Tarea sólida",
+    "Трудная задача": "Tarea difícil",
+    "Большое дело": "Tarea grande",
+    "Важное · спокойно запланируй": "Importante · planifícalo con calma",
+    "Быстро закрыть · срочное": "Ciérralo rápido · urgente",
+    "Необязательное · можно позже": "Opcional · puede esperar",
+    "нажми, чтобы изменить длительность": "pulsa para cambiar la duración",
+    "нажми, чтобы сменить": "pulsa para cambiarlo",
+    "нажми, чтобы изменить время": "pulsa para cambiar la hora",
+    "Нажми, чтобы изменить.": "Pulsa para cambiarlo.",
+    "Нажми, чтобы сменить.": "Pulsa para cambiarlo.",
+    "Нажми Enter, чтобы изменить.": "Pulsa Enter para editarlo.",
+    "Открыть разбор по важности.": "Abrir el desglose por importancia.",
+    "Стрелка вверх или вниз — сменить квадрант.": "La flecha arriba o abajo cambia de cuadrante.",
+    "или стрелками с клавиатуры": "o con las flechas del teclado",
+    "Отметить сферу жизни — работа, дом или здоровье (для баланса недели)":
+      "Marcar el área de la vida — trabajo, casa o salud (para el balance de la semana)",
+    "Отметить сферу жизни дела": "Marcar el área de la vida de la tarea",
+    "достижений": "logros",
+    "все открыты 🏆": "todos desbloqueados 🏆",
+    "Умеренная нагрузка.": "Carga moderada.",
+    "Нагрузка выше обычной.": "Carga mayor de lo habitual.",
+    "День закрыт полностью, без перегруза.": "El día está cerrado por completo, sin sobrecarga.",
+    "Низкая нагрузка, день умещается в бюджет.": "Carga baja, el día entra en el presupuesto.",
+    "Данные считаются только в этом браузере.": "Se cuentan solo en este navegador.",
+    "Неделя закрыта почти полностью — так живут по своему слову, а не по настроению.":
+      "La semana está cerrada casi por completo: así se vive por tu palabra y no por el ánimo.",
+    "Большая часть недели прошла по плану — это не везение, а решения, которые ты принимал(а) каждый день.":
+      "La mayor parte de la semana fue según el plan: no es suerte, son las decisiones que tomaste cada día.",
+    "Редко у кого неделя настолько собрана. Это результат, а не случайность.":
+      "Pocas personas tienen una semana tan ordenada. Es un resultado, no una casualidad.",
+    "Неделя вышла неровной, но больше половины — сделано. Это тоже движение вперёд.":
+      "La semana salió irregular, pero más de la mitad está hecha. Eso también es avanzar.",
+    "Не идеально, но по сути — на своей стороне. Продолжай в том же духе.":
+      "No es perfecto, pero en lo esencial estás de tu lado. Sigue así.",
+    "Часть недели пошла не по плану — и часть всё равно закрыта. Это честный баланс.":
+      "Parte de la semana se salió del plan y parte está cerrada igualmente. Es un balance honesto.",
+    "Неделя была тяжёлой — закрытое пусть небольшое, но оно настоящее.":
+      "Fue una semana dura: lo que cerraste es poco, pero es real.",
+    "Даже в трудную неделю кое-что сделано. Это не ноль.":
+      "Incluso en una semana difícil algo se hizo. No es cero.",
+    "Неделя не задалась, но это ещё не приговор следующей.":
+      "Esta semana no salió, pero no es una sentencia para la siguiente.",
+    "Держишь тот же ритм, что и на прошлой неделе.": "Mantienes el mismo ritmo que la semana pasada.",
+    "Пока тихо — но неделя только начинается.": "Tranquilo por ahora, pero la semana acaba de empezar.",
+    "Ваши оценки времени сходятся с реальностью": "Tus estimaciones de tiempo coinciden con la realidad",
+    "Год силы воли — вы в 1% доводящих до конца.": "Un año de voluntad: estás en el 1 % que llega al final.",
+    "Две недели подряд — вы тот, кто не бросает.": "Dos semanas seguidas: eres de los que no lo dejan.",
+    "Сделай первую резервную копию — сохрани данные в файл.": "Haz tu primera copia de seguridad: guarda los datos en un archivo.",
+    "Давно не было резервной копии — сохрани в файл.": "Hace tiempo que no hay copia de seguridad: guárdala en un archivo.",
+    "Браузер может очистить данные при долгом простое.": "El navegador puede borrar los datos tras un largo tiempo sin uso.",
+    "Браузер может очистить данные при долгом простое — держи копию в файле.":
+      "El navegador puede borrar los datos tras un largo tiempo sin uso: guarda una copia en un archivo.",
+    "нет — браузер может очистить": "no — el navegador puede borrarlos",
+    "В панели есть что посмотреть: напоминания или резервная копия":
+      "Hay algo que ver en el panel: recordatorios o copia de seguridad"
   },
 
   re: [
+    /* Волна 42: уровень, опыт и достижения — строки собираются в коде из чисел. */
+    ["^Уровень (\\d+)$", "Nivel $1"],
+    ["^(\\d+) XP всего$", "$1 XP en total"],
+    ["^ур\\. (\\d+) · (\\d+) XP$", "niv. $1 · $2 XP"],
+    ["^(\\d+) из (\\d+)$", "$1 de $2"],
+    ["^Ещё (\\d+) XP до уровня (\\d+)(.*)$", function (all, xp, lvl, tail) {
+      var t = String(tail || "")
+        .replace(" — один рывок!", " — ¡un último empujón!")
+        .replace(/ · 🎁 (\d+) XP аванс уже в счёт/, " · 🎁 $1 XP de adelanto ya contados");
+      return "Faltan " + xp + " XP para el nivel " + lvl + t;
+    }],
     ["^(\\d+) из (\\d+) выполнено$", "$1 de $2 hechas"],
     ["^Сегодня выполнено: (\\d+) · всего за всё время: (\\d+)\\. Данные считаются только в этом браузере\\.$",
       "Hechas hoy: $1 · en total: $2. Se cuentan solo en este navegador."],
@@ -292,7 +454,12 @@ window.__i18nDict("es", {
     ["^🔥 Серия: (\\d+) (?:день|дня|дней)$", "🔥 Racha: $1 d."],
     ["^Время дела: (.+)$", "Hora de la tarea: $1"],
     ["^Длительность: (.+)$", "Duración: $1"],
-    ["^Повтор: (.+)$", "Repetición: $1"],
+    /* Группа без точки и запятой: подсказка состоит из двух предложений
+       («Повтор: по будням. Нажми, чтобы изменить.»), и жадная группа съедала
+       второе, оставляя его русским. */
+    ["^Повтор: ([^.,]+)(, сегодня не по расписанию)?(\\.)?$", function (all, v, off, dot) {
+      return "Repetición: " + __i18nTR(v) + (off ? ", hoy fuera de horario" : "") + (dot || "");
+    }],
     ["^Бюджет дня: (.+)$", "Presupuesto del día: $1"],
     ["^Погода: (.+)$", "Tiempo: $1"],
     ["^Дорога: (.+)$", "Trayecto: $1"],
@@ -313,7 +480,99 @@ window.__i18nDict("es", {
     }],
     ["^([\\d.,]+) км по прямой, без учёта дорог — путь по дорогам сейчас недоступен$", "$1 km en línea recta, sin contar carreteras — la ruta por carretera no está disponible ahora"],
     ["^Нашёл: (.+) — сохранить как место дела\\?$", "Encontrado: $1 — ¿guardar como lugar de la tarea?"],
-    ["^(\\d+) (?:место|места|мест)$", "$1 lugares"]
+    ["^(\\d+) (?:место|места|мест)$", "$1 lugares"],
+
+    /* ===== Волна 42, проход 3: прожитое состояние =====
+       Строки карточки дела, недельного ритма и калибровки времени рождаются
+       только после работы с делами — на пустом приложении их нет. Группы
+       намеренно без точки внутри ([^.]+): не совпав целиком, строка уходит на
+       разбор по предложениям, и каждое переводится своим правилом. */
+    ["^Время дела ([^,]+), до ([^,]+), ([^.]+)\\.$", function (all, a, b, rel) {
+      return "Hora de la tarea " + a + ", hasta " + b + ", " + __i18nTR(rel) + ".";
+    }],
+    ["^Время дела ([^,]+), ([^.]+)\\.$", function (all, a, rel) { return "Hora de la tarea " + a + ", " + __i18nTR(rel) + "."; }],
+    ["^Время дела ([^,.]+)\\.$", "Hora de la tarea $1."],
+    ["^Длительность ([^.]+)\\.$", "Duración $1."],
+    ["^Место: ([^.]+)\\.$", "Lugar: $1."],
+    ["^Сфера жизни: ([^.·]+?)(\\.)?$", function (all, v, dot) { return "Área de la vida: " + __i18nTR(v) + (dot || ""); }],
+    /* Правило с хвостом «· нажми…» стоит раньше общего: иначе общее забирало
+       строку целиком вместе с подсказкой и та оставалась русской. */
+    ["^Важность: ([^.·]+) · нажми, чтобы разложить по матрице$",
+      function (all, v) { return "Importancia: " + __i18nTR(v) + " · pulsa para colocarla en la matriz"; }],
+    ["^Сфера жизни: ([^.·]+) · нажми, чтобы сменить$",
+      function (all, v) { return "Área de la vida: " + __i18nTR(v) + " · pulsa para cambiarla"; }],
+    ["^Важность: ([^.·]+?)(\\.)?$", function (all, v, dot) { return "Importancia: " + __i18nTR(v) + (dot || ""); }],
+    ["^Серия: (\\d+) (?:день|дня|дней)$", "Racha: $1 d."],
+    ["^Свободно ещё ([^.]+?) в бюджете дня\\.$", "Quedan $1 libres en el presupuesto del día."],
+    ["^Сменить приоритет: ([^.]+)\\.$", "Cambiar la prioridad: $1."],
+    ["^Сейчас — ([^.]+?)\\.?$", function (all, v) { return "Ahora — " + __i18nTR(v) + "."; }],
+    ["^Перенесено на ([^.]+?)( · нажми, чтобы выбрать другой день или вернуть сегодня)?$",
+      function (all, d, tail) { return "Aplazada al " + d + (tail ? " · pulsa para elegir otro día o volver a hoy" : ""); }],
+    ["^Перенесено на (\\d{4}-\\d{2}-\\d{2})\\. Нажми, чтобы выбрать другой день или вернуть сегодня: (.+)$",
+      "Aplazada al $1. Pulsa para elegir otro día o volver a hoy: $2"],
+    ["^Перенести на завтра: (.+)$", "Aplazar a mañana: $1"],
+    ["^Отметить выполненной: (.+)$", "Marcar como hecha: $1"],
+    // Без « · » внутри: строка «через 14 мин · Нажми, чтобы изменить время»
+    // целиком уходила в $1, и хвост подсказки оставался русским.
+    ["^через ([^·]+)$", "en $1"],
+    ["^было ([^·]+) назад$", "hace $1"],
+    ["^(\\d+) XP за закрытие$", "$1 XP al cerrarla"],
+    ["^Запланировано (.+?) в (\\d+) (?:деле|делах)(?: \\(с вашей поправкой ×([\\d.,]+)\\))?$",
+      function (all, dur, n, k) {
+        return "Planificado " + dur + " en " + n + (+n === 1 ? " tarea" : " tareas") +
+               (k ? " (con tu corrección ×" + k + ")" : "");
+      }],
+    ["^бюджет дня: (.+)$", "presupuesto del día: $1"],
+    ["^(\\d+) (?:дело|дела|дел) без оценки времени — задай «＋длит\\.», чтобы учесть\\.$",
+      function (all, n) {
+        return n + (+n === 1 ? " tarea" : " tareas") + " sin estimación de tiempo — pon «＋dur.» para contarla.";
+      }],
+    ["^Сделано (\\d+) из (\\d+) — график соблюдается\\.$", "$1 de $2 hechas — vas según lo previsto."],
+    ["^Сделано (\\d+) из (\\d+); остаток разумно перенести на завтра\\.$",
+      "$1 de $2 hechas; lo demás conviene pasarlo a mañana."],
+    ["^Тяжёлый день закрыт полностью — (\\d+) из (\\d+)\\.$", "Un día duro cerrado por completo — $1 de $2."],
+    ["^Неделя по нагрузке: ([^.]+)\\.$", function (all, list) {
+      return "La semana por carga: " + String(list).split(" · ").map(__i18nTR).join(" · ") + ".";
+    }],
+    ["^🟢 (\\d+) (?:лёгкий|лёгких)$", function (all, n) { return "🟢 " + n + (+n === 1 ? " ligero" : " ligeros"); }],
+    ["^🟡 (\\d+) в меру$", "🟡 $1 moderados"],
+    ["^🔴 (\\d+) (?:тяжёлый|тяжёлых)$", function (all, n) { return "🔴 " + n + (+n === 1 ? " duro" : " duros"); }],
+    ["^Сегодня выполнено: (\\d+) · всего за всё время: (\\d+)\\.$", "Hechas hoy: $1 · en total: $2."],
+    ["^Баланс недели: (\\d+) (?:дело|дела|дел) за 7 дней$",
+      function (all, n) { return "Balance de la semana: " + n + (+n === 1 ? " tarea" : " tareas") + " en 7 días"; }],
+    ["^Итог недели: (\\d+) из (\\d+) \\((\\d+)%\\)$", "Resultado de la semana: $1 de $2 ($3 %)"],
+    ["^(Работа|Дом|Здоровье) (\\d+)$", function (all, v, n) { return __i18nTR(v) + " " + n; }],
+    ["^(Работа|Дом|Здоровье): (\\d+)$", function (all, v, n) { return __i18nTR(v) + ": " + n; }],
+    ["^(\\d+) (?:день|дня|дней) подряд — ритм пойман\\.$", "$1 días seguidos — has cogido el ritmo."],
+    ["^Неделя без пропусков — (\\d+) (?:день|дня|дней)\\.$", "Una semana sin fallos — $1 días seguidos."],
+    ["^(\\d+) дней без пропусков — привычка стала вашей\\.$", "$1 días sin fallar — el hábito ya es tuyo."],
+    ["^(\\d+) дней подряд — это уже характер, а не привычка\\.$", "$1 días seguidos: eso ya es carácter, no hábito."],
+    ["^Лучшая серия: (\\d+)\\.$", "Mejor racha: $1."],
+    ["^Заморозок в запасе: (\\d+)\\.$", "Congelaciones en reserva: $1."],
+    ["^(\\d{4}-\\d{2}-\\d{2}): выполнено (\\d+) · (.+) \\((\\d+)\\/(\\d+)\\)$",
+      function (all, d, v, band, done, total) {
+        return d + ": " + v + " hechas · " + __i18nTR(band) + " (" + done + "/" + total + ")";
+      }],
+    ["^Вы недооцениваете свои дела примерно в ([\\d.,]+) раза$",
+      "Subestimas tus tareas alrededor de ×$1"],
+    ["^Вы закладываете на дела примерно в ([\\d.,]+) раза больше, чем нужно$",
+      "Reservas alrededor de ×$1 más tiempo del necesario"],
+    ["^поправка ×([\\d.,]+)$", "corrección ×$1"],
+    ["^Ещё (\\d+) (?:ответ|ответа|ответов) — и план начнёт считаться по вам\\.$",
+      function (all, n) { return (+n === 1 ? "Una respuesta más" : n + " respuestas más") + " y el plan se calculará según tú."; }],
+    ["^Ещё есть дни, чтобы догнать прошлую неделю \\(было (\\d+)\\)\\.$",
+      "Aún quedan días para alcanzar la semana pasada (fueron $1)."],
+    ["^На (\\d+) (?:день|дня|дней) активнее, чем на прошлой неделе\\.$",
+      function (all, n) { return n + (+n === 1 ? " día" : " días") + " más activo que la semana pasada."; }],
+    ["^На прошлой неделе было (\\d+) — впереди новый ряд\\.$", "La semana pasada fueron $1 — te espera una fila nueva."],
+    ["^⏳ сгорит через (\\d+) (?:час|часа|часов)$",
+      function (all, n) { return "⏳ caduca en " + n + (+n === 1 ? " hora" : " horas"); }],
+    /* Последним: ведущий значок отделяется, а остаток переводится словарём.
+       Не нашлось — строка возвращается как была, ничего не портится. */
+    ["^([^\\wА-Яа-яЁё\\s]{1,3}) (.+)$", function (all, sign, rest) {
+      var out = __i18nTR(rest);
+      return out === rest ? all : sign + " " + out;
+    }]
   ],
 
   parse: [

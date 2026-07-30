@@ -130,6 +130,9 @@
         out = (typeof rule[1] === "function")
           ? rule[1].apply(null, m)
           : rule[1].replace(/\$(\d)/g, function (_, n) { return m[+n] == null ? "" : m[+n]; });
+        // Правило совпало, но ничего не изменило — это промах, а не перевод:
+        // иначе оно закрыло бы дорогу разбору по частям.
+        if (out === s) { out = null; continue; }
         break;
       }
     }
@@ -154,16 +157,77 @@
     });
   }
 
+  /* Единицы времени рождаются в коде из чисел («1 ч 30 мин», «30м», «4ч»), и
+   * перечислить их словарём нельзя — чисел бесконечно много. Заменяем по форме,
+   * как часы: это работает и внутри строк, которые целиком не нашлись. */
+  function localizeUnits(s) {
+    var u = DICT && DICT.units;
+    if (!u || !RU_RE.test(s)) return s;
+    function fill(tpl, a, b) {
+      return String(tpl).replace(/\$1/g, a == null ? "" : a).replace(/\$2/g, b == null ? "" : b);
+    }
+    // Порядок важен: составная форма раньше одиночных, «мин» раньше «м».
+    if (u.hm) s = s.replace(/(\d+)\s*ч\s*(\d+)\s*мин(?![а-яё])/g, function (_, h, m) { return fill(u.hm, h, m); });
+    if (u.min) s = s.replace(/(\d+)\s*мин(?![а-яё])/g, function (_, m) { return fill(u.min, m); });
+    if (u.h) s = s.replace(/(\d+)\s*ч(?![а-яё])/g, function (_, h) { return fill(u.h, h); });
+    if (u.ch) s = s.replace(/(\d+)ч(\d+)(?![а-яё\d])/g, function (_, h, m) { return fill(u.ch, h, m); });
+    if (u.cm) s = s.replace(/(\d+)м(?![а-яё])/g, function (_, m) { return fill(u.cm, m); });
+    return s;
+  }
+
+  /* Составные подсказки склеиваются в коде из готовых кусков через « · »
+   * («⏱ 15:00 · через 42 мин · Сделать сейчас»). Целиком такую строку словарём
+   * не покрыть — сочетаний слишком много. Переводим кусками: что нашлось —
+   * переведено, остальное остаётся русским, а не пропадает. */
+  var SEG = " · ";
+  /* Разбор на предложения без lookbehind: он есть не во всех живых браузерах, а
+   * синтаксическая ошибка в этом файле оставила бы интерфейс без перевода. */
+  function splitSentences(s) {
+    var out = [], buf = "";
+    for (var i = 0; i < s.length; i++) {
+      buf += s.charAt(i);
+      if (s.charAt(i) === "." && s.charAt(i + 1) === " ") { out.push(buf); buf = ""; i++; }
+    }
+    if (buf) out.push(buf);
+    return out;
+  }
+  function trySplit(parts, glue, depth) {
+    var any = false, out = [];
+    for (var i = 0; i < parts.length; i++) {
+      var p = norm(parts[i]);
+      var hit = p ? lookup(p) : null;
+      if (hit == null && depth > 0) hit = lookupParts(p, depth);
+      if (hit == null) { out.push(parts[i]); continue; }
+      any = true; out.push(hit);
+    }
+    return any ? out.join(glue) : null;
+  }
+  function lookupParts(s, depth) {
+    if (!(depth > 0)) return null;
+    // Предложения делим раньше « · »: подсказка вида «… по нагрузке: 🟡 1 в меру.
+    // Сегодня выполнено: 1 · всего за всё время: 31.» содержит и точки, и точки-
+    // разделители, и при обратном порядке разрез по « · » рвал предложение
+    // посередине — ни один осколок не совпадал со словарём. Внутри каждого
+    // предложения « · » раскроется на следующем уровне рекурсии.
+    var r = null;
+    var sent = splitSentences(s);
+    if (sent.length > 1) r = trySplit(sent, " ", depth - 1);
+    if (r != null) return r;
+    if (s.indexOf(SEG) >= 0) r = trySplit(s.split(SEG), SEG, depth - 1);
+    return r;
+  }
+
   function translateString(raw) {
     var s = norm(raw);
     if (!s) return null;
     var hit = lookup(s);
+    if (hit == null) hit = lookupParts(s, 2);
     if (hit == null) {
-      // Не нашли — но время внутри всё равно показываем в локальном формате.
-      var clocked = localizeClock(s);
+      // Не нашли — но время и единицы внутри всё равно показываем по-местному.
+      var clocked = localizeUnits(localizeClock(s));
       return clocked === s ? null : raw.replace(s, clocked);
     }
-    hit = localizeClock(hit);
+    hit = localizeUnits(localizeClock(hit));
     // Сохраняем ведущие/хвостовые пробелы исходного узла: разметка на них опирается.
     var lead = /^\s*/.exec(raw)[0], tail = /\s*$/.exec(raw)[0];
     return lead + hit + tail;
@@ -250,6 +314,15 @@
     return s.replace(/\s+/g, " ").trim();
   }
   api.preparse = preparse;
+  /* Перевод отдельного куска — для правил словаря, которые собирают длинную
+   * подсказку из частей (в них удобно перевести хвост тем же словарём). */
+  api.tr = function (s) {
+    var k = norm(s);
+    if (!k) return s;
+    var hit = lookup(k);
+    if (hit == null) hit = lookupParts(k, 2);
+    return hit == null ? s : hit;
+  };
 
   // «Ничего не нашли» — возвращаем результат на исходной фразе, чтобы
   // нормализация не могла испортить текст дела своими русскими вставками.
@@ -414,8 +487,35 @@
   function isOwn(el) {
     return !!(el && el.closest && el.closest(OWN));
   }
+  /* Названия дел, мест и намерения человек пишет сам — их перевод был бы
+   * порчей данных. В счёте покрытия они тоже не участвуют: иначе «Mark as
+   * done: позвонить маме» вечно считалась бы непереведённой, и метрика не
+   * смогла бы дойти до нуля никогда. */
+  function userStrings() {
+    var out = [];
+    function add(s) { s = norm(s); if (s && RU_RE.test(s)) out.push(s); }
+    try {
+      var ts = JSON.parse(localStorage.getItem("superday_tasks_v1") || "[]") || [];
+      for (var i = 0; i < ts.length; i++) {
+        if (!ts[i]) continue;
+        add(ts[i].text);
+        if (ts[i].loc) { add(ts[i].loc.label); add(ts[i].loc.addr); }
+      }
+    } catch (e) {}
+    try {
+      var it = JSON.parse(localStorage.getItem("superday_intention_v1") || "null");
+      if (it) add(it.text || it);
+    } catch (e) {}
+    // Длинные раньше коротких: «большая уборка» не должна остаться от «уборка».
+    return out.sort(function (a, b) { return b.length - a.length; });
+  }
+  function withoutUser(s, users) {
+    for (var i = 0; i < users.length; i++) s = s.split(users[i]).join("");
+    return s;
+  }
   function coverage() {
-    var left = [], seen = Object.create(null);
+    var left = [], seen = Object.create(null), users = userStrings();
+    function pending(s) { return RU_RE.test(withoutUser(s, users)); }
     var w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
     var n;
     while ((n = w.nextNode())) {
@@ -423,7 +523,8 @@
       if (!p || SKIP_TAGS[p.nodeName] || isOwn(p)) continue;
       var s = norm(n.nodeValue);
       if (!s || !RU_RE.test(s) || seen[s]) continue;
-      seen[s] = 1; left.push(s);
+      seen[s] = 1;
+      if (pending(s)) left.push(s);
     }
     var els = document.querySelectorAll("[" + ATTRS.join("],[") + "]");
     for (var i = 0; i < els.length; i++) {
@@ -431,9 +532,10 @@
       for (var j = 0; j < ATTRS.length; j++) {
         var v = els[i].getAttribute(ATTRS[j]);
         if (!v || !RU_RE.test(v)) continue;
-        var k = ATTRS[j] + " :: " + norm(v);
+        var nv = norm(v), k = ATTRS[j] + " :: " + nv;
         if (seen[k]) continue;
-        seen[k] = 1; left.push(k);
+        seen[k] = 1;
+        if (pending(nv)) left.push(k);
       }
     }
     return left;
