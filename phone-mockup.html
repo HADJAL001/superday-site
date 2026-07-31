@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SUPER DAY — Premium Phone Mockup</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1629 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 20px;
+    }
+
+    .phone-frame {
+      width: 320px;
+      height: 640px;
+      background: #000;
+      border-radius: 50px;
+      overflow: hidden;
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.8),
+        0 0 1px rgba(255, 255, 255, 0.1) inset,
+        0 0 30px rgba(34, 197, 94, 0.15);
+      position: relative;
+      z-index: 10;
+    }
+
+    .phone-frame::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      height: 28px;
+      background: #000;
+      border-radius: 0 0 30px 30px;
+      z-index: 20;
+    }
+
+    .screen {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
+      padding: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      color: #fff;
+      font-size: 13px;
+    }
+
+    .status-bar {
+      height: 24px;
+      padding: 0 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 11px;
+      color: #fff;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding-top: 8px;
+    }
+
+    .logo {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      color: #000;
+    }
+
+    .app-title {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .app-name {
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+    }
+
+    .app-version {
+      font-size: 10px;
+      color: #888;
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 4px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin: 12px 0 8px;
+      font-weight: 600;
+    }
+
+    .card {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 8px;
+      backdrop-filter: blur(10px);
+    }
+
+    .task-name {
+      font-weight: 500;
+      font-size: 13px;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .task-meta {
+      font-size: 11px;
+      color: #aaa;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .priority {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      font-weight: 500;
+    }
+
+    .actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .btn-small {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      background: rgba(139, 92, 246, 0.1);
+      border-radius: 8px;
+      color: #a78bfa;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-small:active {
+      background: rgba(139, 92, 246, 0.2);
+    }
+
+    .bottom-section {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .input-area {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .input-field {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: #fff;
+      font-size: 12px;
+    }
+
+    .btn-add {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-add:active {
+      transform: scale(0.95);
+    }
+
+    .mic-btn {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .focus-badge {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      border-radius: 8px;
+      padding: 8px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 500;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    /* Smooth scrollbar */
+    .content::-webkit-scrollbar {
+      width: 4px;
+    }
+    .content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .content::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+    }
+
+    .glow {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(34, 197, 94, 0.2) 0%, transparent 70%);
+      border-radius: 50%;
+      filter: blur(40px);
+      pointer-events: none;
+    }
+
+    .glow-1 { top: -100px; left: -100px; }
+    .glow-2 { bottom: -100px; right: -100px; }
+  </style>
+</head>
+<body>
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+
+  <div class="phone-frame">
+    <div class="screen">
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <span>9:41</span>
+        <span>🔋📶</span>
+      </div>
+
+      <!-- Header -->
+      <div class="header">
+        <div class="logo">⚡</div>
+        <div class="app-title">
+          <div class="app-name">SUPER DAY</div>
+          <div class="app-version">web · pro</div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="content">
+        <!-- Today's Tasks -->
+        <div class="section-title">Сегодня</div>
+
+        <div class="card">
+          <div class="task-name">Созвон с инвестором</div>
+          <div class="task-meta">
+            <span>10:00 · 40 мин</span>
+            <span class="priority">Срочно</span>
+          </div>
+          <div class="actions">
+            <button class="btn-small">▶ Фокус</button>
+            <button class="btn-small">✓ Готово</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="task-name">Финализировать питч</div>
+          <div class="task-meta">
+            <span>Глубокая работа · 2ч</span>
+            <span class="priority">Важно</span>
+          </div>
+          <div class="actions">
+            <button class="btn-small">▶ Фокус</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="task-name">Ответить на письма</div>
+          <div class="task-meta">
+            <span>Между делами</span>
+            <span class="priority">Срочно</span>
+          </div>
+        </div>
+
+        <!-- Focus Timer -->
+        <div class="section-title">Фокус-таймер</div>
+        <div class="focus-badge">
+          🎯 Выключено · ⏱️ Готов к запуску
+        </div>
+
+        <!-- Input Section -->
+        <div class="bottom-section">
+          <div class="input-area">
+            <input class="input-field" placeholder="Новое дело…" />
+            <button class="mic-btn">🎤</button>
+            <button class="btn-add">+</button>
+          </div>
+          <div style="display: flex; gap: 4px;">
+            <button class="btn-small" style="flex: 1; padding: 6px;">🔥 Срочно</button>
+            <button class="btn-small" style="flex: 1; padding: 6px;">⭐ Важно</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
