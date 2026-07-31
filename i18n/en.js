@@ -29,6 +29,15 @@ window.__i18nDict("en", {
   },
 
   t: {
+    "— горит по времени.": "— pressing by the clock.",
+    "— двигает жизнь. Переложить можно перетаскиванием за ручку ☰.": "— moves life forward. Drag by the ☰ handle to move a task.",
+    "ГОВОРИТЕ И ВАШ ИИ ПРОЛОЖИТ ЛУЧШИЙ ПУТЬ": "SPEAK AND YOUR AI WILL PLOT THE BEST PATH",
+    "ГОВОРИТЕ ИЛИ ВСТАВЬТЕ ВЕСЬ СПИСОК — ИИ РАЗЛОЖИТ ПО ВАЖНОСТИ": "SPEAK OR PASTE THE WHOLE LIST — THE AI WILL SORT IT BY IMPORTANCE",
+    "СКАЖИТЕ ДЕЛА — ИИ ПОКАЖЕТ ИХ НА КАРТЕ И СОБЕРЁТ ПЛАН ДНЯ": "SPEAK YOUR TASKS — THE AI WILL SHOW THEM ON THE MAP AND BUILD THE DAY'S PLAN",
+    "План на день": "Plan for the day",
+    "Сказать дела голосом": "Say your tasks out loud",
+    "План дня": "Day plan",
+    "Заметка": "Note",
     /* Формулировки интерфейса переписываются между волнами, поэтому в словаре
        держатся и прежние, и текущие варианты одной строки — так перевод не
        отваливается от редактуры соседней волны. */
@@ -87,8 +96,8 @@ window.__i18nDict("en", {
     "» — и оно встанет в расписание. Повтор тоже понимает: «зарядка": "” — and it lands on the schedule. Repeats work too: “workout",
     "каждый день": "every day",
     "в 7 утра». Флажки ниже — по желанию.": "at 7am”. The toggles below are optional.",
-    "🔥 Срочно": "🔥 Urgent",
-    "⭐ Важно": "⭐ Important",
+    "Срочно": "Urgent",
+    "Важно": "Important",
     "→ решим за тебя": "→ we'll sort it out",
     "→ Сделать сейчас": "→ Do it now",
     "→ Запланировать": "→ Schedule it",
@@ -131,9 +140,9 @@ window.__i18nDict("en", {
     "Разделы панели": "Panel sections",
     "Разбор по важности": "Sort by importance",
     "Матрица Эйзенхауэра:": "The Eisenhower matrix:",
-    "🔥 срочно": "🔥 urgent",
+    "срочно": "urgent",
     "— горит по времени,": "— burning by time,",
-    "⭐ важно": "⭐ important",
+    "важно": "important",
     "— двигает жизнь. Перетащи дело за ручку ☰ в другой квадрант — маршрут дня пересоберётся сам.": "— moves life forward. Drag a task by the ☰ handle into another quadrant — the day route rebuilds itself.",
     "Матрица Эйзенхауэра": "Eisenhower matrix",
     "Сделать сейчас": "Do it now",
@@ -514,6 +523,7 @@ window.__i18nDict("en", {
 
   /* ===== Шаблоны с числами ===== */
   re: [
+    ["^Перенести (\\d+), убрать выполненные$", "Carry $1 over, remove the completed"],
     /* Волна 42: уровень, опыт и достижения — строки собираются в коде из чисел. */
     ["^Уровень (\\d+)$", "Level $1"],
     ["^(\\d+) XP всего$", "$1 XP total"],
@@ -594,6 +604,9 @@ window.__i18nDict("en", {
     ["^([\\d.,]+) км по прямой, без учёта дорог — путь по дорогам сейчас недоступен$", "$1 km as the crow flies, roads not accounted for — road routing is unavailable right now"],
     ["^Нашёл: (.+) — сохранить как место дела\\?$", "Found: $1 — save it as the task's place?"],
     ["^(\\d+) (?:место|места|мест)$", function (all, n) { return n + " place" + (+n === 1 ? "" : "s"); }],
+    ["^(\\d+) (?:дело|дела|дел)(?: · на карте (\\d+))?$", function (all, n, loc) {
+      return n + " task" + (+n === 1 ? "" : "s") + (loc ? " · on the map " + loc : "");
+    }],
 
     /* ===== Волна 42, проход 3: прожитое состояние =====
        Строки карточки дела, недельного ритма и калибровки времени рождаются

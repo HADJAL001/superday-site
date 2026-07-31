@@ -134,6 +134,13 @@
   .composer input[type=text]{flex:1 1 260px; min-width:0; background:var(--ink); border:1px solid var(--border);
     color:var(--text); border-radius:12px; padding:14px 15px; font-size:15px; font-family:inherit; outline:none}
   .composer input[type=text]:focus{border-color:var(--gold); box-shadow:0 0 0 3px rgba(200,214,240,.12)}
+  /* Приглашение набрано капителью: это обещание продукта, а не пример ввода.
+     Кегль ниже и трекинг шире — иначе капс кричит и не влезает на узком экране.
+     На фокусе гаснет: набирая, человек уже не читает приглашение. */
+  .composer input[type=text]::placeholder,.bulk textarea::placeholder{
+    font-size:11.5px; letter-spacing:.11em; text-transform:uppercase;
+    color:rgba(var(--plat),.42); font-weight:500; opacity:1}
+  .composer input[type=text]:focus::placeholder,.bulk textarea:focus::placeholder{color:rgba(var(--plat),.22)}
   .mic-btn{flex:0 0 auto; width:50px; border:1px solid var(--border); background:var(--ink); color:var(--champagne);
     border-radius:12px; font-size:18px; cursor:pointer; transition:.2s}
   .mic-btn:hover{border-color:var(--gold)}
@@ -401,7 +408,6 @@
   .bulk[hidden]{display:none}
   .bulk-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
   .bulk-head h3{margin:0; font-family:var(--font-display); font-weight:700; font-size:21px; color:var(--text)}
-  .bulk-note{font-size:12.5px; color:var(--text-dim); line-height:1.55; margin:6px 0 11px}
   .bulk textarea{width:100%; box-sizing:border-box; resize:vertical; font:inherit; font-size:14px; line-height:1.6;
     color:var(--text); background:var(--surface-alt); border:1px solid var(--hair-soft); border-radius:12px; padding:11px 13px}
   .bulk textarea:focus{outline:none; border-color:var(--gold)}
@@ -425,7 +431,6 @@
   .dayarc[hidden]{display:none}
   .da-eyebrow{font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:var(--champagne); font-weight:700}
   .da-head{font-family:var(--font-display); font-size:18px; font-weight:700; color:var(--text); margin:4px 0 2px; line-height:1.3}
-  .da-note{font-size:12.5px; color:var(--text-dim); line-height:1.5}
   .da-opts{display:flex; flex-wrap:wrap; gap:7px; margin-top:11px}
   .da-opt{font-size:12px; color:var(--text-dim); background:var(--surface-alt); border:1px solid var(--hair-soft);
     border-radius:999px; padding:6px 11px; cursor:pointer; transition:.15s; text-align:left; line-height:1.35}
@@ -1008,9 +1013,15 @@
   .mapview{position:absolute; inset:0; width:100%; height:100%; background:var(--ink)}
   .mapview .leaflet-container{width:100%; height:100%; background:var(--ink); font-family:inherit}
   .mapview .leaflet-tile-pane{filter:brightness(.62) contrast(1.12) saturate(.7) hue-rotate(178deg)}
+  /* Вуаль поверх карты: под длинным текстом она обязательна для читаемости, но
+     на первом экране гасила саму карту. Верх ослаблен, низ остаётся плотным —
+     ниже сгиба идут карточки и список, там контраст важнее картинки. */
   .mapcard::after{content:""; position:absolute; inset:0; pointer-events:none; z-index:450;
-    box-shadow:inset 0 0 90px 20px rgba(6,10,26,.85);
-    background:radial-gradient(120% 90% at 50% 30%, rgba(10,20,48,.35) 0%, rgba(6,10,26,.82) 100%)}
+    box-shadow:inset 0 0 90px 20px rgba(6,10,26,.62);
+    background:linear-gradient(180deg, rgba(6,10,26,.30) 0%, rgba(6,10,26,.46) 46%, rgba(6,10,26,.80) 100%)}
+  /* Пока карта не построена, вуаль оставляем прежней плотности: на пустой
+     подложке светлый градиент выглядит как незагрузившийся экран. */
+  body:not(.map-live) .mapcard::after{background:radial-gradient(120% 90% at 50% 30%, rgba(10,20,48,.35) 0%, rgba(6,10,26,.82) 100%)}
   .map-stats{margin:0 0 14px; font-size:12.5px; color:var(--text-dim); display:flex; gap:14px; flex-wrap:wrap}
   .map-stats b{color:var(--text); font-weight:700}
   .mapview .leaflet-control-attribution{background:rgba(6,10,26,.72); color:var(--text-muted);
@@ -1083,9 +1094,159 @@
   .notes-head h3,.route h3,.stats-head h3,.tpl-head h3,.bulk-head h3,.da-head,.gr-lvl{
     font-weight:600; letter-spacing:-.008em;
   }
+
+  /* ============ ЗНАКИ ГЛАВНОГО ЭКРАНА ============
+     Эмодзи приносили в платиновый монохром чужую палитру (оранжевое пламя,
+     жёлтую звезду) и рисовались по-своему в каждой ОС — на премиальной
+     поверхности это читалось как наклейка. На их месте штриховые знаки одного
+     модуля 24×24: единая толщина, скруглённые концы, один оптический вес.
+     Цвет — currentColor, поэтому один и тот же знак верен и на тёмном фоне,
+     и на светлой платиновой плашке, где текст чернильный.
+     Заливка задана атрибутами внутри <symbol>, а не классом: содержимое <use>
+     живёт в теневом дереве, куда селекторы страницы не достают. */
+  .sdi{flex:0 0 auto; width:16px; height:16px; display:inline-block; vertical-align:-3px;
+    fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round;
+    overflow:visible}
+  /* Мелкие кегли просят чуть больше веса: при 14px штрих 1.5 на модуле 24
+     превращается в 0.875 физического пикселя и бледнеет. */
+  .tg .sdi,.pg-lead .sdi,.streak .sdi,.pb-ic .sdi{width:14px; height:14px; stroke-width:1.7}
+  .fx-ic .sdi{width:20px; height:20px; vertical-align:0}
+  .fx-focus .sdi{width:13px; height:13px}
+  .pg-ic .sdi{width:17px; height:17px; vertical-align:0}
+  .mic-btn .sdi{width:19px; height:19px}
+  .bulk-btn .sdi{width:18px; height:18px}
+
+  /* Посадка знаков в носители: кнопка и тег становятся flex-строкой, иначе
+     знак сидел бы на базовой линии текста и «проваливался». */
+  .focus .fx-focus,.tg,.mic-btn,.bulk-btn{display:inline-flex; align-items:center; justify-content:center; gap:7px}
+  .tg .sdi{opacity:.9}
+  .tg[aria-pressed=true] .sdi{opacity:1}
+  .pg-ic{color:rgba(var(--plat),.92)}
+  /* Рельс и шеврон рисуют знак, а не букву: у кнопок рельса был кегль шрифта,
+     у шеврона — символ ▶. Размер знака задаём здесь, поворот шеврона остаётся
+     на .pgroup.open — крутится сам <span>, вместе с вложенным знаком. */
+  .rail button .sdi{width:19px; height:19px; vertical-align:0}
+  .rail button{display:inline-flex; align-items:center; justify-content:center}
+  .pg-chev{display:inline-flex; align-items:center}
+  .pg-chev .sdi{width:13px; height:13px; vertical-align:0; stroke-width:1.9}
+
+  /* ============ ПЕРВЫЙ ЭКРАН: КАРТА И ГОЛОС ============
+     Карта уже была фоном на весь экран, но её никто не видел: сверху лежали
+     заголовок и три текстовые карточки. Сцена занимает высоту экрана, держит
+     только знак микрофона и одну строку приглашения — карта работает картинкой,
+     а не обоями. Полупрозрачная вуаль карты ослаблена в этой зоне: под текстом
+     она нужна для читаемости, под сценой — прячет саму карту. */
+  .stage{min-height:calc(100svh - 62px); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:18px; padding:24px 0 34px; text-align:center}
+  .stage-mic{position:relative; width:92px; height:92px; border-radius:50%; cursor:pointer;
+    display:grid; place-items:center; color:var(--on-accent); border:0; font-family:inherit;
+    background:var(--grad-plat); box-shadow:0 26px 60px -22px rgba(0,0,0,.9), var(--inner-light);
+    transition:transform .2s var(--ease-out), box-shadow .2s var(--ease-out)}
+  .stage-mic .sdi{width:38px; height:38px; stroke-width:1.4; vertical-align:0}
+  .stage-mic:hover{transform:translateY(-2px); box-shadow:0 32px 70px -22px rgba(0,0,0,.95), var(--inner-light)}
+  .stage-mic:active{transform:translateY(1px)}
+  .stage-mic:focus-visible{outline:none; box-shadow:0 0 0 4px rgba(232,237,246,.5), var(--shadow-lux)}
+  /* Кольцо расходится, только когда микрофон слушает: анимация без причины на
+     премиальной поверхности читается как рябь. */
+  .sm-ring{position:absolute; inset:-6px; border-radius:50%; border:1px solid rgba(232,237,246,.5); opacity:0}
+  .stage-mic.live .sm-ring{animation:smpulse 1.9s ease-out infinite}
+  .stage-mic.live{box-shadow:0 0 0 6px rgba(232,237,246,.12), 0 26px 60px -22px rgba(0,0,0,.9)}
+  @keyframes smpulse{0%{transform:scale(1); opacity:.55} 70%{transform:scale(1.5); opacity:0} 100%{opacity:0}}
+  .stage-say{max-width:520px; font-size:12px; letter-spacing:.16em; text-transform:uppercase;
+    color:rgba(var(--plat),.62); line-height:1.9; font-weight:500}
+  .stage-live{min-height:22px; max-width:640px; font-family:var(--font-display); font-size:19px;
+    color:var(--text); line-height:1.35}
+  .stage-live.thinking{color:var(--text-dim)}
+  .stage-links{margin:2px 0 0; font-size:12.5px; color:var(--text-muted)}
+
+  /* План дня поверх карты — стекло той же формулы, что панели. Номер строки
+     совпадает с номером маркера на карте: одна нумерация на два представления,
+     иначе список и карта читались бы как два разных плана. */
+  .stage-plan{width:min(560px,calc(100vw - 44px)); text-align:left; padding:16px 18px; border-radius:20px;
+    background:var(--glass) padding-box, var(--edge) border-box; border:1px solid transparent;
+    -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur); box-shadow:var(--shadow-lux), var(--inner-light)}
+  .stage-plan[hidden]{display:none}
+  .sp-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:10px}
+  .sp-title{font-family:var(--font-display); font-size:17px; font-weight:600}
+  .sp-sum{font-size:11.5px; color:var(--text-muted); letter-spacing:.04em}
+  .sp-row{display:flex; align-items:flex-start; gap:11px; padding:8px 0; border-top:1px solid var(--hair-soft)}
+  .sp-row:first-of-type{border-top:0}
+  .sp-num{flex:0 0 auto; width:21px; height:21px; border-radius:7px; display:grid; place-items:center;
+    font-size:11px; font-weight:700; color:var(--on-accent); background:var(--grad-plat)}
+  .sp-body{flex:1; min-width:0}
+  .sp-text{font-size:14px; color:var(--text); line-height:1.35; word-break:break-word}
+  .sp-meta{font-size:11.5px; color:var(--text-muted); margin-top:2px}
+  .sp-meta .sp-dot{opacity:.5; margin:0 5px}
+  @media(max-width:640px){
+    .stage{min-height:calc(100svh - 120px); gap:15px}
+    .stage-mic{width:82px; height:82px}
+    .stage-mic .sdi{width:34px; height:34px}
+    .stage-say{font-size:11px; letter-spacing:.13em; max-width:330px}
+    .stage-live{font-size:17px}
+  }
+  .pg-lead .sdi{margin-right:1px}
 </style>
 </head>
 <body>
+<!-- Спрайт знаков. Один модуль 24×24 на все девять: одинаковая оптическая
+     плотность важнее буквальности рисунка — набор должен читаться как один
+     гарнитурный набор, а не как девять картинок из разных мест. -->
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute"><defs>
+  <symbol id="i-target" viewBox="0 0 24 24"><!-- цель: «начни с этого» -->
+    <circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="4.3"/>
+    <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><!-- пуск фокуса -->
+    <path fill="currentColor" stroke="none" d="M8.6 5.9c0-.9 1-1.5 1.8-1l8.1 5.2c.7.5.7 1.5 0 2l-8.1 5.2c-.8.5-1.8-.1-1.8-1V5.9Z"/></symbol>
+  <symbol id="i-cycle" viewBox="0 0 24 24"><!-- разворот дня -->
+    <path d="M20.2 12a8.2 8.2 0 1 1-2.6-6"/><path d="M20.4 4.2v4.4h-4.4"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><!-- срочность -->
+    <path d="M13.2 2.4c.3 2.3 1.5 3.8 2.7 5.2 1.3 1.5 2.2 3.1 2.2 5.1 0 3.6-2.8 6.4-6.2 6.4s-6.2-2.8-6.2-6.4c0-1.7.6-3.1 1.6-4.4.1 1.1.6 1.9 1.5 2.4-.4-3.5 1.3-6.4 4.4-8.3Z"/>
+    <path d="M12 19.3c-1.5 0-2.7-1.2-2.7-2.7 0-1.2.7-1.9 1.3-2.9.2.7.6 1.2 1.2 1.5.7-.6 1.1-1.3 1.2-2.2.8 1 1.3 2 1.3 3.1 0 1.7-1.1 3.2-2.3 3.2Z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><!-- важность -->
+    <path d="M12 3.1l2.6 5.6 6 .8-4.4 4.3 1.1 6.1L12 17l-5.3 2.9 1.1-6.1L3.4 9.5l6-.8L12 3.1Z"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><!-- голос -->
+    <rect x="9" y="2.6" width="6" height="10.6" rx="3"/>
+    <path d="M5.8 11.2a6.2 6.2 0 0 0 12.4 0"/><path d="M12 17.4v3.8"/><path d="M8.6 21.2h6.8"/></symbol>
+  <symbol id="i-stack" viewBox="0 0 24 24"><!-- разбор списком: строки и искра -->
+    <path d="M3.4 6.6h10.2"/><path d="M3.4 12h8.4"/><path d="M3.4 17.4h11.4"/>
+    <path d="M18.6 3.2l.9 2.5 2.5.9-2.5.9-.9 2.5-.9-2.5-2.5-.9 2.5-.9.9-2.5Z"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><!-- блоки главного экрана -->
+    <rect x="3.4" y="3.4" width="7.4" height="7.4" rx="2"/><rect x="13.2" y="3.4" width="7.4" height="7.4" rx="2"/>
+    <rect x="3.4" y="13.2" width="7.4" height="7.4" rx="2"/><rect x="13.2" y="13.2" width="7.4" height="7.4" rx="2"/></symbol>
+  <symbol id="i-bars" viewBox="0 0 24 24"><!-- панель -->
+    <path d="M3.6 6.6h16.8"/><path d="M3.6 12h16.8"/><path d="M3.6 17.4h16.8"/></symbol>
+  <symbol id="i-matrix" viewBox="0 0 24 24"><!-- разбор по важности: четыре квадранта -->
+    <rect x="3.4" y="3.4" width="17.2" height="17.2" rx="2.6"/><path d="M12 3.4v17.2"/><path d="M3.4 12h17.2"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><!-- напоминания и звук -->
+    <path d="M18 9.6a6 6 0 1 0-12 0c0 4.2-1.6 5.6-1.6 5.6h15.2S18 13.8 18 9.6Z"/>
+    <path d="M10.3 18.6a2 2 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><!-- неделя: столбцы -->
+    <path d="M4 20.2h16"/><path d="M7.4 20.2V12"/><path d="M12 20.2V6.4"/><path d="M16.6 20.2v-5.4"/></symbol>
+  <symbol id="i-medal" viewBox="0 0 24 24"><!-- рост: медаль на ленте -->
+    <path d="M8.4 2.8l3.6 6.4"/><path d="M15.6 2.8L12 9.2"/>
+    <circle cx="12" cy="15.6" r="5.4"/><path d="M12 13.2l.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3.9-1.9Z"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><!-- шаблоны дня: слои -->
+    <path d="M12 3.2l8.4 4.4-8.4 4.4L3.6 7.6 12 3.2Z"/><path d="M3.6 12.4l8.4 4.4 8.4-4.4"/>
+    <path d="M3.6 17.2l8.4 4.4 8.4-4.4"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><!-- заметки -->
+    <path d="M16.4 3.6l4 4-11 11-4.8.8.8-4.8 11-11Z"/><path d="M14.4 5.6l4 4"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><!-- данные и календарь -->
+    <rect x="3.4" y="5.2" width="17.2" height="15.4" rx="2.6"/><path d="M3.4 10h17.2"/>
+    <path d="M8.4 3.4v3.4"/><path d="M15.6 3.4v3.4"/>
+    <circle cx="8.6" cy="14.4" r=".9" fill="currentColor" stroke="none"/>
+    <circle cx="12" cy="14.4" r=".9" fill="currentColor" stroke="none"/>
+    <circle cx="15.4" cy="14.4" r=".9" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><!-- как это работает -->
+    <circle cx="12" cy="12" r="8.8"/>
+    <path d="M9.6 9.4a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.9"/>
+    <circle cx="12" cy="17.2" r="1" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><!-- под капотом: прибор -->
+    <path d="M4 17.2a8.6 8.6 0 1 1 16 0"/><path d="M12 17.2l4-5"/>
+    <circle cx="12" cy="17.4" r="1.2" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><!-- раскрытие раздела -->
+    <path d="M9.4 5.6l7 6.4-7 6.4"/></symbol>
+</defs></svg>
+
 <a class="skip-link" href="#main">К содержимому</a>
 <header>
   <div class="wrap bar">
@@ -1097,11 +1258,11 @@
       <a class="back" href="index.html">← На сайт</a>
       <button class="panel-btn" id="layoutBtn" type="button" aria-expanded="false" aria-controls="layoutPop"
               title="Выбери, какие блоки видны на главном экране">
-        <span class="pb-ic" aria-hidden="true">🧩</span><span>Блоки</span>
+        <span class="pb-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-grid"/></svg></span><span>Блоки</span>
       </button>
       <button class="panel-btn" id="panelBtn" type="button" aria-expanded="false" aria-controls="panel"
               title="Настройки, матрица, неделя, шаблоны, заметки и данные">
-        <span class="pb-ic" aria-hidden="true">☰</span><span>Панель</span>
+        <span class="pb-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-bars"/></svg></span><span>Панель</span>
         <span class="pb-dot" id="panelDot" hidden aria-hidden="true"></span>
       </button>
     </div>
@@ -1110,10 +1271,20 @@
 </header>
 
 <main class="wrap" id="main" tabindex="-1">
-  <section class="intro">
-    <span class="eyebrow">Планировщик дня · без регистрации</span>
-    <h1>Список дел превращается<br><span class="g">в порядок действий.</span></h1>
-    <p><button type="button" class="inline-link" id="introHelp">Как это устроено</button> · <button type="button" class="inline-link" id="introPanel">Панели</button></p>
+  <!-- Первый экран — карта и голос. Прежде здесь стоял заголовок и три текстовых
+       карточки: человек читал про продукт вместо того, чтобы им пользоваться, а
+       карта, лежащая фоном на весь экран, была не видна под текстом. Теперь всё,
+       что было текстом, уехало ниже сгиба: намерение дня, перенос дня и «начни с
+       этого» остались на своих местах в потоке, их не удаляли. -->
+  <section class="stage" id="voiceStage" aria-label="Сказать дела голосом">
+    <button class="stage-mic" id="stageMic" type="button" aria-label="Сказать дела голосом">
+      <span class="sm-ring" aria-hidden="true"></span>
+      <svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-mic"/></svg>
+    </button>
+    <div class="stage-say" id="stageSay">СКАЖИТЕ ДЕЛА — ИИ ПОКАЖЕТ ИХ НА КАРТЕ И СОБЕРЁТ ПЛАН ДНЯ</div>
+    <div class="stage-live" id="stageLive" aria-live="polite"></div>
+    <section class="stage-plan" id="stagePlan" hidden aria-label="План дня"></section>
+    <p class="stage-links"><button type="button" class="inline-link" id="introHelp">Как это устроено</button> · <button type="button" class="inline-link" id="introPanel">Панели</button></p>
   </section>
 
   <section class="onboard" id="onboard" hidden aria-label="Как это работает">
@@ -1144,13 +1315,13 @@
   <div class="rollover" id="planSuggest" hidden role="region" aria-label="Маршрут по геолокации"></div>
 
   <section class="focus" id="focusCard" hidden aria-live="polite" aria-label="Задача, с которой стоит начать">
-    <span class="fx-ic" aria-hidden="true">▶</span>
+    <span class="fx-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-target"/></svg></span>
     <div class="fx-body">
       <div class="fx-eyebrow">Начни с этого</div>
       <div class="fx-task" id="focusTask"></div>
       <div class="fx-meta" id="focusMeta"></div>
     </div>
-    <button class="fx-focus" id="focusStart" type="button" title="Запустить таймбокс на длительность дела">▶ Фокус</button>
+    <button class="fx-focus" id="focusStart" type="button" title="Запустить таймбокс на длительность дела"><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-play"/></svg>Фокус</button>
     <button class="fx-done" id="focusDone" type="button">Готово</button>
   </section>
 
@@ -1172,14 +1343,14 @@
 </main>
 <section class="composer" id="composer" aria-label="Добавить задачу">
   <div class="row1">
-    <input type="text" id="taskInput" placeholder="Задача — например, «позвонить маме»…" autocomplete="off" />
-    <button class="mic-btn" id="micBtn" type="button" title="Продиктовать задачу голосом" aria-label="Продиктовать задачу голосом" aria-pressed="false">&#127908;</button>
-    <button class="bulk-btn" id="bulkBtn" type="button" title="Наговорить или вставить сразу весь список дел — ИИ разложит по важности" aria-label="Разобрать список дел">&#129504;</button>
+    <input type="text" id="taskInput" placeholder="ГОВОРИТЕ И ВАШ ИИ ПРОЛОЖИТ ЛУЧШИЙ ПУТЬ" autocomplete="off" />
+    <button class="mic-btn" id="micBtn" type="button" title="Продиктовать задачу голосом" aria-label="Продиктовать задачу голосом" aria-pressed="false"><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-mic"/></svg></button>
+    <button class="bulk-btn" id="bulkBtn" type="button" title="Наговорить или вставить сразу весь список дел — ИИ разложит по важности" aria-label="Разобрать список дел"><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-stack"/></svg></button>
     <button class="add-btn" id="addBtn" type="button">Добавить</button>
   </div>
   <div class="toggles">
-    <span class="tg u" id="tgUrgent" role="button" tabindex="0" aria-pressed="false">🔥 Срочно</span>
-    <span class="tg i" id="tgImportant" role="button" tabindex="0" aria-pressed="false">⭐ Важно</span>
+    <span class="tg u" id="tgUrgent" role="button" tabindex="0" aria-pressed="false"><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg>Срочно</span>
+    <span class="tg i" id="tgImportant" role="button" tabindex="0" aria-pressed="false"><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-star"/></svg>Важно</span>
     <span class="hint" id="quadHint" role="status" aria-live="polite"></span>
   </div>
 </section>
@@ -1192,8 +1363,7 @@
     <h3 id="bulkTitle">Весь список сразу</h3>
     <button class="route-close" id="bulkClose" type="button" aria-label="Закрыть разбор списком">&times;</button>
   </div>
-  <p class="bulk-note">Пишите как думаете — по строкам, через запятую или потоком. Приоритеты по матрице расставит ИИ, а вы поправите одним касанием.</p>
-  <textarea id="bulkText" rows="7" placeholder="позвонить клиенту срочно&#10;отчёт на 2 часа&#10;купить хлеб&#10;записаться к врачу"></textarea>
+  <textarea id="bulkText" rows="7" placeholder="ГОВОРИТЕ ИЛИ ВСТАВЬТЕ ВЕСЬ СПИСОК — ИИ РАЗЛОЖИТ ПО ВАЖНОСТИ"></textarea>
   <div class="bulk-actions">
     <span class="bulk-state" id="bulkState" aria-live="polite"></span>
     <button class="add-btn" id="bulkRun" type="button">Разобрать</button>
@@ -1222,9 +1392,9 @@
   </div>
   <div class="panel-body" id="panelBody">
   <section class="pgroup" data-sec="matrix">
-    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">🧭</span><span class="pg-title">Разбор по важности</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-matrix"/></svg></span><span class="pg-title">Разбор по важности</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
     <div class="pg-body">
-      <p class="pg-lead">Матрица Эйзенхауэра: <b>🔥 срочно</b> — горит по времени, <b>⭐ важно</b> — двигает жизнь. Перетащи дело за ручку ☰ в другой квадрант — маршрут дня пересоберётся сам.</p>
+      <p class="pg-lead">Матрица Эйзенхауэра: <b><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg> срочно</b> — горит по времени, <b><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-star"/></svg> важно</b> — двигает жизнь. Перетащи дело за ручку ☰ в другой квадрант — маршрут дня пересоберётся сам.</p>
       <section class="matrix" aria-label="Матрица Эйзенхауэра">
         <div class="quad q1" data-q="1">
           <h2>Сделать сейчас <span class="cnt" data-cnt>0</span></h2>
@@ -1254,7 +1424,7 @@
     </div>
   </section>
   <section class="pgroup" data-sec="remind">
-    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">🔔</span><span class="pg-title">Напоминания и звук</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-bell"/></svg></span><span class="pg-title">Напоминания и звук</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
     <div class="pg-body">
       <section class="remindbar" id="remindBar" aria-label="Напоминания">
         <button class="remind-toggle" id="remindToggle" type="button" aria-pressed="false">
@@ -1269,7 +1439,7 @@
     </div>
   </section>
   <section class="pgroup" data-sec="voice">
-    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">🎙</span><span class="pg-title">Голос</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-mic"/></svg></span><span class="pg-title">Голос</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
     <div class="pg-body">
       <section class="voicebar" id="voiceBar" aria-label="Голосовой режим">
         <div class="vm-main">
@@ -1288,7 +1458,7 @@
     </div>
   </section>
   <section class="pgroup" data-sec="stats">
-    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">📊</span><span class="pg-title">Неделя</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chart"/></svg></span><span class="pg-title">Неделя</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
     <div class="pg-body">
       <section class="stats" id="statsCard" aria-label="Статистика недели">
         <div class="stats-head">
@@ -1303,7 +1473,7 @@
     </div>
   </section>
   <section class="pgroup" data-sec="growth">
-    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">🏅</span><span class="pg-title">Рост</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-medal"/></svg></span><span class="pg-title">Рост</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
     <div class="pg-body">
       <section class="growth" id="growthCard" aria-label="Уровень и достижения">
         <div class="gr-head">
@@ -1318,7 +1488,7 @@
     </div>
   </section>
   <section class="pgroup" data-sec="tpl">
-    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">🗂</span><span class="pg-title">Шаблоны дня</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-layers"/></svg></span><span class="pg-title">Шаблоны дня</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
     <div class="pg-body">
       <section class="templates" id="templatesCard" aria-label="Шаблоны дня">
         <div class="tpl-head">
@@ -1332,7 +1502,7 @@
     </div>
   </section>
   <section class="pgroup" data-sec="notes">
-    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">✍️</span><span class="pg-title">Заметки</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-pen"/></svg></span><span class="pg-title">Заметки</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
     <div class="pg-body">
       <section class="notes" aria-label="Заметки">
         <div class="notes-head">
@@ -1340,7 +1510,7 @@
           <span class="nsub">Быстрые мысли — голосом «заметка …» или впиши руками.</span>
         </div>
         <div class="note-add">
-          <input type="text" id="noteInput" placeholder="Например: идея для презентации…" autocomplete="off" />
+          <input type="text" id="noteInput" placeholder="Заметка" autocomplete="off" />
           <button class="add-btn" id="noteAdd" type="button" aria-label="Добавить заметку">＋</button>
         </div>
         <ul class="notelist" id="noteList"></ul>
@@ -1349,7 +1519,7 @@
     </div>
   </section>
   <section class="pgroup" data-sec="data">
-    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">💾</span><span class="pg-title">Данные и календарь</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-calendar"/></svg></span><span class="pg-title">Данные и календарь</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
     <div class="pg-body">
       <p class="pg-lead">Планом можно поделиться текстом, а день — выгрузить в системный календарь: события лягут с будильниками и сработают при закрытом приложении.</p>
       <div class="toolbar">
@@ -1371,15 +1541,15 @@
     </div>
   </section>
   <section class="pgroup" data-sec="help">
-    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">❔</span><span class="pg-title">Как это работает</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-help"/></svg></span><span class="pg-title">Как это работает</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
     <div class="pg-body">
       <p class="pg-lead"><b>Маршрут дня.</b> Сначала то, что горит по времени, затем важное. Цветная точка слева — приоритет, нажатие открывает разбор по важности.</p>
-      <p class="pg-lead"><b>Матрица.</b> 🔥 срочно — горит по времени. ⭐ важно — двигает жизнь. Переложить можно перетаскиванием за ручку ☰.</p>
+      <p class="pg-lead"><b>Матрица.</b> <b><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg> срочно</b> — горит по времени. <b><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-star"/></svg> важно</b> — двигает жизнь. Переложить можно перетаскиванием за ручку ☰.</p>
       <p class="pg-lead"><b>Где данные.</b> Только в этом браузере — ни аккаунта, ни сервера. Работает офлайн.</p>
     </div>
   </section>
   <section class="pgroup" data-sec="diag">
-    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">🔧</span><span class="pg-title">Под капотом</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span></button>
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-gauge"/></svg></span><span class="pg-title">Под капотом</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
     <div class="pg-body">
       <p class="pg-lead">Состояние этой копии приложения. Самотесты гоняют логику (парсеры времени, повторов, дат, порядок маршрута, сборку календаря) прямо на живом коде — тем же набором, что и в сборке.</p>
       <dl class="diag" id="diagList"></dl>
@@ -2211,6 +2381,9 @@
         attribution:'&copy; OpenStreetMap, &copy; CARTO'
       }).addTo(mapState.map);
       mapState.layer = L.layerGroup().addTo(mapState.map);
+      // Метка «карта жива» ослабляет вуаль первого экрана: до загрузки плиток
+      // светлая вуаль показывала бы пустую подложку вместо карты.
+      try{ document.body.classList.add("map-live"); }catch(e){}
     } else {
       mapState.layer.clearLayers();
     }
@@ -2297,6 +2470,7 @@
     renderPlan();
     renderFocusTimer();
     renderMapCard();
+    if(typeof renderStagePlan==="function") renderStagePlan();
     if(typeof suggestDayPlan==="function") suggestDayPlan();
     if(typeof updatePanelDot==="function") updatePanelDot();
     applyLayoutPrefs();
@@ -2891,6 +3065,185 @@
     }).then(function(){ if(runBtn) runBtn.disabled=false; });
   }
 
+  // ===== Первый экран: сказал дела — ИИ разложил, карта показала, план собрался
+  // Один путь на весь сценарий: расшифровка речи → черновик по словам-маркерам
+  // (мгновенно, чтобы экран не молчал) → уточнение моделью → геокодирование мест
+  // → карта и план. Геокодер вызывается только для дел, где место названо: без
+  // этого фильтра каждое «позвонить маме» уходило бы в сеть.
+  function stageEl(id){ return document.getElementById(id); }
+  // Своя капитализация: cap() живёт внутри голосового модуля и снаружи не видна.
+  function stageCap(s){ return s ? String(s).charAt(0).toUpperCase()+String(s).slice(1) : s; }
+  function stageSay(msg, thinking){
+    var el=stageEl("stageLive"); if(!el) return;
+    el.textContent = msg || "";
+    el.classList.toggle("thinking", !!thinking);
+  }
+  // Речь несёт время, длительность, повтор и место в самой фразе. Модель отдаёт
+  // только заголовок и приоритет, поэтому фразу разбирают эти же парсеры, что и
+  // при ручном вводе — и делают это на ОБОИХ путях: и для черновика по словам-
+  // маркерам, и для ответа модели. Иначе при недоступной модели (или без сети)
+  // дело оставалось бы сырым: «в 14:00 встреча на Тверской 1» одной строкой,
+  // без времени и без точки на карте.
+  function stageEnrich(t, source){
+    // Модель отдаёт вычищенный заголовок: из «в 14:00 встреча на Тверской 1»
+    // приходит «Встреча» — времени в тексте уже нет, и парсить его неоткуда.
+    // Поэтому обстоятельства берём из куска ИСХОДНОЙ фразы, который относится
+    // к этому делу: кусок ищется по общим словам, каждый достаётся одному делу.
+    var basis = source || t.text;
+    var pr=parseRepeatPhrase(basis), pd=parseDuration(pr.text||basis), pt=parseTime(pd.text||pr.text||basis);
+    var pp=parsePlacePhrase(pt.text||pd.text||pr.text||basis);
+    // Заголовок остаётся тем, что дала модель, если она его дала: он короче и
+    // чище очищенного куска речи. Без модели берём разобранный кусок.
+    if(!source) t.text = stageCap(pp.text || pt.text || pd.text || pr.text || t.text);
+    if(pt.time) t.time = pt.time;
+    if(validDur(pd.dur) && (!validDur(t.dur) || t.dur===30)) t.dur = pd.dur;
+    if(pr.repeat) t.repeat = pr.repeat;
+    if(t.loc===undefined) t.loc = null;
+    return pp.place || null;
+  }
+  // Куски исходной речи: человек перечисляет дела через запятую, «и», «потом».
+  function stageSegments(text){
+    return String(text||"").split(/[,;]+|\s+(?:и|затем|потом|после)\s+|\.\s+/i)
+      .map(function(s){ return s.trim(); }).filter(function(s){ return s.length>1; });
+  }
+  var STAGE_STOP = /^(в|на|к|до|у|за|по|с|со|из|от|для|это|мне|надо|нужно|потом|затем|ещё|еще|а|и|же|бы|там|тут)$/i;
+  function stageWords(s){
+    return String(s||"").toLowerCase().replace(/[«»"„“(),.!?;:]/g," ").split(/\s+/)
+      .filter(function(w){ return w.length>2 && !STAGE_STOP.test(w); });
+  }
+  // Кусок под дело: максимум общих начал слов. Совпадение по началу, а не по
+  // строгому равенству — модель склоняет и меняет форму («зал» → «поход в зал»).
+  function stageTakeSegment(title, pool){
+    var tw=stageWords(title), best=-1, bestScore=0;
+    for(var i=0;i<pool.length;i++){
+      if(pool[i]==null) continue;
+      var sw=stageWords(pool[i]), score=0;
+      tw.forEach(function(a){
+        sw.forEach(function(b){
+          var n=Math.min(a.length,b.length,5);
+          if(n>=3 && a.slice(0,n)===b.slice(0,n)) score++;
+        });
+      });
+      if(score>bestScore){ bestScore=score; best=i; }
+    }
+    if(best<0 || !bestScore) return null;
+    var seg=pool[best]; pool[best]=null;
+    return seg;
+  }
+  function stageParseSpoken(text){
+    text=(text||"").trim();
+    if(!text) return;
+    var batchId="v"+Date.now();
+    var draft = window.SDGrowth ? SDGrowth.quickParse(text, batchId) : [];
+    var draftItems=[];
+    draft.forEach(function(p){
+      var t=taskFromParsed(p, batchId);
+      var place=stageEnrich(t);
+      tasks.push(t);
+      draftItems.push({ task:t, place:place });
+    });
+    save(); render();
+    stageGeocode(draftItems);
+    renderStagePlan();
+    stageSay(draft.length ? "Разбираю: " + draft.length + " " + plural(draft.length,["дело","дела","дел"]) + "…" : "Разбираю…", true);
+    parseGlow(true);
+
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, PARSE_TIMEOUT_MS);
+    fetch(PARSE_API, {
+      method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ raw_text: text }),
+      signal: ctrl ? ctrl.signal : undefined
+    }).then(function(r){
+      if(!r.ok) throw new Error("http_"+r.status);
+      return r.json();
+    }).then(function(data){
+      clearTimeout(timer);
+      var list=(data && data.tasks) || [];
+      if(!list.length) throw new Error("empty");
+      dropBatch(batchId);
+      var added=[], pool=stageSegments(text);
+      list.forEach(function(p){
+        var t=taskFromParsed(p, batchId);
+        t.provisional=false;
+        var seg=stageTakeSegment(t.text, pool);
+        var place=stageEnrich(t, seg);
+        tasks.push(t);
+        added.push({ task:t, place:place });
+      });
+      save(); render(); parseGlow(false);
+      stageGeocode(added);
+      stageSay("Готово: " + list.length + " " + plural(list.length,["дело","дела","дел"]) + " в плане");
+      renderStagePlan();
+    }).catch(function(){
+      clearTimeout(timer);
+      parseGlow(false);
+      // Черновик остаётся в плане: молчаливая отмена читалась бы как потеря дел.
+      if(draft.length){
+        stageSay("Модель не ответила — разложил по словам-маркерам, поправьте вручную");
+        renderStagePlan();
+      } else {
+        stageSay("Не разобрал сказанное. Повторите чуть медленнее.");
+      }
+    });
+  }
+  // Геокодирование по одному месту за раз: параллельные запросы к своему
+  // геокодеру на слабом канале давали таймауты и половину пустых мест.
+  function stageGeocode(items){
+    var queue=items.filter(function(it){ return it.place; });
+    if(!queue.length) return;
+    (function next(){
+      var it=queue.shift();
+      if(!it){ renderStagePlan(); return; }
+      geocodePlace(it.place, function(found){
+        if(found && found.lat!=null && found.lon!=null){
+          var label=it.place.split(",")[0].trim().slice(0,40) || it.place.slice(0,40);
+          it.task.loc={ lat:found.lat, lon:found.lon, label:label, addr:found.addr || it.place };
+          save(); render();
+        }
+        next();
+      });
+    })();
+  }
+  // План дня рядом с картой: та же нумерация, что у маркеров (planOrder),
+  // иначе список и карта читались бы как два несвязанных плана.
+  function renderStagePlan(){
+    var box=stageEl("stagePlan"); if(!box) return;
+    var order=planOrder().filter(function(t){ return !t.done; });
+    if(!order.length){ box.hidden=true; box.innerHTML=""; return; }
+    box.hidden=false; box.innerHTML="";
+    var head=document.createElement("div"); head.className="sp-head";
+    var title=document.createElement("span"); title.className="sp-title"; title.textContent="План на день";
+    var sum=document.createElement("span"); sum.className="sp-sum";
+    var withLoc=order.filter(function(t){ return t.loc; }).length;
+    sum.textContent = order.length + " " + plural(order.length,["дело","дела","дел"])
+      + (withLoc ? " · на карте " + withLoc : "");
+    head.appendChild(title); head.appendChild(sum); box.appendChild(head);
+    order.forEach(function(t, i){
+      var row=document.createElement("div"); row.className="sp-row";
+      var num=document.createElement("span"); num.className="sp-num"; num.textContent=String(i+1);
+      var body=document.createElement("div"); body.className="sp-body";
+      var txt=document.createElement("div"); txt.className="sp-text"; txt.textContent=t.text;
+      body.appendChild(txt);
+      var bits=[];
+      if(t.time){ var et=endTime(t); bits.push(et ? (t.time+"–"+et) : t.time); }
+      else if(validDur(t.dur)) bits.push(fmtDurShort(t.dur));
+      if(t.loc) bits.push(t.loc.label);
+      bits.push(QUAD_SHORT[quadOf(t)]);
+      if(bits.length){
+        var meta=document.createElement("div"); meta.className="sp-meta";
+        bits.forEach(function(b, k){
+          if(k){ var d=document.createElement("span"); d.className="sp-dot"; d.textContent="·"; meta.appendChild(d); }
+          meta.appendChild(document.createTextNode(b));
+        });
+        body.appendChild(meta);
+      }
+      row.appendChild(num); row.appendChild(body);
+      row.addEventListener("click", function(){ openTasksSheet(t.id); });
+      box.appendChild(row);
+    });
+  }
+
   // Спор двух точек зрения о приоритете спорного дела.
   function askDebate(t){
     if(!t) return;
@@ -2979,9 +3332,8 @@
   function paintArcMorning(box, intention){
     box.appendChild(arcEl("div","da-eyebrow","Намерение дня"));
     box.appendChild(arcEl("div","da-head", intention ? "Сегодня ты — " + intention.focus.toLowerCase() : "Каким будет твой день?"));
-    box.appendChild(arcEl("div","da-note", intention
-      ? "Вечером этот выбор вернётся в итоге дня."
-      : "Выбери не задачу, а кем будешь сегодня. Это меняет то, что кажется важным."));
+    // Пояснительной строки в карточке больше нет: премиальная подача — заголовок
+    // и выбор, без инструкции под ним. Смысл выбора несут сами варианты.
     if(intention){
       var votes=SDGrowth.identityVotes(intention.focus);
       if(votes>1){
@@ -3137,7 +3489,7 @@
     var streak = st ? st.current : 0;
     if(streak>0){
       stEl.className="streak";
-      var line = '<span class="flame">🔥</span> Серия: '+streak+' '+plural(streak,["день","дня","дней"]);
+      var line = '<svg class="sdi" focusable="false"><use href="#i-flame"/></svg> Серия: '+streak+' '+plural(streak,["день","дня","дней"]);
       // Неприятие потери работает только когда потеря конкретна: не «не потеряй
       // серию», а сколько часов осталось.
       if(st.atRisk) line += ' · ⏳ сгорит через '+st.hoursLeft+' '+plural(st.hoursLeft,["час","часа","часов"]);
@@ -3891,7 +4243,8 @@
   function showRollover(bar, undone, done){
     bar.hidden=false; bar.innerHTML="";
     var head=document.createElement("div"); head.className="ro-head";
-    var ic=document.createElement("span"); ic.className="pg-ic"; ic.setAttribute("aria-hidden","true"); ic.textContent="🔄";
+    var ic=document.createElement("span"); ic.className="pg-ic"; ic.setAttribute("aria-hidden","true");
+    ic.innerHTML='<svg class="sdi" focusable="false"><use href="#i-cycle"/></svg>';
     var title=document.createElement("span"); title.className="ro-title pg-title"; title.textContent="Новый день";
     head.appendChild(ic); head.appendChild(title);
     var acts=document.createElement("div"); acts.className="ro-actions";
@@ -4659,11 +5012,34 @@
         input.value = input.value ? (input.value+" "+t) : t; input.focus();
         return;
       }
+      // Первый экран: показываем речь по ходу — человек должен видеть, что его
+      // слышат, до всякого разбора. Окончательные куски копятся в буфер.
+      if(mode==="stage"){
+        var live="";
+        for(var s=ev.resultIndex;s<ev.results.length;s++){
+          var seg=ev.results[s], txt=(seg[0].transcript||"").trim();
+          if(seg.isFinal){ stageBuf += (stageBuf ? " " : "") + txt; }
+          else { live += (live ? " " : "") + txt; }
+        }
+        if(typeof stageSay==="function") stageSay((stageBuf + (live ? " " + live : "")).trim(), true);
+        stageArmIdle();
+        return;
+      }
       for(var i=ev.resultIndex;i<ev.results.length;i++){
         var r=ev.results[i]; if(r.isFinal){ processFinal((r[0].transcript||"").toLowerCase()); }
       }
     };
     rec.onerror=function(e){
+      if(mode==="stage"){
+        clearTimeout(stageIdle); stageIdle=null; mode=null; stageBuf="";
+        if(stageMic){ stageMic.classList.remove("live"); stageMic.setAttribute("aria-pressed","false"); }
+        var denied = e && (e.error==="not-allowed"||e.error==="service-not-allowed");
+        if(typeof stageSay==="function"){
+          stageSay(denied ? "Нет доступа к микрофону — разрешите его в браузере"
+                          : "Не расслышал. Нажмите знак и скажите ещё раз");
+        }
+        return;
+      }
       if(e && (e.error==="not-allowed"||e.error==="service-not-allowed")){
         mode=null; awake=false; vmToggle.setAttribute("aria-pressed","false");
         micBtn.classList.remove("rec"); micBtn.setAttribute("aria-pressed","false");
@@ -4672,6 +5048,9 @@
     };
     rec.onend=function(){
       micBtn.classList.remove("rec"); micBtn.setAttribute("aria-pressed","false");
+      // Браузер сам обрывает continuous-сессию на тишине. Для первого экрана это
+      // равно «сказал всё»: разбираем накопленное, а не молчим с погасшим знаком.
+      if(mode==="stage"){ stageStop(); return; }
       if(mode==="hands"){
         try{ rec.start(); }catch(e){ setTimeout(function(){ try{ if(mode==="hands") rec.start(); }catch(_){}}, 400); }
       } else if(mode==="dictation"){ mode=null; }
@@ -4684,6 +5063,44 @@
       rec.interimResults=false; rec.continuous=false; mode="dictation";
       try{ rec.start(); micBtn.classList.add("rec"); micBtn.setAttribute("aria-pressed","true"); }catch(e){ mode=null; }
     });
+
+    // ===== Микрофон первого экрана: человек проговаривает весь день подряд
+    // Отличие от диктовки в поле: речь копится целиком (continuous) и уходит в
+    // разбор одной фразой — «позвонить маме, в два встреча на Тверской, вечером
+    // зал» должно стать тремя делами, а не одной строкой. Останов — повторным
+    // нажатием или паузой: молчание надёжнее ловится таймером, чем событием
+    // onend, которое браузеры присылают вразнобой.
+    var stageMic = document.getElementById("stageMic");
+    var stageBuf = "", stageIdle = null;
+    function stageStop(){
+      clearTimeout(stageIdle); stageIdle=null;
+      if(mode==="stage"){ mode=null; try{ rec.stop(); }catch(e){} }
+      if(stageMic) stageMic.classList.remove("live");
+      if(stageMic) stageMic.setAttribute("aria-pressed","false");
+      var said=stageBuf.trim(); stageBuf="";
+      if(said){ if(typeof stageParseSpoken==="function") stageParseSpoken(said); }
+      else if(typeof stageSay==="function") stageSay("");
+    }
+    function stageArmIdle(){
+      clearTimeout(stageIdle);
+      stageIdle=setTimeout(stageStop, 2600);   // пауза в речи = «сказал всё»
+    }
+    if(stageMic){
+      stageMic.addEventListener("click", function(){
+        if(mode==="stage"){ stageStop(); return; }
+        if(mode==="hands"){ stopHands(true); }
+        if(mode==="dictation"){ try{ rec.stop(); }catch(e){} mode=null; }
+        stageBuf=""; mode="stage";
+        rec.interimResults=true; rec.continuous=true;
+        try{
+          rec.start();
+          stageMic.classList.add("live");
+          stageMic.setAttribute("aria-pressed","true");
+          if(typeof stageSay==="function") stageSay("Слушаю…", true);
+          stageArmIdle();
+        }catch(e){ mode=null; stageMic.classList.remove("live"); }
+      });
+    }
 
     // hands-free режим
     function startHands(){
@@ -5712,16 +6129,16 @@
   // значит все обработчики и render-функции работают без изменений.
   var PANEL_KEY = "superday_panel_v1";
   var PANEL_SECS = [
-    { id:"matrix", ic:"🧭", name:"Разбор по важности" },
-    { id:"remind", ic:"🔔", name:"Напоминания и звук" },
-    { id:"voice",  ic:"🎙", name:"Голос" },
-    { id:"stats",  ic:"📊", name:"Неделя" },
-    { id:"growth", ic:"🏅", name:"Рост" },
-    { id:"tpl",    ic:"🗂", name:"Шаблоны дня" },
-    { id:"notes",  ic:"✍️", name:"Заметки" },
-    { id:"data",   ic:"💾", name:"Данные и календарь" },
-    { id:"help",   ic:"❔", name:"Как это работает" },
-    { id:"diag",   ic:"🔧", name:"Под капотом" }
+    { id:"matrix", ic:"matrix", name:"Разбор по важности" },
+    { id:"remind", ic:"bell", name:"Напоминания и звук" },
+    { id:"voice",  ic:"mic", name:"Голос" },
+    { id:"stats",  ic:"chart", name:"Неделя" },
+    { id:"growth", ic:"medal", name:"Рост" },
+    { id:"tpl",    ic:"layers", name:"Шаблоны дня" },
+    { id:"notes",  ic:"pen", name:"Заметки" },
+    { id:"data",   ic:"calendar", name:"Данные и календарь" },
+    { id:"help",   ic:"help", name:"Как это работает" },
+    { id:"diag",   ic:"gauge", name:"Под капотом" }
   ];
   var panelEl, scrimEl, panelBtn, panelOpen=false, panelPushed=false, panelReturn=null;
   var routeEl, routeSheetOpen=false, routeReturn=null;
@@ -5917,7 +6334,8 @@
     if(rail){
       PANEL_SECS.forEach(function(s){
         var b=document.createElement("button"); b.type="button";
-        b.textContent=s.ic; b.title=s.name; b.setAttribute("aria-label", s.name);
+        b.innerHTML='<svg class="sdi" focusable="false" aria-hidden="true"><use href="#i-'+s.ic+'"/></svg>';
+        b.title=s.name; b.setAttribute("aria-label", s.name);
         b.addEventListener("click", function(){ openPanel(s.id); });
         rail.appendChild(b);
       });

@@ -25,6 +25,15 @@ window.__i18nDict("es", {
   },
 
   t: {
+    "— горит по времени.": "— aprieta por la hora.",
+    "— двигает жизнь. Переложить можно перетаскиванием за ручку ☰.": "— mueve la vida. Se mueve arrastrando por el asa ☰.",
+    "ГОВОРИТЕ И ВАШ ИИ ПРОЛОЖИТ ЛУЧШИЙ ПУТЬ": "HABLE Y SU IA TRAZARÁ EL MEJOR CAMINO",
+    "ГОВОРИТЕ ИЛИ ВСТАВЬТЕ ВЕСЬ СПИСОК — ИИ РАЗЛОЖИТ ПО ВАЖНОСТИ": "HABLE O PEGUE TODA LA LISTA — LA IA LA ORDENARÁ POR IMPORTANCIA",
+    "СКАЖИТЕ ДЕЛА — ИИ ПОКАЖЕТ ИХ НА КАРТЕ И СОБЕРЁТ ПЛАН ДНЯ": "DIGA SUS TAREAS — LA IA LAS MOSTRARÁ EN EL MAPA Y ARMARÁ EL PLAN DEL DÍA",
+    "План на день": "Plan del día",
+    "Сказать дела голосом": "Decir las tareas en voz alta",
+    "План дня": "Plan del día",
+    "Заметка": "Nota",
     "Планировщик дня · без регистрации": "Planificador del día · sin registro",
     "Планировщик дня · работает сразу": "Planificador del día · funciona al instante",
     "Список дел превращается": "La lista de tareas se convierte",
@@ -73,8 +82,8 @@ window.__i18nDict("es", {
     "на 2 часа": "durante 2 horas",
     "». Флажки ниже нужны, только если приоритет хочется задать вручную.": "». Las casillas de abajo solo hacen falta si quieres fijar la prioridad a mano.",
     "каждый день": "todos los días",
-    "🔥 Срочно": "🔥 Urgente",
-    "⭐ Важно": "⭐ Importante",
+    "Срочно": "Urgente",
+    "Важно": "Importante",
     "→ приоритет определится сам": "→ la prioridad se decide sola",
     "→ решим за тебя": "→ lo decidimos por ti",
     "→ Сделать сейчас": "→ Hazlo ahora",
@@ -117,9 +126,9 @@ window.__i18nDict("es", {
     "Разделы панели": "Secciones del panel",
     "Разбор по важности": "Desglose por importancia",
     "Матрица Эйзенхауэра:": "La matriz de Eisenhower:",
-    "🔥 срочно": "🔥 urgente",
+    "срочно": "urgente",
     "— горит по времени,": "— urge por tiempo,",
-    "⭐ важно": "⭐ importante",
+    "важно": "importante",
     "— двигает жизнь. Перетащи дело за ручку ☰ в другой квадрант — маршрут дня пересоберётся сам.": "— mueve la vida. Arrastra la tarea por el asa ☰ a otro cuadrante y la ruta se rearma sola.",
     "Матрица Эйзенхауэра": "Matriz de Eisenhower",
     "Сделать сейчас": "Hazlo ahora",
@@ -438,6 +447,7 @@ window.__i18nDict("es", {
   },
 
   re: [
+    ["^Перенести (\\d+), убрать выполненные$", "Pasar $1, quitar las hechas"],
     /* Волна 42: уровень, опыт и достижения — строки собираются в коде из чисел. */
     ["^Уровень (\\d+)$", "Nivel $1"],
     ["^(\\d+) XP всего$", "$1 XP en total"],
@@ -485,6 +495,9 @@ window.__i18nDict("es", {
     ["^([\\d.,]+) км по прямой, без учёта дорог — путь по дорогам сейчас недоступен$", "$1 km en línea recta, sin contar carreteras — la ruta por carretera no está disponible ahora"],
     ["^Нашёл: (.+) — сохранить как место дела\\?$", "Encontrado: $1 — ¿guardar como lugar de la tarea?"],
     ["^(\\d+) (?:место|места|мест)$", "$1 lugares"],
+    ["^(\\d+) (?:дело|дела|дел)(?: · на карте (\\d+))?$", function (all, n, loc) {
+      return n + " tareas" + (loc ? " · en el mapa " + loc : "");
+    }],
 
     /* ===== Волна 42, проход 3: прожитое состояние =====
        Строки карточки дела, недельного ритма и калибровки времени рождаются
