@@ -443,10 +443,26 @@ window.__i18nDict("fr", {
 
     /* Волна 44: текст, рождающийся по действиям */
     "Спор не состоялся — приоритет остаётся вашим": "Le débat n'a pas eu lieu — la priorité reste la même",
-    "Приоритет уточнён": "Priorité définie"
+    "Приоритет уточнён": "Priorité définie",
+    "Расход автомобиля": "Consommation du véhicule",
+    "Нужен для честного расчёта топлива": "Nécessaire pour calculer le carburant honnêtement",
+    "л/100 км": "L/100 km",
+    "🔒 Запись передаётся по HTTPS в Whisper SUPER DAY, превращается в текст и удаляется сразу после распознавания. Для AI-разбора используется только расшифровка.": "🔒 L'enregistrement est envoyé via HTTPS à Whisper SUPER DAY, transcrit puis supprimé immédiatement. L'IA utilise uniquement la transcription.",
+    "Дорога за неделю": "Trajets de la semaine",
+    "только сохранённые поездки": "trajets enregistrés uniquement",
+    "Расход автомобиля в литрах на 100 километров": "Consommation en litres pour 100 kilomètres",
+    "История маршрутов и расхода топлива": "Historique des trajets et du carburant",
+    "За 7 дней: 0 км. График построен из локальной истории без новых запросов к картам.": "7 jours : 0 km. Le graphique utilise l'historique local sans nouvelle requête cartographique.",
+    "За 7 дней: 0 км · 0 л · 0 мин в пути.": "7 jours : 0 km · 0 L · 0 min de trajet."
   },
 
   re: [
+    ["^(\\d{4}-\\d{2}-\\d{2}): ([\\d.,]+) км(?: · ([\\d.,]+) л)?(?: · ([\\d.,]+) мин)?$", function (all, day, km, fuel, min) {
+      return day + " : " + km + " km" + (fuel ? " · " + fuel + " L" : "") + (min ? " · " + min + " min" : "");
+    }],
+    ["^За 7 дней: ([\\d.,]+) км(?: · ([\\d.,]+) л)?(?: · ([\\d.,]+) мин в пути)?\\.$", function (all, km, fuel, min) {
+      return "7 jours : " + km + " km" + (fuel ? " · " + fuel + " L" : "") + (min ? " · " + min + " min de trajet" : "") + ".";
+    }],
     ["^Перенести (\\d+), убрать выполненные$", "Reporter $1, retirer les faites"],
     /* Волна 42: уровень, опыт и достижения — строки собираются в коде из чисел. */
     ["^Уровень (\\d+)$", "Niveau $1"],

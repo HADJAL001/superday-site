@@ -518,11 +518,27 @@ window.__i18nDict("en", {
 
     /* Волна 44: текст, рождающийся по действиям (toast/confirm/alert) */
     "Спор не состоялся — приоритет остаётся вашим": "The debate didn’t happen — priority stays as is",
-    "Приоритет уточнён": "Priority is set"
+    "Приоритет уточнён": "Priority is set",
+    "Расход автомобиля": "Vehicle fuel consumption",
+    "Нужен для честного расчёта топлива": "Used for an honest fuel estimate",
+    "л/100 км": "L/100 km",
+    "🔒 Запись передаётся по HTTPS в Whisper SUPER DAY, превращается в текст и удаляется сразу после распознавания. Для AI-разбора используется только расшифровка.": "🔒 The recording is sent over HTTPS to SUPER DAY Whisper, transcribed, and deleted immediately. AI planning uses only the transcript.",
+    "Дорога за неделю": "Road this week",
+    "только сохранённые поездки": "saved trips only",
+    "Расход автомобиля в литрах на 100 километров": "Vehicle fuel consumption in litres per 100 kilometres",
+    "История маршрутов и расхода топлива": "Route and fuel history",
+    "За 7 дней: 0 км. График построен из локальной истории без новых запросов к картам.": "7 days: 0 km. The chart uses local history without new map requests.",
+    "За 7 дней: 0 км · 0 л · 0 мин в пути.": "7 days: 0 km · 0 L · 0 min on the road."
   },
 
   /* ===== Шаблоны с числами ===== */
   re: [
+    ["^(\\d{4}-\\d{2}-\\d{2}): ([\\d.,]+) км(?: · ([\\d.,]+) л)?(?: · ([\\d.,]+) мин)?$", function (all, day, km, fuel, min) {
+      return day + ": " + km + " km" + (fuel ? " · " + fuel + " L" : "") + (min ? " · " + min + " min" : "");
+    }],
+    ["^За 7 дней: ([\\d.,]+) км(?: · ([\\d.,]+) л)?(?: · ([\\d.,]+) мин в пути)?\\.$", function (all, km, fuel, min) {
+      return "7 days: " + km + " km" + (fuel ? " · " + fuel + " L" : "") + (min ? " · " + min + " min on the road" : "") + ".";
+    }],
     ["^Перенести (\\d+), убрать выполненные$", "Carry $1 over, remove the completed"],
     /* Волна 42: уровень, опыт и достижения — строки собираются в коде из чисел. */
     ["^Уровень (\\d+)$", "Level $1"],

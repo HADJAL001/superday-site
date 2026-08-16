@@ -2,7 +2,7 @@
    Стратегия: навигации — network-first с офлайн-фолбэком на кэш главной;
    статика (иконки, манифест, шрифты) — cache-first. Версия в имени кэша —
    меняй CACHE при обновлении, чтобы старый кэш очистился. */
-var CACHE = "superday-v56";
+var CACHE = "superday-v59";
 var SHELL = [
   "/",
   "/index.html",
@@ -53,9 +53,19 @@ self.addEventListener("fetch", function (e) {
   // Навигации: сеть, при офлайне — кэш этой же страницы, иначе главная.
   if (req.mode === "navigate") {
     e.respondWith(
-      fetch(req).catch(function () {
+      fetch(req).then(function (res) {
+        if (!res || res.status !== 200 || (res.type !== "basic" && res.type !== "cors")) {
+          return res;
+        }
+        var copy = res.clone();
+        return caches.open(CACHE).then(function (c) {
+          return c.put(req, copy);
+        }).then(function () { return res; });
+      }).catch(function () {
         return caches.match(req).then(function (r) {
-          return r || caches.match("/index.html").then(function (h) { return h || caches.match("/"); });
+          return r || caches.match("/app.html").then(function (app) {
+            return app || caches.match("/index.html").then(function (h) { return h || caches.match("/"); });
+          });
         });
       })
     );

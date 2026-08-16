@@ -17,6 +17,7 @@ const SEED = () => {
   ]));
   localStorage.setItem("superday_lastday", y);            // вчера → карточка «Новый день»
   localStorage.setItem("superday_onboard_v1", "1");       // онбординг не перекрывает экран
+  localStorage.setItem("superday_vehicle_v1", JSON.stringify({ fuelLPer100Km: 8.2, updatedAt: Date.now() }));
   return y;
 };
 
@@ -235,10 +236,52 @@ const SEED = () => {
        запросы page.route НЕ перехватывает — на втором заходе он отдавал файлы,
        скачанные напрямую с боевого superday.fun, и проба показывала прод вместо
        правки: сцены нет, заголовок на месте. Прибор мерил не то, что правили. */
-    const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 }, serviceWorkers: "block" });
+    const ctx = await browser.newContext({
+      viewport: { width: 1440, height: 1000 },
+      serviceWorkers: "block",
+      geolocation: { latitude: 55.751244, longitude: 37.618423 },
+      permissions: ["geolocation"]
+    });
     const page = await ctx.newPage();
     const errs = [];
     page.on("pageerror", e => errs.push(String(e.message)));
+    // Deterministic browser-contract responses. Production acceptance below
+    // uses the live providers; this block isolates client parsing/rendering so
+    // a provider outage cannot make the UI regression suite nondeterministic.
+    await page.route("https://158.160.192.153/site-api/**", async route => {
+      const req = route.request();
+      const url = new URL(req.url());
+      const cors = {
+        "Access-Control-Allow-Origin": "https://superday.fun",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Content-Type": "application/json; charset=utf-8"
+      };
+      if (req.method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors, body: "" });
+      if (url.pathname === "/site-api/parse") {
+        return route.fulfill({ status: 200, headers: cors, body: JSON.stringify({
+          tasks: [
+            { title: "Позвонить маме", minutes: 15, quadrant: "not_urgent_important", quadrantNumber: 2, confidence: .94, reasoning: "Личное важное дело." },
+            { title: "Встреча", minutes: 60, quadrant: "urgent_important", quadrantNumber: 1, confidence: .97, reasoning: "Назначено точное время." },
+            { title: "Зал", minutes: 60, quadrant: "not_urgent_important", quadrantNumber: 2, confidence: .91, reasoning: "Здоровье важно." }
+          ],
+          needs_debate: [], threshold: .7, source: "llm", model: "contract-test", cached: false
+        }) });
+      }
+      if (url.pathname === "/site-api/geocode") {
+        return route.fulfill({ status: 200, headers: cors, body: JSON.stringify({
+          lat: 55.764812, lon: 37.605511, label: "Тверская улица, 1, Москва", cached: false
+        }) });
+      }
+      if (url.pathname === "/site-api/route") {
+        return route.fulfill({ status: 200, headers: cors, body: JSON.stringify({
+          km: 4.8, distanceMeters: 4837, minutes: 13, minutesTraffic: 18,
+          trafficLevel: "moderate", polyline: null, fuelLiters: .4,
+          fuelRate: 8.2, cached: false
+        }) });
+      }
+      return route.fulfill({ status: 404, headers: cors, body: JSON.stringify({ error: "not_found" }) });
+    });
     /* Разбор речи идёт в своё API, а оно отдаёт CORS только для боевого адреса
        (Access-Control-Allow-Origin: https://superday.fun — проверено curl'ом).
        С localhost браузер отбросил бы ответ, и проба измеряла бы не продукт, а
@@ -321,11 +364,14 @@ const SEED = () => {
     console.log("\n=== 5в. Сказал дела → план и карта ===");
     say(spoken.hidden === false && spoken.rows.length >= 3, "план собран из сказанного",
       spoken.rows.length + " строк: " + spoken.rows.map(r => r.num + "." + r.text).join(" | "));
-    say(/Готово/.test(spoken.live || ""), "разобрала модель, а не откат по словам-маркерам", spoken.live);
+    say(/Готово/.test(spoken.live || ""), "получен ответ модели без локальной подмены", spoken.live);
     say(spoken.rows.some(r => /14:00/.test(r.meta)), "время из речи попало в план",
       spoken.rows.map(r => r.meta).join(" / "));
     say(spoken.withLoc >= 1, "место из речи распознано и подписано", "строк с адресом: " + spoken.withLoc);
     say(spoken.markers >= 1, "метка появилась на карте", spoken.markers + " шт");
+    const routeMetrics = await page.locator("#mapStats").textContent();
+    say(/4[,.]8\s*км/.test(routeMetrics || "") && /18\s*мин/.test(routeMetrics || "") && /0[,.]4\s*л/.test(routeMetrics || ""),
+      "маршрут показывает реальные поля расстояния, времени и топлива", routeMetrics || "метрики скрыты");
     say(errs.length === 0, "нет ошибок исполнения на этом пути", errs.join(" | ") || "чисто");
 
     await page.screenshot({ path: "stage-desktop.png" });
@@ -372,5 +418,5 @@ const SEED = () => {
   if (brokenProbe.length) console.log("ПРИБОР СЛОМАН (негативный контроль прошёл): " + brokenProbe.join("; "));
   console.log(fails.length ? "НЕ ПРОЙДЕНО: " + fails.length + "\n  - " + fails.join("\n  - ")
     : "все проверки зелёные");
-  process.exit(0);
+  process.exit(fails.length || brokenProbe.length ? 1 : 0);
 })();

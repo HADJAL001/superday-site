@@ -443,10 +443,26 @@ window.__i18nDict("es", {
 
     /* Волна 44: текст, рождающийся по действиям */
     "Спор не состоялся — приоритет остаётся вашим": "El debate no ocurrió — la prioridad se queda como está",
-    "Приоритет уточнён": "Prioridad establecida"
+    "Приоритет уточнён": "Prioridad establecida",
+    "Расход автомобиля": "Consumo del vehículo",
+    "Нужен для честного расчёта топлива": "Necesario para calcular el combustible con precisión",
+    "л/100 км": "L/100 km",
+    "🔒 Запись передаётся по HTTPS в Whisper SUPER DAY, превращается в текст и удаляется сразу после распознавания. Для AI-разбора используется только расшифровка.": "🔒 La grabación se envía por HTTPS a Whisper SUPER DAY, se transcribe y se elimina de inmediato. La IA usa solo la transcripción.",
+    "Дорога за неделю": "Trayectos de la semana",
+    "только сохранённые поездки": "solo trayectos guardados",
+    "Расход автомобиля в литрах на 100 километров": "Consumo del vehículo en litros por 100 kilómetros",
+    "История маршрутов и расхода топлива": "Historial de rutas y combustible",
+    "За 7 дней: 0 км. График построен из локальной истории без новых запросов к картам.": "7 días: 0 km. El gráfico usa el historial local sin nuevas solicitudes de mapas.",
+    "За 7 дней: 0 км · 0 л · 0 мин в пути.": "7 días: 0 km · 0 L · 0 min en ruta."
   },
 
   re: [
+    ["^(\\d{4}-\\d{2}-\\d{2}): ([\\d.,]+) км(?: · ([\\d.,]+) л)?(?: · ([\\d.,]+) мин)?$", function (all, day, km, fuel, min) {
+      return day + ": " + km + " km" + (fuel ? " · " + fuel + " L" : "") + (min ? " · " + min + " min" : "");
+    }],
+    ["^За 7 дней: ([\\d.,]+) км(?: · ([\\d.,]+) л)?(?: · ([\\d.,]+) мин в пути)?\\.$", function (all, km, fuel, min) {
+      return "7 días: " + km + " km" + (fuel ? " · " + fuel + " L" : "") + (min ? " · " + min + " min en ruta" : "") + ".";
+    }],
     ["^Перенести (\\d+), убрать выполненные$", "Pasar $1, quitar las hechas"],
     /* Волна 42: уровень, опыт и достижения — строки собираются в коде из чисел. */
     ["^Уровень (\\d+)$", "Nivel $1"],

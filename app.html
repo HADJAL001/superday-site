@@ -519,6 +519,19 @@
   .weekpeak{margin-top:15px; padding-top:14px; border-top:1px solid var(--hair-soft)}
   .weekpeak-head{font-size:12px; font-weight:700; color:var(--champagne); text-align:center; margin-bottom:6px}
   .weekpeak-phrase{text-align:center; font-size:12.5px; color:var(--text-dim); font-style:italic; line-height:1.5}
+  .route-analytics{margin-top:15px; padding-top:14px; border-top:1px solid var(--hair-soft)}
+  .route-analytics[hidden]{display:none}
+  .route-analytics-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:9px}
+  .route-analytics-head b{font-size:12px; color:var(--champagne)}
+  .route-analytics-head span{font-size:10px; color:var(--text-muted)}
+  .route-chart{display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:7px; min-height:104px; align-items:end}
+  .route-day{min-width:0; display:flex; flex-direction:column; align-items:center; gap:5px}
+  .route-bars{height:76px; width:100%; display:flex; align-items:flex-end; justify-content:center; gap:2px; border-bottom:1px solid var(--hair-soft)}
+  .route-bar{width:7px; min-height:0; border-radius:3px 3px 0 0; opacity:.9; transition:height .35s ease}
+  .route-bar.km{background:#9fb4e8}.route-bar.fuel{background:#d8bd82}.route-bar.time{background:#9ad0ba}
+  .route-day-label{font-size:10px; color:var(--text-muted)}
+  .route-day-value{font-size:9px; color:var(--text-dim); min-height:12px; white-space:nowrap}
+  .route-analytics-foot{margin:8px 0 0; font-size:10.5px; color:var(--text-muted); line-height:1.45; text-align:center}
 
   /* ===== Шаблоны дня ===== */
   .templates{max-width:760px; margin:22px auto 0}
@@ -1024,6 +1037,15 @@
   body:not(.map-live) .mapcard::after{background:radial-gradient(120% 90% at 50% 30%, rgba(10,20,48,.35) 0%, rgba(6,10,26,.82) 100%)}
   .map-stats{margin:0 0 14px; font-size:12.5px; color:var(--text-dim); display:flex; gap:14px; flex-wrap:wrap}
   .map-stats b{color:var(--text); font-weight:700}
+  .vehicle-settings{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 14px;
+    padding:9px 11px; border:1px solid var(--hair-soft); border-radius:10px; background:rgba(255,255,255,.025)}
+  .vehicle-settings label{font-size:12px; color:var(--text-dim); line-height:1.35}
+  .vehicle-settings small{display:block; color:var(--text-muted); font-size:10px; margin-top:2px}
+  .vehicle-rate{display:flex; align-items:center; gap:6px; flex:0 0 auto}
+  .vehicle-rate input{width:74px; height:32px; border:1px solid var(--hair); border-radius:8px; background:var(--surface-alt);
+    color:var(--text); font:600 14px var(--font-ui); text-align:right; padding:0 8px; font-variant-numeric:tabular-nums}
+  .vehicle-rate input:focus{outline:2px solid var(--gold); outline-offset:1px}
+  .vehicle-rate span{font-size:11px; color:var(--text-muted); white-space:nowrap}
   .mapview .leaflet-control-attribution{background:rgba(6,10,26,.72); color:var(--text-muted);
     border-radius:8px 0 0 0; padding:2px 7px}
   .mapview .leaflet-control-attribution a{color:var(--text-muted)}
@@ -1377,6 +1399,10 @@
     <button class="route-close" id="routeClose" type="button" aria-label="Закрыть окно дел">&times;</button>
   </div>
   <p class="map-stats" id="mapStats" hidden></p>
+  <div class="vehicle-settings" id="vehicleSettings">
+    <label for="vehicleFuelRate">Расход автомобиля<small>Нужен для честного расчёта топлива</small></label>
+    <div class="vehicle-rate"><input id="vehicleFuelRate" type="number" inputmode="decimal" min="2" max="40" step="0.1" placeholder="8.5" aria-label="Расход автомобиля в литрах на 100 километров" /><span>л/100 км</span></div>
+  </div>
   <div class="day-summary" id="daySummary" hidden aria-live="polite"></div>
   <ol class="plan" id="planList"></ol>
   <div class="empty" id="planEmpty">Пока пусто</div>
@@ -1453,7 +1479,7 @@
           <input id="wakeInput" type="text" autocomplete="off" maxlength="24" placeholder="Супер день" />
           <span class="vm-config-hint">— произнеси его, и оно откликнется</span>
         </div>
-        <p class="vm-privacy">🔒 Задачи не покидают браузер. <b>Распознавание речи</b> — через облачный сервис браузера, как в любой диктовке.</p>
+        <p class="vm-privacy">🔒 Запись передаётся по HTTPS в Whisper SUPER DAY, превращается в текст и удаляется сразу после распознавания. Для AI-разбора используется только расшифровка.</p>
       </section>
     </div>
   </section>
@@ -1469,6 +1495,11 @@
         <div class="stats-foot" id="statsFoot"></div>
         <div class="ctxbal" id="ctxBalance" aria-label="Баланс недели по сферам жизни"></div>
         <div class="weekpeak" id="weekPeak" aria-live="polite" hidden></div>
+        <div class="route-analytics" id="routeAnalytics" hidden aria-label="История маршрутов и расхода топлива">
+          <div class="route-analytics-head"><b>Дорога за неделю</b><span>только сохранённые поездки</span></div>
+          <div class="route-chart" id="routeChart"></div>
+          <p class="route-analytics-foot" id="routeAnalyticsFoot"></p>
+        </div>
       </section>
     </div>
   </section>
@@ -1587,7 +1618,7 @@
   try{ tasks = JSON.parse(localStorage.getItem(STORE_KEY) || "[]") || []; }catch(e){ tasks = []; }
 
   // ===== Версия схемы данных + миграции (на будущее, чтобы не терять данные) =====
-  var SCHEMA = 7;
+  var SCHEMA = 8;
   var CTX_LIST = ["work","home","health"];
   var CTX_LABEL = {work:"Работа", home:"Дом", health:"Здоровье"};
   var CTX_ICON = {work:"💼", home:"🏠", health:"❤️"};
@@ -1613,7 +1644,9 @@
   // Нормализация места дела: принимаем только валидную форму {lat,lon,label},
   // addr при отсутствии — тот же label. Всё остальное (включая undefined) → null.
   function normLoc(loc){
-    if(!loc || typeof loc.lat!=="number" || typeof loc.lon!=="number" || typeof loc.label!=="string") return null;
+    if(!loc || typeof loc.lat!=="number" || !isFinite(loc.lat) || loc.lat < -90 || loc.lat > 90 ||
+       typeof loc.lon!=="number" || !isFinite(loc.lon) || loc.lon < -180 || loc.lon > 180 ||
+       typeof loc.label!=="string" || !loc.label.trim()) return null;
     return { lat:loc.lat, lon:loc.lon, label:loc.label, addr:(typeof loc.addr==="string"? loc.addr : loc.label) };
   }
   (function migrate(){
@@ -1628,6 +1661,9 @@
     //     «выполнено» (нужен, чтобы завтра регулярное дело само стало невыполненным).
     // v6: поле loc ({lat,lon,label,addr} | null) — место дела для «Карты дел».
     // v7: поле context ("work"|"home"|"health"|null) — сфера жизни, для баланса недели.
+    // v8: миграция сохраняет расширенные поля ИИ/наград и надёжно записывает
+    //     нормализованный массив до фиксации номера схемы.
+    var migrated = false;
     try{
       tasks = (tasks||[]).map(function(t){
         var tm = (typeof t.time==="string" && /^\d{2}:\d{2}$/.test(t.time)) ? t.time : null;
@@ -1637,22 +1673,72 @@
         var dn = (typeof t.doneOn==="string" && /^\d{4}-\d{2}-\d{2}$/.test(t.doneOn)) ? t.doneOn : null;
         var lc = normLoc(t.loc);
         var cx = normContext(t.context);
-        return { id: t.id || ("t"+Math.random().toString(36).slice(2)),
-                 text: String(t.text||""), urgent: !!t.urgent, important: !!t.important, done: !!t.done,
-                 time: tm, dur: du, defer: df, repeat: rp, doneOn: dn, loc: lc, context: cx,
-                 remindedOn: (typeof t.remindedOn==="string"? t.remindedOn : null) };
+        // Не пересобираем объект из короткого белого списка: так прежняя
+        // миграция стирала bonusXp, batchId, aiReason и другие уже используемые
+        // поля. Нормализуем только известную часть поверх исходной записи.
+        var out = {};
+        Object.keys(t||{}).forEach(function(k){ out[k]=t[k]; });
+        out.id = t.id || ("t"+Math.random().toString(36).slice(2));
+        out.text = String(t.text||""); out.urgent=!!t.urgent; out.important=!!t.important; out.done=!!t.done;
+        out.time=tm; out.dur=du; out.defer=df; out.repeat=rp; out.doneOn=dn; out.loc=lc; out.context=cx;
+        out.remindedOn = (typeof t.remindedOn==="string"? t.remindedOn : null);
+        return out;
       });
+      // Сначала сами данные, затем маркер схемы. Иначе при сбое записи браузер
+      // считал старые данные уже мигрированными и больше их не исправлял.
+      localStorage.setItem(STORE_KEY, JSON.stringify(tasks));
+      migrated = true;
     }catch(e){}
-    try{ localStorage.setItem("superday_schema", String(SCHEMA)); }catch(e){}
+    if(migrated){ try{ localStorage.setItem("superday_schema", String(SCHEMA)); }catch(e){} }
   })();
 
-  // ===== Тихий автобэкап в localStorage — страховка от случайной очистки =====
-  function autoBackup(){
+  // ===== Backup snapshot helpers =====
+  // Keep this independent from the later map declarations: save() can be
+  // called by an early startup handler, before those var assignments run.
+  var BACKUP_VERSION = 2;
+  function backupRecord(v){
+    return !!v && Object.prototype.toString.call(v)==="[object Object]";
+  }
+  function backupReadRecord(key){
     try{
-      var snap = { app:"SUPER DAY", kind:"autobackup", version:SCHEMA, at:new Date().toISOString(),
-        tasks:tasks, notes:(typeof notes!=="undefined"?notes:[]) };
-      localStorage.setItem("superday_autobackup", JSON.stringify(snap));
-    }catch(e){}
+      var v=JSON.parse(localStorage.getItem(key)||"null");
+      return backupRecord(v)?v:{};
+    }catch(e){ return {}; }
+  }
+  function backupReadString(key){
+    try{ return String(localStorage.getItem(key)||""); }catch(e){ return ""; }
+  }
+  function backupFinite(v){ return typeof v==="number" && isFinite(v); }
+  function backupClone(v){
+    try{ return JSON.parse(JSON.stringify(v)); }catch(e){ return null; }
+  }
+  function buildBackupPayload(includeCaches, kind){
+    var routeHistory=backupReadRecord("superday_route_history_v1");
+    var analytics={
+      stats:backupReadRecord("superday_stats_v1"),
+      dayLog:backupReadRecord("superday_daylog"),
+      completions:backupReadRecord("superday_completion_history_v1"),
+      // Kept as an alias for backups written by the previous app build.
+      routes:routeHistory
+    };
+    var vehicle=backupReadRecord("superday_vehicle_v1");
+    if(!validFuelRate(+vehicle.fuelLPer100Km)) vehicle=null;
+    var out={ app:"SUPER DAY", kind:kind||"backup", backupVersion:BACKUP_VERSION,
+      version:SCHEMA, exportedAt:new Date().toISOString(), wake:backupReadString("superday_wake"),
+      tasks:tasks, notes:(typeof notes!=="undefined"?notes:[]), vehicle:vehicle,
+      analytics:analytics, routeHistory:routeHistory };
+    // Geometry can be large. Manual exports include it so a restored device
+    // can use a previously measured route offline; the compact auto-backup
+    // intentionally keeps only the analytics snapshots.
+    if(includeCaches){
+      out.routeCache=backupReadRecord("superday_routecache_v1");
+      out.geoCache=backupReadRecord("superday_geocache_v1");
+    }
+    return out;
+  }
+  function autoBackup(){
+    try{ localStorage.setItem("superday_autobackup", JSON.stringify(buildBackupPayload(false,"autobackup"))); }
+    catch(e){}
   }
 
   function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(tasks)); }catch(e){} autoBackup(); }
@@ -1719,7 +1805,10 @@
     _muted=!!v;
     try{ localStorage.setItem(MUTE_KEY, _muted?"1":"0"); }catch(e){}
     // Уже начатую фразу тоже обрываем — иначе «выключил» ощущается сломанным.
-    if(_muted){ try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(e){} }
+    if(_muted){
+      try{ if(typeof window.__ttsCancel==="function") window.__ttsCancel();
+           else if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(e){}
+    }
     paintMute();
   }
   (function(){
@@ -1914,15 +2003,25 @@
   // 2) топоним после предлога без номера («в Meridian Mall»). Без явного
   // кандидата — null, дело остаётся без места, как раньше «＋место».
   // \b не видит кириллицу как «словесный» символ в JS-регэкспах — \bв\b/\bна\b
-  // никогда не совпадали с «в»/«на». Границы через lookbehind/lookahead вместо \b.
-  var PLACE_RE_HOUSE = /(?:(?<![а-яёА-ЯЁa-zA-Z])(?:в|на|у|около|возле)\s+)?([A-ZА-ЯЁ][\wа-яёA-Za-z-]*(?:\s+[A-ZА-ЯЁ][\wа-яёA-Za-z-]*){0,2})\s+(\d{1,4}[а-яa-z]?)(?![а-яёА-ЯЁa-zA-Z0-9])/;
-  var PLACE_RE_PREP = /(?<![а-яёА-ЯЁa-zA-Z])(?:в|на|у|около|возле)\s+((?:[A-ZА-ЯЁ][\wа-яёA-Za-z-]*\s*){1,3}(?:,\s*[A-ZА-ЯЁ][\wа-яёA-Za-z-]*)?)/;
+  // никогда не совпадали с «в»/«на». Используем явные пробельные границы.
+  // Без lookbehind: старые iOS Safari не умеют его даже разобрать и из-за
+  // одного такого литерала не запускают весь скрипт приложения. Для речи есть
+  // отдельная ветка с обязательным предлогом: распознаватели часто возвращают
+  // адрес строчными буквами ("на тверской 1").
+  var PLACE_RE_HOUSE = /(?:^|[\s,;])(?:(в|на|у|около|возле)\s+)?([A-ZА-ЯЁ][\wа-яёA-Za-z-]*(?:\s+[A-ZА-ЯЁ][\wа-яёA-Za-z-]*){0,2})\s+(\d{1,4}[а-яa-z]?)(?=$|[\s,.;!?])/;
+  var PLACE_RE_HOUSE_SPOKEN = /(?:^|[\s,;])(?:по\s+адресу|в|на|у|около|возле)\s+([а-яёa-z][\wа-яёa-z-]*(?:\s+[а-яёa-z][\wа-яёa-z-]*){0,2})\s+(\d{1,4}[а-яa-z]?)(?=$|[\s,.;!?])/i;
+  var PLACE_RE_PREP = /(?:^|[\s,;])(?:в|на|у|около|возле)\s+((?:[A-ZА-ЯЁ][\wа-яёA-Za-z-]*\s*){1,3}(?:,\s*[A-ZА-ЯЁ][\wа-яёA-Za-z-]*)?)/;
   function parsePlacePhrase(text){
     var s = String(text||"").trim();
     var mh = s.match(PLACE_RE_HOUSE);
-    if(mh && !(mh.index===0 && !/^(в|на|у|около|возле)\s/i.test(mh[0]))){
+    if(mh && (mh[1] || mh.index>0)){
       var clean = (s.slice(0,mh.index) + " " + s.slice(mh.index+mh[0].length)).replace(/\s+/g," ").trim();
-      return { text: clean || s, place: (mh[1]+" "+mh[2]).trim() };
+      return { text: clean || s, place: (mh[2]+" "+mh[3]).trim() };
+    }
+    var ms = s.match(PLACE_RE_HOUSE_SPOKEN);
+    if(ms){
+      var cleanSpoken = (s.slice(0,ms.index) + " " + s.slice(ms.index+ms[0].length)).replace(/\s+/g," ").trim();
+      return { text: cleanSpoken || s, place: (ms[1]+" "+ms[2]).trim() };
     }
     var mp = s.match(PLACE_RE_PREP);
     if(mp){
@@ -2077,9 +2176,10 @@
   tgI.addEventListener("click", function(){ togglePend("important", tgI); });
   [tgU,tgI].forEach(function(el){ el.addEventListener("keydown", function(e){ if(e.key===" "||e.key==="Enter"){ e.preventDefault(); el.click(); } }); });
 
-  function addTask(){
-    var raw = input.value.trim();
-    if(!raw) { input.focus(); return; }
+  function createTaskFromRaw(raw, opts){
+    raw=String(raw||"").trim();
+    if(!raw) return null;
+    opts=opts||{};
     // Порядок разбора: повтор → длительность → время. Повтор снимаем первым,
     // иначе «каждый день» мешает разбору времени.
     var pr = parseRepeatPhrase(raw);
@@ -2087,10 +2187,11 @@
     var pt = parseTime(pd.text || pr.text || raw);
     var pp = parsePlacePhrase(pt.text || pd.text || pr.text || raw);
     var text = pp.text || pt.text || pd.text || pr.text || raw;
-    var task = { id:uid(), text:text, urgent:pend.urgent, important:pend.important, done:false,
+    if(opts.capitalize && text) text=text.charAt(0).toUpperCase()+text.slice(1);
+    var task = { id:uid(), text:text, urgent:!!opts.urgent, important:!!opts.important, done:false,
                  time:pt.time, dur:pd.dur, defer:null, repeat:pr.repeat, doneOn:null, remindedOn:null, loc:null };
     tasks.push(task);
-    if(pt.time || pd.dur || pr.repeat){
+    if(opts.announceSchedule && (pt.time || pd.dur || pr.repeat)){
       var bits=[];
       if(pr.repeat) bits.push("🔁 "+fmtRepeat(pr.repeat));
       if(pt.time) bits.push("⏱ "+pt.time);
@@ -2099,12 +2200,7 @@
     }
     save();
     if(typeof onboardFirstTask==="function") onboardFirstTask(task);
-    input.value = "";
-    pend = { urgent:false, important:false };
-    tgU.setAttribute("aria-pressed","false"); tgI.setAttribute("aria-pressed","false");
-    refreshHint();
     render();
-    input.focus();
     // Фоновая, без confirm — молча пропускаем, если геокодер не нашёл: ручное
     // «＋место» (editTaskLoc) остаётся подстраховкой и спрашивает явно.
     if(pp.place){
@@ -2115,6 +2211,24 @@
         save(); render();
       });
     }
+    // Один и тот же исходный текст уходит в модель и для клавиатуры, и для
+    // голоса. Локальный объект уже сохранён, поэтому таймаут API не теряет дело.
+    if(opts.ai!==false && typeof requestSingleTaskParse==="function" && !IS_SELFTEST){
+      requestSingleTaskParse(task, opts.aiRaw || raw, { explicitDuration:!!pd.dur });
+    }
+    return { task:task, time:pt.time, dur:pd.dur, repeat:pr.repeat, place:pp.place };
+  }
+
+  function addTask(options){
+    var fromVoice=!!(options && options.fromVoice);
+    var raw = input.value.trim();
+    if(!raw) { if(!fromVoice) input.focus(); return; }
+    createTaskFromRaw(raw, { urgent:pend.urgent, important:pend.important, announceSchedule:true, ai:true });
+    input.value = "";
+    pend = { urgent:false, important:false };
+    tgU.setAttribute("aria-pressed","false"); tgI.setAttribute("aria-pressed","false");
+    refreshHint();
+    if(!fromVoice) input.focus();
   }
   addBtn.addEventListener("click", addTask);
   input.addEventListener("keydown", function(e){ if(e.key==="Enter") addTask(); });
@@ -2317,7 +2431,7 @@
   // по геолокации на каждый вызов. Маркеры дел — красные и мигающие, линия
   // маршрута — асфальтовая (см. buildMapView) — маркеры не путать с дорогой.
   // Своя геолокация — отдельный красный мигающий значок человека (drawUserLoc).
-  var mapState = { map:null, layer:null, userLoc:null, booted:false };
+  var mapState = { map:null, layer:null, userLoc:null, booted:false, renderSeq:0 };
   var IS_SELFTEST = /[?&]selftest=1/.test(location.search||"");
   function tasksForMap(){ return planOrder().filter(function(t){ return t.loc && !t.done; }); }
   function renderMapCard(){
@@ -2333,7 +2447,13 @@
       // Геолокация запрашивается параллельно, не блокирует карту
       requestUserLocation(function(loc){
         mapState.userLoc = loc;
-        if(loc && mapState.map){ try{ mapState.map.panTo([loc.lat, loc.lon]); }catch(e){} }
+        if(loc && mapState.map){
+          try{ mapState.map.panTo([loc.lat, loc.lon]); }catch(e){}
+          // Первая отрисовка не ждёт разрешения геолокации. Когда координаты
+          // пришли, пересчитываем путь уже от пользователя, иначе маршрут
+          // начинался с первого дела и одно единственное дело не считалось вовсе.
+          buildMapView(tasksForMap());
+        }
       });
       return;
     }
@@ -2387,12 +2507,19 @@
     } else {
       mapState.layer.clearLayers();
     }
+    var renderSeq = ++mapState.renderSeq;
     drawUserLoc();
     if(pts.length<1){
+      renderMapStats(null);
       setTimeout(function(){ if(mapState.map) mapState.map.invalidateSize(); }, 60);
       return;
     }
+    // Старые цифры не должны висеть, пока считается новый набор остановок.
+    renderMapStats(null);
     buildRoute(pts, function(route){
+      // Геокодирование и route API асинхронны. Поздний ответ для уже удалённого
+      // или изменённого дела не имеет права перерисовать актуальную карту.
+      if(renderSeq !== mapState.renderSeq) return;
       mapState.layer.clearLayers();
       drawUserLoc();
       var bounds=[];
@@ -2404,20 +2531,17 @@
         mk.on("click", function(){ openTasksSheet(t.id); });
         bounds.push([t.loc.lat, t.loc.lon]);
       });
-      if(route){
+      if(route && route.mode!=="unavailable"){
         // Асфальт — маркеры мест красные, дорога должна читаться как дорога
         var style = route.mode==="google" ? { color:"#3A3F47", weight:4, opacity:.95 }
                                            : { color:"#3A3F47", weight:2, opacity:.6, dashArray:"2 8" };
         L.polyline(route.coords, style).addTo(mapState.layer);
         if(route.coords.length) bounds = route.coords;
-        if(route.mode!=="google"){
-          toast(route.km+" км по прямой, без учёта дорог — маршрут сейчас недоступен", "error");
-        }
       }
       renderMapStats(route);
       if(bounds.length){ try{ mapState.map.fitBounds(bounds, {padding:[26,26]}); }catch(e){} }
       setTimeout(function(){ if(mapState.map) mapState.map.invalidateSize(); }, 60);
-    });
+    }, mapState.userLoc);
   }
 
   var TRAFFIC_LABEL = { light:"без пробок", moderate:"пробки заметные", heavy:"пробки плотные" };
@@ -2430,9 +2554,12 @@
     if(typeof route.minutesTraffic==="number" && isFinite(route.minutesTraffic)){
       var label = TRAFFIC_LABEL[route.trafficLevel] || "";
       bits.push("🚗 "+route.minutesTraffic+" мин"+(label?" ("+label+")":""));
+    } else if(typeof route.minutes==="number" && isFinite(route.minutes)){
+      bits.push("🚗 "+route.minutes+" мин");
     } else if(route.mode!=="google"){
-      bits.push("🚗 маршрут по прямой");
+      bits.push("🚗 время в пути недоступно");
     }
+    if(route.stale) bits.push("сохранённый маршрут");
     el.textContent = bits.join(" · ");
     el.hidden = false;
   }
@@ -2746,7 +2873,7 @@
 
   // ===== Выполнение задачи + учёт для статистики =====
   function toggleDone(t){
-    if(t.done){ t.done=false; t.doneOn=null; revokeFor(t); }
+    if(t.done){ revokeCompletion(t); t.done=false; t.doneOn=null; revokeFor(t); }
     else { markDone(t); }
     save(); render();
   }
@@ -2790,7 +2917,7 @@
   // ставился вручную (карточка «Начни с этого», кнопка «Готово» таймера).
   function markDone(t){
     if(!t || t.done) return false;
-    t.done=true; t.doneOn=todayKey(); recordCompletion();
+    t.done=true; t.doneOn=todayKey(); recordCompletion(t);
     awardFor(t);
     return true;
   }
@@ -2978,20 +3105,58 @@
   // группу целиком по batchId. Если модель недоступна — черновик остаётся
   // рабочим планом, а не пропадает: разбор не имеет права оставить человека ни
   // с чем.
-  var PARSE_API = "https://superday-api.osgard.cloud/api/parse";
-  var DEBATE_API = "https://superday-api.osgard.cloud/api/debate";
-  var PARSE_TIMEOUT_MS = 20000;
+  var PARSE_API = "https://158.160.192.153/site-api/parse";
+  var DEBATE_API = "https://158.160.192.153/site-api/debate";
+  // The API may legitimately try a second provider after a transient failure.
+  // Keep the browser deadline above the server's end-to-end LLM budget so a
+  // valid response is not discarded while the request is still in failover.
+  var PARSE_TIMEOUT_MS = 60000;
 
   function quadFlags(q){
     return { urgent: q===1 || q===3, important: q===1 || q===2 };
   }
+  function parsedQuadrant(p){
+    var q=+((p&&p.quadrantNumber!=null)?p.quadrantNumber:p&&p.quadrant);
+    return isFinite(q) && q>=1 && q<=4 && Math.floor(q)===q ? q : null;
+  }
   function taskFromParsed(p, batchId){
-    var f = quadFlags(+p.quadrant || +p.quadrantNumber || 2);
-    return { id:uid(), text:String(p.title||p.text||"").trim(), urgent:f.urgent, important:f.important,
-             done:false, time:null, dur: validDur(+p.minutes) ? +p.minutes : 30, defer:null, repeat:null,
+    if(!p || (typeof p.title!=="string" && typeof p.text!=="string")) return null;
+    var q=parsedQuadrant(p); if(q===null) return null;
+    var title=String(p.title||p.text||"").trim(); if(!title) return null;
+    var f = quadFlags(q);
+    return { id:uid(), text:title, urgent:f.urgent, important:f.important,
+             done:false, time:null, dur: validDur(+p.minutes) ? +p.minutes : null, defer:null, repeat:null,
              doneOn:null, remindedOn:null, batchId:batchId, provisional:!!p.provisional,
-             aiConf: (typeof p.confidence==="number" ? p.confidence : null),
-             aiReason: p.reasoning ? String(p.reasoning) : null };
+              aiConf: (typeof p.confidence==="number" ? p.confidence : null),
+              aiReason: p.reasoning ? String(p.reasoning) : null };
+  }
+  function requestSingleTaskParse(task, raw, meta){
+    if(!task || !raw || !window.fetch) return Promise.resolve(null);
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, PARSE_TIMEOUT_MS);
+    return fetch(PARSE_API, {
+      method:"POST", headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ raw_text:String(raw) }),
+      signal:ctrl ? ctrl.signal : undefined
+    }).then(function(r){
+      if(!r.ok) throw new Error("http_"+r.status);
+      return r.json();
+    }).then(function(data){
+      clearTimeout(timer);
+      if(tasks.indexOf(task)<0) return null; // дело могли удалить, пока отвечала модель
+      if(data && data.source==="fallback_heuristic") throw new Error("heuristic_response");
+      var p=data && data.tasks && data.tasks[0];
+      var q=parsedQuadrant(p); if(!p || q===null) throw new Error("invalid_model_task");
+      var f=quadFlags(q);
+      task.urgent=f.urgent; task.important=f.important;
+      if(!(meta && meta.explicitDuration) && validDur(+p.minutes)) task.dur=+p.minutes;
+      task.aiConf=typeof p.confidence==="number" ? p.confidence : null;
+      task.aiReason=p.reasoning ? String(p.reasoning) : null;
+      task.aiSource=data.source || "llm";
+      task.aiModel=data.model || null;
+      save(); render();
+      return data;
+    }).catch(function(){ clearTimeout(timer); return null; });
   }
   function dropBatch(batchId){
     for(var i=tasks.length-1;i>=0;i--){ if(tasks[i].batchId===batchId) tasks.splice(i,1); }
@@ -3012,18 +3177,35 @@
   }
   function bulkState(msg){ var el=document.getElementById("bulkState"); if(el) el.textContent=msg||""; }
 
+  // Keep one user-authored task when the model is unavailable, but do not
+  // attach locally inferred metadata. A failed AI request must never look like
+  // a successful model parse or trigger a map route from heuristic output.
+  function literalFallbackItem(raw, batchId){
+    var source=String(raw||"").trim();
+    var t={id:uid(), text:source, urgent:false, important:false, done:false,
+      time:null, dur:null, defer:null, repeat:null,
+      doneOn:null, remindedOn:null, batchId:batchId, provisional:false,
+      aiConf:null, aiReason:"AI provider unavailable; kept original text", aiSource:"unavailable", aiModel:null, loc:null};
+    return {task:t, place:null};
+  }
+  function saveLiteralFallback(raw, batchId){
+    var item=literalFallbackItem(raw,batchId);
+    tasks.push(item.task); save(); render();
+    if(item.place && typeof stageGeocode==="function") stageGeocode([item]);
+    if(typeof renderStagePlan==="function") renderStagePlan();
+    return item;
+  }
+
   function runBulkParse(){
     var ta=document.getElementById("bulkText");
     var text=(ta && ta.value || "").trim();
     if(!text){ bulkState("Впишите дела — хоть одной строкой."); return; }
     var runBtn=document.getElementById("bulkRun");
     var batchId="b"+Date.now();
-    var draft = window.SDGrowth ? SDGrowth.quickParse(text, batchId) : [];
-    draft.forEach(function(p){ tasks.push(taskFromParsed(p, batchId)); });
-    save(); render();
     if(runBtn) runBtn.disabled=true;
-    bulkState(draft.length ? "Черновик готов, модель уточняет приоритеты…" : "Разбираю…");
+    bulkState("Модель разбирает список…");
     parseGlow(true);
+    var committed=false;
 
     var ctrl = window.AbortController ? new AbortController() : null;
     var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, PARSE_TIMEOUT_MS);
@@ -3036,38 +3218,32 @@
       return r.json();
     }).then(function(data){
       clearTimeout(timer);
-      var list = (data && data.tasks) || [];
-      if(!list.length) throw new Error("empty");
-      dropBatch(batchId);
-      list.forEach(function(p){
-        var t=taskFromParsed(p, batchId);
-        t.provisional=false;
-        tasks.push(t);
-      });
+      if(data && data.source==="fallback_heuristic") throw new Error("heuristic_response");
+      var prepared=prepareParsedBatch((data && data.tasks) || [], batchId, text);
+      var list=prepared.list, added=prepared.added;
+      // Commit only after every model item has passed validation. A malformed
+      // later item must not leave a partial AI batch beside the literal fallback.
+      Array.prototype.push.apply(tasks, list);
+      committed=true;
       save(); render();
+      stageGeocode(added);
       parseGlow(false);
       closeBulk();
       var spor=(data.needs_debate||[]).length;
       toast("🧠 Разобрано: "+list.length+" "+plural(list.length,["дело","дела","дел"])
-        + (data.source==="fallback_heuristic" ? " · без модели, по словам-маркерам" : "")
         + (spor ? " · спорных: "+spor : ""), "success");
     }).catch(function(){
       clearTimeout(timer);
       parseGlow(false);
-      // Черновик уже в плане и остаётся рабочим: молчаливая отмена выглядела бы
-      // как потеря дел.
-      if(draft.length){
-        closeBulk();
-        toast("Модель не ответила — дела разложены по словам-маркерам, поправьте вручную", "warn");
-      } else {
-        bulkState("Модель не ответила и разобрать нечего — попробуйте по строкам.");
-      }
+      if(!committed) saveLiteralFallback(text,batchId);
+      closeBulk();
+      if(!committed) toast("Модель не ответила — сохранён один исходный текст без придуманного разбора", "warn");
     }).then(function(){ if(runBtn) runBtn.disabled=false; });
   }
 
   // ===== Первый экран: сказал дела — ИИ разложил, карта показала, план собрался
-  // Один путь на весь сценарий: расшифровка речи → черновик по словам-маркерам
-  // (мгновенно, чтобы экран не молчал) → уточнение моделью → геокодирование мест
+  // Один путь на весь сценарий: расшифровка речи → реальный ответ модели
+  // → геокодирование мест. При отказе сохраняется исходная фраза без догадок.
   // → карта и план. Геокодер вызывается только для дел, где место названо: без
   // этого фильтра каждое «позвонить маме» уходило бы в сеть.
   function stageEl(id){ return document.getElementById(id); }
@@ -3080,8 +3256,8 @@
   }
   // Речь несёт время, длительность, повтор и место в самой фразе. Модель отдаёт
   // только заголовок и приоритет, поэтому фразу разбирают эти же парсеры, что и
-  // при ручном вводе — и делают это на ОБОИХ путях: и для черновика по словам-
-  // маркерам, и для ответа модели. Иначе при недоступной модели (или без сети)
+  // при ручном вводе. Явные обстоятельства сохраняются и в ответе модели, и в
+  // единственной исходной задаче при отказе API. Иначе при сбое модели
   // дело оставалось бы сырым: «в 14:00 встреча на Тверской 1» одной строкой,
   // без времени и без точки на карте.
   function stageEnrich(t, source){
@@ -3130,23 +3306,28 @@
     var seg=pool[best]; pool[best]=null;
     return seg;
   }
+  // Preparing a model batch has no persistent side effects. Both entry points
+  // use it so an invalid item makes the whole answer fail atomically.
+  function prepareParsedBatch(rawList, batchId, sourceText){
+    if(!Array.isArray(rawList) || !rawList.length) throw new Error("empty");
+    var list=[], added=[], pool=stageSegments(sourceText);
+    rawList.forEach(function(p){
+      var t=taskFromParsed(p, batchId);
+      if(!t) throw new Error("invalid_model_task");
+      t.provisional=false;
+      var place=stageEnrich(t, stageTakeSegment(t.text,pool));
+      list.push(t);
+      added.push({task:t, place:place});
+    });
+    return {list:list, added:added};
+  }
   function stageParseSpoken(text){
     text=(text||"").trim();
     if(!text) return;
     var batchId="v"+Date.now();
-    var draft = window.SDGrowth ? SDGrowth.quickParse(text, batchId) : [];
-    var draftItems=[];
-    draft.forEach(function(p){
-      var t=taskFromParsed(p, batchId);
-      var place=stageEnrich(t);
-      tasks.push(t);
-      draftItems.push({ task:t, place:place });
-    });
-    save(); render();
-    stageGeocode(draftItems);
-    renderStagePlan();
-    stageSay(draft.length ? "Разбираю: " + draft.length + " " + plural(draft.length,["дело","дела","дел"]) + "…" : "Разбираю…", true);
+    stageSay("Модель разбирает сказанное…", true);
     parseGlow(true);
+    var committed=false;
 
     var ctrl = window.AbortController ? new AbortController() : null;
     var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, PARSE_TIMEOUT_MS);
@@ -3159,18 +3340,12 @@
       return r.json();
     }).then(function(data){
       clearTimeout(timer);
-      var list=(data && data.tasks) || [];
-      if(!list.length) throw new Error("empty");
-      dropBatch(batchId);
-      var added=[], pool=stageSegments(text);
-      list.forEach(function(p){
-        var t=taskFromParsed(p, batchId);
-        t.provisional=false;
-        var seg=stageTakeSegment(t.text, pool);
-        var place=stageEnrich(t, seg);
-        tasks.push(t);
-        added.push({ task:t, place:place });
-      });
+      if(data && data.source==="fallback_heuristic") throw new Error("heuristic_response");
+      var prepared=prepareParsedBatch((data && data.tasks) || [], batchId, text);
+      var list=prepared.list, added=prepared.added;
+      // Do not persist half a response if a later model item is malformed.
+      Array.prototype.push.apply(tasks, list);
+      committed=true;
       save(); render(); parseGlow(false);
       stageGeocode(added);
       stageSay("Готово: " + list.length + " " + plural(list.length,["дело","дела","дел"]) + " в плане");
@@ -3178,12 +3353,9 @@
     }).catch(function(){
       clearTimeout(timer);
       parseGlow(false);
-      // Черновик остаётся в плане: молчаливая отмена читалась бы как потеря дел.
-      if(draft.length){
-        stageSay("Модель не ответила — разложил по словам-маркерам, поправьте вручную");
-        renderStagePlan();
-      } else {
-        stageSay("Не разобрал сказанное. Повторите чуть медленнее.");
+      if(!committed){
+        saveLiteralFallback(text,batchId);
+        stageSay("Модель недоступна — сохранён исходный текст без придуманного разбора");
       }
     });
   }
@@ -3245,6 +3417,17 @@
   }
 
   // Спор двух точек зрения о приоритете спорного дела.
+  function validatedDebateVerdict(data){
+    var verdict=data && data.verdict;
+    var q=parsedQuadrant(verdict);
+    var confidence=verdict && verdict.confidence;
+    var reasoning=verdict && typeof verdict.reasoning==="string" ? verdict.reasoning.trim() : "";
+    if(!data || data.source!=="llm" || !verdict || q===null ||
+       typeof confidence!=="number" || !isFinite(confidence) || confidence<0 || confidence>1 || !reasoning){
+      return null;
+    }
+    return { quadrantNumber:q, confidence:confidence, reasoning:reasoning };
+  }
   function askDebate(t){
     if(!t) return;
     toast("🧠 Спорю о приоритете…");
@@ -3252,17 +3435,18 @@
       method:"POST", headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({ task_title: t.text })
     }).then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
-      if(!d || !d.verdict){ toast("Спор не состоялся — приоритет остаётся вашим", "warn"); return; }
-      var f=quadFlags(+d.verdict.quadrantNumber || 2);
+      var verdict=validatedDebateVerdict(d);
+      if(!verdict){ toast("Спор не состоялся — приоритет остаётся вашим", "warn"); return; }
+      var f=quadFlags(verdict.quadrantNumber);
       t.urgent=f.urgent; t.important=f.important;
-      t.aiConf=d.verdict.confidence; t.aiReason=d.verdict.reasoning;
+      t.aiConf=verdict.confidence; t.aiReason=verdict.reasoning;
       // Дебат — тоже достижение: он засчитывается один раз за дело.
       if(window.SDGrowth && !t.debated){
         t.debated=true;
         try{ var l=SDGrowth.readLedger(); l.debated+=1; localStorage.setItem("superday_growth_v1", JSON.stringify(l)); }catch(e){}
       }
       save(); render();
-      toast("⚖️ "+(d.verdict.reasoning || "Приоритет уточнён"), "success");
+      toast("⚖️ "+verdict.reasoning, "success");
     }).catch(function(){ toast("Спор не состоялся — приоритет остаётся вашим", "warn"); });
   }
 
@@ -3439,9 +3623,53 @@
     if(noteEl) noteEl.textContent = "ур. " + p.level + " · " + p.xp + " XP";
   }
 
-  function readStats(){ try{ return JSON.parse(localStorage.getItem("superday_stats_v1")||"{}")||{}; }catch(e){ return {}; } }
-  function recordCompletion(){
-    try{ var s=readStats(); var k=todayKey(); s[k]=(s[k]||0)+1; localStorage.setItem("superday_stats_v1", JSON.stringify(s)); }catch(e){}
+  var STATS_KEY="superday_stats_v1";
+  var COMPLETION_HISTORY_KEY="superday_completion_history_v1";
+  function readStats(){ try{ return JSON.parse(localStorage.getItem(STATS_KEY)||"{}")||{}; }catch(e){ return {}; } }
+  function readCompletionHistory(){ try{ return JSON.parse(localStorage.getItem(COMPLETION_HISTORY_KEY)||"{}")||{}; }catch(e){ return {}; } }
+  function writeCompletionHistory(h){ try{ localStorage.setItem(COMPLETION_HISTORY_KEY, JSON.stringify(h)); }catch(e){} }
+  function completionKey(t, day){ return String(t&&t.id||"task")+"|"+String(day||todayKey()); }
+  function adjustCompletionCount(day, delta){
+    try{
+      var s=readStats(), n=Math.max(0,(parseInt(s[day]||0,10)||0)+delta);
+      if(n) s[day]=n; else delete s[day];
+      localStorage.setItem(STATS_KEY, JSON.stringify(s));
+    }catch(e){}
+  }
+  function recordCompletion(t){
+    if(!t) return;
+    var day=t.doneOn||todayKey(), key=completionKey(t,day), h=readCompletionHistory();
+    // Идемпотентная запись: повторный вызов не раздувает график.
+    if(h[key]) return;
+    h[key]={ taskId:t.id||null, day:day, completedAt:new Date().toISOString(), text:String(t.text||""),
+      time:t.time||null, dur:validDur(t.dur)?t.dur:null, quadrant:quadOf(t), context:normContext(t.context),
+      loc:normLoc(t.loc) };
+    var keys=Object.keys(h).sort(function(a,b){ return String(h[a].day||"").localeCompare(String(h[b].day||"")); });
+    while(keys.length>2500){ delete h[keys.shift()]; }
+    writeCompletionHistory(h);
+    adjustCompletionCount(day,1);
+  }
+  function revokeCompletion(t){
+    if(!t) return;
+    var day=t.doneOn||todayKey(), key=completionKey(t,day), h=readCompletionHistory();
+    if(h[key]){ delete h[key]; writeCompletionHistory(h); }
+    // До v8 событийного журнала не было, но счётчик уже существовал. Поэтому
+    // снятие старой галочки тоже корректно уменьшает агрегат, не уходя ниже нуля.
+    adjustCompletionCount(day,-1);
+  }
+  function completionRowsWithLegacy(list){
+    var h=readCompletionHistory(), rows=[], seen={};
+    Object.keys(h).forEach(function(k){
+      var e=h[k]; if(!e || !e.day) return;
+      seen[String(e.taskId||"task")+"|"+e.day]=true;
+      rows.push({id:e.taskId,done:true,doneOn:e.day,context:e.context});
+    });
+    (list||[]).forEach(function(t){
+      if(!t || !t.done || !t.doneOn) return;
+      var k=completionKey(t,t.doneOn); if(seen[k]) return;
+      rows.push(t);
+    });
+    return rows;
   }
 
   // ===== Статистика недели (последние 7 дней) + серия ✕ =====
@@ -3516,6 +3744,57 @@
       digest + "Сегодня выполнено: "+todayV+" · всего за всё время: "+total+". Данные считаются только в этом браузере.";
     renderCtxBalance();
     renderWeekPeak();
+    renderRouteAnalytics();
+  }
+  function routeWeekRows(dlog, todayStr){
+    var rows=[], labels=["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
+    var end=new Date(todayStr+"T00:00:00"), fallbackRate=currentFuelRate();
+    for(var i=6;i>=0;i--){
+      var d=new Date(end); d.setDate(d.getDate()-i);
+      var key=dayKeyOf(d), raw=dlog&&dlog[key]&&dlog[key].route;
+      if(raw && !hasValidStoredRouteDistance(raw)) raw=null;
+      var km=raw?numOrNull(raw.km):null;
+      var minutes=raw?(numOrNull(raw.minutesTraffic)!==null?numOrNull(raw.minutesTraffic):numOrNull(raw.minutes)):null;
+      var rate=raw&&validFuelRate(+raw.fuelRate)?+raw.fuelRate:fallbackRate;
+      var meters=raw?storedRouteDistanceMeters(raw):null;
+      var calculatedFuel=fuelForDistance(meters,rate);
+      var fuel=calculatedFuel!==null?calculatedFuel:(raw?numOrNull(raw.fuelLiters):null);
+      rows.push({key:key,label:labels[d.getDay()],km:km,distanceMeters:meters,fuel:fuel,minutes:minutes,has:km!==null});
+    }
+    return rows;
+  }
+  function renderRouteAnalytics(){
+    var box=document.getElementById("routeAnalytics"), chart=document.getElementById("routeChart"), foot=document.getElementById("routeAnalyticsFoot");
+    if(!box||!chart||!foot) return;
+    var rows=routeWeekRows(readDayLog(),todayKey()), used=rows.filter(function(r){return r.has;});
+    if(!used.length){ box.hidden=true; chart.innerHTML=""; foot.textContent=""; return; }
+    box.hidden=false; chart.innerHTML="";
+    var maxKm=Math.max.apply(null,used.map(function(r){return r.km||0;}).concat([1]));
+    var maxFuel=Math.max.apply(null,used.map(function(r){return r.fuel||0;}).concat([1]));
+    var maxMinutes=Math.max.apply(null,used.map(function(r){return r.minutes||0;}).concat([1]));
+    var totals={km:0,fuel:0,minutes:0,fuelKnown:false};
+    rows.forEach(function(r){
+      var day=document.createElement("div"); day.className="route-day";
+      var bars=document.createElement("div"); bars.className="route-bars";
+      [["km",r.km,maxKm],["fuel",r.fuel,maxFuel],["time",r.minutes,maxMinutes]].forEach(function(m){
+        var bar=document.createElement("i"); bar.className="route-bar "+m[0];
+        bar.style.height=m[1]===null||!isFinite(m[1])||m[1]<=0?"0":Math.max(5,Math.round(m[1]/m[2]*74))+"px";
+        bars.appendChild(bar);
+      });
+      var bits=[];
+      if(r.km!==null){ bits.push(r.km+" км"); totals.km+=r.km; }
+      if(r.fuel!==null){ bits.push(r.fuel+" л"); totals.fuel+=r.fuel; totals.fuelKnown=true; }
+      if(r.minutes!==null){ bits.push(r.minutes+" мин"); totals.minutes+=r.minutes; }
+      day.title=r.key+(bits.length?": "+bits.join(" · "):" — маршрута нет");
+      var value=document.createElement("div"); value.className="route-day-value"; value.textContent=r.km===null?"":""+(Math.round(r.km*10)/10);
+      var label=document.createElement("div"); label.className="route-day-label"; label.textContent=r.label;
+      day.appendChild(value); day.appendChild(bars); day.appendChild(label); chart.appendChild(day);
+    });
+    var summary="За 7 дней: "+Math.round(totals.km*10)/10+" км";
+    if(totals.fuelKnown) summary+=" · "+Math.round(totals.fuel*100)/100+" л";
+    if(totals.minutes) summary+=" · "+Math.round(totals.minutes)+" мин в пути";
+    foot.textContent=summary+". График построен из локальной истории без новых запросов к картам.";
+    chart.setAttribute("aria-label",summary+". Синие столбцы — километры, золотые — топливо, зелёные — время.");
   }
   // Баланс недели по сферам жизни: отвечает «на что уходит жизнь», а не
   // только «что успел» (readStats/renderStats выше — про число дел, не про их
@@ -3538,7 +3817,7 @@
   }
   function renderCtxBalance(){
     var wrap = document.getElementById("ctxBalance"); if(!wrap) return;
-    var bal = weekContextBalance(tasks, todayKey());
+    var bal = weekContextBalance(completionRowsWithLegacy(tasks), todayKey());
     wrap.innerHTML = "";
     if(!bal.total){
       wrap.textContent = "Отметь сферу дела («＋сфера» у строки), чтобы увидеть баланс недели.";
@@ -3966,7 +4245,59 @@
   // своим ключом с жёсткими ограничениями (2 API) + кэш в Netlify Blobs.
   // Никакой статики/эвристики вместо реальных данных — прямое требование
   // основателя (волна 32): «НИКАКОЙ СТАТИКИ, ПИШИ ПОЛНОЦЕННЫЙ БЕКЭНД».
-  var API_BASE = "https://superday-api.osgard.cloud/api";
+  // Единственная публичная точка API. Префикс /site-api переписывается Caddy
+  // в /api внутри контейнера; ключи провайдеров никогда не попадают в браузер.
+  var API_BASE = "https://158.160.192.153/site-api";
+  var STT_API = "https://158.160.192.153/voice/stt/transcribe";
+  var SERVER_STT_TIMEOUT_MS = 90000;
+  var VEHICLE_KEY = "superday_vehicle_v1";
+  function validFuelRate(v){ return typeof v==="number" && isFinite(v) && v>=2 && v<=40; }
+  function readVehicleSettings(){
+    try{
+      var raw=JSON.parse(localStorage.getItem(VEHICLE_KEY)||"null");
+      return raw && validFuelRate(+raw.fuelLPer100Km) ? {fuelLPer100Km:Math.round(+raw.fuelLPer100Km*10)/10} : {fuelLPer100Km:null};
+    }catch(e){ return {fuelLPer100Km:null}; }
+  }
+  function currentFuelRate(){ var n=readVehicleSettings().fuelLPer100Km; return validFuelRate(n)?n:null; }
+  function validDistanceMeters(v){ return typeof v==="number" && isFinite(v) && v>=0; }
+  function fuelForDistance(distanceMeters, rate){
+    return validFuelRate(rate) && validDistanceMeters(distanceMeters)
+      ? Math.round(distanceMeters*rate/100000*100)/100 : null;
+  }
+  // Compatibility helper for pre-distanceMeters history and external callers.
+  function fuelForKm(km, rate){
+    return typeof km==="number" && isFinite(km) && km>=0 ? fuelForDistance(km*1000,rate) : null;
+  }
+  function hasValidStoredRouteDistance(route){
+    return !!route && (!Object.prototype.hasOwnProperty.call(route,"distanceMeters") ||
+      validDistanceMeters(route.distanceMeters));
+  }
+  function storedRouteDistanceMeters(route){
+    if(!route) return null;
+    if(Object.prototype.hasOwnProperty.call(route,"distanceMeters")){
+      return validDistanceMeters(route.distanceMeters) ? route.distanceMeters : null;
+    }
+    var km=numOrNull(route.km);
+    return km===null ? null : km*1000;
+  }
+  function paintVehicleRate(){
+    var input=document.getElementById("vehicleFuelRate"); if(!input) return;
+    var rate=currentFuelRate(); input.value=rate===null ? "" : String(rate);
+  }
+  function saveVehicleRate(value){
+    var n=String(value==null?"":value).replace(",",".").trim();
+    if(n===""){ try{ localStorage.removeItem(VEHICLE_KEY); }catch(e){} paintVehicleRate(); renderMapCard(); renderStats(); return; }
+    var rate=Number(n);
+    if(!validFuelRate(rate)){ toast("Укажи расход от 2 до 40 л/100 км", "warn"); paintVehicleRate(); return; }
+    rate=Math.round(rate*10)/10;
+    try{ localStorage.setItem(VEHICLE_KEY, JSON.stringify({fuelLPer100Km:rate, updatedAt:Date.now()})); }catch(e){}
+    paintVehicleRate(); renderMapCard(); renderStats();
+  }
+  (function initVehicleRate(){
+    var input=document.getElementById("vehicleFuelRate"); if(!input) return;
+    paintVehicleRate();
+    input.addEventListener("change", function(){ saveVehicleRate(input.value); });
+  })();
   var GEOCACHE_KEY = "superday_geocache_v1";
   function geoCacheKey(q){ return String(q||"").trim().toLowerCase().replace(/\s+/g," "); }
   function loadGeoCache(){ try{ return JSON.parse(localStorage.getItem(GEOCACHE_KEY)||"{}")||{}; }catch(e){ return {}; } }
@@ -4039,38 +4370,152 @@
   }
   var ROUTECACHE_KEY = "superday_routecache_v1";
   var ROUTECACHE_TTL_MS = 10*60*1000; // короче, чем пробки живут смысл — не день целиком
-  function routeCacheKey(pts){
-    return pts.map(function(p){ return p.lat.toFixed(4)+","+p.lon.toFixed(4); }).join(";");
+  var ROUTE_HISTORY_KEY = "superday_route_history_v1";
+  var routePending = {};
+  function routeCacheKeyAtPrecision(pts, precision){
+    return pts.map(function(p){ return p.lat.toFixed(precision)+","+p.lon.toFixed(precision); }).join(";");
   }
+  function routeCacheKey(pts){ return routeCacheKeyAtPrecision(pts,6); }
+  function legacyRouteCacheKey(pts){ return routeCacheKeyAtPrecision(pts,4); }
   function loadRouteCache(){ try{ return JSON.parse(localStorage.getItem(ROUTECACHE_KEY)||"{}")||{}; }catch(e){ return {}; } }
-  function saveRouteCache(c){ try{ localStorage.setItem(ROUTECACHE_KEY, JSON.stringify(c)); }catch(e){} }
-  function buildFallbackRoute(pts){
-    var km=0; for(var i=1;i<pts.length;i++){ km += haversineKm(pts[i-1], pts[i]); }
-    km = Math.round(km*10)/10;
-    return { coords: pts.map(function(p){ return [p.lat, p.lon]; }), km:km, minutes:null, minutesTraffic:null,
-             trafficLevel:null, fuelLiters: Math.round(km*0.08*10)/10, mode:"fallback" };
+  function saveRouteCache(c){
+    try{
+      // Полилинии объёмны. Держим последние реальные маршруты, а дневная
+      // история ниже сохраняет лёгкие числовые снимки для будущих графиков.
+      var keys=Object.keys(c).sort(function(a,b){ return ((c[a]&&c[a].at)||0)-((c[b]&&c[b].at)||0); });
+      while(keys.length>80){ delete c[keys.shift()]; }
+      localStorage.setItem(ROUTECACHE_KEY, JSON.stringify(c));
+    }catch(e){}
   }
-  function buildRoute(tasksWithLoc, cb){
-    var pts = tasksWithLoc.map(function(t){ return t.loc; });
-    if(pts.length<2){ cb(null); return; }
+  function readRouteHistory(){ try{ return JSON.parse(localStorage.getItem(ROUTE_HISTORY_KEY)||"{}")||{}; }catch(e){ return {}; } }
+  function saveRouteHistory(h){ try{ localStorage.setItem(ROUTE_HISTORY_KEY, JSON.stringify(h)); }catch(e){} }
+  function validPoint(p){ return !!p && typeof p.lat==="number" && isFinite(p.lat) && p.lat>=-90 && p.lat<=90 && typeof p.lon==="number" && isFinite(p.lon) && p.lon>=-180 && p.lon<=180; }
+  function routePoints(tasksWithLoc, origin){
+    var pts=[];
+    if(validPoint(origin)) pts.push({lat:origin.lat,lon:origin.lon});
+    (tasksWithLoc||[]).forEach(function(t){ if(t && validPoint(t.loc)) pts.push({lat:t.loc.lat,lon:t.loc.lon}); });
+    return pts;
+  }
+  function buildUnavailableRoute(pts){
+    // Нет настоящего Directions-ответа — не придумываем километры, время и
+    // топливо по прямой. Маркеры остаются на карте, метрики скрыты.
+    return { coords:[], km:null, distanceMeters:null, minutes:null, minutesTraffic:null,
+             trafficLevel:null, fuelLiters:null, mode:"unavailable" };
+  }
+  function numOrNull(v){ return typeof v==="number" && isFinite(v) && v>=0 ? v : null; }
+  function normalizeRouteResult(j, pts){
+    if(!j || j.error) return null;
+    var km=numOrNull(j.km); if(km===null) return null;
+    var hasMeters=Object.prototype.hasOwnProperty.call(j,"distanceMeters");
+    var distanceMeters=hasMeters ? numOrNull(j.distanceMeters) : km*1000;
+    if(distanceMeters===null) return null;
+    var coords=[];
+    if(typeof j.polyline==="string" && j.polyline){ try{ coords=decodePolyline(j.polyline); }catch(e){ coords=[]; } }
+    var rate=validFuelRate(+j.fuelRate) ? Math.round(+j.fuelRate*10)/10 : currentFuelRate();
+    return { coords:coords, km:km, distanceMeters:distanceMeters,
+             minutes:numOrNull(j.minutes), minutesTraffic:numOrNull(j.minutesTraffic),
+             trafficLevel:(j.trafficLevel==="light"||j.trafficLevel==="moderate"||j.trafficLevel==="heavy")?j.trafficLevel:null,
+             fuelRate:rate, fuelLiters:fuelForDistance(distanceMeters,rate), mode:"google" };
+  }
+  function cloneRoute(r, extra){
+    var out={}; Object.keys(r||{}).forEach(function(k){ out[k]=r[k]; });
+    Object.keys(extra||{}).forEach(function(k){ out[k]=extra[k]; });
+    return out;
+  }
+  function applyFuelRate(route){
+    if(!route) return route;
+    var out=cloneRoute(route,{}), rate=currentFuelRate();
+    if(rate===null && validFuelRate(+route.fuelRate)) rate=Math.round(+route.fuelRate*10)/10;
+    var distanceMeters=storedRouteDistanceMeters(route);
+    if(distanceMeters!==null) out.distanceMeters=distanceMeters;
+    out.fuelRate=rate; out.fuelLiters=fuelForDistance(distanceMeters,rate);
+    return out;
+  }
+  function realCachedRoute(hit){
+    var r=hit && hit.result;
+    if(!r || r.mode!=="google" || numOrNull(r.km)===null) return null;
+    if(!hasValidStoredRouteDistance(r)) return null;
+    return r;
+  }
+  function recordRouteHistory(tasksWithLoc, route, key, pts, measuredAt){
+    if(!route || route.mode!=="google" || numOrNull(route.km)===null) return;
+    try{
+      var day=todayKey(), h=readRouteHistory();
+      if(!h[day] || typeof h[day]!=="object") h[day]={};
+      var distanceMeters=storedRouteDistanceMeters(route);
+      if(distanceMeters===null) return;
+      var fuelRate=validFuelRate(+route.fuelRate)?Math.round(+route.fuelRate*10)/10:null;
+      var fuelLiters=fuelForDistance(distanceMeters,fuelRate);
+      h[day][key]={
+        measuredAt:measuredAt||Date.now(), lastUsedAt:Date.now(), km:route.km, distanceMeters:distanceMeters,
+        minutes:route.minutes, minutesTraffic:route.minutesTraffic,
+        trafficLevel:route.trafficLevel, fuelRate:fuelRate, fuelLiters:fuelLiters,
+        points:(pts||[]).map(function(p){ return {lat:p.lat,lon:p.lon}; }),
+        stops:(tasksWithLoc||[]).map(function(t){ return {id:t.id||null,text:String(t.text||""),time:t.time||null,
+          lat:t.loc.lat,lon:t.loc.lon,label:t.loc.label||t.loc.addr||""}; })
+      };
+      var days=Object.keys(h).sort(); while(days.length>365){ delete h[days.shift()]; }
+      var routeKeys=Object.keys(h[day]).sort(function(a,b){ return (h[day][a].lastUsedAt||0)-(h[day][b].lastUsedAt||0); });
+      while(routeKeys.length>24){ delete h[day][routeKeys.shift()]; }
+      saveRouteHistory(h);
+
+      // Последний подтверждённый маршрут дня лежит и в компактном журнале:
+      // недельный/месячный график читает его локально, не вызывает Directions.
+      if(typeof readDayLog==="function"){
+        var log=readDayLog(), prev=log[day]||{};
+        var merged={}; Object.keys(prev).forEach(function(k){ merged[k]=prev[k]; });
+        merged.route={ km:route.km, distanceMeters:distanceMeters,
+          minutes:route.minutes, minutesTraffic:route.minutesTraffic,
+          trafficLevel:route.trafficLevel, fuelRate:fuelRate, fuelLiters:fuelLiters, measuredAt:measuredAt||Date.now() };
+        merged.updatedAt=Date.now(); log[day]=merged;
+        localStorage.setItem(DAYLOG_KEY, JSON.stringify(log));
+      }
+      if(typeof renderRouteAnalytics==="function") renderRouteAnalytics();
+    }catch(e){}
+  }
+  function finishRouteRequest(key, route, measuredAt){
+    var q=routePending[key]||[]; delete routePending[key];
+    q.forEach(function(p){
+      var r=cloneRoute(route,{routeKey:key});
+      recordRouteHistory(p.tasks, r, key, p.points, measuredAt);
+      p.cb(r);
+    });
+  }
+  function buildRoute(tasksWithLoc, cb, origin){
+    var pts = routePoints(tasksWithLoc, origin);
+    if(pts.length<2){ cb(buildUnavailableRoute(pts)); return; }
     var key = routeCacheKey(pts);
     var cache = loadRouteCache();
-    var hit = cache[key];
-    if(hit && hit.at && (Date.now()-hit.at)<ROUTECACHE_TTL_MS){ cb(hit.result); return; }
+    var legacyKey=legacyRouteCacheKey(pts);
+    var hit = cache[key] || (legacyKey!==key ? cache[legacyKey] : null);
+    var cachedReal=realCachedRoute(hit);
+    if(cachedReal && hit.at && (Date.now()-hit.at)<ROUTECACHE_TTL_MS){
+      var fresh=applyFuelRate(cloneRoute(cachedReal,{routeKey:key,fromCache:true,stale:false}));
+      if(!cache[key]){ cache[key]={result:fresh,at:hit.at}; saveRouteCache(cache); }
+      recordRouteHistory(tasksWithLoc, fresh, key, pts, hit.at);
+      cb(fresh); return;
+    }
+    if(routePending[key]){
+      routePending[key].push({cb:cb,tasks:tasksWithLoc,points:pts});
+      return;
+    }
+    routePending[key]=[{cb:cb,tasks:tasksWithLoc,points:pts}];
     fetch(API_BASE + "/route", {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ points: pts.map(function(p){ return {lat:p.lat, lon:p.lon}; }) })
+      body: JSON.stringify({ points: pts.map(function(p){ return {lat:p.lat, lon:p.lon}; }),
+        fuel_l_per_100km: currentFuelRate() })
     })
       .then(function(r){ if(!r.ok) throw new Error("route_"+r.status); return r.json(); })
       .then(function(j){
-        if(!j || j.error){ cb(buildFallbackRoute(pts)); return; }
-        var coords = j.polyline ? decodePolyline(j.polyline) : pts.map(function(p){ return [p.lat, p.lon]; });
-        var result = { coords:coords, km:j.km, minutes:j.minutes, minutesTraffic:j.minutesTraffic,
-                       trafficLevel:j.trafficLevel, fuelLiters:j.fuelLiters, mode:"google" };
-        cache[key] = { result:result, at:Date.now() }; saveRouteCache(cache);
-        cb(result);
+        var result=applyFuelRate(normalizeRouteResult(j,pts)); if(!result) throw new Error("route_invalid");
+        var at=Date.now(), latest=loadRouteCache();
+        latest[key] = { result:result, at:at }; saveRouteCache(latest);
+        finishRouteRequest(key,result,at);
       })
-      .catch(function(){ cb(buildFallbackRoute(pts)); });
+      .catch(function(){
+        if(cachedReal){ finishRouteRequest(key,applyFuelRate(cloneRoute(cachedReal,{stale:true,fromCache:true})),hit.at); }
+        else { finishRouteRequest(key,buildUnavailableRoute(pts),null); }
+      });
   }
 
   // ===== Маршрут по геолокации: с чего лучше начать =====
@@ -4728,11 +5173,163 @@
     function pad(n){ return n<10 ? "0"+n : ""+n; }
     function stamp(){ var d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
     function readWake(){ try{ return localStorage.getItem("superday_wake")||""; }catch(e){ return ""; } }
+    function taskBackupKey(t){
+      t=t||{};
+      var rp=normRepeat(t.repeat), loc=normLoc(t.loc);
+      return [String(t.text||"").trim().toLowerCase(), validTime(t.time)?t.time:"",
+        validDur(+t.dur)?Math.round(+t.dur):"", typeof t.defer==="string"?t.defer:"",
+        rp?rp.days.join(","):"", loc?loc.lat+","+loc.lon:"", normContext(t.context)||"",
+        t.urgent?1:0, t.important?1:0, t.done?1:0, typeof t.doneOn==="string"?t.doneOn:""]
+        .join("\u001f");
+    }
+    function writeRecord(key, value){
+      if(!backupRecord(value)) return false;
+      try{ localStorage.setItem(key, JSON.stringify(value)); return true; }catch(e){ return false; }
+    }
+    function finiteOrZero(v){ return backupFinite(+v) ? +v : 0; }
+    function mergeStats(imported){
+      if(!backupRecord(imported)) return 0;
+      var current=backupReadRecord("superday_stats_v1"), changed=0;
+      Object.keys(imported).forEach(function(day){
+        var n=+imported[day]; if(!backupFinite(n) || n<0) return;
+        if(!backupFinite(+current[day]) || +current[day]<n){ current[day]=Math.round(n); changed++; }
+      });
+      if(changed) writeRecord("superday_stats_v1",current);
+      return changed;
+    }
+    function mergeCompletions(imported, idMap){
+      if(!backupRecord(imported)) return 0;
+      var current=backupReadRecord("superday_completion_history_v1"), changed=0;
+      Object.keys(imported).forEach(function(key){
+        var incoming=backupClone(imported[key]); if(!backupRecord(incoming)) return;
+        var oldId=String(incoming.taskId||"");
+        if(oldId && idMap && idMap[oldId]) incoming.taskId=idMap[oldId];
+        var targetKey=incoming.taskId&&incoming.day?String(incoming.taskId)+"|"+String(incoming.day):key;
+        var old=current[targetKey], it=Date.parse(String(incoming.completedAt||""))||0;
+        var ot=old && (Date.parse(String(old.completedAt||""))||0);
+        if(!old || it>=ot){ current[targetKey]=incoming; changed++; }
+      });
+      if(changed) writeRecord("superday_completion_history_v1",current);
+      return changed;
+    }
+    function mergeDayLog(imported){
+      if(!backupRecord(imported)) return 0;
+      var current=backupReadRecord("superday_daylog"), changed=0;
+      Object.keys(imported).forEach(function(day){
+        var incoming=backupClone(imported[day]); if(!backupRecord(incoming)) return;
+        // Old snapshots have no distanceMeters and remain valid. A present but
+        // malformed value is not allowed to poison exact offline fuel totals.
+        if(backupRecord(incoming.route) && !hasValidStoredRouteDistance(incoming.route)) delete incoming.route;
+        var old=current[day];
+        if(!backupRecord(old)){ current[day]=incoming; changed++; return; }
+        var it=finiteOrZero(incoming.updatedAt), ot=finiteOrZero(old.updatedAt);
+        var merged={}; Object.keys(old).forEach(function(k){ merged[k]=old[k]; });
+        if(it>=ot){ Object.keys(incoming).forEach(function(k){ merged[k]=incoming[k]; }); }
+        // Route measurements have their own timestamp and must not be lost
+        // just because the daily workload snapshot is newer.
+        if(backupRecord(incoming.route)){
+          var ir=finiteOrZero(incoming.route.measuredAt), or=backupRecord(old.route)?finiteOrZero(old.route.measuredAt):0;
+          if(!backupRecord(old.route) || ir>=or) merged.route=incoming.route;
+        }
+        if(JSON.stringify(merged)!==JSON.stringify(old)){ current[day]=merged; changed++; }
+      });
+      if(changed) writeRecord("superday_daylog",current);
+      return changed;
+    }
+    function validCachedRoute(entry){
+      if(!backupRecord(entry) || !backupRecord(entry.result)) return false;
+      var r=entry.result;
+      return r.mode==="google" && backupFinite(r.km) && r.km>=0 &&
+        hasValidStoredRouteDistance(r) &&
+        (r.minutes===null || backupFinite(r.minutes)) &&
+        (r.minutesTraffic===null || backupFinite(r.minutesTraffic));
+    }
+    function mergeRouteHistory(imported, idMap){
+      if(!backupRecord(imported)) return 0;
+      var current=backupReadRecord("superday_route_history_v1"), changed=0;
+      Object.keys(imported).forEach(function(day){
+        var src=imported[day]; if(!backupRecord(src)) return;
+        if(!backupRecord(current[day])) current[day]={};
+        Object.keys(src).forEach(function(key){
+          var incoming=backupClone(src[key]);
+          if(!backupRecord(incoming) || !backupFinite(incoming.km) || incoming.km<0 || !hasValidStoredRouteDistance(incoming)) return;
+          if(Array.isArray(incoming.stops) && idMap){
+            incoming.stops.forEach(function(stop){
+              var oldId=stop&&String(stop.id||""); if(oldId && idMap[oldId]) stop.id=idMap[oldId];
+            });
+          }
+          var old=current[day][key];
+          var it=Math.max(finiteOrZero(incoming.lastUsedAt),finiteOrZero(incoming.measuredAt));
+          var ot=old?Math.max(finiteOrZero(old.lastUsedAt),finiteOrZero(old.measuredAt)):0;
+          if(!old || it>=ot){ current[day][key]=incoming; changed++; }
+        });
+      });
+      // Match the runtime retention policy before writing untrusted backups.
+      var days=Object.keys(current).sort(); while(days.length>365) delete current[days.shift()];
+      Object.keys(current).forEach(function(day){
+        var keys=Object.keys(current[day]||{}).sort(function(a,b){
+          return finiteOrZero(current[day][a]&&current[day][a].lastUsedAt)-finiteOrZero(current[day][b]&&current[day][b].lastUsedAt);
+        });
+        while(keys.length>24) delete current[day][keys.shift()];
+      });
+      if(changed) writeRecord("superday_route_history_v1",current);
+      return changed;
+    }
+    function mergeRouteCache(imported){
+      if(!backupRecord(imported)) return 0;
+      var current=backupReadRecord("superday_routecache_v1"), changed=0;
+      Object.keys(imported).forEach(function(key){
+        var incoming=imported[key]; if(!validCachedRoute(incoming)) return;
+        var old=current[key], it=finiteOrZero(incoming.at), ot=old?finiteOrZero(old.at):0;
+        if(!old || it>=ot){ current[key]=incoming; changed++; }
+      });
+      var keys=Object.keys(current).sort(function(a,b){ return finiteOrZero(current[a]&&current[a].at)-finiteOrZero(current[b]&&current[b].at); });
+      while(keys.length>80) delete current[keys.shift()];
+      if(changed) writeRecord("superday_routecache_v1",current);
+      return changed;
+    }
+    function mergeGeoCache(imported){
+      if(!backupRecord(imported)) return 0;
+      var current=backupReadRecord("superday_geocache_v1"), changed=0;
+      Object.keys(imported).forEach(function(key){
+        var p=imported[key];
+        if(!backupRecord(p) || !backupFinite(p.lat) || p.lat<-90 || p.lat>90 ||
+           !backupFinite(p.lon) || p.lon<-180 || p.lon>180) return;
+        if(!backupRecord(current[key])){ current[key]=p; changed++; }
+      });
+      if(changed) writeRecord("superday_geocache_v1",current);
+      return changed;
+    }
+    function importPersistentData(data, idMap){
+      var analytics=backupRecord(data.analytics)?data.analytics:{};
+      var routes=data.routeHistory || analytics.routes;
+      var counts={stats:mergeStats(analytics.stats), completions:mergeCompletions(analytics.completions,idMap),
+        dayLog:mergeDayLog(analytics.dayLog), routes:mergeRouteHistory(routes,idMap), cache:mergeRouteCache(data.routeCache), geo:mergeGeoCache(data.geoCache)};
+      var vehicleChanged=false;
+      if(backupRecord(data.vehicle) && validFuelRate(+data.vehicle.fuelLPer100Km)){
+        var old=backupReadRecord("superday_vehicle_v1");
+        var incomingAt=finiteOrZero(data.vehicle.updatedAt), oldAt=finiteOrZero(old.updatedAt);
+        if(!validFuelRate(+old.fuelLPer100Km) || incomingAt>=oldAt){
+          vehicleChanged=writeRecord("superday_vehicle_v1",{fuelLPer100Km:Math.round(+data.vehicle.fuelLPer100Km*10)/10,
+            updatedAt:incomingAt||Date.now()});
+        }
+      }
+      var wakeChanged=false;
+      if(typeof data.wake==="string" && data.wake.trim() && !readWake()){
+        try{ localStorage.setItem("superday_wake",data.wake.trim()); wakeChanged=true; }catch(e){}
+      }
+      counts.vehicle=vehicleChanged; counts.wake=wakeChanged;
+      return counts;
+    }
 
     exportBtn.addEventListener("click", function(){
-      if(!tasks.length && !notes.length){ flash("Пока нечего сохранять — добавь задачи или заметки."); return; }
-      var payload={ app:"SUPER DAY", kind:"backup", version:SCHEMA, exportedAt:new Date().toISOString(),
-        wake:readWake(), tasks:tasks, notes:notes };
+      var payload=buildBackupPayload(true,"backup");
+      var hasPersistent=Object.keys(payload.routeHistory||{}).length ||
+        Object.keys(payload.routeCache||{}).length || Object.keys(payload.geoCache||{}).length ||
+        Object.keys((payload.analytics&&payload.analytics.stats)||{}).length ||
+        Object.keys((payload.analytics&&payload.analytics.dayLog)||{}).length ||
+        Object.keys((payload.analytics&&payload.analytics.completions)||{}).length || payload.vehicle;
+      if(!tasks.length && !notes.length && !hasPersistent){ flash("Пока нечего сохранять — добавь задачи или заметки."); return; }
       try{
         var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
         var url=URL.createObjectURL(blob);
@@ -4741,33 +5338,59 @@
         setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
         try{ localStorage.setItem("superday_last_export", String(Date.now())); }catch(e){}
         if(typeof updateBackupRemind==="function") updateBackupRemind();
-        flash("Файл сохранён: задач "+tasks.length+", заметок "+notes.length+".");
+        flash("Файл сохранён: задач "+tasks.length+", заметок "+notes.length+", маршрутов "+Object.keys(payload.routeHistory||{}).length+" дней.");
       }catch(e){ flash("Не удалось сохранить файл в этом браузере."); }
     });
 
     importBtn.addEventListener("click", function(){ importFile.value=""; importFile.click(); });
     importFile.addEventListener("change", function(){
       var file=importFile.files && importFile.files[0]; if(!file) return;
+      if(file.size>12*1024*1024){ flash("Файл слишком большой. Максимальный размер копии — 12 МБ."); return; }
       var reader=new FileReader();
       reader.onload=function(){
         var data;
         try{ data=JSON.parse(reader.result); }
         catch(e){ flash("Не удалось прочитать файл — это не резервная копия SUPER DAY."); return; }
-        if(!data || (!Array.isArray(data.tasks) && !Array.isArray(data.notes))){
+        var hasPersistent=data && (backupRecord(data.analytics) || backupRecord(data.routeHistory) ||
+          backupRecord(data.routeCache) || backupRecord(data.geoCache) || backupRecord(data.vehicle));
+        if(!data || (typeof data.app==="string" && data.app!=="SUPER DAY") ||
+           (!Array.isArray(data.tasks) && !Array.isArray(data.notes) && !hasPersistent)){
           flash("В файле нет данных SUPER DAY."); return;
         }
         var addedT=0, addedN=0;
-        var haveT={}; tasks.forEach(function(t){ haveT[(t.text||"").trim().toLowerCase()]=true; });
+        var haveT=Object.create(null), usedIds=Object.create(null), taskIdMap=Object.create(null);
+        tasks.forEach(function(t){
+          if(!t) return;
+          haveT[taskBackupKey(t)]=t;
+          if(t.id!=null) usedIds[String(t.id)]=true;
+        });
         (data.tasks||[]).forEach(function(t){
           if(!t || typeof t.text!=="string") return;
-          var key=t.text.trim().toLowerCase(); if(!key || haveT[key]) return;
+          var key=taskBackupKey(t); if(!t.text.trim()) return;
+          if(haveT[key]){
+            if(t.id!=null && haveT[key].id!=null) taskIdMap[String(t.id)]=String(haveT[key].id);
+            return;
+          }
           var tm=(typeof t.time==="string" && /^\d{2}:\d{2}$/.test(t.time))?t.time:null;
           var du=(typeof t.dur==="number" && t.dur>0 && t.dur<=1440)?Math.round(t.dur):null;
           var df=(typeof t.defer==="string" && /^\d{4}-\d{2}-\d{2}$/.test(t.defer))?t.defer:null;
           var rp=normRepeat(t.repeat);
           var dn=(typeof t.doneOn==="string" && /^\d{4}-\d{2}-\d{2}$/.test(t.doneOn))?t.doneOn:null;
-          tasks.push({ id:uid(), text:t.text.trim(), urgent:!!t.urgent, important:!!t.important, done:!!t.done, time:tm, dur:du, defer:df, repeat:rp, doneOn:dn, remindedOn:null });
-          haveT[key]=true; addedT++;
+          var importedTask={};
+          Object.keys(t).forEach(function(k){
+            if(k!=="__proto__" && k!=="prototype" && k!=="constructor") importedTask[k]=t[k];
+          });
+          var incomingId=t.id==null?"":String(t.id);
+          importedTask.id=incomingId && !usedIds[incomingId] ? incomingId : uid();
+          usedIds[String(importedTask.id)]=true;
+          if(incomingId) taskIdMap[incomingId]=String(importedTask.id);
+          importedTask.text=t.text.trim(); importedTask.urgent=!!t.urgent;
+          importedTask.important=!!t.important; importedTask.done=!!t.done; importedTask.time=tm;
+          importedTask.dur=du; importedTask.defer=df; importedTask.repeat=rp; importedTask.doneOn=dn;
+          importedTask.remindedOn=(typeof t.remindedOn==="string"?t.remindedOn:null);
+          importedTask.loc=normLoc(t.loc); importedTask.context=normContext(t.context);
+          tasks.push(importedTask);
+          haveT[key]=importedTask; addedT++;
         });
         var haveN={}; notes.forEach(function(n){ haveN[(n.text||"").trim().toLowerCase()]=true; });
         (data.notes||[]).forEach(function(n){
@@ -4776,14 +5399,15 @@
           notes.push({ id:"n"+(++noteSeq), text:n.text.trim() });
           haveN[key]=true; addedN++;
         });
-        // имя-обращение подхватываем, только если своё ещё не задано
+        var restored=importPersistentData(data,taskIdMap);
         var wi=document.getElementById("wakeInput");
-        if(typeof data.wake==="string" && data.wake.trim() && wi && !wi.value.trim()){
-          wi.value=data.wake.trim();
-          try{ wi.dispatchEvent(new Event("input")); }catch(e){ try{ localStorage.setItem("superday_wake", data.wake.trim()); }catch(_){} }
-        }
+        if(restored.wake && wi){ wi.value=readWake(); try{ wi.dispatchEvent(new Event("input")); }catch(e){} }
         save(); saveNotes(); render(); renderNotes();
-        if(addedT || addedN) flash("Загружено: задач +"+addedT+", заметок +"+addedN+". Дубликаты пропущены.");
+        if(typeof paintVehicleRate==="function") paintVehicleRate();
+        if(typeof renderStats==="function") renderStats();
+        if(typeof renderMapCard==="function") renderMapCard();
+        var restoredN=restored.stats+restored.completions+restored.dayLog+restored.routes+restored.cache+restored.geo+(restored.vehicle?1:0)+(restored.wake?1:0);
+        if(addedT || addedN || restoredN) flash("Загружено: задач +"+addedT+", заметок +"+addedN+", история/кэш +"+restoredN+". Дубликаты пропущены.");
         else flash("Всё из файла уже есть — ничего не добавлено.");
       };
       reader.onerror=function(){ flash("Ошибка чтения файла."); };
@@ -4800,7 +5424,11 @@
     var voiceBar = document.getElementById("voiceBar");
     var wakeInput = document.getElementById("wakeInput");
     var clearDoneBtn = document.getElementById("clearDone");
-    if(!SR){ micBtn.style.display="none"; if(voiceBar) voiceBar.style.display="none"; return; }
+    var canServerStt=!!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder && window.FormData);
+    // TTS полезен и в Safari без SpeechRecognition, поэтому голосовые кнопки
+    // скрываем, но модуль озвучки ниже всё равно инициализируем.
+    if(!SR && !canServerStt){ micBtn.style.display="none"; if(voiceBar) voiceBar.style.display="none"; }
+    else if(!SR && voiceBar){ voiceBar.style.display="none"; }
 
     // — Голос работает только на защищённом адресе (HTTPS). На http:// браузер
     //   блокирует микрофон. Честно объясняем это, а не «молча ломаемся». —
@@ -4867,53 +5495,91 @@
       return pickedVoice;
     }
     chooseVoice();
-    if(window.speechSynthesis && typeof window.speechSynthesis.onvoiceschanged!=="undefined"){
-      window.speechSynthesis.onvoiceschanged=function(){ chooseVoice(); };
+    if(window.speechSynthesis && typeof window.speechSynthesis.addEventListener==="function"){
+      window.speechSynthesis.addEventListener("voiceschanged", chooseVoice);
     }
     // — живой голос: сперва пробуем нейросетевой TTS (Yandex SpeechKit) через
     //   свой бэкенд, а если он не настроен/недоступен — тихо откатываемся на
     //   голос браузера (Web Speech API), чтобы приложение не немело —
     var TTS_API = API_BASE + "/tts";
-    var ttsAudio = null;
-    function speakBrowser(t, cb){
-      if(!window.speechSynthesis){ cb&&cb(); return; }
+    var ttsAudio=null, ttsUrl=null, ttsController=null, speechSerial=0;
+    var appleTouch=/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+    var audioProbe=document.createElement("audio");
+    var canPlayOgg=!!(audioProbe.canPlayType && audioProbe.canPlayType('audio/ogg; codecs="opus"'));
+    function clearTtsMedia(){
+      if(ttsController){ try{ ttsController.abort(); }catch(e){} ttsController=null; }
+      if(ttsAudio){
+        try{ ttsAudio.onended=null; ttsAudio.onerror=null; ttsAudio.pause(); ttsAudio.removeAttribute("src"); ttsAudio.load(); }catch(e){}
+        ttsAudio=null;
+      }
+      if(ttsUrl){ try{ URL.revokeObjectURL(ttsUrl); }catch(e){} ttsUrl=null; }
+    }
+    function cancelSpeech(){
+      speechSerial++;
+      clearTtsMedia();
+      try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(e){}
+      speaking=false;
+    }
+    function speakBrowser(t, serial, finish){
+      if(!window.speechSynthesis){ finish(); return; }
       try{
         if(!pickedVoice) chooseVoice();
         var u=new SpeechSynthesisUtterance(t); u.lang="ru-RU";
         if(pickedVoice) u.voice=pickedVoice;
         // Спокойный премиальный тон: чуть медленнее и ниже — читается разборчиво.
         u.rate=0.98; u.pitch=0.96; u.volume=1;
-        u.onend=function(){ speaking=false; cb&&cb(); };
-        u.onerror=function(){ speaking=false; cb&&cb(); };
-        window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
-      }catch(e){ speaking=false; cb&&cb(); }
+        u.onend=function(){ if(serial===speechSerial) finish(); };
+        u.onerror=function(){ if(serial===speechSerial) finish(); };
+        window.speechSynthesis.cancel();
+        try{ window.speechSynthesis.resume(); }catch(e){}
+        window.speechSynthesis.speak(u);
+      }catch(e){ finish(); }
     }
     function speak(t, cb){
       // Тихий режим: молчим, но цепочку не рвём — ответ остаётся на экране (setStatus).
       if(typeof isMuted==="function" && isMuted()){ speaking=false; cb&&cb(); return; }
+      cancelSpeech();
+      var serial=++speechSerial;
       speaking=true;
+      var resumeHands=pauseRecognitionForSpeech();
       var done=false;
-      function finish(){ if(done) return; done=true; speaking=false; cb&&cb(); }
+      function finish(){
+        if(done || serial!==speechSerial) return;
+        done=true; clearTtsMedia(); speaking=false;
+        cb&&cb();
+        if(resumeHands) resumeHandsAfterSpeech();
+      }
+      // Safari/iOS долго не умел OGG Opus, а play() после сетевого ответа уже не
+      // считается прямым жестом пользователя. Там сразу используем системный
+      // speechSynthesis без шестисекундной паузы и NotAllowedError.
+      if(appleTouch || !canPlayOgg){ speakBrowser(t, serial, finish); return; }
       var ctrl=(typeof AbortController!=="undefined") ? new AbortController() : null;
-      var timer=setTimeout(function(){ try{ ctrl&&ctrl.abort(); }catch(e){} }, 6000);
+      ttsController=ctrl;
+      var timer=setTimeout(function(){ try{ ctrl&&ctrl.abort(); }catch(e){} }, 4500);
       fetch(TTS_API, {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({text:t}), signal: ctrl?ctrl.signal:undefined
       }).then(function(r){ clearTimeout(timer); if(!r.ok) throw new Error("tts_"+r.status); return r.blob(); })
         .then(function(blob){
-          if(done) return;
-          var url=URL.createObjectURL(blob);
-          if(ttsAudio){ try{ ttsAudio.pause(); }catch(e){} }
-          ttsAudio=new Audio(url);
-          ttsAudio.onended=function(){ URL.revokeObjectURL(url); finish(); };
-          ttsAudio.onerror=function(){ URL.revokeObjectURL(url); speakBrowser(t, finish); };
-          ttsAudio.play().catch(function(){ URL.revokeObjectURL(url); speakBrowser(t, finish); });
+          if(done || serial!==speechSerial) return;
+          ttsController=null;
+          ttsUrl=URL.createObjectURL(blob);
+          ttsAudio=new Audio(ttsUrl);
+          ttsAudio.onended=finish;
+          ttsAudio.onerror=function(){ clearTtsMedia(); speakBrowser(t, serial, finish); };
+          ttsAudio.play().catch(function(){ clearTtsMedia(); speakBrowser(t, serial, finish); });
         })
-        .catch(function(){ clearTimeout(timer); if(!done) speakBrowser(t, finish); });
+        .catch(function(){ clearTimeout(timer); if(!done && serial===speechSerial){ clearTtsMedia(); speakBrowser(t, serial, finish); } });
     }
     // Открываем наружу — чтобы все места приложения (не только команды
     // голосового режима) звучали одним и тем же премиальным голосом.
     window.__ttsSpeak = speak;
+    window.__ttsCancel = function(){
+      var resume=!!handsEnabled;
+      cancelSpeech(); speechPause=false;
+      if(resume) resumeHandsAfterSpeech();
+    };
     // — короткий сигнал «слушаю» —
     function chime(){
       if(typeof isMuted==="function" && isMuted()) return;   // тихий режим
@@ -4933,9 +5599,224 @@
     function setStatus(html){ vmStatus.innerHTML=html; }
     function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
 
+    // Safari/iOS нестабилен с webkitSpeechRecognition и не имеет его на части
+    // устройств. Для ручной диктовки пишем короткий аудиофрагмент и отправляем
+    // его в уже работающий voice-core. Это настоящий STT, не локальная имитация.
+    var useServerManual=canServerStt, useServerStage=canServerStt;
+    var serverStageMic=document.getElementById("stageMic");
+    var serverRecorder=null, serverStream=null, serverChunks=[], serverBase="", serverKind="manual";
+    var serverStarting=false, serverStopTimer=null, serverUploadCtrl=null, serverFailureUntil=0;
+    var serverAudioCtx=null, serverAnalyser=null, serverListenRaf=null, serverHeard=false, serverLastSound=0, serverStartedAt=0;
+    function serverRecorderMime(){
+      var types=["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus"];
+      for(var i=0;i<types.length;i++){
+        try{ if(MediaRecorder.isTypeSupported(types[i])) return types[i]; }catch(e){}
+      }
+      return "";
+    }
+    function releaseServerStream(){
+      if(serverListenRaf){ try{ cancelAnimationFrame(serverListenRaf); }catch(e){} serverListenRaf=null; }
+      serverAnalyser=null;
+      if(serverAudioCtx){ try{ serverAudioCtx.close(); }catch(e){} serverAudioCtx=null; }
+      if(serverStream){
+        try{ serverStream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
+        serverStream=null;
+      }
+    }
+    function paintServerRecording(on, busy, kind){
+      kind=kind||serverKind;
+      var button=kind==="stage"?serverStageMic:micBtn;
+      if(!button) return;
+      button.classList.toggle(kind==="stage"?"live":"rec",!!on);
+      button.setAttribute("aria-pressed",on?"true":"false");
+      if(busy) button.setAttribute("aria-busy","true"); else button.removeAttribute("aria-busy");
+    }
+    function monitorServerSilence(stream){
+      var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+      try{
+        serverAudioCtx=new AC(); serverAnalyser=serverAudioCtx.createAnalyser(); serverAnalyser.fftSize=1024;
+        serverAudioCtx.createMediaStreamSource(stream).connect(serverAnalyser);
+        var samples=new Uint8Array(serverAnalyser.fftSize);
+        function sample(){
+          if(!serverRecorder || serverRecorder.state==="inactive" || !serverAnalyser) return;
+          serverAnalyser.getByteTimeDomainData(samples);
+          var sum=0; for(var i=0;i<samples.length;i++){ var v=(samples[i]-128)/128; sum+=v*v; }
+          var rms=Math.sqrt(sum/samples.length), now=Date.now();
+          if(rms>0.018){ serverHeard=true; serverLastSound=now; }
+          if(serverHeard && now-serverLastSound>1800 && now-serverStartedAt>1200){ stopServerRecording(); return; }
+          if(!serverHeard && now-serverStartedAt>9000){ stopServerRecording(); return; }
+          serverListenRaf=requestAnimationFrame(sample);
+        }
+        serverListenRaf=requestAnimationFrame(sample);
+      }catch(e){ serverAnalyser=null; }
+    }
+    function uploadServerSpeech(blob, base, kind){
+      if(!blob || !blob.size){
+        paintServerRecording(false,false,kind);
+        if(kind==="stage") stageSay("Не расслышал. Нажмите знак и скажите ещё раз");
+        else setStatus("Не расслышал задачу. Нажми микрофон и повтори.");
+        return;
+      }
+      var form=new FormData(), type=blob.type||"audio/webm";
+      var ext=type.indexOf("mp4")>=0?"m4a":(type.indexOf("ogg")>=0?"ogg":"webm");
+      form.append("audio",blob,"superday-voice."+ext);
+      if(serverUploadCtrl){ try{ serverUploadCtrl.abort(); }catch(e){} }
+      serverUploadCtrl=window.AbortController?new AbortController():null;
+      var ctrl=serverUploadCtrl;
+      var timer=setTimeout(function(){ try{ ctrl&&ctrl.abort(); }catch(e){} },SERVER_STT_TIMEOUT_MS);
+      paintServerRecording(false,true,kind);
+      if(kind==="stage") stageSay("Распознаю…",true); else setStatus("<b>Распознаю…</b>");
+      fetch(STT_API,{method:"POST",body:form,signal:ctrl?ctrl.signal:undefined})
+        .then(function(r){
+          if(!r.ok){ var err=new Error("stt_"+r.status); err.status=r.status; throw err; }
+          return r.json();
+        })
+        .then(function(data){
+          var text=String(data&&data.text||"").trim();
+          if(!text) throw new Error("stt_empty");
+          serverFailureUntil=0;
+          if(kind==="stage"){
+            stageSay(text,true);
+            stageParseSpoken(text);
+          }else{
+            input.value=(base+(base?" ":"")+text).trim();
+            addTask({fromVoice:true});
+            setStatus("Добавлено из голоса: «<b>"+escapeHtml(text)+"</b>».");
+          }
+        })
+        .catch(function(e){
+          if(!(e && /^stt_empty$/.test(e.message||""))) serverFailureUntil=Date.now()+60000;
+          var message=e&&e.name==="AbortError"?"Распознавание заняло слишком долго. Повторите ещё раз.":
+            (e&&e.status===429?"Слишком много голосовых запросов. Подождите немного.":"Не удалось распознать запись. Проверьте сеть и повторите.");
+          if(kind==="stage") stageSay(message); else setStatus(message);
+          if(typeof toast==="function") toast("Голос не распознан — запись не добавлена", "error");
+        })
+        .then(function(){
+          clearTimeout(timer);
+          if(serverUploadCtrl===ctrl) serverUploadCtrl=null;
+          paintServerRecording(false,false,kind);
+        });
+    }
+    function stopServerRecording(){
+      clearTimeout(serverStopTimer); serverStopTimer=null;
+      if(serverRecorder && serverRecorder.state!=="inactive"){
+        try{ serverRecorder.stop(); }catch(e){ releaseServerStream(); paintServerRecording(false,false); }
+      }
+    }
+    function startServerRecording(kind){
+      if(serverStarting || (serverRecorder && serverRecorder.state!=="inactive")) return;
+      serverKind=kind==="stage"?"stage":"manual";
+      cancelSpeech();
+      if(typeof handsEnabled!=="undefined" && handsEnabled && typeof stopHands==="function") stopHands(true);
+      if(typeof rec!=="undefined" && rec && (recognitionActive||startPending)){
+        intentionalAbort=true; try{ rec.abort(); }catch(e){}
+      }
+      if(serverUploadCtrl){ try{ serverUploadCtrl.abort(); }catch(e){} serverUploadCtrl=null; }
+      serverStarting=true; serverChunks=[]; serverBase=serverKind==="manual"?input.value.trim():"";
+      navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false})
+        .then(function(stream){
+          serverStarting=false; serverStream=stream;
+          var mime=serverRecorderMime();
+          try{ serverRecorder=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream); }
+          catch(e){ releaseServerStream(); throw e; }
+          serverChunks=[];
+          serverRecorder.ondataavailable=function(e){ if(e.data && e.data.size) serverChunks.push(e.data); };
+          serverRecorder.onerror=function(){
+            releaseServerStream(); paintServerRecording(false,false);
+            setStatus("Не удалось записать звук. Освободи микрофон и попробуй снова.");
+          };
+          serverRecorder.onstop=function(){
+            var type=serverRecorder.mimeType || (serverChunks[0]&&serverChunks[0].type) || "audio/webm";
+            var blob=new Blob(serverChunks,{type:type});
+            serverChunks=[]; releaseServerStream();
+            uploadServerSpeech(blob,serverBase,serverKind);
+          };
+          serverRecorder.start(250);
+          serverStartedAt=Date.now(); serverHeard=false; serverLastSound=serverStartedAt;
+          monitorServerSilence(stream);
+          paintServerRecording(true,false);
+          if(serverKind==="stage") stageSay("Слушаю…",true);
+          else setStatus("<b>Слушаю…</b> нажми ещё раз, когда закончишь.");
+          serverStopTimer=setTimeout(stopServerRecording,30000);
+        })
+        .catch(function(e){
+          serverStarting=false; releaseServerStream(); paintServerRecording(false,false);
+          var denied=e && (e.name==="NotAllowedError" || e.name==="SecurityError");
+          var message=denied?"Нет доступа к микрофону. Разрешите его в настройках браузера и повторите.":"Микрофон занят или недоступен.";
+          if(serverKind==="stage") stageSay(message); else setStatus(message);
+        });
+    }
+    function handleServerMic(kind, event){
+      // После сетевого отказа на минуту пропускаем событие дальше к настоящему
+      // SpeechRecognition. Если его нет, сервер остаётся единственным реальным STT.
+      if(Date.now()<serverFailureUntil && SR) return;
+      event.preventDefault(); event.stopImmediatePropagation();
+      if(serverRecorder && serverRecorder.state!=="inactive") stopServerRecording();
+      else startServerRecording(kind);
+    }
+    if(useServerManual){
+      micBtn.addEventListener("click",function(e){ handleServerMic("manual",e); });
+    }
+    if(useServerStage && serverStageMic){
+      serverStageMic.addEventListener("click",function(e){ handleServerMic("stage",e); });
+    }
+    if(useServerManual || useServerStage){
+      document.addEventListener("visibilitychange",function(){
+        if(document.hidden && serverRecorder && serverRecorder.state!=="inactive") stopServerRecording();
+      });
+      window.addEventListener("pagehide",function(){
+        clearTimeout(serverStopTimer);
+        if(serverUploadCtrl){ try{ serverUploadCtrl.abort(); }catch(e){} }
+        releaseServerStream();
+      });
+    }
+
+    if(!SR) return;
+
     var rec=new SR(); rec.lang="ru-RU"; rec.maxAlternatives=1;
     var mode=null;            // null | "dictation" | "hands"
+    var handsEnabled=false, recognitionActive=false, startPending=false;
+    var speechPause=false, intentionalAbort=false, restartTimer=null, restartFailures=0;
     var awake=false, awakeTimer=null;
+    var dictationBase="", dictationFinal="", dictationFailed=false;
+    var lastFinal="", lastFinalAt=0;
+
+    function clearRestart(){ if(restartTimer){ clearTimeout(restartTimer); restartTimer=null; } }
+    function scheduleHandsRestart(delay){
+      clearRestart();
+      if(!handsEnabled || mode!=="hands" || speechPause || speaking || document.hidden) return;
+      restartTimer=setTimeout(function(){ restartTimer=null; startRecognition("hands"); }, delay==null?350:delay);
+    }
+    function startRecognition(nextMode){
+      if(recognitionActive || startPending) return false;
+      if(nextMode==="hands" && (!handsEnabled || speechPause || speaking || document.hidden)) return false;
+      mode=nextMode;
+      // continuous/interim по-разному ломаются на iOS и Android. Короткие
+      // финальные сессии + контролируемый restart дают одинаковую семантику.
+      rec.interimResults=false; rec.continuous=false;
+      try{
+        startPending=true;
+        rec.start();
+        return true;
+      }catch(e){
+        startPending=false;
+        if(nextMode==="hands" && handsEnabled){
+          restartFailures++;
+          scheduleHandsRestart(Math.min(6000, 300*Math.pow(2,Math.min(restartFailures,4))));
+        }else if(nextMode==="dictation"){ mode=null; }
+        return false;
+      }
+    }
+    function pauseRecognitionForSpeech(){
+      if(!handsEnabled || mode!=="hands") return false;
+      speechPause=true; clearRestart();
+      if(recognitionActive || startPending){ intentionalAbort=true; try{ rec.abort(); }catch(e){} }
+      return true;
+    }
+    function resumeHandsAfterSpeech(){
+      speechPause=false;
+      if(handsEnabled && mode==="hands" && !document.hidden) scheduleHandsRestart(220);
+    }
 
     function armAwakeTimeout(){
       clearTimeout(awakeTimer);
@@ -4948,6 +5829,7 @@
       awake=true;
       setStatus("<b>Слушаю…</b> можно продолжать без «<b>"+wname()+"</b>».");
       armAwakeTimeout();
+      if(handsEnabled && !speaking) scheduleHandsRestart(220);
     }
 
     function speakPlan(cb){
@@ -4986,30 +5868,47 @@
       var clean=text.replace(/(^|\s)(это\s+)?(очень\s+)?(срочно|срочная|срочное|горит|важно|важная|важное)(\s|$)/gi," ").replace(/\s+/g," ").trim();
       clean=clean.replace(/^(добавь|запиши|создай|задачу|задача|напомни мне|напомни)\s+/i,"").trim();
       if(!clean){ awake=false; setStatus("Не расслышал задачу. Скажи «<b>"+wname()+"</b>» и повтори."); return; }
-      var pr=parseRepeatPhrase(clean);
-      var pd=parseDuration(pr.text||clean); var pt=parseTime(pd.text||pr.text||clean);
-      var tmClean = pt.text || pd.text || pr.text || clean; var tm = pt.time; var du = pd.dur; var rp = pr.repeat;
-      tasks.push({ id:uid(), text:cap(tmClean), urgent:urgent, important:important, done:false, time:tm, dur:du, defer:null, repeat:rp, doneOn:null, remindedOn:null });
-      save(); render();
+      var added=createTaskFromRaw(clean, { urgent:urgent, important:important, capitalize:true,
+                                          announceSchedule:false, ai:true, aiRaw:text });
+      if(!added){ awake=false; setStatus("Не удалось добавить задачу. Повтори ещё раз."); return; }
+      var tmClean=added.task.text, tm=added.time, du=added.dur, rp=added.repeat;
       var q=quadOf({urgent:urgent,important:important});
       var QN={1:"сделать сейчас",2:"запланировать",3:"быстро закрыть",4:"на потом"};
-      setStatus("Добавлено: «<b>"+escapeHtml(cap(tmClean))+"</b>»"+(rp?" 🔁 "+escapeHtml(fmtRepeat(rp)):"")+(tm?" ⏱ "+tm:"")+(du?" ⏳ "+fmtDurShort(du):"")+" → "+QN[q]+".");
+      setStatus("Добавлено: «<b>"+escapeHtml(tmClean)+"</b>»"+(rp?" 🔁 "+escapeHtml(fmtRepeat(rp)):"")+(tm?" ⏱ "+tm:"")+(du?" ⏳ "+fmtDurShort(du):"")+(added.place?" · ищу место на карте":"")+" → "+QN[q]+".");
       speak("Добавил: "+tmClean+(rp?", "+fmtRepeat(rp):"")+(tm?", в "+tm.replace(":"," "):"")+(du?", "+fmtDur(du):""), keepListening);
     }
 
     function processFinal(tr){
-      if(speaking) return;
-      if(awake){ handleCommand(tr); return; }
+      tr=String(tr||"").trim();
+      if(!tr || speaking) return false;
+      var key=tr.toLowerCase().replace(/\s+/g," "), now=Date.now();
+      // Chrome иногда повторно отдаёт тот же final после внутреннего restart.
+      if(key===lastFinal && now-lastFinalAt<2500) return false;
+      lastFinal=key; lastFinalAt=now; restartFailures=0;
+      if(awake){ handleCommand(tr); return true; }
       for(var k=0;k<WAKE.length;k++){
         var m=tr.match(WAKE[k]);
-        if(m){ chime(); handleCommand(tr.slice(m.index+m[0].length)); return; }
+        if(m){ chime(); handleCommand(tr.slice(m.index+m[0].length)); return true; }
       }
+      return false;
     }
 
+    rec.onstart=function(){
+      startPending=false; recognitionActive=true;
+      if(mode==="dictation"){
+        micBtn.classList.add("rec"); micBtn.setAttribute("aria-pressed","true");
+      }
+    };
     rec.onresult=function(ev){
       if(mode==="dictation"){
-        var t=ev.results[0][0].transcript.trim();
-        input.value = input.value ? (input.value+" "+t) : t; input.focus();
+        for(var d=ev.resultIndex;d<ev.results.length;d++){
+          var dr=ev.results[d];
+          if(dr.isFinal){
+            var dt=(dr[0].transcript||"").trim();
+            if(dt) dictationFinal+=(dictationFinal?" ":"")+dt;
+          }
+        }
+        input.value=(dictationBase+(dictationBase&&dictationFinal?" ":"")+dictationFinal).trim();
         return;
       }
       // Первый экран: показываем речь по ходу — человек должен видеть, что его
@@ -5026,42 +5925,73 @@
         return;
       }
       for(var i=ev.resultIndex;i<ev.results.length;i++){
-        var r=ev.results[i]; if(r.isFinal){ processFinal((r[0].transcript||"").toLowerCase()); }
+        var r=ev.results[i];
+        if(r.isFinal && processFinal(r[0].transcript||"")) break;
       }
     };
     rec.onerror=function(e){
+      var code=e && e.error || "unknown";
+      if(code==="aborted" && intentionalAbort) return;
+      var denied=code==="not-allowed" || code==="service-not-allowed";
+      var fatal=denied || code==="audio-capture" || code==="language-not-supported";
       if(mode==="stage"){
         clearTimeout(stageIdle); stageIdle=null; mode=null; stageBuf="";
         if(stageMic){ stageMic.classList.remove("live"); stageMic.setAttribute("aria-pressed","false"); }
-        var denied = e && (e.error==="not-allowed"||e.error==="service-not-allowed");
         if(typeof stageSay==="function"){
           stageSay(denied ? "Нет доступа к микрофону — разрешите его в браузере"
                           : "Не расслышал. Нажмите знак и скажите ещё раз");
         }
         return;
       }
-      if(e && (e.error==="not-allowed"||e.error==="service-not-allowed")){
-        mode=null; awake=false; vmToggle.setAttribute("aria-pressed","false");
-        micBtn.classList.remove("rec"); micBtn.setAttribute("aria-pressed","false");
-        setStatus("Нет доступа к микрофону. Разреши его в браузере и включи снова.");
+      if(mode==="dictation") dictationFailed=true;
+      if(code==="network") restartFailures++;
+      if(fatal){
+        handsEnabled=false; mode=null; awake=false; clearRestart();
+        vmToggle.setAttribute("aria-pressed","false");
       }
+      micBtn.classList.remove("rec"); micBtn.setAttribute("aria-pressed","false");
+      if(denied) setStatus("Нет доступа к микрофону. Разреши его в настройках браузера и включи снова.");
+      else if(code==="audio-capture") setStatus("Микрофон занят другим приложением или не найден.");
+      else if(code==="network") setStatus("Распознавание речи потеряло сеть. Переподключаюсь…");
+      else if(code!=="no-speech" && code!=="aborted") setStatus("Не удалось распознать речь ("+escapeHtml(code)+"). Попробуй ещё раз.");
     };
     rec.onend=function(){
+      var endedMode=mode;
+      recognitionActive=false; startPending=false;
       micBtn.classList.remove("rec"); micBtn.setAttribute("aria-pressed","false");
       // Браузер сам обрывает continuous-сессию на тишине. Для первого экрана это
       // равно «сказал всё»: разбираем накопленное, а не молчим с погасшим знаком.
-      if(mode==="stage"){ stageStop(); return; }
-      if(mode==="hands"){
-        try{ rec.start(); }catch(e){ setTimeout(function(){ try{ if(mode==="hands") rec.start(); }catch(_){}}, 400); }
-      } else if(mode==="dictation"){ mode=null; }
+      intentionalAbort=false;
+      if(endedMode==="stage"){ stageStop(); return; }
+      if(endedMode==="dictation"){
+        mode=null;
+        var said=(dictationBase+(dictationBase&&dictationFinal?" ":"")+dictationFinal).trim();
+        var failed=dictationFailed;
+        dictationBase=""; dictationFinal=""; dictationFailed=false;
+        if(said && !failed){ input.value=said; addTask({fromVoice:true}); }
+        else if(!failed) setStatus("Не расслышал задачу. Нажми микрофон и повтори.");
+        return;
+      }
+      if(handsEnabled && mode==="hands" && !speechPause && !document.hidden){
+        if(restartFailures>=5){
+          handsEnabled=false; mode=null; vmToggle.setAttribute("aria-pressed","false");
+          setStatus("Распознавание речи недоступно по сети. Нажми ещё раз, когда связь восстановится.");
+          return;
+        }
+        var delay=restartFailures ? Math.min(6000,400*Math.pow(2,restartFailures)) : 420;
+        scheduleHandsRestart(delay);
+      }
     };
 
     // ручная диктовка в поле ввода
     micBtn.addEventListener("click", function(){
-      if(mode==="hands"){ stopHands(false); return; }
-      if(mode==="dictation"){ try{ rec.stop(); }catch(e){} mode=null; return; }
-      rec.interimResults=false; rec.continuous=false; mode="dictation";
-      try{ rec.start(); micBtn.classList.add("rec"); micBtn.setAttribute("aria-pressed","true"); }catch(e){ mode=null; }
+      if(handsEnabled){ stopHands(false); return; }
+      if(mode==="dictation"){
+        try{ rec.stop(); }catch(e){}
+        return;
+      }
+      dictationBase=input.value.trim(); dictationFinal=""; dictationFailed=false;
+      startRecognition("dictation");
     });
 
     // ===== Микрофон первого экрана: человек проговаривает весь день подряд
@@ -5104,26 +6034,39 @@
 
     // hands-free режим
     function startHands(){
-      rec.interimResults=true; rec.continuous=true; mode="hands"; awake=false;
+      if(mode==="dictation" || recognitionActive || startPending){
+        intentionalAbort=true; try{ rec.abort(); }catch(e){}
+      }
+      clearRestart(); cancelSpeech();
+      handsEnabled=true; speechPause=false; mode="hands"; awake=false; restartFailures=0;
       vmToggle.setAttribute("aria-pressed","true");
       // Если включён тихий режим — предупреждаем прямо здесь, иначе «оно ответит
       // голосом» выглядит сломанным: ответы будут только текстом.
       var mutedNow = (typeof isMuted==="function" && isMuted());
       setStatus("<b>Слушаю.</b> Скажи «<b>"+wname()+"</b>», затем задачу или «заметка …»."
         + (mutedNow ? " <b>🔇 Тихий режим включён</b> — отвечаю текстом, без голоса." : ""));
-      try{ rec.start(); }catch(e){}
-      speak("Голосовой режим включён.");
+      // Не произносим подтверждение после запуска микрофона: иначе телефон
+      // распознаёт собственный TTS как следующую команду.
+      if(!startRecognition("hands")) scheduleHandsRestart(350);
     }
     function stopHands(silent){
-      mode=null; awake=false; clearTimeout(awakeTimer);
+      handsEnabled=false; speechPause=false; mode=null; awake=false;
+      clearTimeout(awakeTimer); clearRestart(); cancelSpeech();
       vmToggle.setAttribute("aria-pressed","false");
-      try{ rec.stop(); }catch(e){}
+      if(recognitionActive || startPending){ intentionalAbort=true; try{ rec.abort(); }catch(e){} }
       if(!silent) setStatus("Голосовой режим выключен. Включи, чтобы управлять голосом.");
     }
     vmToggle.addEventListener("click", function(){
-      if(mode==="hands"){ stopHands(false); }
-      else { if(mode==="dictation"){ try{ rec.stop(); }catch(e){} mode=null; } startHands(); }
+      if(handsEnabled){ stopHands(false); }
+      else { startHands(); }
     });
+    document.addEventListener("visibilitychange", function(){
+      if(document.hidden && handsEnabled){
+        stopHands(true);
+        setStatus("Голосовой режим приостановлен, пока приложение не на экране. Нажми, чтобы включить снова.");
+      }
+    });
+    window.addEventListener("pagehide", function(){ if(handsEnabled) stopHands(true); });
   })();
 
   // ================= Шаблоны дня =================
@@ -5214,6 +6157,9 @@
     }
     function speakRemind(txt){
       if(typeof isMuted==="function" && isMuted()) return;   // тихий режим
+      if(typeof window.__ttsSpeak==="function"){
+        try{ window.__ttsSpeak(txt); return; }catch(e){}
+      }
       try{
         if(!window.speechSynthesis) return;
         var u=new SpeechSynthesisUtterance(txt); u.lang="ru-RU";
@@ -5579,6 +6525,10 @@
       var r = parsePlacePhrase("встреча на Тверской 1");
       return r.place==="Тверской 1" && r.text.indexOf("Тверской")===-1;
     });
+    T("parsePlacePhrase: голосовой адрес строчными «на тверской 1»", function(){
+      var r = parsePlacePhrase("встреча на тверской 1");
+      return r.place==="тверской 1" && r.text==="встреча";
+    });
     T("parsePlacePhrase: «съездить в Meridian Mall» → место «Meridian Mall»", function(){
       var r = parsePlacePhrase("съездить в Meridian Mall");
       return r.place==="Meridian Mall" && /съездить/.test(r.text);
@@ -5587,9 +6537,69 @@
       var r = parsePlacePhrase("купить 5 яблок");
       return r.place===null && r.text==="купить 5 яблок";
     });
-    T("buildFallbackRoute: км/расход — конечные положительные числа", function(){
-      var r = buildFallbackRoute([{lat:55.75,lon:37.61},{lat:59.93,lon:30.36}]);
-      return isFinite(r.km) && r.km>0 && isFinite(r.fuelLiters) && r.fuelLiters>0;
+    T("routeCacheKey: шесть знаков различают соседние точки, старый ключ читаем отдельно", function(){
+      var a=[{lat:55.123456,lon:37.654321}], b=[{lat:55.123457,lon:37.654321}];
+      return routeCacheKey(a)!==routeCacheKey(b) && legacyRouteCacheKey(a)===legacyRouteCacheKey(b) &&
+        routeCacheKey(a)==="55.123456,37.654321";
+    });
+    T("buildUnavailableRoute: без Directions не выдумывает км, время и топливо", function(){
+      var r = buildUnavailableRoute([{lat:55.75,lon:37.61},{lat:59.93,lon:30.36}]);
+      return r.mode==="unavailable" && r.km===null && r.distanceMeters===null &&
+        r.minutes===null && r.fuelLiters===null && r.coords.length===0;
+    });
+    T("fuelForKm: персональный расход считается из реального километража", function(){
+      return fuelForKm(12.5,8)===1 && fuelForKm(12.5,null)===null && validFuelRate(1.9)===false;
+    });
+    T("normalizeRouteResult: расход считается из точных метров, не округлённых км", function(){
+      var r=normalizeRouteResult({km:4.8,distanceMeters:4837,minutes:13,minutesTraffic:18,
+        trafficLevel:"moderate",polyline:null,fuelRate:8.2},[]);
+      return !!r && r.distanceMeters===4837 && r.fuelLiters===0.4 &&
+        normalizeRouteResult({km:4.8,distanceMeters:-1,fuelRate:8.2},[])===null;
+    });
+    T("старый route cache без distanceMeters остаётся рабочим", function(){
+      var old={result:{mode:"google",km:4.8,minutes:13,minutesTraffic:18,fuelRate:8.2},at:1};
+      var r=realCachedRoute(old), withFuel=applyFuelRate(r);
+      return r===old.result && withFuel.distanceMeters===4800 &&
+        realCachedRoute({result:{mode:"google",km:4.8,distanceMeters:"4800"}})===null;
+    });
+    T("routeWeekRows: график читает сохранённый день без сети", function(){
+      var key=todayKey(), log={}; log[key]={route:{km:10,minutesTraffic:24,fuelRate:8,fuelLiters:.8}};
+      var rows=routeWeekRows(log,key), last=rows[rows.length-1];
+      return rows.length===7 && last.key===key && last.km===10 && last.distanceMeters===10000 &&
+        last.fuel===.8 && last.minutes===24;
+    });
+    T("routeWeekRows: топливо пересчитывается из точных метров", function(){
+      var key=todayKey(), log={}; log[key]={route:{km:4.8,distanceMeters:4837,minutesTraffic:18,fuelRate:8.2,fuelLiters:.39}};
+      var last=routeWeekRows(log,key)[6];
+      return last.distanceMeters===4837 && last.fuel===0.4;
+    });
+    T("история и backup сохраняют точные метры и рассчитанное топливо", function(){
+      var keys=[ROUTE_HISTORY_KEY,DAYLOG_KEY,ROUTECACHE_KEY], before={};
+      keys.forEach(function(k){ before[k]=localStorage.getItem(k); localStorage.setItem(k,"{}"); });
+      var day=todayKey(), key="precision-selftest", at=1700000000000;
+      var route={mode:"google",km:4.8,distanceMeters:4837,minutes:13,minutesTraffic:18,
+        trafficLevel:"moderate",fuelRate:8.2,fuelLiters:.39};
+      try{
+        var cache={}; cache[key]={result:applyFuelRate(route),at:at};
+        localStorage.setItem(ROUTECACHE_KEY,JSON.stringify(cache));
+        recordRouteHistory([],route,key,[{lat:55.75,lon:37.61},{lat:55.76,lon:37.62}],at);
+        var history=readRouteHistory(), log=readDayLog(), backup=buildBackupPayload(true,"selftest");
+        return history[day][key].distanceMeters===4837 && history[day][key].fuelLiters===0.4 &&
+          log[day].route.distanceMeters===4837 && log[day].route.fuelLiters===0.4 &&
+          backup.routeHistory[day][key].distanceMeters===4837 &&
+          backup.analytics.dayLog[day].route.distanceMeters===4837 &&
+          backup.routeCache[key].result.distanceMeters===4837;
+      } finally {
+        keys.forEach(function(k){
+          if(before[k]===null) localStorage.removeItem(k); else localStorage.setItem(k,before[k]);
+        });
+        renderRouteAnalytics();
+      }
+    });
+    T("routeWeekRows: пустая история не создаёт NaN и фиктивные поездки", function(){
+      return routeWeekRows({},todayKey()).every(function(r){
+        return r.has===false && r.km===null && r.fuel===null && r.minutes===null;
+      });
     });
     T("renderMapStats: без маршрута — скрыт, не «0 км»", function(){
       var el=document.getElementById("mapStats");
@@ -5603,6 +6613,8 @@
       renderMapStats(null);
       return ok;
     });
+    T("серверная расшифровка учитывает очередь и инференс", function(){ return SERVER_STT_TIMEOUT_MS===90000; });
+    T("LLM failover not cut off by browser", function(){ return PARSE_TIMEOUT_MS===60000; });
 
     // ===== Волна 35: окно дел — модалка по клику на маркер / фокусу композера =====
     T("routeSheet скрыт по умолчанию и живёт вне <main> (иначе сработал бы setBackdropInert)", function(){
@@ -5925,19 +6937,46 @@
         return xpEarnedToday()===30;
       } finally { tasks.length=0; keep.forEach(function(x){ tasks.push(x); }); render(); }
     });
-    T("черновик разбора: режет список и по умолчанию ставит важное", function(){
-      var d=SDGrowth.quickParse("срочно к врачу\nпозвонить клиенту; купить хлеб", "b1");
-      if(d.length!==3) throw new Error("кусков "+d.length);
-      // Дефолт «важно, не срочно»: спрятать дело в угол опаснее, чем переоценить,
-      // поэтому кусок без единого маркера уходит во второй квадрант, а не в четвёртый.
-      return d[0].quadrant===1 && d[1].quadrant===2 && d[2].quadrant===2
-        && d.every(function(x){ return x.provisional===true && x.confidence===0 && x.minutes===30; });
+    T("сбой модели: исходный список остаётся одной дословной задачей без приоритета", function(){
+      var d=literalFallbackItem("срочно к врачу\nпозвонить клиенту; купить хлеб", "b1");
+      return d.task.text==="срочно к врачу\nпозвонить клиенту; купить хлеб" &&
+        d.task.urgent===false && d.task.important===false && d.task.dur===null;
     });
-    T("черновик разделяет только срочное, если важности не видно", function(){
-      return SDGrowth.quickParse("сегодня забрать посылку","b2")[0].quadrant===3;
+    T("сбой модели: слово «сегодня» не превращается в выдуманный приоритет", function(){
+      var d=literalFallbackItem("сегодня забрать посылку","b2");
+      return d.task.text==="сегодня забрать посылку" && !d.task.urgent && !d.task.important;
     });
-    T("черновик отбрасывает обрывки короче трёх букв", function(){
-      return SDGrowth.quickParse("да\nох\nсходить в банк","b3").length===1;
+    T("сбой модели: короткие строки исходного текста не теряются", function(){
+      var d=literalFallbackItem("да\nох\nсходить в банк","b3");
+      return d.task.text==="да\nох\nсходить в банк";
+    });
+    T("сбой модели: время и адрес не выдаются за успешный разбор", function(){
+      var d=literalFallbackItem("В 14:00 встреча на Тверской 1","b4");
+      return d.task.text==="В 14:00 встреча на Тверской 1" && d.task.time===null &&
+        d.task.repeat===null && d.task.dur===null && d.place===null && d.task.aiSource==="unavailable";
+    });
+    T("битый verdict спора не превращается во второй квадрант", function(){
+      return validatedDebateVerdict({source:"llm",verdict:{quadrantNumber:9,confidence:2,reasoning:" "}})===null &&
+        validatedDebateVerdict({source:"fallback_heuristic",verdict:{quadrantNumber:2,confidence:0.8,reasoning:"x"}})===null &&
+        validatedDebateVerdict({source:"llm",verdict:{quadrantNumber:3,confidence:0.8,reasoning:"обосновано"}}).quadrantNumber===3;
+    });
+    T("сбой модели: частично битый batch отклоняется целиком", function(){
+      var before=tasks.length;
+      try{
+        // Первый элемент валиден, второй пустой: подготовка обязана прервать
+        // весь ответ до единственного commit в вызывающем пути.
+        prepareParsedBatch([
+          {title:"первое дело",quadrant:2,minutes:20},
+          {title:"   ",quadrant:1,minutes:30}
+        ], "tx", "первое дело, второе дело");
+        return false;
+      }catch(e){ return tasks.length===before; }
+    });
+    T("сбой модели: без оценки длительности нет выдуманных 30 минут", function(){
+      var p=prepareParsedBatch([{title:"без оценки",quadrant:4}], "tx2", "без оценки");
+      return p.list.length===1 && p.list[0].dur===null &&
+        p.list[0].urgent===false && p.list[0].important===false &&
+        taskFromParsed({title:"дробный приоритет",quadrant:2.6,minutes:30}, "tx3")===null;
     });
     T("номер квадранта разворачивается в флаги задачи", function(){
       function f(q){ var t=taskFromParsed({title:"а",quadrant:q,minutes:30},"b"); return (t.urgent?"U":"")+(t.important?"I":""); }
