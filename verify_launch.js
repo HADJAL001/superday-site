@@ -87,7 +87,7 @@ const SEED = () => {
       "кодовое слово mellivora доступно проверяющему");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v62/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v63/.test(workerSource), "версия кэша service worker обновлена");
     say(/assets\/vendor\/leaflet-1\.9\.4\.js/.test(appSource) && !/unpkg\.com\/leaflet/.test(appSource) &&
       workerSource.includes('"/assets/vendor/leaflet-1.9.4.js"') && /Leaflet 1\.9\.4/.test(leafletSource),
       "Leaflet 1.9.4 локален и входит в offline shell");
@@ -559,6 +559,18 @@ const SEED = () => {
     const routeMetrics = await page.locator("#mapStats").textContent();
     say(/4[,.]8\s*км/.test(routeMetrics || "") && /18\s*мин/.test(routeMetrics || "") && /0[,.]4\s*л/.test(routeMetrics || "") && /26\s*₽/.test(routeMetrics || ""),
       "маршрут показывает реальные поля расстояния, времени, топлива и стоимости", routeMetrics || "метрики скрыты");
+    const routeBrief = await page.evaluate(() => ({
+      visible: !document.getElementById("routeBrief").hidden,
+      title: document.getElementById("routeBriefTitle").textContent,
+      values: document.getElementById("routeBriefMetrics").textContent,
+      nav: document.getElementById("routeNavigate").href,
+      action: document.getElementById("routeNavigate").textContent
+    }));
+    say(routeBrief.visible && /Тверск/i.test(routeBrief.title) && /4[,.]8\s*км/.test(routeBrief.values) &&
+      /18\s*мин/.test(routeBrief.values) && /0[,.]4\s*л/.test(routeBrief.values) && /26\s*₽/.test(routeBrief.values),
+      "расстояние, ETA, топливо и стоимость видны прямо на первом экране", routeBrief.title + " · " + routeBrief.values);
+    say(/origin=55\.751244%2C37\.618423/.test(routeBrief.nav) && /destination=55\.764812%2C37\.605511/.test(routeBrief.nav) &&
+      /Открыть навигацию/.test(routeBrief.action), "кнопка навигации передаёт явные старт и назначение", routeBrief.nav);
     say(attempts.parse === 2 && attempts.geocode === 2 && attempts.route === 2,
       "временные 5xx parse/geocode/route повторены ровно один раз", JSON.stringify(attempts));
     say(new Set(parseBodies).size === 1 && new Set(geocodeQueries).size === 1 &&
@@ -610,12 +622,43 @@ const SEED = () => {
       noFuel.route.km === 4.8 && noFuel.route.minutesTraffic === 18 && noFuel.route.fuelLiters === null &&
       /укажите фактический расход/.test(noFuel.text),
       "без расхода route payload не содержит null, но маршрут и ETA остаются реальными", noFuel.text);
+    const missingOrigin = await page.evaluate(() => {
+      const saved = { loc: window.mapState.userLoc, state: window.mapState.userLocState };
+      window.mapState.userLoc = null;
+      window.mapState.userLocState = "unavailable";
+      window.renderRouteBrief(null, [{ id: "geo1", text: "Встреча", time: "15:00", dur: 45,
+        loc: { lat: 55.764812, lon: 37.605511, label: "Тверская 1", addr: "Тверская улица, 1" } }]);
+      const result = {
+        title: document.getElementById("routeBriefTitle").textContent,
+        note: document.getElementById("routeBriefNote").textContent,
+        metricsHidden: document.getElementById("routeBriefMetrics").hidden,
+        locateVisible: !document.getElementById("routeLocateBtn").hidden,
+        nav: document.getElementById("routeNavigate").href,
+        navText: document.getElementById("routeNavigate").textContent
+      };
+      window.mapState.userLoc = saved.loc;
+      window.mapState.userLocState = saved.state;
+      return result;
+    });
+    say(/Тверская/.test(missingOrigin.title) && /текущей геопозиции/.test(missingOrigin.note) &&
+      missingOrigin.metricsHidden && missingOrigin.locateVisible && !/origin=/.test(missingOrigin.nav) && /Открыть адрес/.test(missingOrigin.navText),
+      "без геолокации адрес и действия видны, фиктивных времени и километров нет", missingOrigin.note);
     await page.evaluate(() => window.renderMapCard());
     say(errs.length === 0, "нет ошибок исполнения на этом пути", errs.join(" | ") || "чисто");
 
     await page.screenshot({ path: artifact("stage-desktop.png") });
     await page.setViewportSize({ width: 430, height: 900 });
     await page.waitForTimeout(600);
+    const mobileRoute = await page.evaluate(() => {
+      const brief = document.getElementById("routeBrief"), nav = document.getElementById("routeNavigate"),
+        composer = document.getElementById("composer"), r = brief.getBoundingClientRect(), n = nav.getBoundingClientRect(), c = composer.getBoundingClientRect();
+      return { visible: !brief.hidden, left: r.left, right: r.right, bottom: r.bottom, composerTop: c.top,
+        actionFits: nav.scrollWidth <= nav.clientWidth + 1 && nav.scrollHeight <= nav.clientHeight + 1,
+        actionW: n.width, overflow: document.documentElement.scrollWidth > innerWidth };
+    });
+    say(mobileRoute.visible && mobileRoute.left >= 0 && mobileRoute.right <= 430 && !mobileRoute.overflow &&
+      mobileRoute.bottom < mobileRoute.composerTop && mobileRoute.actionFits && mobileRoute.actionW >= 120,
+      "маршрутная панель на 430×900 не перекрыта и не выходит за экран", JSON.stringify(mobileRoute));
     await page.screenshot({ path: artifact("stage-mobile.png") });
     await ctx.close();
   }
