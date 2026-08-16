@@ -29,6 +29,12 @@ window.__i18nDict("en", {
   },
 
   t: {
+    "Документы": "Documents",
+    "Поддержка": "Support",
+    "Документы и поддержка": "Documents and support",
+    "Задачи, заметки, история поездок и недельные графики сохраняются в этом браузере. Голосовая запись удаляется после Whisper; AI получает расшифровку, а адреса и маршрут обрабатываются серверными API и кэшируются.": "Tasks, notes, trip history and weekly charts are stored in this browser. Voice recordings are deleted after Whisper; AI receives the transcript, while addresses and routes are processed by server APIs and cached.",
+    "Задачи и история остаются в браузере и доступны офлайн. Голос, AI-разбор, геокодирование и новый расчёт маршрута требуют защищённого запроса к серверу; сохранённые маршруты и графики открываются из локального кэша.": "Tasks and history stay in the browser and remain available offline. Voice, AI analysis, geocoding and a new route calculation require a secure server request; saved routes and charts open from the local cache.",
+    "Задачи и история локальны · голос, AI и новые маршруты используют сервер": "Tasks and history are local · voice, AI and new routes use the server",
     "— горит по времени.": "— pressing by the clock.",
     "— двигает жизнь. Переложить можно перетаскиванием за ручку ☰.": "— moves life forward. Drag by the ☰ handle to move a task.",
     "ГОВОРИТЕ И ВАШ ИИ ПРОЛОЖИТ ЛУЧШИЙ ПУТЬ": "SPEAK AND YOUR AI WILL PLOT THE BEST PATH",
@@ -232,7 +238,6 @@ window.__i18nDict("en", {
     "Матрица.": "The matrix.",
     "🔥 срочно — горит по времени. ⭐ важно — двигает жизнь. Дело без флажков попадает в «Отложить». Переложить можно перетаскиванием за ручку ☰ в разделе «Разбор по важности».": "🔥 urgent — burning by time. ⭐ important — moves life forward. A task without toggles goes to “Postpone”. Move it by dragging the ☰ handle in the “Sort by importance” section.",
     "Где данные.": "Where the data is.",
-    "Только в этом браузере — ни аккаунта, ни сервера. Поэтому раз в неделю имеет смысл сохранять копию файлом в разделе «Данные». Приложение работает офлайн.": "Only in this browser — no account, no server. So once a week it makes sense to save a copy as a file in the “Data” section. The app works offline.",
     "Клавиатура.": "Keyboard.",
     "Enter в поле — добавить дело. Esc — закрыть панель. Аппаратная «Назад» на телефоне тоже закрывает панель, а не страницу.": "Enter in the field adds a task. Esc closes the panel. The hardware “Back” button on a phone also closes the panel, not the page.",
 
@@ -452,7 +457,6 @@ window.__i18nDict("en", {
     "Маршрут дня.": "The day’s route.",
     "Сначала то, что горит по времени, затем важное. Цветная точка слева — приоритет, нажатие открывает разбор по важности.": "First what is pressing by the clock, then what is important. The coloured dot on the left is the priority; tap it to open the importance breakdown.",
     "🔥 срочно — горит по времени. ⭐ важно — двигает жизнь. Переложить можно перетаскиванием за ручку ☰.": "🔥 urgent — pressing by the clock. ⭐ important — moves life forward. Drag by the ☰ handle to move a task.",
-    "Только в этом браузере — ни аккаунта, ни сервера. Работает офлайн.": "In this browser only — no account, no server. Works offline.",
 
     /* ===== Волна 42, проход 3: то, что видно только на прожитом дне =====
        Подписи-вставки (квадрант, сфера жизни, нагрузка, сложность) стоят

@@ -1,6 +1,11 @@
 /* SUPER DAY — dictionnaire français de la page d'accueil (vague 11). */
 window.__i18nDict("fr", {
   t: {
+    "Документы": "Documents",
+    "Поддержка": "Assistance",
+    "Документы и поддержка": "Documents et assistance",
+    "Сейчас": "Maintenant",
+    "Это рабочее приложение — открыть →": "C'est une application fonctionnelle — ouvrir →",
     "Веб-версия": "Version web",
     "Возможности": "Fonctions",
     "Как работает": "Comment ça marche",
@@ -150,6 +155,10 @@ window.__i18nDict("fr", {
     "Будь первым, кто проживёт SUPER DAY": "Sois le premier à vivre un SUPER DAY",
     "Оставь e-mail — пришлём ссылку, как только приложение выйдет в сторах.": "Laisse ton e-mail — nous enverrons le lien dès que l'application sera dans les boutiques.",
     "В список ожидания": "Rejoindre la liste d'attente",
+    "Я согласен(на) на обработку e-mail для уведомления о выпуске приложения согласно": "J’accepte le traitement de mon adresse e-mail afin d’être informé(e) du lancement de l’application conformément à la",
+    "политике обработки данных": "politique de traitement des données",
+    "Сервер не ответил вовремя. E-mail не сохранён; повторите отправку.": "Le serveur n’a pas répondu à temps. L’e-mail n’a pas été enregistré ; renvoyez le formulaire.",
+    "Не удалось подтвердить запись. E-mail не сохранён; проверьте соединение и повторите попытку.": "Impossible de confirmer l’inscription. L’e-mail n’a pas été enregistré ; vérifiez la connexion et réessayez.",
     "скоро": "bientôt",
     "Проживай день на максимум": "Vis ta journée à fond",
     "Создано с помощью": "Créé avec",

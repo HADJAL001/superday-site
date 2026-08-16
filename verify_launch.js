@@ -3,6 +3,8 @@
    а украшение: поэтому каждый замер сопровождается негативным контролем. */
 const PW = "C:/Users/HADJAL/AppData/Roaming/npm/node_modules/@playwright/mcp/node_modules/playwright-core";
 const { chromium } = require(PW);
+const fs = require("fs");
+const path = require("path");
 const BASE = "http://127.0.0.1:8791/app.html";
 
 /* Засев хранилища настоящими ключами приложения: на пустом экране карточки
@@ -58,6 +60,157 @@ const SEED = () => {
     say(!!head && head.pass === head.total, "самотест зелёный", head ? head.text : "результат не найден");
     say(errs.length === 0, "нет ошибок исполнения", errs.join(" | ") || "чисто");
     await page.close();
+  }
+
+  // ===== 1б. Публичные документы, постоянная навигация и живая поддержка =====
+  {
+    const siteDir = __dirname;
+    const documentsSource = fs.readFileSync(path.join(siteDir, "documents.html"), "utf8");
+    const supportSource = fs.readFileSync(path.join(siteDir, "support.html"), "utf8");
+    const indexSource = fs.readFileSync(path.join(siteDir, "index.html"), "utf8");
+    const workerSource = fs.readFileSync(path.join(siteDir, "sw.js"), "utf8");
+    const sitemapSource = fs.readFileSync(path.join(siteDir, "sitemap.xml"), "utf8");
+    const forbiddenDetails = /\b(?:ИП|ООО|ИНН|ОГРН|ОГРНИП)\b/iu;
+
+    console.log("\n=== 1б. Документы и поддержка ===");
+    say(!forbiddenDetails.test(documentsSource + "\n" + supportSource),
+      "в публичных документах нет ИП/ООО/ИНН/ОГРН");
+    say(["Условия использования", "Политика обработки данных", "Согласие пользователя", "Оплата, отмена и возврат"]
+      .every(s => documentsSource.includes(s)), "все обязательные разделы опубликованы");
+    say(/\bmellivora\b/.test(documentsSource) && /\bmellivora\b/.test(supportSource),
+      "кодовое слово mellivora доступно проверяющему");
+    say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
+      .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
+    say(/superday-v60/.test(workerSource), "версия кэша service worker обновлена");
+    say(/https:\/\/superday\.fun\/documents\.html/.test(sitemapSource) &&
+      /https:\/\/superday\.fun\/support\.html/.test(sitemapSource), "документы и поддержка добавлены в sitemap");
+    say(/https:\/\/158\.160\.192\.153\/site-api\/waitlist/.test(indexSource) &&
+      !/Formspree|mailto:hello@superday\.fun|WAITLIST_ENDPOINT\s*=\s*["']{2}/i.test(indexSource),
+      "waitlist подключён к persistent API без пустого или mailto fallback");
+
+    const navCtx = await browser.newContext({ viewport: { width: 320, height: 800 }, serviceWorkers: "block" });
+    const navPage = await navCtx.newPage();
+    for (const probe of [
+      { path: "index.html", selector: "header .nav-service" },
+      { path: "app.html", selector: "header .head-service" },
+      { path: "documents.html", selector: "header a[href='documents.html'],header a[href='support.html']" },
+      { path: "support.html", selector: "header a[href='documents.html'],header a[href='support.html']" }
+    ]) {
+      await navPage.goto(BASE.replace("app.html", probe.path), { waitUntil: "domcontentloaded" });
+      const nav = await navPage.evaluate(selector => {
+        const links = Array.from(document.querySelectorAll(selector));
+        return {
+          count: links.length,
+          visible: links.every(a => {
+            const r = a.getBoundingClientRect(), cs = getComputedStyle(a);
+            return cs.display !== "none" && r.width > 0 && r.left >= 0 && r.right <= innerWidth;
+          }),
+          overflow: document.documentElement.scrollWidth > innerWidth
+        };
+      }, probe.selector);
+      say(nav.count === 2 && nav.visible && !nav.overflow,
+        probe.path + ": отдельные кнопки видны на 320px без переполнения",
+        nav.count + " кнопки, overflow=" + nav.overflow);
+    }
+    for (const lang of ["en", "de", "zh"]) {
+      await navPage.goto(BASE.replace("app.html", "index.html") + "?lang=" + lang, { waitUntil: "load" });
+      await navPage.waitForFunction(() => window.SuperDayI18n && window.SuperDayI18n.ready === true,
+        { timeout: 10000 });
+      const translated = await navPage.evaluate(() => window.__i18ntest && window.__i18ntest());
+      say(!!translated && translated.dict === true && translated.untranslated === 0,
+        "index.html: кнопки переведены на " + lang,
+        translated ? translated.untranslated + " непереведённых: " + translated.list.join(" | ") : "аудит недоступен");
+    }
+    await navCtx.close();
+
+    const supportCtx = await browser.newContext({ viewport: { width: 430, height: 900 }, serviceWorkers: "block" });
+    const supportPage = await supportCtx.newPage();
+    let submitted = null;
+    const supportUrl = "https://158.160.192.153/site-api/support";
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Accept",
+      "Content-Type": "application/json; charset=utf-8"
+    };
+    await supportPage.route(supportUrl, async route => {
+      const request = route.request();
+      if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers: corsHeaders, body: "" });
+      submitted = request.postDataJSON();
+      return route.fulfill({ status: 201, headers: corsHeaders, body: JSON.stringify({
+        ok: true, ticket_id: "SD-20260816-ABCDEF123456", created_at: "2026-08-16T12:00:00.000Z"
+      }) });
+    });
+    await supportPage.goto(BASE.replace("app.html", "support.html"), { waitUntil: "domcontentloaded" });
+    await supportPage.fill("#supportName", "Иван");
+    await supportPage.fill("#supportEmail", "USER@example.com");
+    await supportPage.selectOption("#supportTopic", "technical");
+    await supportPage.fill("#supportMessage", "Не строится маршрут после голосового ввода.");
+    await supportPage.check("#supportConsent");
+    await supportPage.click("#supportSubmit");
+    await supportPage.waitForFunction(() => document.getElementById("supportStatus").dataset.state === "success");
+    const successText = await supportPage.locator("#supportStatus").textContent();
+    const expectedKeys = ["codeword", "consent", "email", "message", "name", "source", "topic"];
+    say(!!submitted && JSON.stringify(Object.keys(submitted).sort()) === JSON.stringify(expectedKeys),
+      "форма POST-ит только поля контракта", submitted ? Object.keys(submitted).sort().join(", ") : "POST не получен");
+    say(!!submitted && submitted.consent === true && submitted.codeword === "mellivora" && submitted.source === "web" &&
+      submitted.email === "user@example.com", "consent, codeword, source и e-mail переданы корректно");
+    say(/SD-20260816-ABCDEF123456/.test(successText || ""), "показывается подтверждённый номер обращения", successText);
+
+    await supportPage.unroute(supportUrl);
+    await supportPage.route(supportUrl, async route => {
+      const request = route.request();
+      if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers: corsHeaders, body: "" });
+      return route.fulfill({ status: 201, headers: corsHeaders, body: JSON.stringify({
+        ok: true, ticket_id: "<script>", created_at: "not-a-date"
+      }) });
+    });
+    await supportPage.fill("#supportName", "Иван");
+    await supportPage.fill("#supportEmail", "user@example.com");
+    await supportPage.selectOption("#supportTopic", "privacy");
+    await supportPage.fill("#supportMessage", "Прошу уточнить порядок удаления моих данных.");
+    await supportPage.check("#supportConsent");
+    await supportPage.click("#supportSubmit");
+    await supportPage.waitForFunction(() => document.getElementById("supportStatus").dataset.state === "error");
+    const rejected = await supportPage.locator("#supportStatus").textContent();
+    say(/не принято/i.test(rejected || "") && !/SD-/.test(rejected || ""),
+      "повреждённый ответ API отклонён без выдуманного номера", rejected);
+    await supportCtx.close();
+
+    const waitlistCtx = await browser.newContext({ viewport: { width: 430, height: 900 }, serviceWorkers: "block" });
+    const waitlistPage = await waitlistCtx.newPage();
+    const waitlistUrl = "https://158.160.192.153/site-api/waitlist";
+    let subscribed = null;
+    await waitlistPage.route(waitlistUrl, async route => {
+      if (route.request().method() === "OPTIONS") {
+        return route.fulfill({ status: 204, headers: corsHeaders, body: "" });
+      }
+      subscribed = route.request().postDataJSON();
+      return route.fulfill({ status: 201, headers: corsHeaders,
+        body: JSON.stringify({ ok: true, subscribed: true }) });
+    });
+    await waitlistPage.goto(BASE.replace("app.html", "index.html"), { waitUntil: "domcontentloaded" });
+    await waitlistPage.fill("#wlEmail", "Launch.User@example.com");
+    await waitlistPage.check("#wlConsent");
+    await waitlistPage.click("#wlForm button[type='submit']");
+    await waitlistPage.waitForSelector(".wl-card");
+    say(!!subscribed && subscribed.email === "Launch.User@example.com" && subscribed.consent === true &&
+      subscribed.source === "web" && Object.keys(subscribed).sort().join(",") === "consent,email,source",
+      "waitlist отправляет только e-mail, consent и source в persistent API");
+
+    await waitlistPage.unroute(waitlistUrl);
+    await waitlistPage.route(waitlistUrl, route => route.request().method() === "OPTIONS"
+      ? route.fulfill({ status: 204, headers: corsHeaders, body: "" })
+      : route.fulfill({ status: 503, headers: corsHeaders,
+        body: JSON.stringify({ error: "waitlist_unavailable" }) }));
+    await waitlistPage.reload({ waitUntil: "domcontentloaded" });
+    await waitlistPage.fill("#wlEmail", "retry@example.com");
+    await waitlistPage.check("#wlConsent");
+    await waitlistPage.click("#wlForm button[type='submit']");
+    await waitlistPage.waitForFunction(() => /не сохранён/i.test(document.getElementById("wlStatus").textContent || ""));
+    say(await waitlistPage.locator(".wl-card").count() === 0,
+      "waitlist не показывает ложный успех при отказе хранилища");
+    await waitlistCtx.close();
   }
 
   // ===== 2. Знаки: реально отрисованы геометрией, эмодзи в разметке нет =====

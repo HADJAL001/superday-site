@@ -1,6 +1,11 @@
 /* SUPER DAY — diccionario español de la página de inicio (ola 11). */
 window.__i18nDict("es", {
   t: {
+    "Документы": "Documentos",
+    "Поддержка": "Soporte",
+    "Документы и поддержка": "Documentos y soporte",
+    "Сейчас": "Ahora",
+    "Это рабочее приложение — открыть →": "Es una aplicación funcional — abrir →",
     "Веб-версия": "Versión web",
     "Возможности": "Funciones",
     "Как работает": "Cómo funciona",
@@ -150,6 +155,10 @@ window.__i18nDict("es", {
     "Будь первым, кто проживёт SUPER DAY": "Sé el primero en vivir un SUPER DAY",
     "Оставь e-mail — пришлём ссылку, как только приложение выйдет в сторах.": "Deja tu correo: enviaremos el enlace en cuanto la app esté en las tiendas.",
     "В список ожидания": "A la lista de espera",
+    "Я согласен(на) на обработку e-mail для уведомления о выпуске приложения согласно": "Acepto el tratamiento de mi correo electrónico para recibir avisos sobre el lanzamiento de la aplicación conforme a la",
+    "политике обработки данных": "política de tratamiento de datos",
+    "Сервер не ответил вовремя. E-mail не сохранён; повторите отправку.": "El servidor no respondió a tiempo. El correo no se guardó; vuelve a enviarlo.",
+    "Не удалось подтвердить запись. E-mail не сохранён; проверьте соединение и повторите попытку.": "No se pudo confirmar la inscripción. El correo no se guardó; comprueba la conexión e inténtalo de nuevo.",
     "скоро": "pronto",
     "Проживай день на максимум": "Vive el día al máximo",
     "Создано с помощью": "Creado con",

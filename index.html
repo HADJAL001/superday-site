@@ -3,11 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<!-- Заголовки безопасности (на GitHub Pages доступны только через meta).
-     Главная ценность: upgrade-insecure-requests, object-src 'none', base-uri lock.
-     script/connect намеренно допускают https: — чтобы активация Formspree/аналитики
-     (см. COORDINATION.md) не сломалась. Инлайн-стили и скрипты требуют 'unsafe-inline'. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https:; connect-src 'self' https:; manifest-src 'self'; media-src 'self' data: blob:; form-action 'self' https: mailto:; upgrade-insecure-requests" />
+<!-- На GitHub Pages заголовки безопасности задаются через meta. HTTPS нужен
+     для production API, шрифтов и аналитики; формы не используют mailto. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https:; connect-src 'self' https:; manifest-src 'self'; media-src 'self' data: blob:; form-action 'self' https:; upgrade-insecure-requests" />
 <meta name="referrer" content="strict-origin-when-cross-origin" />
 <meta name="color-scheme" content="dark" />
 <title>SUPER DAY — умный премиальный планировщик дня</title>
@@ -218,9 +216,12 @@
   .brand b{font-size:15px; letter-spacing:5px; font-weight:500;
     background:linear-gradient(180deg,#FFFFFF,rgba(232,237,246,.62) 150%);
     -webkit-background-clip:text; background-clip:text; color:transparent;}
-  nav.links{display:flex; gap:30px; align-items:center}
-  nav.links a{color:var(--text-dim); font-size:13.5px; font-weight:400; letter-spacing:.02em; transition:color .2s}
+  nav.links{display:flex; gap:18px; align-items:center}
+  nav.links a{color:var(--text-dim); font-size:13px; font-weight:400; letter-spacing:.02em; transition:color .2s}
   nav.links a:hover{color:var(--text)}
+  nav.links .nav-service{display:inline-flex; align-items:center; justify-content:center; min-height:34px;
+    padding:6px 11px; border:1px solid var(--hair); border-radius:8px; color:var(--text); white-space:nowrap}
+  nav.links .nav-service:hover{border-color:rgba(var(--plat),.55); background:rgba(232,237,246,.06)}
   .btn{
     display:inline-flex; align-items:center; justify-content:center; gap:8px;
     font-weight:700; font-size:14px; border-radius:999px; padding:11px 22px;
@@ -250,7 +251,15 @@
      в приглушённо-серый: на платине он почти не читался. Возвращаем цвета. */
   nav.links a.btn-plat{color:var(--on-accent)}
   nav.links a.btn-ghost{color:var(--text)}
-  @media(max-width:760px){ nav.links a:not(.btn){display:none} .brand b{letter-spacing:2px} }
+  @media(max-width:980px){nav.links .nav-secondary{display:none}}
+  @media(max-width:620px){
+    .nav-inner{gap:8px}
+    nav.links{gap:6px}
+    nav.links .nav-app,nav.links .nav-cta{display:none}
+    nav.links .nav-service{min-height:32px; padding:5px 8px; font-size:11px}
+    .brand{gap:7px}.brand img{width:27px;height:27px}.brand b{font-size:13px;letter-spacing:2px}
+  }
+  @media(max-width:360px){.wrap.nav-inner{padding-left:10px;padding-right:10px}nav.links .nav-service{padding:5px 6px;font-size:10.5px}}
 
   /* ---------- HERO ---------- */
   .hero{padding:84px 0 52px; position:relative}
@@ -564,13 +573,19 @@
     letter-spacing:-.012em; margin:0 0 12px; position:relative}
   .cta p{color:var(--text-dim); margin:0 auto 28px; max-width:440px; position:relative; font-size:15px}
   .wl{display:flex; gap:10px; max-width:440px; margin:0 auto; position:relative; flex-wrap:wrap; justify-content:center}
-  .wl input{
+  .wl input[type="email"]{
     flex:1; min-width:200px; background:rgba(5,7,12,.55); border:1px solid var(--hair);
     color:var(--text); border-radius:999px; padding:14px 21px; font-size:14px; font-family:inherit; outline:none;
     box-shadow:inset 0 2px 6px rgba(0,0,0,.5);
   }
-  .wl input:focus{border-color:rgba(var(--plat),.6); box-shadow:inset 0 2px 6px rgba(0,0,0,.5), 0 0 0 3px rgba(232,237,246,.10)}
-  .wl input::placeholder{color:var(--text-muted)}
+  .wl input[type="email"]:focus{border-color:rgba(var(--plat),.6); box-shadow:inset 0 2px 6px rgba(0,0,0,.5), 0 0 0 3px rgba(232,237,246,.10)}
+  .wl input[type="email"]::placeholder{color:var(--text-muted)}
+  .wl-consent{flex:0 0 100%; display:flex; align-items:flex-start; gap:9px; color:var(--text-dim);
+    font-size:11.5px; line-height:1.5; text-align:left; padding:2px 6px 0}
+  .wl-consent input{width:17px; height:17px; flex:0 0 17px; margin:1px 0 0; accent-color:#E8EDF6}
+  .wl-consent a{color:var(--champagne); text-decoration:underline; text-underline-offset:2px}
+  .wl-status{flex:0 0 100%; min-height:18px; margin:0!important; color:#E8A9A9!important; font-size:12px!important;
+    line-height:1.45; text-align:left}
   #waitlist .stores{display:flex; gap:12px; justify-content:center; margin-top:22px; flex-wrap:wrap; position:relative}
   #waitlist .store{
     display:flex; align-items:center; gap:9px; border:1px solid transparent; border-radius:16px;
@@ -587,6 +602,10 @@
   .foot-brand img{width:30px;height:30px}
   .foot-brand b{letter-spacing:3px; font-size:14px}
   .foot-brand span{display:block; font-size:11px; color:var(--text-muted)}
+  .foot-legal{display:flex; align-items:center; justify-content:center; gap:9px; flex-wrap:wrap}
+  .foot-legal a{display:inline-flex; align-items:center; min-height:34px; padding:6px 11px; border:1px solid var(--hair);
+    border-radius:8px; color:var(--text-dim); font-size:12px; text-decoration:none}
+  .foot-legal a:hover{color:var(--text); border-color:rgba(var(--plat),.55)}
   .osgard-badge{
     display:inline-flex; align-items:center; gap:14px;
     padding:13px 22px 13px 15px; border-radius:20px;
@@ -810,12 +829,14 @@
   <div class="wrap nav-inner">
     <a class="brand" href="#top"><img src="assets/mark.png" alt="SUPER DAY" /><b>SUPER&nbsp;DAY</b></a>
     <nav class="links">
-      <a href="app.html">Веб-версия</a>
-      <a href="#features">Возможности</a>
-      <a href="#how">Как работает</a>
-      <a href="#pricing">Тарифы</a>
-      <a href="#faq">Вопросы</a>
-      <a class="btn btn-plat" href="#waitlist">Ранний доступ</a>
+      <a class="nav-app" href="app.html">Веб-версия</a>
+      <a class="nav-secondary" href="#features">Возможности</a>
+      <a class="nav-secondary" href="#how">Как работает</a>
+      <a class="nav-secondary" href="#pricing">Тарифы</a>
+      <a class="nav-secondary" href="#faq">Вопросы</a>
+      <a class="nav-service" href="documents.html">Документы</a>
+      <a class="nav-service" href="support.html">Поддержка</a>
+      <a class="btn btn-plat nav-cta" href="#waitlist">Ранний доступ</a>
     </nav>
   </div>
 </header>
@@ -1007,6 +1028,11 @@
         <form class="wl" id="wlForm">
           <input type="email" id="wlEmail" placeholder="you@example.com" required autocomplete="email" />
           <button class="btn btn-plat" type="submit">В список ожидания</button>
+          <label class="wl-consent">
+            <input type="checkbox" id="wlConsent" required />
+            <span>Я согласен(на) на обработку e-mail для уведомления о выпуске приложения согласно <a href="documents.html#privacy">политике обработки данных</a>.</span>
+          </label>
+          <p class="wl-status" id="wlStatus" role="status" aria-live="polite"></p>
         </form>
         <div class="stores">
           <span class="store">&#129337; <b>RuStore</b> <small>скоро</small></span>
@@ -1025,6 +1051,11 @@
       <img src="assets/mark.png" alt="SUPER DAY" />
       <div><b>SUPER&nbsp;DAY</b><span>Проживай день на максимум</span></div>
     </div>
+
+    <nav class="foot-legal" aria-label="Документы и поддержка">
+      <a href="documents.html">Документы</a>
+      <a href="support.html">Поддержка</a>
+    </nav>
 
     <!-- Бейдж атрибуции платформы: продукт → платформа -->
     <a class="osgard-badge"
@@ -1052,16 +1083,10 @@
   },{threshold:0.12});
   document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
 
-  // ================= Waitlist — реальный сбор e-mail =================
-  // P0.1: форма шлёт POST на внешний эндпоинт (Formspree — бесплатно, без бэкенда).
-  // Активация: вставь сюда endpoint вида "https://formspree.io/f/xxxxxxx".
-  // Пока строка пустая — работает честный mailto-фолбэк (письмо на ящик продукта),
-  // так что регресса нет. Подробности — в COORDINATION.md.
-  var WAITLIST_ENDPOINT = "";                 // ← сюда Formspree endpoint
-  var WAITLIST_MAILBOX  = "hello@superday.fun"; // ящик для фолбэка/писем
+  // ================= Waitlist — постоянное серверное хранилище =================
+  var WAITLIST_ENDPOINT = "https://158.160.192.153/site-api/waitlist";
 
-  function wlBuildCard(email, mode){
-    // mode: "captured" — почта уже сохранена на сервере; "mailto" — нужен клик по письму
+  function wlBuildCard(email){
     var card = document.createElement("div");
     card.className = "wl-card";
     card.setAttribute("role", "status");
@@ -1081,26 +1106,12 @@
         '<p class="wlc-shared" aria-live="polite">Ссылка скопирована — отправь её другу</p>' +
       '</div>';
 
-    if(mode === "captured"){
-      card.innerHTML = head +
-        '<ul class="row wlc-steps">' +
-          '<li><i>1</i><span>Готово — e-mail сохранён, подтверждать ничего не нужно.</span></li>' +
-          '<li><i>2</i><span>Пришлём личную ссылку на скачивание в день запуска в сторах.</span></li>' +
-          '<li><i>3</i><span>Ранний доступ = расширенные лимиты на старте. Это подарок первым.</span></li>' +
-        '</ul>' + shareBlock;
-    } else {
-      var subj = encodeURIComponent("Ранний доступ к SUPER DAY");
-      var body = encodeURIComponent("Хочу в список ожидания SUPER DAY. Мой e-mail: " + email);
-      var mailto = "mailto:" + WAITLIST_MAILBOX + "?subject=" + subj + "&body=" + body;
-      card.innerHTML = head +
-        '<ul class="row wlc-steps">' +
-          '<li><i>1</i><span>Открой письмо и отправь его — так мы зафиксируем тебя в списке.</span></li>' +
-          '<li><i>2</i><span>Пришлём личную ссылку на скачивание в день запуска в сторах.</span></li>' +
-          '<li><i>3</i><span>Ранний доступ = расширенные лимиты на старте. Это подарок первым.</span></li>' +
-        '</ul>' +
-        '<a class="btn btn-plat row" href="' + mailto + '">Открыть письмо и подтвердить</a>' +
-        shareBlock;
-    }
+    card.innerHTML = head +
+      '<ul class="row wlc-steps">' +
+        '<li><i>1</i><span>Готово — e-mail сохранён, подтверждать ничего не нужно.</span></li>' +
+        '<li><i>2</i><span>Пришлём личную ссылку на скачивание в день запуска в сторах.</span></li>' +
+        '<li><i>3</i><span>Ранний доступ = расширенные лимиты на старте. Это подарок первым.</span></li>' +
+      '</ul>' + shareBlock;
     // e-mail вставляем текстом (без HTML-инъекций)
     card.querySelector(".wlc-email").textContent = email;
 
@@ -1166,12 +1177,16 @@
     ev.preventDefault();
     var form = this;
     var input = document.getElementById("wlEmail");
+    var consent = document.getElementById("wlConsent");
+    var status = document.getElementById("wlStatus");
     var btn = form.querySelector("button");
     var email = input.value.trim();
+    status.textContent = "";
     // валидность проверяет и сам input[type=email]; подстрахуемся
     if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
       input.focus(); return;
     }
+    if(!consent.checked){ consent.focus(); return; }
     if(form.parentNode.querySelector(".wl-card")) return; // не дублируем
 
     // фирменная вспышка + звук от точки кнопки
@@ -1181,36 +1196,33 @@
       playPressSound();
     }catch(e){}
 
-    // Нет эндпоинта → честный mailto-фолбэк (прежнее поведение)
-    if(!WAITLIST_ENDPOINT){
-      wlSwapToCard(form, wlBuildCard(email, "mailto"));
-      return;
-    }
-
-    // Есть эндпоинт → реальный сбор почты
     btn.disabled = true;
     var oldLabel = btn.textContent;
     btn.textContent = "Отправляем…";
-
-    var payload = new FormData();
-    payload.append("email", email);
-    payload.append("_subject", "Новая заявка в список ожидания SUPER DAY");
-    payload.append("source", "superday.fun");
+    var controller = "AbortController" in window ? new AbortController() : null;
+    var timer = controller ? window.setTimeout(function(){ controller.abort(); }, 20000) : null;
 
     fetch(WAITLIST_ENDPOINT, {
       method: "POST",
-      headers: { "Accept": "application/json" },
-      body: payload
+      mode: "cors",
+      credentials: "omit",
+      headers: { "Accept": "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email, consent: true, source: "web" }),
+      signal: controller ? controller.signal : undefined
     }).then(function(res){
-      if(res.ok){
-        wlSwapToCard(form, wlBuildCard(email, "captured"));
-      } else {
-        throw new Error("bad status " + res.status);
-      }
-    }).catch(function(){
-      // сеть/сервис недоступны — не теряем пользователя, даём mailto-путь
-      btn.disabled = false; btn.textContent = oldLabel;
-      wlSwapToCard(form, wlBuildCard(email, "mailto"));
+      if(res.status !== 200 && res.status !== 201) throw new Error("bad status " + res.status);
+      return res.json();
+    }).then(function(data){
+      if(!data || data.ok !== true || data.subscribed !== true) throw new Error("invalid response");
+      wlSwapToCard(form, wlBuildCard(email));
+    }).catch(function(error){
+      status.textContent = error && error.name === "AbortError"
+        ? "Сервер не ответил вовремя. E-mail не сохранён; повторите отправку."
+        : "Не удалось подтвердить запись. E-mail не сохранён; проверьте соединение и повторите попытку.";
+    }).finally(function(){
+      if(timer) window.clearTimeout(timer);
+      btn.disabled = false;
+      btn.textContent = oldLabel;
     });
   });
 

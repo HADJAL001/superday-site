@@ -10,7 +10,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin" />
 <meta name="color-scheme" content="dark" />
 <title>SUPER DAY — веб-планировщик (бета)</title>
-<meta name="description" content="Бесплатный веб-планировщик SUPER DAY: продиктуй или впиши задачи, разложи по матрице Эйзенхауэра и получи спокойный план дня. Работает офлайн, данные хранятся только в этом браузере." />
+<meta name="description" content="Веб-планировщик SUPER DAY: задачи и история хранятся локально, а защищённые серверные AI, Whisper и карты помогают собрать маршрут дня." />
 <meta name="theme-color" content="#05070C" />
 <link rel="canonical" href="https://superday.fun/app.html" />
 <meta property="og:type" content="website" />
@@ -18,14 +18,14 @@
 <meta property="og:locale" content="ru_RU" />
 <meta property="og:url" content="https://superday.fun/app.html" />
 <meta property="og:title" content="SUPER DAY — планируй день прямо в браузере" />
-<meta property="og:description" content="Выгрузи задачи голосом или текстом, разложи по матрице Эйзенхауэра и получи спокойный маршрут дня. Бесплатно, работает офлайн." />
+<meta property="og:description" content="Выгрузи задачи голосом или текстом, разложи по матрице Эйзенхауэра и получи маршрут дня. Задачи и история сохраняются локально; голос, AI и маршруты используют защищённые серверные запросы." />
 <meta property="og:image" content="https://superday.fun/assets/og.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="SUPER DAY — проживай день на максимум" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="SUPER DAY — планируй день прямо в браузере" />
-<meta name="twitter:description" content="Задачи голосом → матрица Эйзенхауэра → спокойный план дня. Бесплатно, офлайн." />
+<meta name="twitter:description" content="Задачи голосом или текстом, AI-приоритеты и маршрут дня. История сохраняется локально и доступна офлайн." />
 <meta name="twitter:image" content="https://superday.fun/assets/og.png" />
 <link rel="icon" href="assets/mark.png" type="image/png" />
 <link rel="apple-touch-icon" href="assets/apple-touch-icon-180.png" />
@@ -109,6 +109,10 @@
     border:1px solid var(--hair); padding:2px 7px; border-radius:999px; margin-left:2px; white-space:nowrap}
   .back{font-size:13px; color:var(--text-dim); text-decoration:none; white-space:nowrap}
   .back:hover{color:var(--text)}
+  .head-service{display:inline-flex; align-items:center; justify-content:center; min-height:34px; padding:6px 10px;
+    border:1px solid var(--border); border-radius:8px; color:var(--text-dim); font-size:12px; font-weight:600;
+    line-height:1.2; text-decoration:none; white-space:nowrap}
+  .head-service:hover{border-color:var(--gold); color:var(--text)}
 
   /* Интро */
   .intro{padding:38px 0 8px; text-align:center; text-shadow:0 2px 18px rgba(6,10,26,.9)}
@@ -294,6 +298,11 @@
 
   footer{border-top:1px solid var(--hair-soft); padding:22px 0 34px; text-align:left; color:var(--text-muted); font-size:12px}
   footer a{color:var(--champagne); text-decoration:none}
+  .footer-row{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap}
+  .app-legal-links{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+  .app-legal-links a{display:inline-flex; align-items:center; min-height:32px; padding:5px 9px; border:1px solid var(--hair);
+    border-radius:8px; color:var(--text-dim)}
+  .app-legal-links a:hover{color:var(--text); border-color:var(--gold)}
   .offline-note{display:inline-flex; align-items:center; gap:8px; font-family:var(--font-display); font-size:12.5px;
     letter-spacing:.3px; color:var(--platinum); background:linear-gradient(135deg,rgba(222,228,238,.1),rgba(120,132,155,.04));
     border:1px solid var(--plat-deep); border-radius:999px; padding:7px 15px;
@@ -743,6 +752,17 @@
     background:var(--gold); box-shadow:0 0 0 2px rgba(8,13,26,.9)}
   .panel-btn .pb-dot[hidden]{display:none}
   .bar .right{display:flex; align-items:center; gap:12px}
+
+  @media(max-width:680px){
+    .bar{padding-left:12px;padding-right:12px;gap:8px}
+    .brand .beta,.back{display:none}
+    .bar .right{gap:5px}
+    .head-service{min-height:32px;padding:5px 7px;font-size:11px}
+    .panel-btn{width:34px;height:34px;padding:0;justify-content:center;border-radius:8px}
+    .panel-btn .pb-label{display:none}
+  }
+  @media(max-width:430px){.brand b{display:none}.brand{gap:0}.brand img{width:28px;height:28px}}
+  @media(max-width:340px){.head-service{padding:5px;font-size:10.5px}.panel-btn{width:32px;height:32px}}
 
   .layout-pop{position:absolute; top:64px; right:16px; z-index:41; width:250px; padding:12px;
     border-radius:14px; border:1px solid var(--border); background:var(--panel-bg,var(--ink));
@@ -1278,13 +1298,15 @@
     </a>
     <div class="right">
       <a class="back" href="index.html">← На сайт</a>
+      <a class="head-service" href="documents.html">Документы</a>
+      <a class="head-service" href="support.html">Поддержка</a>
       <button class="panel-btn" id="layoutBtn" type="button" aria-expanded="false" aria-controls="layoutPop"
               title="Выбери, какие блоки видны на главном экране">
-        <span class="pb-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-grid"/></svg></span><span>Блоки</span>
+        <span class="pb-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-grid"/></svg></span><span class="pb-label">Блоки</span>
       </button>
       <button class="panel-btn" id="panelBtn" type="button" aria-expanded="false" aria-controls="panel"
               title="Настройки, матрица, неделя, шаблоны, заметки и данные">
-        <span class="pb-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-bars"/></svg></span><span>Панель</span>
+        <span class="pb-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-bars"/></svg></span><span class="pb-label">Панель</span>
         <span class="pb-dot" id="panelDot" hidden aria-hidden="true"></span>
       </button>
     </div>
@@ -1552,6 +1574,7 @@
   <section class="pgroup" data-sec="data">
     <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-calendar"/></svg></span><span class="pg-title">Данные и календарь</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
     <div class="pg-body">
+      <p class="pg-lead"><b>Где данные.</b> Задачи, заметки, история поездок и недельные графики сохраняются в этом браузере. Голосовая запись удаляется после Whisper; AI получает расшифровку, а адреса и маршрут обрабатываются серверными API и кэшируются.</p>
       <p class="pg-lead">Планом можно поделиться текстом, а день — выгрузить в системный календарь: события лягут с будильниками и сработают при закрытом приложении.</p>
       <div class="toolbar">
         <button id="copyPlan" class="accent" type="button">Поделиться планом</button>
@@ -1576,7 +1599,7 @@
     <div class="pg-body">
       <p class="pg-lead"><b>Маршрут дня.</b> Сначала то, что горит по времени, затем важное. Цветная точка слева — приоритет, нажатие открывает разбор по важности.</p>
       <p class="pg-lead"><b>Матрица.</b> <b><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-flame"/></svg> срочно</b> — горит по времени. <b><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-star"/></svg> важно</b> — двигает жизнь. Переложить можно перетаскиванием за ручку ☰.</p>
-      <p class="pg-lead"><b>Где данные.</b> Только в этом браузере — ни аккаунта, ни сервера. Работает офлайн.</p>
+      <p class="pg-lead"><b>Где данные.</b> Задачи и история остаются в браузере и доступны офлайн. Голос, AI-разбор, геокодирование и новый расчёт маршрута требуют защищённого запроса к серверу; сохранённые маршруты и графики открываются из локального кэша.</p>
     </div>
   </section>
   <section class="pgroup" data-sec="diag">
@@ -1594,7 +1617,13 @@
 
 
 <footer class="wrap">
-  <div class="offline-note"><span class="d"></span> Работает офлайн · данные только в этом браузере</div>
+  <div class="footer-row">
+    <div class="offline-note"><span class="d"></span> Задачи и история локальны · голос, AI и новые маршруты используют сервер</div>
+    <nav class="app-legal-links" aria-label="Документы и поддержка">
+      <a href="documents.html">Документы</a>
+      <a href="support.html">Поддержка</a>
+    </nav>
+  </div>
 </footer>
 
 <!-- Карта — фон всего экрана (position:fixed; z-index:0), поэтому её место в DOM

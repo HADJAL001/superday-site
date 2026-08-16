@@ -25,6 +25,12 @@ window.__i18nDict("es", {
   },
 
   t: {
+    "Документы": "Documentos",
+    "Поддержка": "Soporte",
+    "Документы и поддержка": "Documentos y soporte",
+    "Задачи, заметки, история поездок и недельные графики сохраняются в этом браузере. Голосовая запись удаляется после Whisper; AI получает расшифровку, а адреса и маршрут обрабатываются серверными API и кэшируются.": "Las tareas, notas, el historial de viajes y los gráficos semanales se guardan en este navegador. La grabación de voz se elimina después de Whisper; la IA recibe la transcripción, mientras que las direcciones y la ruta se procesan mediante API del servidor y se almacenan en caché.",
+    "Задачи и история остаются в браузере и доступны офлайн. Голос, AI-разбор, геокодирование и новый расчёт маршрута требуют защищённого запроса к серверу; сохранённые маршруты и графики открываются из локального кэша.": "Las tareas y el historial permanecen en el navegador y están disponibles sin conexión. La voz, el análisis de IA, la geocodificación y un nuevo cálculo de ruta requieren una solicitud segura al servidor; las rutas y los gráficos guardados se abren desde la caché local.",
+    "Задачи и история локальны · голос, AI и новые маршруты используют сервер": "Las tareas y el historial son locales · la voz, la IA y las rutas nuevas usan el servidor",
     "— горит по времени.": "— aprieta por la hora.",
     "— двигает жизнь. Переложить можно перетаскиванием за ручку ☰.": "— mueve la vida. Se mueve arrastrando por el asa ☰.",
     "ГОВОРИТЕ И ВАШ ИИ ПРОЛОЖИТ ЛУЧШИЙ ПУТЬ": "HABLE Y SU IA TRAZARÁ EL MEJOR CAMINO",
@@ -221,7 +227,6 @@ window.__i18nDict("es", {
     "Состояние этой копии приложения. Самотесты гоняют логику (парсеры времени, повторов, дат, порядок маршрута, сборку календаря) прямо на живом коде — тем же набором, что и в сборке.": "Estado de esta copia de la app. Las autopruebas ejecutan la lógica (análisis de hora, repeticiones y fechas, orden de la ruta, generación del calendario) sobre el código en vivo, con el mismo conjunto que en la compilación.",
     "Это ранняя веб-версия. Полное приложение с голосом и AI-дебатами —": "Esta es una versión web temprana. La app completa con voz y debates de IA —",
     "Где данные.": "Dónde están los datos.",
-    "Только в этом браузере — ни аккаунта, ни сервера. Поэтому раз в неделю имеет смысл сохранять копию файлом в разделе «Данные». Приложение работает офлайн.": "Solo en este navegador: ni cuenta ni servidor. Por eso conviene guardar una copia semanal en la sección «Datos». La app funciona sin conexión.",
     "Клавиатура.": "Teclado.",
     "Под капотом": "Bajo el capó",
     "Схема данных": "Esquema de datos",
@@ -365,7 +370,6 @@ window.__i18nDict("es", {
     "Маршрут дня.": "La ruta del día.",
     "Сначала то, что горит по времени, затем важное. Цветная точка слева — приоритет, нажатие открывает разбор по важности.": "Primero lo que aprieta por la hora, luego lo importante. El punto de color de la izquierda es la prioridad; al pulsarlo se abre el desglose por importancia.",
     "🔥 срочно — горит по времени. ⭐ важно — двигает жизнь. Переложить можно перетаскиванием за ручку ☰.": "🔥 urgente — aprieta por la hora. ⭐ importante — mueve la vida. Se mueve arrastrando por el asa ☰.",
-    "Только в этом браузере — ни аккаунта, ни сервера. Работает офлайн.": "Solo en este navegador: sin cuenta y sin servidor. Funciona sin conexión.",
 
     /* ===== Волна 42, проход 3: то, что видно только на прожитом дне =====
        Подписи-вставки (квадрант, сфера жизни, нагрузка, сложность) стоят

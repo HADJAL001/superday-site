@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self' https://158.160.192.153; manifest-src 'self'; form-action 'self'; upgrade-insecure-requests" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="theme-color" content="#070a11" />
+  <title>Поддержка SUPER DAY</title>
+  <meta name="description" content="Поддержка SUPER DAY по работе сервиса, данным, оплате, отмене и возврату." />
+  <link rel="canonical" href="https://superday.fun/support.html" />
+  <link rel="icon" href="assets/mark.png" type="image/png" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon-180.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="legal.css" />
+  <script src="legal.js" defer></script>
+  <script src="support.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">К форме поддержки</a>
+  <header class="legal-header">
+    <div class="legal-wrap legal-header-inner">
+      <a class="legal-brand" href="index.html" aria-label="SUPER DAY — на главную">
+        <img src="assets/mark.png" alt="" />
+        <b>SUPER DAY</b>
+      </a>
+      <nav class="legal-nav" aria-label="Основная навигация">
+        <a class="nav-secondary" href="index.html">Главная</a>
+        <a class="nav-secondary" href="app.html">Планировщик</a>
+        <a href="documents.html">Документы</a>
+        <a href="support.html" aria-current="page">Поддержка</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="content">
+    <section class="legal-hero">
+      <div class="legal-wrap">
+        <p class="legal-kicker">SUPER DAY · помощь пользователям</p>
+        <h1>Поддержка</h1>
+        <p class="legal-lead">Отправьте обращение по работе сервиса, обработке данных, оплате, отмене или возврату. После подтверждённой отправки появится номер обращения.</p>
+      </div>
+    </section>
+
+    <div class="legal-wrap support-layout">
+      <form class="support-form" id="supportForm" novalidate>
+        <div class="form-grid">
+          <div class="field">
+            <label for="supportName">Имя</label>
+            <input id="supportName" name="name" type="text" minlength="2" maxlength="100" autocomplete="name" required placeholder="Как к вам обращаться" />
+          </div>
+          <div class="field">
+            <label for="supportEmail">E-mail для ответа</label>
+            <input id="supportEmail" name="email" type="email" maxlength="254" autocomplete="email" inputmode="email" required placeholder="name@example.com" />
+          </div>
+          <div class="field field-wide">
+            <label for="supportTopic">Тема</label>
+            <select id="supportTopic" name="topic" required>
+              <option value="technical">Работа сервиса</option>
+              <option value="billing">Оплата и возврат</option>
+              <option value="privacy">Данные и конфиденциальность</option>
+              <option value="other">Другое</option>
+            </select>
+          </div>
+          <div class="field field-wide">
+            <label for="supportMessage">Сообщение</label>
+            <textarea id="supportMessage" name="message" minlength="10" maxlength="4000" required placeholder="Опишите вопрос и укажите, что уже произошло"></textarea>
+            <span class="field-hint">Не отправляйте пароль, полный номер карты или защитный код.</span>
+          </div>
+        </div>
+
+        <label class="consent-row" for="supportConsent">
+          <input id="supportConsent" name="consent" type="checkbox" required />
+          <span>Я прочитал(а) <a class="inline-link" href="documents.html#privacy">политику обработки данных</a> и согласен(на) на обработку имени, e-mail и сообщения для ответа на обращение.</span>
+        </label>
+
+        <button class="support-submit" id="supportSubmit" type="submit" aria-busy="false">Отправить обращение</button>
+        <div class="support-status" id="supportStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+      </form>
+
+      <aside class="support-aside" aria-label="Информация о поддержке">
+        <h2>Чтобы решить вопрос быстрее</h2>
+        <ul>
+          <li>Укажите устройство, браузер и точное действие, после которого возникла ошибка.</li>
+          <li>По оплате укажите дату и сумму, но не присылайте реквизиты карты.</li>
+          <li>Сохраните номер, который появится только после подтверждения сервера.</li>
+        </ul>
+        <p>Правила сервиса, обработки данных, отмены и возврата постоянно доступны на странице <a class="inline-link" href="documents.html">«Документы»</a>.</p>
+        <div class="legal-callout"><strong>Кодовое слово для проверки:</strong><br /><code>mellivora</code></div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="legal-footer">
+    <div class="legal-wrap legal-footer-inner">
+      <p>© 2026 SUPER DAY · superday.fun</p>
+      <nav class="legal-footer-links" aria-label="Ссылки в подвале">
+        <a href="app.html">Планировщик</a>
+        <a href="documents.html">Документы</a>
+        <a href="support.html">Поддержка</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

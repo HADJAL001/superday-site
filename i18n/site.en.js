@@ -2,6 +2,11 @@
    Загружается только на лендинге (data-scope="site"), дополняя основной словарь. */
 window.__i18nDict("en", {
   t: {
+    "Документы": "Documents",
+    "Поддержка": "Support",
+    "Документы и поддержка": "Documents and support",
+    "Сейчас": "Now",
+    "Это рабочее приложение — открыть →": "This is a working app — open →",
     /* Навигация */
     "Веб-версия": "Web version",
     "Возможности": "Features",
@@ -161,6 +166,10 @@ window.__i18nDict("en", {
     "Будь первым, кто проживёт SUPER DAY": "Be the first to live a SUPER DAY",
     "Оставь e-mail — пришлём ссылку, как только приложение выйдет в сторах.": "Leave your email — we'll send the link as soon as the app is in the stores.",
     "В список ожидания": "Join the waitlist",
+    "Я согласен(на) на обработку e-mail для уведомления о выпуске приложения согласно": "I consent to the processing of my email address for notification about the app release in accordance with the",
+    "политике обработки данных": "data processing policy",
+    "Сервер не ответил вовремя. E-mail не сохранён; повторите отправку.": "The server did not respond in time. Your email was not saved; submit it again.",
+    "Не удалось подтвердить запись. E-mail не сохранён; проверьте соединение и повторите попытку.": "We could not confirm the subscription. Your email was not saved; check the connection and try again.",
     "скоро": "soon",
     "Проживай день на максимум": "Live your day to the fullest",
     "Создано с помощью": "Made with",
