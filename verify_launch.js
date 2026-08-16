@@ -6,6 +6,9 @@ const { chromium } = require(PW);
 const fs = require("fs");
 const path = require("path");
 const BASE = "http://127.0.0.1:8791/app.html";
+const ARTIFACT_DIR = process.env.SUPERDAY_ARTIFACT_DIR || __dirname;
+fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
+const artifact = name => path.join(ARTIFACT_DIR, name);
 
 /* Засев хранилища настоящими ключами приложения: на пустом экране карточки
    скрыты, и замер знаков дал бы «ноль» не потому, что знак сломан, а потому,
@@ -19,7 +22,7 @@ const SEED = () => {
   ]));
   localStorage.setItem("superday_lastday", y);            // вчера → карточка «Новый день»
   localStorage.setItem("superday_onboard_v1", "1");       // онбординг не перекрывает экран
-  localStorage.setItem("superday_vehicle_v1", JSON.stringify({ fuelLPer100Km: 8.2, updatedAt: Date.now() }));
+  localStorage.setItem("superday_vehicle_v1", JSON.stringify({ fuelLPer100Km: 8.2, fuelPricePerLiter: 65, updatedAt: Date.now() }));
   return y;
 };
 
@@ -68,7 +71,10 @@ const SEED = () => {
     const documentsSource = fs.readFileSync(path.join(siteDir, "documents.html"), "utf8");
     const supportSource = fs.readFileSync(path.join(siteDir, "support.html"), "utf8");
     const indexSource = fs.readFileSync(path.join(siteDir, "index.html"), "utf8");
+    const appSource = fs.readFileSync(path.join(siteDir, "app.html"), "utf8");
     const workerSource = fs.readFileSync(path.join(siteDir, "sw.js"), "utf8");
+    const leafletPath = path.join(siteDir, "assets", "vendor", "leaflet-1.9.4.js");
+    const leafletSource = fs.readFileSync(leafletPath, "utf8");
     const sitemapSource = fs.readFileSync(path.join(siteDir, "sitemap.xml"), "utf8");
     const forbiddenDetails = /\b(?:ИП|ООО|ИНН|ОГРН|ОГРНИП)\b/iu;
 
@@ -81,7 +87,10 @@ const SEED = () => {
       "кодовое слово mellivora доступно проверяющему");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v60/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v61/.test(workerSource), "версия кэша service worker обновлена");
+    say(/assets\/vendor\/leaflet-1\.9\.4\.js/.test(appSource) && !/unpkg\.com\/leaflet/.test(appSource) &&
+      workerSource.includes('"/assets/vendor/leaflet-1.9.4.js"') && /Leaflet 1\.9\.4/.test(leafletSource),
+      "Leaflet 1.9.4 локален и входит в offline shell");
     say(/https:\/\/superday\.fun\/documents\.html/.test(sitemapSource) &&
       /https:\/\/superday\.fun\/support\.html/.test(sitemapSource), "документы и поддержка добавлены в sitemap");
     say(/https:\/\/158\.160\.192\.153\/site-api\/waitlist/.test(indexSource) &&
@@ -357,17 +366,17 @@ const SEED = () => {
     });
     mustFail(zero >= 8, "скрытый знак измерен как нулевой (" + zero + "px) — замер видит display:none");
 
-    await page.screenshot({ path: "shot-desktop.png", fullPage: false });
+    await page.screenshot({ path: artifact("shot-desktop.png"), fullPage: false });
     // Кропы крупным планом: замер говорит «отрисован», но кривизну видно только глазом.
     for (const [sel, name] of [["#composer", "crop-composer.png"], ["#focusCard", "crop-focus.png"],
                                ["#rolloverBar", "crop-rollover.png"], ["header", "crop-header.png"],
                                ["#rail", "crop-rail.png"]]) {
       const el = await page.$(sel);
-      if (el) await el.screenshot({ path: name }).catch(() => {});
+      if (el) await el.screenshot({ path: artifact(name) }).catch(() => {});
     }
     await page.setViewportSize({ width: 430, height: 900 });
     await page.waitForTimeout(400);
-    await page.screenshot({ path: "shot-mobile.png", fullPage: false });
+    await page.screenshot({ path: artifact("shot-mobile.png"), fullPage: false });
 
     // Обрезка приглашения на узком экране: если текст не влезает, это видно замером.
     const fit = await page.evaluate(() => {
@@ -397,6 +406,8 @@ const SEED = () => {
     });
     const page = await ctx.newPage();
     const errs = [];
+    const attempts = { parse: 0, geocode: 0, route: 0, stt: 0 };
+    const parseBodies = [], geocodeQueries = [], routeBodies = [], sttSizes = [];
     page.on("pageerror", e => errs.push(String(e.message)));
     // Deterministic browser-contract responses. Production acceptance below
     // uses the live providers; this block isolates client parsing/rendering so
@@ -412,6 +423,9 @@ const SEED = () => {
       };
       if (req.method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors, body: "" });
       if (url.pathname === "/site-api/parse") {
+        attempts.parse++;
+        parseBodies.push(req.postDataJSON().raw_text);
+        if (attempts.parse === 1) return route.fulfill({ status: 502, headers: cors, body: JSON.stringify({ error: "cold_start" }) });
         return route.fulfill({ status: 200, headers: cors, body: JSON.stringify({
           tasks: [
             { title: "Позвонить маме", minutes: 15, quadrant: "not_urgent_important", quadrantNumber: 2, confidence: .94, reasoning: "Личное важное дело." },
@@ -422,11 +436,17 @@ const SEED = () => {
         }) });
       }
       if (url.pathname === "/site-api/geocode") {
+        attempts.geocode++;
+        geocodeQueries.push(url.searchParams.get("q"));
+        if (attempts.geocode === 1) return route.fulfill({ status: 503, headers: cors, body: JSON.stringify({ error: "warming" }) });
         return route.fulfill({ status: 200, headers: cors, body: JSON.stringify({
           lat: 55.764812, lon: 37.605511, label: "Тверская улица, 1, Москва", cached: false
         }) });
       }
       if (url.pathname === "/site-api/route") {
+        attempts.route++;
+        routeBodies.push(req.postDataJSON());
+        if (attempts.route === 1) return route.fulfill({ status: 502, headers: cors, body: JSON.stringify({ error: "cold_start" }) });
         return route.fulfill({ status: 200, headers: cors, body: JSON.stringify({
           km: 4.8, distanceMeters: 4837, minutes: 13, minutesTraffic: 18,
           trafficLevel: "moderate", polyline: null, fuelLiters: .4,
@@ -434,6 +454,15 @@ const SEED = () => {
         }) });
       }
       return route.fulfill({ status: 404, headers: cors, body: JSON.stringify({ error: "not_found" }) });
+    });
+    await page.route("https://158.160.192.153/voice/stt/transcribe", async route => {
+      const req = route.request();
+      const cors = { "Access-Control-Allow-Origin": "https://superday.fun", "Content-Type": "application/json; charset=utf-8" };
+      if (req.method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors, body: "" });
+      attempts.stt++;
+      sttSizes.push((req.postDataBuffer() || Buffer.alloc(0)).length);
+      if (attempts.stt === 1) return route.fulfill({ status: 502, headers: cors, body: JSON.stringify({ error: "cold_start" }) });
+      return route.fulfill({ status: 200, headers: cors, body: JSON.stringify({ text: "проверка повтора" }) });
     });
     /* Разбор речи идёт в своё API, а оно отдаёт CORS только для боевого адреса
        (Access-Control-Allow-Origin: https://superday.fun — проверено curl'ом).
@@ -453,7 +482,7 @@ const SEED = () => {
     await page.goto("https://superday.fun/app.html", { waitUntil: "load" });
     await page.evaluate(SEED);
     await page.goto("https://superday.fun/app.html", { waitUntil: "load" });
-    await page.waitForTimeout(2600);          // карта тянет Leaflet с CDN
+    await page.waitForTimeout(1800);          // Leaflet локален; сеть нужна только реальным тайлам
 
     console.log("\n=== 5б. Первый экран ===");
     const stage = await page.evaluate(() => {
@@ -476,6 +505,8 @@ const SEED = () => {
         below: below,
         mapLive: document.body.classList.contains("map-live"),
         tiles: document.querySelectorAll(".mapview img.leaflet-tile").length,
+        leafletLocal: performance.getEntriesByType("resource").some(e => /\/assets\/vendor\/leaflet-1\.9\.4\.js(?:$|\?)/.test(e.name)) &&
+          !performance.getEntriesByType("resource").some(e => /unpkg\.com\/leaflet/.test(e.name)),
         veil: getComputedStyle(document.querySelector(".mapcard"), "::after").background.slice(0, 40)
       };
     });
@@ -485,6 +516,7 @@ const SEED = () => {
     say(stage.below.every(b => b.state !== "скрыт" ? !/НА ПЕРВОМ/.test(b.state) : true),
       "текстовые карточки ушли ниже сгиба", stage.below.map(b => b.sel + "=" + b.state).join(", "));
     say(stage.mapLive === true, "карта построена (класс map-live)");
+    say(stage.leafletLocal === true, "runtime карты загружен локально без CDN");
     say(stage.tiles > 0, "плитки карты реально загружены", stage.tiles + " шт");
 
     // Полный путь голоса без микрофона: подаём расшифровку прямо в разбор.
@@ -498,7 +530,8 @@ const SEED = () => {
         const box = document.getElementById("stagePlan");
         const rows = box && !box.hidden ? box.querySelectorAll(".sp-row").length : 0;
         const live = (document.getElementById("stageLive") || {}).textContent || "";
-        if (rows > before && !/Разбираю/.test(live)) break;
+        const metrics = (document.getElementById("mapStats") || {}).textContent || "";
+        if (rows > before && !/Разбираю/.test(live) && document.querySelectorAll(".mapview .mp-marker").length && /км/.test(metrics)) break;
       }
       const box = document.getElementById("stagePlan");
       const rows = Array.from(box.querySelectorAll(".sp-row")).map(r => ({
@@ -517,20 +550,73 @@ const SEED = () => {
     console.log("\n=== 5в. Сказал дела → план и карта ===");
     say(spoken.hidden === false && spoken.rows.length >= 3, "план собран из сказанного",
       spoken.rows.length + " строк: " + spoken.rows.map(r => r.num + "." + r.text).join(" | "));
-    say(/Готово/.test(spoken.live || ""), "получен ответ модели без локальной подмены", spoken.live);
+    say(/Готово/.test(spoken.live || "") && /Маршрут:/.test(spoken.live || ""),
+      "получен ответ модели и видимый итог маршрута без локальной подмены", spoken.live);
     say(spoken.rows.some(r => /14:00/.test(r.meta)), "время из речи попало в план",
       spoken.rows.map(r => r.meta).join(" / "));
     say(spoken.withLoc >= 1, "место из речи распознано и подписано", "строк с адресом: " + spoken.withLoc);
     say(spoken.markers >= 1, "метка появилась на карте", spoken.markers + " шт");
     const routeMetrics = await page.locator("#mapStats").textContent();
-    say(/4[,.]8\s*км/.test(routeMetrics || "") && /18\s*мин/.test(routeMetrics || "") && /0[,.]4\s*л/.test(routeMetrics || ""),
-      "маршрут показывает реальные поля расстояния, времени и топлива", routeMetrics || "метрики скрыты");
+    say(/4[,.]8\s*км/.test(routeMetrics || "") && /18\s*мин/.test(routeMetrics || "") && /0[,.]4\s*л/.test(routeMetrics || "") && /26\s*₽/.test(routeMetrics || ""),
+      "маршрут показывает реальные поля расстояния, времени, топлива и стоимости", routeMetrics || "метрики скрыты");
+    say(attempts.parse === 2 && attempts.geocode === 2 && attempts.route === 2,
+      "временные 5xx parse/geocode/route повторены ровно один раз", JSON.stringify(attempts));
+    say(new Set(parseBodies).size === 1 && new Set(geocodeQueries).size === 1 &&
+      new Set(routeBodies.map(v => JSON.stringify(v))).size === 1 && routeBodies[0].fuel_l_per_100km === 8.2,
+      "ввод и route payload стабильны между retry");
+
+    const sttProbe = await page.evaluate(async () => {
+      const form = new FormData();
+      form.append("audio", new Blob(["real-audio-probe"], { type: "audio/webm" }), "probe.webm");
+      const response = await window.fetchIdempotent(window.STT_API, { method: "POST", body: form });
+      return { status: response.status, data: await response.json() };
+    });
+    say(attempts.stt === 2 && sttProbe.status === 200 && sttProbe.data.text === "проверка повтора" &&
+      sttSizes.length === 2 && sttSizes.every(n => n > 0),
+      "STT повторяет тот же записанный blob после временного 502", attempts.stt + " попытки");
+
+    const archive = await page.evaluate(async () => {
+      await window.__routeArchiveReady;
+      const started = Date.now();
+      let rows = [];
+      while (Date.now() - started < 5000) {
+        rows = await window.__routeArchiveRead();
+        if (rows.some(r => r && r.distanceMeters === 4837 && r.fuelCost === 26)) break;
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      return rows;
+    });
+    say(archive.some(r => r && r.distanceMeters === 4837 && r.fuelLiters === .4 && r.fuelCost === 26),
+      "маршрут продублирован в IndexedDB для офлайн-графиков", archive.length + " записей");
+
+    const bodyCountBeforeNoFuel = routeBodies.length;
+    const noFuel = await page.evaluate(async () => {
+      const oldVehicle = localStorage.getItem("superday_vehicle_v1");
+      try {
+        localStorage.removeItem("superday_vehicle_v1");
+        localStorage.setItem("superday_routecache_v1", "{}");
+        const route = await new Promise(resolve => window.buildRoute([
+          { id: "nf1", text: "Без расхода", loc: { lat: 55.71, lon: 37.51, label: "Точка" } }
+        ], resolve, { lat: 55.70, lon: 37.50 }));
+        window.renderMapStats(route);
+        return { route, text: document.getElementById("mapStats").textContent };
+      } finally {
+        if (oldVehicle === null) localStorage.removeItem("superday_vehicle_v1");
+        else localStorage.setItem("superday_vehicle_v1", oldVehicle);
+      }
+    });
+    const noFuelBodies = routeBodies.slice(bodyCountBeforeNoFuel);
+    say(noFuelBodies.length === 1 && !Object.prototype.hasOwnProperty.call(noFuelBodies[0], "fuel_l_per_100km") &&
+      noFuel.route.km === 4.8 && noFuel.route.minutesTraffic === 18 && noFuel.route.fuelLiters === null &&
+      /укажите фактический расход/.test(noFuel.text),
+      "без расхода route payload не содержит null, но маршрут и ETA остаются реальными", noFuel.text);
+    await page.evaluate(() => window.renderMapCard());
     say(errs.length === 0, "нет ошибок исполнения на этом пути", errs.join(" | ") || "чисто");
 
-    await page.screenshot({ path: "stage-desktop.png" });
+    await page.screenshot({ path: artifact("stage-desktop.png") });
     await page.setViewportSize({ width: 430, height: 900 });
     await page.waitForTimeout(600);
-    await page.screenshot({ path: "stage-mobile.png" });
+    await page.screenshot({ path: artifact("stage-mobile.png") });
     await ctx.close();
   }
 

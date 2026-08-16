@@ -1044,6 +1044,11 @@
   /* ===== Карта — фон всего главного экрана (как волна 31), не карточка ===== */
   .mapcard{position:fixed; inset:0; z-index:0; height:100vh; overflow:hidden; background:var(--ink)}
   .mapview{position:absolute; inset:0; width:100%; height:100%; background:var(--ink)}
+  .map-status{position:absolute; left:50%; bottom:18px; z-index:1001; max-width:min(520px,calc(100% - 32px));
+    transform:translateX(-50%); margin:0; padding:8px 11px; border:1px solid var(--hair);
+    border-radius:8px; background:rgba(6,10,26,.9); color:var(--text-dim); font-size:11px;
+    line-height:1.4; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .map-status[hidden]{display:none}
   .mapview .leaflet-container{width:100%; height:100%; background:var(--ink); font-family:inherit}
   .mapview .leaflet-tile-pane{filter:brightness(.62) contrast(1.12) saturate(.7) hue-rotate(178deg)}
   /* Вуаль поверх карты: под длинным текстом она обязательна для читаемости, но
@@ -1057,15 +1062,17 @@
   body:not(.map-live) .mapcard::after{background:radial-gradient(120% 90% at 50% 30%, rgba(10,20,48,.35) 0%, rgba(6,10,26,.82) 100%)}
   .map-stats{margin:0 0 14px; font-size:12.5px; color:var(--text-dim); display:flex; gap:14px; flex-wrap:wrap}
   .map-stats b{color:var(--text); font-weight:700}
-  .vehicle-settings{display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 14px;
+  .vehicle-settings{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin:0 0 14px;
     padding:9px 11px; border:1px solid var(--hair-soft); border-radius:10px; background:rgba(255,255,255,.025)}
-  .vehicle-settings label{font-size:12px; color:var(--text-dim); line-height:1.35}
+  .vehicle-settings > label{font-size:12px; color:var(--text-dim); line-height:1.35; flex:1 1 180px}
   .vehicle-settings small{display:block; color:var(--text-muted); font-size:10px; margin-top:2px}
+  .vehicle-fields{display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:7px 12px; margin-left:auto}
   .vehicle-rate{display:flex; align-items:center; gap:6px; flex:0 0 auto}
   .vehicle-rate input{width:74px; height:32px; border:1px solid var(--hair); border-radius:8px; background:var(--surface-alt);
     color:var(--text); font:600 14px var(--font-ui); text-align:right; padding:0 8px; font-variant-numeric:tabular-nums}
   .vehicle-rate input:focus{outline:2px solid var(--gold); outline-offset:1px}
   .vehicle-rate span{font-size:11px; color:var(--text-muted); white-space:nowrap}
+  .vehicle-price-label{font-size:10px !important; color:var(--text-muted) !important}
   .mapview .leaflet-control-attribution{background:rgba(6,10,26,.72); color:var(--text-muted);
     border-radius:8px 0 0 0; padding:2px 7px}
   .mapview .leaflet-control-attribution a{color:var(--text-muted)}
@@ -1422,8 +1429,11 @@
   </div>
   <p class="map-stats" id="mapStats" hidden></p>
   <div class="vehicle-settings" id="vehicleSettings">
-    <label for="vehicleFuelRate">Расход автомобиля<small>Нужен для честного расчёта топлива</small></label>
-    <div class="vehicle-rate"><input id="vehicleFuelRate" type="number" inputmode="decimal" min="2" max="40" step="0.1" placeholder="8.5" aria-label="Расход автомобиля в литрах на 100 километров" /><span>л/100 км</span></div>
+    <label for="vehicleFuelRate">Расход автомобиля<small>Нужны фактические значения для расчёта топлива и стоимости</small></label>
+    <div class="vehicle-fields">
+      <div class="vehicle-rate"><input id="vehicleFuelRate" type="number" inputmode="decimal" min="2" max="40" step="0.1" placeholder="8.5" aria-label="Расход автомобиля в литрах на 100 километров" /><span>л/100 км</span></div>
+      <div class="vehicle-rate"><span class="vehicle-price-label">Цена</span><input id="vehicleFuelPrice" type="number" inputmode="decimal" min="1" max="1000" step="0.1" placeholder="65" aria-label="Цена топлива за литр" /><span>₽/л</span></div>
+    </div>
   </div>
   <div class="day-summary" id="daySummary" hidden aria-live="polite"></div>
   <ol class="plan" id="planList"></ol>
@@ -1632,6 +1642,7 @@
      остановок внутри карты (её контейнер, маркеры, зум, атрибуция). Волна 34. -->
 <div class="mapcard" id="mapCard" role="region" aria-label="Карта дня">
   <div class="mapview" id="mapView" aria-label="Карта дня — точки дел и маршрут"></div>
+  <p class="map-status" id="mapStatus" hidden role="status" aria-live="polite"></p>
 </div>
 
 <div class="triumph" id="triumphBox" aria-live="polite" hidden></div>
@@ -1750,8 +1761,11 @@
       // Kept as an alias for backups written by the previous app build.
       routes:routeHistory
     };
-    var vehicle=backupReadRecord("superday_vehicle_v1");
-    if(!validFuelRate(+vehicle.fuelLPer100Km)) vehicle=null;
+    var rawVehicle=backupReadRecord("superday_vehicle_v1");
+    var vehicle={fuelLPer100Km:validFuelRate(+rawVehicle.fuelLPer100Km)?Math.round(+rawVehicle.fuelLPer100Km*10)/10:null,
+      fuelPricePerLiter:validFuelPrice(+rawVehicle.fuelPricePerLiter)?Math.round(+rawVehicle.fuelPricePerLiter*10)/10:null,
+      updatedAt:backupFinite(+rawVehicle.updatedAt)?+rawVehicle.updatedAt:null};
+    if(vehicle.fuelLPer100Km===null && vehicle.fuelPricePerLiter===null) vehicle=null;
     var out={ app:"SUPER DAY", kind:kind||"backup", backupVersion:BACKUP_VERSION,
       version:SCHEMA, exportedAt:new Date().toISOString(), wake:backupReadString("superday_wake"),
       tasks:tasks, notes:(typeof notes!=="undefined"?notes:[]), vehicle:vehicle,
@@ -2233,7 +2247,7 @@
     // Фоновая, без confirm — молча пропускаем, если геокодер не нашёл: ручное
     // «＋место» (editTaskLoc) остаётся подстраховкой и спрашивает явно.
     if(pp.place){
-      geocodePlace(pp.place, function(found){
+      geocodeTaskPlace(task,pp.place, function(found){
         if(!found || found.lat==null || found.lon==null) return;
         var label = pp.place.split(",")[0].trim().slice(0,40) || pp.place.slice(0,40);
         task.loc = { lat:found.lat, lon:found.lon, label:label, addr:found.addr || pp.place };
@@ -2362,7 +2376,10 @@
       cx.addEventListener("click", function(){ cycleTaskContext(t); });
       var del = document.createElement("button"); del.className="del"; del.type="button";
       del.setAttribute("aria-label","Удалить"); del.innerHTML="&times;";
-      del.addEventListener("click", function(){ tasks = tasks.filter(function(x){return x.id!==t.id;}); save(); render(); });
+      del.addEventListener("click", function(){
+        if(typeof cancelTaskNetwork==="function") cancelTaskNetwork(t.id);
+        tasks = tasks.filter(function(x){return x.id!==t.id;}); save(); render();
+      });
       li.appendChild(chk);
       if(plan){
         // Цветная точка = квадрант. Она же вход в разбор по важности: нажал —
@@ -2460,9 +2477,14 @@
   // по геолокации на каждый вызов. Маркеры дел — красные и мигающие, линия
   // маршрута — асфальтовая (см. buildMapView) — маркеры не путать с дорогой.
   // Своя геолокация — отдельный красный мигающий значок человека (drawUserLoc).
-  var mapState = { map:null, layer:null, userLoc:null, booted:false, renderSeq:0 };
+  var mapState = { map:null, layer:null, baseLayer:null, userLoc:null, booted:false, renderSeq:0,
+    tileFallback:false, tileErrors:0, routeRequest:null };
   var IS_SELFTEST = /[?&]selftest=1/.test(location.search||"");
   function tasksForMap(){ return planOrder().filter(function(t){ return t.loc && !t.done; }); }
+  function setMapStatus(message){
+    var el=document.getElementById("mapStatus"); if(!el) return;
+    el.textContent=message||""; el.hidden=!message;
+  }
   function renderMapCard(){
     var card=document.getElementById("mapCard"), view=document.getElementById("mapView");
     if(!card || !view) return;
@@ -2472,7 +2494,7 @@
       loadLeaflet(function(){
         buildMapView(tasksForMap());
         if(typeof suggestDayPlan==="function") suggestDayPlan();
-      }, function(){ });
+      }, function(){ setMapStatus("Не удалось загрузить модуль карты. Обновите страницу или проверьте соединение."); });
       // Геолокация запрашивается параллельно, не блокирует карту
       requestUserLocation(function(loc){
         mapState.userLoc = loc;
@@ -2493,10 +2515,37 @@
     if(loadLeaflet._q){ loadLeaflet._q.push({ok:ok,fail:fail}); return; }
     loadLeaflet._q = [{ok:ok,fail:fail}];
     var s=document.createElement("script");
-    s.src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    s.src="assets/vendor/leaflet-1.9.4.js";
     s.onload=function(){ var q=loadLeaflet._q||[]; loadLeaflet._q=null; q.forEach(function(p){ p.ok(); }); };
     s.onerror=function(){ var q=loadLeaflet._q||[]; loadLeaflet._q=null; q.forEach(function(p){ if(p.fail) p.fail(); }); };
     document.head.appendChild(s);
+  }
+  function installBaseMap(useFallback){
+    if(!mapState.map || !window.L) return;
+    if(mapState.baseLayer){ try{ mapState.map.removeLayer(mapState.baseLayer); }catch(e){} }
+    mapState.tileFallback=!!useFallback; mapState.tileErrors=0;
+    var url=useFallback ? "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        : "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png";
+    var options=useFallback
+      ? {maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}
+      : {subdomains:"abcd",maxZoom:19,attribution:'&copy; OpenStreetMap, &copy; CARTO'};
+    var layer=L.tileLayer(url,options);
+    mapState.baseLayer=layer;
+    layer.on("tileload",function(){
+      if(mapState.baseLayer===layer){ mapState.tileErrors=0; setMapStatus(""); }
+    });
+    layer.on("tileerror",function(){
+      if(mapState.baseLayer!==layer) return;
+      mapState.tileErrors++;
+      if(mapState.tileErrors<3) return;
+      if(!useFallback){
+        setMapStatus("Основная карта недоступна. Переключаемся на OpenStreetMap…");
+        installBaseMap(true);
+      }else{
+        setMapStatus("Не удалось загрузить тайлы карты. Проверьте соединение; маршрут и сохранённые данные останутся доступны.");
+      }
+    });
+    layer.addTo(mapState.map);
   }
   function mapPopup(t, idx, color){
     var wrap=document.createElement("div"); wrap.className="mp-pop";
@@ -2525,10 +2574,7 @@
     if(!mapState.map){
       mapState.map = L.map(view, { attributionControl:true, zoomControl:true });
       mapState.map.setView(mapState.userLoc ? [mapState.userLoc.lat, mapState.userLoc.lon] : [20,10], mapState.userLoc?12:2);
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png", {
-        subdomains:"abcd", maxZoom:19,
-        attribution:'&copy; OpenStreetMap, &copy; CARTO'
-      }).addTo(mapState.map);
+      installBaseMap(false);
       mapState.layer = L.layerGroup().addTo(mapState.map);
       // Метка «карта жива» ослабляет вуаль первого экрана: до загрузки плиток
       // светлая вуаль показывала бы пустую подложку вместо карты.
@@ -2538,6 +2584,11 @@
     }
     var renderSeq = ++mapState.renderSeq;
     drawUserLoc();
+    var nextRoutePoints=routePoints(pts,mapState.userLoc);
+    var nextRouteKey=nextRoutePoints.length>=2?routeCacheKey(nextRoutePoints):null;
+    if(mapState.routeRequest && mapState.routeRequest.key!==nextRouteKey){
+      mapState.routeRequest.cancel(); mapState.routeRequest=null;
+    }
     if(pts.length<1){
       renderMapStats(null);
       setTimeout(function(){ if(mapState.map) mapState.map.invalidateSize(); }, 60);
@@ -2545,10 +2596,11 @@
     }
     // Старые цифры не должны висеть, пока считается новый набор остановок.
     renderMapStats(null);
-    buildRoute(pts, function(route){
+    var routeHandle=buildRoute(pts, function(route){
       // Геокодирование и route API асинхронны. Поздний ответ для уже удалённого
       // или изменённого дела не имеет права перерисовать актуальную карту.
       if(renderSeq !== mapState.renderSeq) return;
+      if(mapState.routeRequest && route && mapState.routeRequest.key===route.routeKey) mapState.routeRequest=null;
       mapState.layer.clearLayers();
       drawUserLoc();
       var bounds=[];
@@ -2571,15 +2623,29 @@
       if(bounds.length){ try{ mapState.map.fitBounds(bounds, {padding:[26,26]}); }catch(e){} }
       setTimeout(function(){ if(mapState.map) mapState.map.invalidateSize(); }, 60);
     }, mapState.userLoc);
+    if(routeHandle) mapState.routeRequest=routeHandle;
   }
 
   var TRAFFIC_LABEL = { light:"без пробок", moderate:"пробки заметные", heavy:"пробки плотные" };
+  function publishStageRouteSummary(summary){
+    var live=document.getElementById("stageLive");
+    if(!live || live.classList.contains("thinking")) return;
+    var text=String(live.textContent||"");
+    if(!/^(Готово|Маршрут)/.test(text)) return;
+    var prefix=text.split(" · Маршрут:")[0];
+    live.textContent=prefix+" · Маршрут: "+summary;
+  }
   function renderMapStats(route){
     var el = document.getElementById("mapStats");
     if(!el) return;
+    if(route && route.mode==="unavailable" && route.error){
+      var unavailable="Маршрут временно недоступен. Проверьте соединение и повторите расчёт.";
+      el.textContent=unavailable; el.hidden=false; publishStageRouteSummary(unavailable); return;
+    }
     if(!route || typeof route.km!=="number" || !isFinite(route.km)){ el.hidden = true; el.textContent=""; return; }
     var bits = [route.km+" км"];
     if(typeof route.fuelLiters==="number" && isFinite(route.fuelLiters)) bits.push("⛽ ~"+route.fuelLiters+" л");
+    if(typeof route.fuelCost==="number" && isFinite(route.fuelCost)) bits.push("~"+route.fuelCost+" ₽");
     if(typeof route.minutesTraffic==="number" && isFinite(route.minutesTraffic)){
       var label = TRAFFIC_LABEL[route.trafficLevel] || "";
       bits.push("🚗 "+route.minutesTraffic+" мин"+(label?" ("+label+")":""));
@@ -2589,8 +2655,11 @@
       bits.push("🚗 время в пути недоступно");
     }
     if(route.stale) bits.push("сохранённый маршрут");
+    if(!validFuelRate(+route.fuelRate)) bits.push("укажите фактический расход авто ниже");
+    else if(!validFuelPrice(+route.fuelPricePerLiter)) bits.push("укажите цену топлива для расчёта стоимости");
     el.textContent = bits.join(" · ");
     el.hidden = false;
+    publishStageRouteSummary(el.textContent);
   }
 
   function render(){
@@ -3136,6 +3205,48 @@
   // с чем.
   var PARSE_API = "https://158.160.192.153/site-api/parse";
   var DEBATE_API = "https://158.160.192.153/site-api/debate";
+  var IDEMPOTENT_RETRY_ATTEMPTS = 2;
+  var IDEMPOTENT_RETRY_DELAY_MS = 300;
+  function retryableHttpStatus(status){
+    return status===408 || status===425 || status===500 || status===502 || status===503 || status===504;
+  }
+  function abortedRequestError(){
+    try{ return new DOMException("Request aborted","AbortError"); }
+    catch(e){ var err=new Error("Request aborted"); err.name="AbortError"; return err; }
+  }
+  function retryPause(ms, signal){
+    return new Promise(function(resolve,reject){
+      if(signal && signal.aborted){ reject(abortedRequestError()); return; }
+      var timer=null;
+      function cleanup(){ if(signal && signal.removeEventListener) signal.removeEventListener("abort",onAbort); }
+      function onAbort(){ clearTimeout(timer); cleanup(); reject(abortedRequestError()); }
+      timer=setTimeout(function(){ cleanup(); resolve(); },ms);
+      if(signal && signal.addEventListener) signal.addEventListener("abort",onAbort,{once:true});
+    });
+  }
+  // All callers below are read/derive operations: repeating them cannot create
+  // a second user task. Validation and commits still happen exactly once after
+  // the final real response; aborts never retry.
+  function fetchIdempotent(url, init, retryOptions){
+    init=init||{}; retryOptions=retryOptions||{};
+    var attempts=Math.max(1,+retryOptions.attempts||IDEMPOTENT_RETRY_ATTEMPTS);
+    var delay=Math.max(0,+retryOptions.delayMs||IDEMPOTENT_RETRY_DELAY_MS);
+    var signal=init.signal;
+    function run(n){
+      if(signal && signal.aborted) return Promise.reject(abortedRequestError());
+      return fetch(url,init).then(function(response){
+        if(n<attempts && retryableHttpStatus(response.status)){
+          return retryPause(delay*n,signal).then(function(){ return run(n+1); });
+        }
+        return response;
+      },function(error){
+        if((signal && signal.aborted) || (error && error.name==="AbortError")) throw error;
+        if(n>=attempts) throw error;
+        return retryPause(delay*n,signal).then(function(){ return run(n+1); });
+      });
+    }
+    return run(1);
+  }
   // The API may legitimately try a second provider after a transient failure.
   // Keep the browser deadline above the server's end-to-end LLM budget so a
   // valid response is not discarded while the request is still in failover.
@@ -3159,19 +3270,36 @@
               aiConf: (typeof p.confidence==="number" ? p.confidence : null),
               aiReason: p.reasoning ? String(p.reasoning) : null };
   }
+  var singleTaskParseControllers={};
+  function cancelTaskNetwork(taskId){
+    var key=String(taskId||"");
+    var parseCtrl=singleTaskParseControllers[key];
+    if(parseCtrl){ try{ parseCtrl.abort(); }catch(e){} delete singleTaskParseControllers[key]; }
+    if(typeof taskGeoControllers!=="undefined"){
+      var geoCtrl=taskGeoControllers[key];
+      if(geoCtrl){ try{ geoCtrl.abort(); }catch(e){} delete taskGeoControllers[key]; }
+    }
+  }
   function requestSingleTaskParse(task, raw, meta){
     if(!task || !raw || !window.fetch) return Promise.resolve(null);
+    var requestKey=String(task.id||"");
+    if(requestKey && singleTaskParseControllers[requestKey]){
+      try{ singleTaskParseControllers[requestKey].abort(); }catch(e){}
+    }
     var ctrl = window.AbortController ? new AbortController() : null;
+    if(requestKey && ctrl) singleTaskParseControllers[requestKey]=ctrl;
     var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, PARSE_TIMEOUT_MS);
-    return fetch(PARSE_API, {
+    var stableRaw=String(raw);
+    return fetchIdempotent(PARSE_API, {
       method:"POST", headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ raw_text:String(raw) }),
+      body:JSON.stringify({ raw_text:stableRaw }),
       signal:ctrl ? ctrl.signal : undefined
     }).then(function(r){
       if(!r.ok) throw new Error("http_"+r.status);
       return r.json();
     }).then(function(data){
       clearTimeout(timer);
+      if(requestKey && singleTaskParseControllers[requestKey]===ctrl) delete singleTaskParseControllers[requestKey];
       if(tasks.indexOf(task)<0) return null; // дело могли удалить, пока отвечала модель
       if(data && data.source==="fallback_heuristic") throw new Error("heuristic_response");
       var p=data && data.tasks && data.tasks[0];
@@ -3185,7 +3313,11 @@
       task.aiModel=data.model || null;
       save(); render();
       return data;
-    }).catch(function(){ clearTimeout(timer); return null; });
+    }).catch(function(){
+      clearTimeout(timer);
+      if(requestKey && singleTaskParseControllers[requestKey]===ctrl) delete singleTaskParseControllers[requestKey];
+      return null;
+    });
   }
   function dropBatch(batchId){
     for(var i=tasks.length-1;i>=0;i--){ if(tasks[i].batchId===batchId) tasks.splice(i,1); }
@@ -3238,7 +3370,7 @@
 
     var ctrl = window.AbortController ? new AbortController() : null;
     var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, PARSE_TIMEOUT_MS);
-    fetch(PARSE_API, {
+    fetchIdempotent(PARSE_API, {
       method:"POST", headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({ raw_text: text }),
       signal: ctrl ? ctrl.signal : undefined
@@ -3360,7 +3492,7 @@
 
     var ctrl = window.AbortController ? new AbortController() : null;
     var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, PARSE_TIMEOUT_MS);
-    fetch(PARSE_API, {
+    fetchIdempotent(PARSE_API, {
       method:"POST", headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({ raw_text: text }),
       signal: ctrl ? ctrl.signal : undefined
@@ -3393,15 +3525,20 @@
   function stageGeocode(items){
     var queue=items.filter(function(it){ return it.place; });
     if(!queue.length) return;
+    var failures=[];
     (function next(){
       var it=queue.shift();
-      if(!it){ renderStagePlan(); return; }
-      geocodePlace(it.place, function(found){
+      if(!it){
+        renderStagePlan();
+        if(failures.length) stageSay("План готов, но не удалось загрузить адрес: "+failures.join(", ")+". Проверьте соединение или уточните место.");
+        return;
+      }
+      geocodeTaskPlace(it.task,it.place, function(found){
         if(found && found.lat!=null && found.lon!=null){
           var label=it.place.split(",")[0].trim().slice(0,40) || it.place.slice(0,40);
           it.task.loc={ lat:found.lat, lon:found.lon, label:label, addr:found.addr || it.place };
           save(); render();
-        }
+        }else failures.push(it.place);
         next();
       });
     })();
@@ -4278,16 +4415,20 @@
   // в /api внутри контейнера; ключи провайдеров никогда не попадают в браузер.
   var API_BASE = "https://158.160.192.153/site-api";
   var STT_API = "https://158.160.192.153/voice/stt/transcribe";
+  var STT_RETRY_ENABLED = true;
   var SERVER_STT_TIMEOUT_MS = 90000;
   var VEHICLE_KEY = "superday_vehicle_v1";
   function validFuelRate(v){ return typeof v==="number" && isFinite(v) && v>=2 && v<=40; }
+  function validFuelPrice(v){ return typeof v==="number" && isFinite(v) && v>=1 && v<=1000; }
   function readVehicleSettings(){
     try{
       var raw=JSON.parse(localStorage.getItem(VEHICLE_KEY)||"null");
-      return raw && validFuelRate(+raw.fuelLPer100Km) ? {fuelLPer100Km:Math.round(+raw.fuelLPer100Km*10)/10} : {fuelLPer100Km:null};
-    }catch(e){ return {fuelLPer100Km:null}; }
+      return {fuelLPer100Km:raw&&validFuelRate(+raw.fuelLPer100Km)?Math.round(+raw.fuelLPer100Km*10)/10:null,
+        fuelPricePerLiter:raw&&validFuelPrice(+raw.fuelPricePerLiter)?Math.round(+raw.fuelPricePerLiter*10)/10:null};
+    }catch(e){ return {fuelLPer100Km:null,fuelPricePerLiter:null}; }
   }
   function currentFuelRate(){ var n=readVehicleSettings().fuelLPer100Km; return validFuelRate(n)?n:null; }
+  function currentFuelPrice(){ var n=readVehicleSettings().fuelPricePerLiter; return validFuelPrice(n)?n:null; }
   function validDistanceMeters(v){ return typeof v==="number" && isFinite(v) && v>=0; }
   function fuelForDistance(distanceMeters, rate){
     return validFuelRate(rate) && validDistanceMeters(distanceMeters)
@@ -4296,6 +4437,10 @@
   // Compatibility helper for pre-distanceMeters history and external callers.
   function fuelForKm(km, rate){
     return typeof km==="number" && isFinite(km) && km>=0 ? fuelForDistance(km*1000,rate) : null;
+  }
+  function fuelCostForLiters(liters,price){
+    return typeof liters==="number" && isFinite(liters) && liters>=0 && validFuelPrice(price)
+      ? Math.round(liters*price*100)/100 : null;
   }
   function hasValidStoredRouteDistance(route){
     return !!route && (!Object.prototype.hasOwnProperty.call(route,"distanceMeters") ||
@@ -4309,42 +4454,82 @@
     var km=numOrNull(route.km);
     return km===null ? null : km*1000;
   }
-  function paintVehicleRate(){
-    var input=document.getElementById("vehicleFuelRate"); if(!input) return;
-    var rate=currentFuelRate(); input.value=rate===null ? "" : String(rate);
+  function paintVehicleSettings(){
+    var rateInput=document.getElementById("vehicleFuelRate"), priceInput=document.getElementById("vehicleFuelPrice");
+    var settings=readVehicleSettings();
+    if(rateInput) rateInput.value=settings.fuelLPer100Km===null ? "" : String(settings.fuelLPer100Km);
+    if(priceInput) priceInput.value=settings.fuelPricePerLiter===null ? "" : String(settings.fuelPricePerLiter);
+  }
+  function persistVehicleSettings(settings){
+    try{
+      if(settings.fuelLPer100Km===null && settings.fuelPricePerLiter===null) localStorage.removeItem(VEHICLE_KEY);
+      else localStorage.setItem(VEHICLE_KEY,JSON.stringify({fuelLPer100Km:settings.fuelLPer100Km,
+        fuelPricePerLiter:settings.fuelPricePerLiter,updatedAt:Date.now()}));
+    }catch(e){}
   }
   function saveVehicleRate(value){
     var n=String(value==null?"":value).replace(",",".").trim();
-    if(n===""){ try{ localStorage.removeItem(VEHICLE_KEY); }catch(e){} paintVehicleRate(); renderMapCard(); renderStats(); return; }
+    var settings=readVehicleSettings();
+    if(n===""){ settings.fuelLPer100Km=null; persistVehicleSettings(settings); paintVehicleSettings(); renderMapCard(); renderStats(); return; }
     var rate=Number(n);
-    if(!validFuelRate(rate)){ toast("Укажи расход от 2 до 40 л/100 км", "warn"); paintVehicleRate(); return; }
+    if(!validFuelRate(rate)){ toast("Укажи расход от 2 до 40 л/100 км", "warn"); paintVehicleSettings(); return; }
     rate=Math.round(rate*10)/10;
-    try{ localStorage.setItem(VEHICLE_KEY, JSON.stringify({fuelLPer100Km:rate, updatedAt:Date.now()})); }catch(e){}
-    paintVehicleRate(); renderMapCard(); renderStats();
+    settings.fuelLPer100Km=rate; persistVehicleSettings(settings);
+    paintVehicleSettings(); renderMapCard(); renderStats();
+  }
+  function saveVehiclePrice(value){
+    var n=String(value==null?"":value).replace(",",".").trim(), settings=readVehicleSettings();
+    if(n===""){ settings.fuelPricePerLiter=null; persistVehicleSettings(settings); paintVehicleSettings(); renderMapCard(); renderStats(); return; }
+    var price=Number(n);
+    if(!validFuelPrice(price)){ toast("Укажи цену топлива от 1 до 1000 ₽/л", "warn"); paintVehicleSettings(); return; }
+    settings.fuelPricePerLiter=Math.round(price*10)/10; persistVehicleSettings(settings);
+    paintVehicleSettings(); renderMapCard(); renderStats();
   }
   (function initVehicleRate(){
-    var input=document.getElementById("vehicleFuelRate"); if(!input) return;
-    paintVehicleRate();
+    var input=document.getElementById("vehicleFuelRate"), price=document.getElementById("vehicleFuelPrice");
+    if(!input) return;
+    paintVehicleSettings();
     input.addEventListener("change", function(){ saveVehicleRate(input.value); });
+    if(price) price.addEventListener("change",function(){ saveVehiclePrice(price.value); });
   })();
   var GEOCACHE_KEY = "superday_geocache_v1";
+  var GEOCODE_TIMEOUT_MS = 20000;
+  var taskGeoControllers = {};
   function geoCacheKey(q){ return String(q||"").trim().toLowerCase().replace(/\s+/g," "); }
   function loadGeoCache(){ try{ return JSON.parse(localStorage.getItem(GEOCACHE_KEY)||"{}")||{}; }catch(e){ return {}; } }
   function saveGeoCache(c){ try{ localStorage.setItem(GEOCACHE_KEY, JSON.stringify(c)); }catch(e){} }
-  function geocodePlace(query, cb){
+  function geocodePlace(query, cb, signal){
     var key = geoCacheKey(query);
     if(!key){ cb(null); return; }
     var cache = loadGeoCache();
     if(cache[key]){ cb(cache[key]); return; }
-    fetch(API_BASE + "/geocode?q=" + encodeURIComponent(query))
+    var ownCtrl=!signal && window.AbortController?new AbortController():null;
+    var requestSignal=signal || (ownCtrl?ownCtrl.signal:undefined);
+    var timer=setTimeout(function(){ try{ if(ownCtrl) ownCtrl.abort(); }catch(e){} },GEOCODE_TIMEOUT_MS);
+    fetchIdempotent(API_BASE + "/geocode?q=" + encodeURIComponent(query),{signal:requestSignal})
       .then(function(r){ if(!r.ok) throw new Error("geocode_"+r.status); return r.json(); })
       .then(function(j){
+        clearTimeout(timer);
         if(!j || j.error || typeof j.lat!=="number" || typeof j.lon!=="number"){ cb(null); return; }
         var found = { lat:j.lat, lon:j.lon, addr: j.label || query };
         cache[key] = found; saveGeoCache(cache);
         cb(found);
       })
-      .catch(function(){ cb(undefined); });
+      .catch(function(){ clearTimeout(timer); cb(undefined); });
+    return function(){ if(ownCtrl) try{ ownCtrl.abort(); }catch(e){} };
+  }
+  function geocodeTaskPlace(task,query,cb){
+    if(!task){ geocodePlace(query,cb); return; }
+    var key=String(task.id||"");
+    if(taskGeoControllers[key]) try{ taskGeoControllers[key].abort(); }catch(e){}
+    var token={abort:function(){}};
+    taskGeoControllers[key]=token;
+    token.abort=geocodePlace(query,function(found){
+      if(taskGeoControllers[key]!==token) return;
+      delete taskGeoControllers[key];
+      if(tasks.indexOf(task)<0) return;
+      cb(found);
+    }) || token.abort;
   }
   function editTaskLoc(t){
     var cur = t.loc ? (t.loc.label || t.loc.addr || "") : "";
@@ -4353,7 +4538,7 @@
     ans = ans.trim();
     if(ans===""){ t.loc = null; save(); render(); return; }
     toast("Ищу место…");
-    geocodePlace(ans, function(found){
+    geocodeTaskPlace(t,ans, function(found){
       if(found===undefined){ toast("Сеть недоступна — попробуй позже", "error"); return; }
       if(found===null){ toast("Это место не нашёл — попробуй проще: «улица, город»"); return; }
       var ok = window.confirm("Нашёл: " + found.addr + " — сохранить как место дела?");
@@ -4400,6 +4585,7 @@
   var ROUTECACHE_KEY = "superday_routecache_v1";
   var ROUTECACHE_TTL_MS = 10*60*1000; // короче, чем пробки живут смысл — не день целиком
   var ROUTE_HISTORY_KEY = "superday_route_history_v1";
+  var ROUTE_TIMEOUT_MS = 45000;
   var routePending = {};
   function routeCacheKeyAtPrecision(pts, precision){
     return pts.map(function(p){ return p.lat.toFixed(precision)+","+p.lon.toFixed(precision); }).join(";");
@@ -4418,6 +4604,108 @@
   }
   function readRouteHistory(){ try{ return JSON.parse(localStorage.getItem(ROUTE_HISTORY_KEY)||"{}")||{}; }catch(e){ return {}; } }
   function saveRouteHistory(h){ try{ localStorage.setItem(ROUTE_HISTORY_KEY, JSON.stringify(h)); }catch(e){} }
+  var ROUTE_DB_NAME="superday_route_archive_v1", ROUTE_DB_STORE="routes", routeDbPromise=null;
+  function openRouteArchive(){
+    if(!window.indexedDB) return Promise.resolve(null);
+    if(routeDbPromise) return routeDbPromise;
+    routeDbPromise=new Promise(function(resolve,reject){
+      var request;
+      try{ request=indexedDB.open(ROUTE_DB_NAME,1); }catch(e){ reject(e); return; }
+      request.onupgradeneeded=function(){
+        var db=request.result;
+        if(!db.objectStoreNames.contains(ROUTE_DB_STORE)){
+          var store=db.createObjectStore(ROUTE_DB_STORE,{keyPath:"id"});
+          store.createIndex("day","day",{unique:false});
+        }
+      };
+      request.onsuccess=function(){ resolve(request.result); };
+      request.onerror=function(){ reject(request.error||new Error("route_db_open")); };
+      request.onblocked=function(){ reject(new Error("route_db_blocked")); };
+    });
+    return routeDbPromise;
+  }
+  function routeArchiveRecord(day,key,snapshot){
+    var copy=backupClone(snapshot); if(!copy) return null;
+    copy.id=day+"|"+key; copy.day=day; copy.routeKey=key;
+    return copy;
+  }
+  function putRouteArchive(day,key,snapshot){
+    if(IS_SELFTEST) return Promise.resolve(false);
+    var record=routeArchiveRecord(day,key,snapshot); if(!record) return Promise.resolve(false);
+    return openRouteArchive().then(function(db){
+      if(!db) return false;
+      return new Promise(function(resolve,reject){
+        var tx=db.transaction(ROUTE_DB_STORE,"readwrite");
+        tx.objectStore(ROUTE_DB_STORE).put(record);
+        tx.oncomplete=function(){ resolve(true); };
+        tx.onerror=function(){ reject(tx.error||new Error("route_db_write")); };
+        tx.onabort=function(){ reject(tx.error||new Error("route_db_abort")); };
+      });
+    }).catch(function(){ return false; });
+  }
+  function readRouteArchive(){
+    return openRouteArchive().then(function(db){
+      if(!db) return [];
+      return new Promise(function(resolve,reject){
+        var store=db.transaction(ROUTE_DB_STORE,"readonly").objectStore(ROUTE_DB_STORE);
+        if(store.getAll){
+          var all=store.getAll();
+          all.onsuccess=function(){ resolve(all.result||[]); };
+          all.onerror=function(){ reject(all.error||new Error("route_db_read")); };
+          return;
+        }
+        var rows=[],cursor=store.openCursor();
+        cursor.onsuccess=function(){ var c=cursor.result; if(!c){ resolve(rows); return; } rows.push(c.value); c.continue(); };
+        cursor.onerror=function(){ reject(cursor.error||new Error("route_db_cursor")); };
+      });
+    }).catch(function(){ return []; });
+  }
+  function replaceRouteArchive(history){
+    if(IS_SELFTEST) return Promise.resolve(false);
+    return openRouteArchive().then(function(db){
+      if(!db) return false;
+      return new Promise(function(resolve,reject){
+        var tx=db.transaction(ROUTE_DB_STORE,"readwrite"),store=tx.objectStore(ROUTE_DB_STORE);
+        store.clear();
+        Object.keys(history||{}).forEach(function(day){
+          Object.keys(history[day]||{}).forEach(function(key){
+            var record=routeArchiveRecord(day,key,history[day][key]); if(record) store.put(record);
+          });
+        });
+        tx.oncomplete=function(){ resolve(true); };
+        tx.onerror=function(){ reject(tx.error||new Error("route_db_replace")); };
+        tx.onabort=function(){ reject(tx.error||new Error("route_db_abort")); };
+      });
+    }).catch(function(){ return false; });
+  }
+  function hydrateRouteArchive(){
+    if(IS_SELFTEST) return Promise.resolve({available:!!window.indexedDB,count:0});
+    return readRouteArchive().then(function(records){
+      var history=readRouteHistory(), changed=false;
+      (records||[]).forEach(function(record){
+        if(!record || !/^\d{4}-\d{2}-\d{2}$/.test(record.day||"") || !record.routeKey ||
+           numOrNull(record.km)===null || !hasValidStoredRouteDistance(record)) return;
+        if(!history[record.day] || typeof history[record.day]!=="object") history[record.day]={};
+        var local=history[record.day][record.routeKey];
+        if(!local || (+record.measuredAt||0)>(+local.measuredAt||0)){
+          var copy=backupClone(record); delete copy.id; delete copy.day; delete copy.routeKey;
+          history[record.day][record.routeKey]=copy; changed=true;
+        }
+      });
+      var days=Object.keys(history).sort();
+      while(days.length>365){ delete history[days.shift()]; changed=true; }
+      Object.keys(history).forEach(function(day){
+        var keys=Object.keys(history[day]||{}).sort(function(a,b){
+          return (+history[day][a].lastUsedAt||0)-(+history[day][b].lastUsedAt||0);
+        });
+        while(keys.length>24){ delete history[day][keys.shift()]; changed=true; }
+      });
+      if(changed){ saveRouteHistory(history); if(typeof renderRouteAnalytics==="function") renderRouteAnalytics(); }
+      return replaceRouteArchive(history).then(function(ok){ return {available:ok,count:records.length}; });
+    });
+  }
+  window.__routeArchiveRead=readRouteArchive;
+  window.__routeArchiveReady=hydrateRouteArchive();
   function validPoint(p){ return !!p && typeof p.lat==="number" && isFinite(p.lat) && p.lat>=-90 && p.lat<=90 && typeof p.lon==="number" && isFinite(p.lon) && p.lon>=-180 && p.lon<=180; }
   function routePoints(tasksWithLoc, origin){
     var pts=[];
@@ -4425,11 +4713,11 @@
     (tasksWithLoc||[]).forEach(function(t){ if(t && validPoint(t.loc)) pts.push({lat:t.loc.lat,lon:t.loc.lon}); });
     return pts;
   }
-  function buildUnavailableRoute(pts){
+  function buildUnavailableRoute(pts,error){
     // Нет настоящего Directions-ответа — не придумываем километры, время и
     // топливо по прямой. Маркеры остаются на карте, метрики скрыты.
     return { coords:[], km:null, distanceMeters:null, minutes:null, minutesTraffic:null,
-             trafficLevel:null, fuelLiters:null, mode:"unavailable" };
+             trafficLevel:null, fuelLiters:null, mode:"unavailable", error:error||null };
   }
   function numOrNull(v){ return typeof v==="number" && isFinite(v) && v>=0 ? v : null; }
   function normalizeRouteResult(j, pts){
@@ -4440,11 +4728,15 @@
     if(distanceMeters===null) return null;
     var coords=[];
     if(typeof j.polyline==="string" && j.polyline){ try{ coords=decodePolyline(j.polyline); }catch(e){ coords=[]; } }
-    var rate=validFuelRate(+j.fuelRate) ? Math.round(+j.fuelRate*10)/10 : currentFuelRate();
+    // Fuel is only derived from the rate the person entered locally. The route
+    // endpoint may expose an old/default rate, but it is not evidence of this
+    // driver's actual consumption.
+    var rate=currentFuelRate(), price=currentFuelPrice(), liters=fuelForDistance(distanceMeters,rate);
     return { coords:coords, km:km, distanceMeters:distanceMeters,
-             minutes:numOrNull(j.minutes), minutesTraffic:numOrNull(j.minutesTraffic),
-             trafficLevel:(j.trafficLevel==="light"||j.trafficLevel==="moderate"||j.trafficLevel==="heavy")?j.trafficLevel:null,
-             fuelRate:rate, fuelLiters:fuelForDistance(distanceMeters,rate), mode:"google" };
+              minutes:numOrNull(j.minutes), minutesTraffic:numOrNull(j.minutesTraffic),
+              trafficLevel:(j.trafficLevel==="light"||j.trafficLevel==="moderate"||j.trafficLevel==="heavy")?j.trafficLevel:null,
+              fuelRate:rate, fuelPricePerLiter:price, fuelLiters:liters,
+              fuelCost:fuelCostForLiters(liters,price), mode:"google" };
   }
   function cloneRoute(r, extra){
     var out={}; Object.keys(r||{}).forEach(function(k){ out[k]=r[k]; });
@@ -4453,11 +4745,12 @@
   }
   function applyFuelRate(route){
     if(!route) return route;
-    var out=cloneRoute(route,{}), rate=currentFuelRate();
-    if(rate===null && validFuelRate(+route.fuelRate)) rate=Math.round(+route.fuelRate*10)/10;
+    var out=cloneRoute(route,{}), rate=currentFuelRate(), price=currentFuelPrice();
     var distanceMeters=storedRouteDistanceMeters(route);
     if(distanceMeters!==null) out.distanceMeters=distanceMeters;
-    out.fuelRate=rate; out.fuelLiters=fuelForDistance(distanceMeters,rate);
+    out.fuelRate=rate; out.fuelPricePerLiter=price;
+    out.fuelLiters=fuelForDistance(distanceMeters,rate);
+    out.fuelCost=fuelCostForLiters(out.fuelLiters,price);
     return out;
   }
   function realCachedRoute(hit){
@@ -4474,11 +4767,13 @@
       var distanceMeters=storedRouteDistanceMeters(route);
       if(distanceMeters===null) return;
       var fuelRate=validFuelRate(+route.fuelRate)?Math.round(+route.fuelRate*10)/10:null;
+      var fuelPrice=validFuelPrice(+route.fuelPricePerLiter)?Math.round(+route.fuelPricePerLiter*10)/10:null;
       var fuelLiters=fuelForDistance(distanceMeters,fuelRate);
       h[day][key]={
         measuredAt:measuredAt||Date.now(), lastUsedAt:Date.now(), km:route.km, distanceMeters:distanceMeters,
         minutes:route.minutes, minutesTraffic:route.minutesTraffic,
-        trafficLevel:route.trafficLevel, fuelRate:fuelRate, fuelLiters:fuelLiters,
+        trafficLevel:route.trafficLevel, fuelRate:fuelRate, fuelPricePerLiter:fuelPrice,
+        fuelLiters:fuelLiters, fuelCost:fuelCostForLiters(fuelLiters,fuelPrice),
         points:(pts||[]).map(function(p){ return {lat:p.lat,lon:p.lon}; }),
         stops:(tasksWithLoc||[]).map(function(t){ return {id:t.id||null,text:String(t.text||""),time:t.time||null,
           lat:t.loc.lat,lon:t.loc.lon,label:t.loc.label||t.loc.addr||""}; })
@@ -4487,6 +4782,7 @@
       var routeKeys=Object.keys(h[day]).sort(function(a,b){ return (h[day][a].lastUsedAt||0)-(h[day][b].lastUsedAt||0); });
       while(routeKeys.length>24){ delete h[day][routeKeys.shift()]; }
       saveRouteHistory(h);
+      putRouteArchive(day,key,h[day][key]);
 
       // Последний подтверждённый маршрут дня лежит и в компактном журнале:
       // недельный/месячный график читает его локально, не вызывает Directions.
@@ -4495,24 +4791,38 @@
         var merged={}; Object.keys(prev).forEach(function(k){ merged[k]=prev[k]; });
         merged.route={ km:route.km, distanceMeters:distanceMeters,
           minutes:route.minutes, minutesTraffic:route.minutesTraffic,
-          trafficLevel:route.trafficLevel, fuelRate:fuelRate, fuelLiters:fuelLiters, measuredAt:measuredAt||Date.now() };
+          trafficLevel:route.trafficLevel, fuelRate:fuelRate, fuelPricePerLiter:fuelPrice,
+          fuelLiters:fuelLiters, fuelCost:fuelCostForLiters(fuelLiters,fuelPrice), measuredAt:measuredAt||Date.now() };
         merged.updatedAt=Date.now(); log[day]=merged;
         localStorage.setItem(DAYLOG_KEY, JSON.stringify(log));
       }
       if(typeof renderRouteAnalytics==="function") renderRouteAnalytics();
     }catch(e){}
   }
-  function finishRouteRequest(key, route, measuredAt){
-    var q=routePending[key]||[]; delete routePending[key];
-    q.forEach(function(p){
+  function finishRouteRequest(key, pending, route, measuredAt){
+    if(routePending[key]!==pending) return;
+    delete routePending[key];
+    (pending.listeners||[]).forEach(function(p){
       var r=cloneRoute(route,{routeKey:key});
       recordRouteHistory(p.tasks, r, key, p.points, measuredAt);
       p.cb(r);
     });
   }
+  function cancelRouteRequest(key,pending){
+    if(!pending || routePending[key]!==pending) return;
+    delete routePending[key];
+    clearTimeout(pending.timer);
+    if(pending.controller) try{ pending.controller.abort(); }catch(e){}
+  }
+  function routeRequestPayload(pts){
+    var payload={points:pts.map(function(p){ return {lat:p.lat,lon:p.lon}; })};
+    var rate=currentFuelRate();
+    if(rate!==null) payload.fuel_l_per_100km=rate;
+    return payload;
+  }
   function buildRoute(tasksWithLoc, cb, origin){
     var pts = routePoints(tasksWithLoc, origin);
-    if(pts.length<2){ cb(buildUnavailableRoute(pts)); return; }
+    if(pts.length<2){ cb(buildUnavailableRoute(pts)); return null; }
     var key = routeCacheKey(pts);
     var cache = loadRouteCache();
     var legacyKey=legacyRouteCacheKey(pts);
@@ -4522,29 +4832,38 @@
       var fresh=applyFuelRate(cloneRoute(cachedReal,{routeKey:key,fromCache:true,stale:false}));
       if(!cache[key]){ cache[key]={result:fresh,at:hit.at}; saveRouteCache(cache); }
       recordRouteHistory(tasksWithLoc, fresh, key, pts, hit.at);
-      cb(fresh); return;
+      cb(fresh); return null;
     }
     if(routePending[key]){
-      routePending[key].push({cb:cb,tasks:tasksWithLoc,points:pts});
-      return;
+      var existing=routePending[key];
+      existing.listeners.push({cb:cb,tasks:tasksWithLoc,points:pts});
+      return {key:key,cancel:function(){ cancelRouteRequest(key,existing); }};
     }
-    routePending[key]=[{cb:cb,tasks:tasksWithLoc,points:pts}];
-    fetch(API_BASE + "/route", {
+    var ctrl=window.AbortController?new AbortController():null;
+    var pending={listeners:[{cb:cb,tasks:tasksWithLoc,points:pts}],controller:ctrl,timer:null};
+    routePending[key]=pending;
+    pending.timer=setTimeout(function(){ if(ctrl) ctrl.abort(); },ROUTE_TIMEOUT_MS);
+    var payload=routeRequestPayload(pts);
+    fetchIdempotent(API_BASE + "/route", {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ points: pts.map(function(p){ return {lat:p.lat, lon:p.lon}; }),
-        fuel_l_per_100km: currentFuelRate() })
+      body:JSON.stringify(payload),signal:ctrl?ctrl.signal:undefined
     })
       .then(function(r){ if(!r.ok) throw new Error("route_"+r.status); return r.json(); })
       .then(function(j){
+        clearTimeout(pending.timer);
+        if(routePending[key]!==pending) return;
         var result=applyFuelRate(normalizeRouteResult(j,pts)); if(!result) throw new Error("route_invalid");
         var at=Date.now(), latest=loadRouteCache();
         latest[key] = { result:result, at:at }; saveRouteCache(latest);
-        finishRouteRequest(key,result,at);
+        finishRouteRequest(key,pending,result,at);
       })
       .catch(function(){
-        if(cachedReal){ finishRouteRequest(key,applyFuelRate(cloneRoute(cachedReal,{stale:true,fromCache:true})),hit.at); }
-        else { finishRouteRequest(key,buildUnavailableRoute(pts),null); }
+        clearTimeout(pending.timer);
+        if(routePending[key]!==pending) return;
+        if(cachedReal){ finishRouteRequest(key,pending,applyFuelRate(cloneRoute(cachedReal,{stale:true,fromCache:true})),hit.at); }
+        else { finishRouteRequest(key,pending,buildUnavailableRoute(pts,"network"),null); }
       });
+    return {key:key,cancel:function(){ cancelRouteRequest(key,pending); }};
   }
 
   // ===== Маршрут по геолокации: с чего лучше начать =====
@@ -4812,7 +5131,10 @@
     var rep = tasks.filter(isRepeating).length;
     var msg = "Удалить все задачи? Это действие нельзя отменить."
       + (rep ? "\n\nСреди них " + rep + " " + plural(rep,["регулярное дело","регулярных дела","регулярных дел"]) + " — правила повтора тоже удалятся." : "");
-    if(confirm(msg)){ tasks=[]; save(); render(); }
+    if(confirm(msg)){
+      tasks.forEach(function(t){ if(typeof cancelTaskNetwork==="function") cancelTaskNetwork(t.id); });
+      tasks=[]; save(); render();
+    }
   });
 
   // Экспорт плана: собрать текст в порядке маршрута дня
@@ -5301,7 +5623,7 @@
         });
         while(keys.length>24) delete current[day][keys.shift()];
       });
-      if(changed) writeRecord("superday_route_history_v1",current);
+      if(changed){ writeRecord("superday_route_history_v1",current); replaceRouteArchive(current); }
       return changed;
     }
     function mergeRouteCache(imported){
@@ -5335,11 +5657,13 @@
       var counts={stats:mergeStats(analytics.stats), completions:mergeCompletions(analytics.completions,idMap),
         dayLog:mergeDayLog(analytics.dayLog), routes:mergeRouteHistory(routes,idMap), cache:mergeRouteCache(data.routeCache), geo:mergeGeoCache(data.geoCache)};
       var vehicleChanged=false;
-      if(backupRecord(data.vehicle) && validFuelRate(+data.vehicle.fuelLPer100Km)){
+      if(backupRecord(data.vehicle) && (validFuelRate(+data.vehicle.fuelLPer100Km) || validFuelPrice(+data.vehicle.fuelPricePerLiter))){
         var old=backupReadRecord("superday_vehicle_v1");
         var incomingAt=finiteOrZero(data.vehicle.updatedAt), oldAt=finiteOrZero(old.updatedAt);
-        if(!validFuelRate(+old.fuelLPer100Km) || incomingAt>=oldAt){
-          vehicleChanged=writeRecord("superday_vehicle_v1",{fuelLPer100Km:Math.round(+data.vehicle.fuelLPer100Km*10)/10,
+        if((!validFuelRate(+old.fuelLPer100Km) && !validFuelPrice(+old.fuelPricePerLiter)) || incomingAt>=oldAt){
+          vehicleChanged=writeRecord("superday_vehicle_v1",{
+            fuelLPer100Km:validFuelRate(+data.vehicle.fuelLPer100Km)?Math.round(+data.vehicle.fuelLPer100Km*10)/10:null,
+            fuelPricePerLiter:validFuelPrice(+data.vehicle.fuelPricePerLiter)?Math.round(+data.vehicle.fuelPricePerLiter*10)/10:null,
             updatedAt:incomingAt||Date.now()});
         }
       }
@@ -5432,7 +5756,7 @@
         var wi=document.getElementById("wakeInput");
         if(restored.wake && wi){ wi.value=readWake(); try{ wi.dispatchEvent(new Event("input")); }catch(e){} }
         save(); saveNotes(); render(); renderNotes();
-        if(typeof paintVehicleRate==="function") paintVehicleRate();
+        if(typeof paintVehicleSettings==="function") paintVehicleSettings();
         if(typeof renderStats==="function") renderStats();
         if(typeof renderMapCard==="function") renderMapCard();
         var restoredN=restored.stats+restored.completions+restored.dayLog+restored.routes+restored.cache+restored.geo+(restored.vehicle?1:0)+(restored.wake?1:0);
@@ -5695,7 +6019,7 @@
       var timer=setTimeout(function(){ try{ ctrl&&ctrl.abort(); }catch(e){} },SERVER_STT_TIMEOUT_MS);
       paintServerRecording(false,true,kind);
       if(kind==="stage") stageSay("Распознаю…",true); else setStatus("<b>Распознаю…</b>");
-      fetch(STT_API,{method:"POST",body:form,signal:ctrl?ctrl.signal:undefined})
+      fetchIdempotent(STT_API,{method:"POST",body:form,signal:ctrl?ctrl.signal:undefined})
         .then(function(r){
           if(!r.ok){ var err=new Error("stt_"+r.status); err.status=r.status; throw err; }
           return r.json();
@@ -6482,8 +6806,12 @@
       var km=haversineKm({lat:55.7558,lon:37.6173},{lat:59.9311,lon:30.3609});
       return km>600 && km<670;
     });
-    // Ветка с реальным маршрутом намеренно не тестируется здесь — она дёргает
-    // loadLeaflet()/CDN, а самотесты не должны трогать сеть.
+    // Ветка с реальными тайлами намеренно не тестируется здесь: локальный
+    // Leaflet не требует CDN, но CARTO/OSM остаются сетевыми провайдерами.
+    T("Leaflet загружается из локального PWA asset, а не с CDN", function(){
+      var src=loadLeaflet.toString();
+      return src.indexOf("assets/vendor/leaflet-1.9.4.js")>=0 && src.indexOf("unpkg.com")<0;
+    });
     T("renderMapCard: карта — фон главного экрана (волна 33 вернула fixed-фон)", function(){
       var card=document.getElementById("mapCard"), view=document.getElementById("mapView");
       if(!card || !view) return false;
@@ -6579,11 +6907,32 @@
     T("fuelForKm: персональный расход считается из реального километража", function(){
       return fuelForKm(12.5,8)===1 && fuelForKm(12.5,null)===null && validFuelRate(1.9)===false;
     });
+    T("стоимость топлива считается только из фактических литров и цены", function(){
+      return fuelCostForLiters(1.25,64)===80 && fuelCostForLiters(1.25,null)===null && validFuelPrice(0)===false;
+    });
+    T("route payload не отправляет null fuel, но сохраняет введённый расход", function(){
+      var before=localStorage.getItem(VEHICLE_KEY), pts=[{lat:55.75,lon:37.61},{lat:55.76,lon:37.62}];
+      try{
+        localStorage.removeItem(VEHICLE_KEY);
+        var empty=routeRequestPayload(pts);
+        localStorage.setItem(VEHICLE_KEY,JSON.stringify({fuelLPer100Km:8.2,updatedAt:1}));
+        var filled=routeRequestPayload(pts);
+        return !Object.prototype.hasOwnProperty.call(empty,"fuel_l_per_100km") && filled.fuel_l_per_100km===8.2;
+      } finally {
+        if(before===null) localStorage.removeItem(VEHICLE_KEY); else localStorage.setItem(VEHICLE_KEY,before);
+      }
+    });
     T("normalizeRouteResult: расход считается из точных метров, не округлённых км", function(){
-      var r=normalizeRouteResult({km:4.8,distanceMeters:4837,minutes:13,minutesTraffic:18,
-        trafficLevel:"moderate",polyline:null,fuelRate:8.2},[]);
-      return !!r && r.distanceMeters===4837 && r.fuelLiters===0.4 &&
-        normalizeRouteResult({km:4.8,distanceMeters:-1,fuelRate:8.2},[])===null;
+      var before=localStorage.getItem(VEHICLE_KEY);
+      try{
+        localStorage.setItem(VEHICLE_KEY,JSON.stringify({fuelLPer100Km:8.2,fuelPricePerLiter:65,updatedAt:1}));
+        var r=normalizeRouteResult({km:4.8,distanceMeters:4837,minutes:13,minutesTraffic:18,
+          trafficLevel:"moderate",polyline:null,fuelRate:12},[]);
+        return !!r && r.distanceMeters===4837 && r.fuelLiters===0.4 && r.fuelCost===26 &&
+          normalizeRouteResult({km:4.8,distanceMeters:-1,fuelRate:8.2},[])===null;
+      } finally {
+        if(before===null) localStorage.removeItem(VEHICLE_KEY); else localStorage.setItem(VEHICLE_KEY,before);
+      }
     });
     T("старый route cache без distanceMeters остаётся рабочим", function(){
       var old={result:{mode:"google",km:4.8,minutes:13,minutesTraffic:18,fuelRate:8.2},at:1};
@@ -6642,8 +6991,25 @@
       renderMapStats(null);
       return ok;
     });
+    T("renderMapStats: без расхода честно просит значение, сохраняя ETA", function(){
+      var before=localStorage.getItem(VEHICLE_KEY), el=document.getElementById("mapStats");
+      try{
+        localStorage.removeItem(VEHICLE_KEY);
+        var route=applyFuelRate({km:4.8,distanceMeters:4837,minutesTraffic:18,trafficLevel:"moderate",mode:"google"});
+        renderMapStats(route);
+        return /4[,.]8 км/.test(el.textContent) && /18 мин/.test(el.textContent) && /укажите фактический расход/.test(el.textContent) && !/\d+[,.]?\d* л/.test(el.textContent);
+      } finally {
+        if(before===null) localStorage.removeItem(VEHICLE_KEY); else localStorage.setItem(VEHICLE_KEY,before);
+        renderMapStats(null);
+      }
+    });
     T("серверная расшифровка учитывает очередь и инференс", function(){ return SERVER_STT_TIMEOUT_MS===90000; });
     T("LLM failover not cut off by browser", function(){ return PARSE_TIMEOUT_MS===60000; });
+    T("parse/geocode/route/STT используют ограниченный retry", function(){
+      return IDEMPOTENT_RETRY_ATTEMPTS===2 && retryableHttpStatus(502) && !retryableHttpStatus(400) &&
+        geocodePlace.toString().indexOf("fetchIdempotent")>=0 && buildRoute.toString().indexOf("fetchIdempotent")>=0 &&
+        STT_RETRY_ENABLED===true;
+    });
 
     // ===== Волна 35: окно дел — модалка по клику на маркер / фокусу композера =====
     T("routeSheet скрыт по умолчанию и живёт вне <main> (иначе сработал бы setBackdropInert)", function(){

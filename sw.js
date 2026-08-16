@@ -2,7 +2,7 @@
    Стратегия: навигации — network-first с офлайн-фолбэком на кэш главной;
    статика (иконки, манифест, шрифты) — cache-first. Версия в имени кэша —
    меняй CACHE при обновлении, чтобы старый кэш очистился. */
-var CACHE = "superday-v60";
+var CACHE = "superday-v61";
 var SHELL = [
   "/",
   "/index.html",
@@ -21,6 +21,7 @@ var SHELL = [
   // Движок роста: без него приложение работает, но без уровней и серии — в
   // оболочке, потому что рендер обращается к нему на первом же кадре.
   "/growth.js",
+  "/assets/vendor/leaflet-1.9.4.js",
   "/manifest.webmanifest",
   "/assets/mark.png",
   "/assets/logo.png",

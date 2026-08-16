@@ -449,6 +449,10 @@ window.__i18nDict("fr", {
     "Спор не состоялся — приоритет остаётся вашим": "Le débat n'a pas eu lieu — la priorité reste la même",
     "Приоритет уточнён": "Priorité définie",
     "Расход автомобиля": "Consommation du véhicule",
+    "Нужны фактические значения для расчёта топлива и стоимости": "Des valeurs réelles sont nécessaires pour calculer le carburant et le coût",
+    "Цена": "Prix",
+    "Цена топлива за литр": "Prix du carburant par litre",
+    "₽/л": "₽/L",
     "Нужен для честного расчёта топлива": "Nécessaire pour calculer le carburant honnêtement",
     "л/100 км": "L/100 km",
     "🔒 Запись передаётся по HTTPS в Whisper SUPER DAY, превращается в текст и удаляется сразу после распознавания. Для AI-разбора используется только расшифровка.": "🔒 L'enregistrement est envoyé via HTTPS à Whisper SUPER DAY, transcrit puis supprimé immédiatement. L'IA utilise uniquement la transcription.",
@@ -457,10 +461,27 @@ window.__i18nDict("fr", {
     "Расход автомобиля в литрах на 100 километров": "Consommation en litres pour 100 kilomètres",
     "История маршрутов и расхода топлива": "Historique des trajets et du carburant",
     "За 7 дней: 0 км. График построен из локальной истории без новых запросов к картам.": "7 jours : 0 km. Le graphique utilise l'historique local sans nouvelle requête cartographique.",
-    "За 7 дней: 0 км · 0 л · 0 мин в пути.": "7 jours : 0 km · 0 L · 0 min de trajet."
+    "За 7 дней: 0 км · 0 л · 0 мин в пути.": "7 jours : 0 km · 0 L · 0 min de trajet.",
+    "Итог дня": "Bilan du jour",
+    "План на сегодня ещё пуст": "Le programme d'aujourd'hui est encore vide",
+    "День закрыт полностью 🎯": "Journée entièrement terminée 🎯",
+    "День ещё открыт": "La journée est encore ouverte",
+    "Заверши одну задачу, чтобы начать новую серию": "Termine une tâche pour lancer une nouvelle série",
+    "Ты — человек, который держит слово себе. Сегодня это снова так.": "Tu es quelqu'un qui tient parole envers soi-même. Aujourd'hui encore.",
+    "День прожит с намерением, а не на автопилоте. Это и есть рост.": "Cette journée a été vécue avec intention, pas en pilote automatique. C'est cela, progresser.",
+    "Каждая закрытая задача — кирпич в том, кем ты становишься.": "Chaque tâche terminée est une brique de la personne que tu deviens.",
+    "Ты не «был занят» — ты двигался к важному. Разница огромна.": "Tu n'as pas seulement été occupé : tu as avancé vers l'essentiel. La différence est immense.",
+    "Сделанное сегодня освободило голову на завтра. Отдохни с чистой совестью.": "Ce que tu as terminé aujourd'hui t'a libéré l'esprit pour demain. Repose-toi l'esprit tranquille.",
+    "Даже открыть план — это выбор в пользу себя. Завтра начнём с малого шага.": "Même ouvrir le programme, c'est choisir de prendre soin de toi. Demain, nous commencerons par un petit pas."
   },
 
   re: [
+    ["^Сделано (\\d+) из (\\d+)$", "$1 sur $2 terminées"],
+    ["^Серия продолжается: (\\d+) подряд 🔥$", "La série continue : $1 jours de suite 🔥"],
+    ["^Серия (\\d+) на кону — закрой одну задачу, чтобы сохранить$", "Ta série de $1 jours est en jeu : termine une tâche pour la conserver"],
+    ["^\\+(\\d+) XP за день$", "+$1 XP aujourd'hui"],
+    ["^Фокус: (.+)$", function (all, value) { return "Priorité : " + __i18nTR(value); }],
+    ["^Утром ты выбрал быть тем, кто (.+)\\.$", "Ce matin, tu as choisi d'être quelqu'un qui $1."],
     ["^(\\d{4}-\\d{2}-\\d{2}): ([\\d.,]+) км(?: · ([\\d.,]+) л)?(?: · ([\\d.,]+) мин)?$", function (all, day, km, fuel, min) {
       return day + " : " + km + " km" + (fuel ? " · " + fuel + " L" : "") + (min ? " · " + min + " min" : "");
     }],
