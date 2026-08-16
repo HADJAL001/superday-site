@@ -2607,7 +2607,7 @@
     var text=document.createElement("span"); text.className="mp-text"; text.textContent=t.text;
     wrap.appendChild(num); wrap.appendChild(text);
     if(t.time){ var tm=document.createElement("span"); tm.className="mp-time"; tm.textContent=t.time; wrap.appendChild(tm); }
-    var addr=document.createElement("span"); addr.className="mp-addr"; addr.textContent=t.loc.addr||t.loc.label;
+    var addr=document.createElement("span"); addr.className="mp-addr"; addr.textContent=t.loc.label||t.loc.addr;
     wrap.appendChild(addr);
     var nav=document.createElement("a"); nav.className="mp-nav"; nav.target="_blank"; nav.rel="noopener";
     nav.href=routeNavigationUrl([t],mapState.userLoc);
@@ -2652,7 +2652,7 @@
       nav=document.getElementById("routeNavigate"), locate=document.getElementById("routeLocateBtn"), fuel=document.getElementById("routeFuelBtn");
     brief.hidden=false;
     kicker.textContent=pts.length>1 ? "Маршрут дня · "+pts.length+" остановки" : "Следующая остановка";
-    title.textContent=first.loc.addr || first.loc.label || first.text;
+    title.textContent=first.loc.label || first.loc.addr || first.text;
     time.textContent=taskRouteTime(first);
     nav.href=routeNavigationUrl(pts,mapState.userLoc);
     nav.textContent=validPoint(mapState.userLoc) ? "Открыть навигацию" : "Открыть адрес в навигаторе";
