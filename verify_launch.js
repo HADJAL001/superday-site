@@ -87,7 +87,7 @@ const SEED = () => {
       "кодовое слово mellivora доступно проверяющему");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v61/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v62/.test(workerSource), "версия кэша service worker обновлена");
     say(/assets\/vendor\/leaflet-1\.9\.4\.js/.test(appSource) && !/unpkg\.com\/leaflet/.test(appSource) &&
       workerSource.includes('"/assets/vendor/leaflet-1.9.4.js"') && /Leaflet 1\.9\.4/.test(leafletSource),
       "Leaflet 1.9.4 локален и входит в offline shell");

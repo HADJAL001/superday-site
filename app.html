@@ -2042,8 +2042,9 @@
 
   // ===== Автораспознавание адреса в тексте дела (волна 32) =====
   // Эвристика, не ML — предсказуемая и объяснимая, как parseRepeatPhrase рядом:
-  // 1) улица/топоним с номером дома («Тверской 1», «на Ленина 5»);
-  // 2) топоним после предлога без номера («в Meridian Mall»). Без явного
+  // 1) явный полный адрес («по адресу Москва, Тверская улица, 1»);
+  // 2) улица/топоним с номером дома («Тверской 1», «на Ленина 5»);
+  // 3) топоним после предлога без номера («в Meridian Mall»). Без явного
   // кандидата — null, дело остаётся без места, как раньше «＋место».
   // \b не видит кириллицу как «словесный» символ в JS-регэкспах — \bв\b/\bна\b
   // никогда не совпадали с «в»/«на». Используем явные пробельные границы.
@@ -2051,11 +2052,21 @@
   // одного такого литерала не запускают весь скрипт приложения. Для речи есть
   // отдельная ветка с обязательным предлогом: распознаватели часто возвращают
   // адрес строчными буквами ("на тверской 1").
+  var PLACE_RE_EXPLICIT = /(?:^|[\s,;])по\s+адресу\s+(.+?)(?=\s+(?:и\s+потом|затем|после\s+этого)(?:\s|$)|$|[;!?])/i;
   var PLACE_RE_HOUSE = /(?:^|[\s,;])(?:(в|на|у|около|возле)\s+)?([A-ZА-ЯЁ][\wа-яёA-Za-z-]*(?:\s+[A-ZА-ЯЁ][\wа-яёA-Za-z-]*){0,2})\s+(\d{1,4}[а-яa-z]?)(?=$|[\s,.;!?])/;
   var PLACE_RE_HOUSE_SPOKEN = /(?:^|[\s,;])(?:по\s+адресу|в|на|у|около|возле)\s+([а-яёa-z][\wа-яёa-z-]*(?:\s+[а-яёa-z][\wа-яёa-z-]*){0,2})\s+(\d{1,4}[а-яa-z]?)(?=$|[\s,.;!?])/i;
   var PLACE_RE_PREP = /(?:^|[\s,;])(?:в|на|у|около|возле)\s+((?:[A-ZА-ЯЁ][\wа-яёA-Za-z-]*\s*){1,3}(?:,\s*[A-ZА-ЯЁ][\wа-яёA-Za-z-]*)?)/;
   function parsePlacePhrase(text){
     var s = String(text||"").trim();
+    var me = s.match(PLACE_RE_EXPLICIT);
+    if(me){
+      var explicitPlace=me[1].replace(/^[\s,.-]+|[\s,.-]+$/g,"").replace(/\s*,\s*/g,", ").replace(/\s+/g," ").trim();
+      if(explicitPlace){
+        var cleanExplicit=(s.slice(0,me.index)+" "+s.slice(me.index+me[0].length))
+          .replace(/[\s,;:-]+$/g,"").replace(/\s+/g," ").trim();
+        return { text:cleanExplicit || s, place:explicitPlace };
+      }
+    }
     var mh = s.match(PLACE_RE_HOUSE);
     if(mh && (mh[1] || mh.index>0)){
       var clean = (s.slice(0,mh.index) + " " + s.slice(mh.index+mh[0].length)).replace(/\s+/g," ").trim();
@@ -2072,6 +2083,13 @@
       return { text: clean2 || s, place: mp[1].trim() };
     }
     return { text: s, place: null };
+  }
+
+  function taskPlaceLabel(place){
+    var full=String(place||"").replace(/\s+/g," ").trim();
+    var parts=full.split(",").map(function(part){ return part.trim(); }).filter(Boolean);
+    var label=parts.length>1 ? parts.slice(-2).join(", ") : full;
+    return (label || full).slice(0,60);
   }
 
   // ===== Разбор дня, на который переносим дело =====
@@ -2249,7 +2267,7 @@
     if(pp.place){
       geocodeTaskPlace(task,pp.place, function(found){
         if(!found || found.lat==null || found.lon==null) return;
-        var label = pp.place.split(",")[0].trim().slice(0,40) || pp.place.slice(0,40);
+        var label = taskPlaceLabel(pp.place);
         task.loc = { lat:found.lat, lon:found.lon, label:label, addr:found.addr || pp.place };
         save(); render();
       });
@@ -3535,7 +3553,7 @@
       }
       geocodeTaskPlace(it.task,it.place, function(found){
         if(found && found.lat!=null && found.lon!=null){
-          var label=it.place.split(",")[0].trim().slice(0,40) || it.place.slice(0,40);
+          var label=taskPlaceLabel(it.place);
           it.task.loc={ lat:found.lat, lon:found.lon, label:label, addr:found.addr || it.place };
           save(); render();
         }else failures.push(it.place);
@@ -6885,6 +6903,11 @@
     T("parsePlacePhrase: голосовой адрес строчными «на тверской 1»", function(){
       var r = parsePlacePhrase("встреча на тверской 1");
       return r.place==="тверской 1" && r.text==="встреча";
+    });
+    T("parsePlacePhrase: полный голосовой адрес с городом и запятыми", function(){
+      var r = parsePlacePhrase("Завтра встреча с клиентом по адресу Москва, Тверская улица, 1");
+      return r.place==="Москва, Тверская улица, 1" && r.text==="Завтра встреча с клиентом" &&
+        taskPlaceLabel(r.place)==="Тверская улица, 1";
     });
     T("parsePlacePhrase: «съездить в Meridian Mall» → место «Meridian Mall»", function(){
       var r = parsePlacePhrase("съездить в Meridian Mall");
