@@ -93,7 +93,7 @@ window.__i18nDict("es", {
     "Прямой установочный файл": "Archivo de instalación directo",
     ". Работает на телефонах и планшетах Android 7.0 и новее.": ". Funciona en móviles y tabletas con Android 7.0 o superior.",
     "Скачать для Android · .apk": "Descargar para Android · .apk",
-    "Файл 82,8 МиБ · версия 1.1.1": "Archivo 82,8 MiB · versión 1.1.1",
+    "Файл 82,8 МиБ · версия 1.1.2": "Archivo 82,8 MiB · versión 1.1.2",
     "При установке Android спросит разрешение поставить приложение «из этого источника» — это нормально для беты. Нажмите": "Al instalar, Android pedirá permiso para instalar «desde esta fuente»: es normal en una beta. Pulsa",
     "«Разрешить»": "«Permitir»",
     "«Установить»": "«Instalar»",
