@@ -149,6 +149,8 @@ window.__i18nDict("fr", {
     "Маршрут к делам": "Itinéraire vers les tâches",
     "Следующая остановка": "Prochain arrêt",
     "Начать маршрут": "Démarrer l’itinéraire",
+    "Очистить маршрут": "Effacer l’itinéraire",
+    "Маршрут убран с карты. Дела и история сохранены.": "L’itinéraire a été retiré de la carte. Les tâches et l’historique sont conservés.",
     "Показать остановку на карте": "Afficher l’arrêt sur la carte",
     "Навигация SUPER DAY": "Navigation SUPER DAY",
     "Маршрут активен": "Itinéraire actif",

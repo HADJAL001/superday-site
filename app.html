@@ -1059,6 +1059,9 @@
   .leaflet-pane > svg,.leaflet-pane > canvas,.leaflet-zoom-box,.leaflet-image-layer,.leaflet-layer{
     position:absolute; left:0; top:0}
   .leaflet-container{overflow:hidden; -webkit-tap-highlight-color:transparent}
+  .leaflet-container.leaflet-touch-zoom{touch-action:pan-x pan-y}
+  .leaflet-container.leaflet-touch-drag{touch-action:none; touch-action:pinch-zoom}
+  .leaflet-container.leaflet-touch-drag.leaflet-touch-zoom{touch-action:none}
   .leaflet-tile,.leaflet-marker-icon,.leaflet-marker-shadow{-webkit-user-select:none; user-select:none;
     -webkit-user-drag:none}
   .leaflet-tile::selection{background:transparent}
@@ -1260,8 +1263,9 @@
      только знак микрофона и одну строку приглашения — карта работает картинкой,
      а не обоями. Полупрозрачная вуаль карты ослаблена в этой зоне: под текстом
      она нужна для читаемости, под сценой — прячет саму карту. */
-  .stage{min-height:calc(100svh - 62px); display:flex; flex-direction:column;
+  .stage{min-height:calc(100svh - 62px); display:flex; flex-direction:column; pointer-events:none;
     align-items:center; justify-content:center; gap:18px; padding:24px 0 34px; text-align:center}
+  .stage > *{pointer-events:auto}
   .stage-mic{position:relative; width:92px; height:92px; border-radius:50%; cursor:pointer;
     display:grid; place-items:center; color:var(--on-accent); border:0; font-family:inherit;
     background:var(--grad-plat); box-shadow:0 26px 60px -22px rgba(0,0,0,.9), var(--inner-light);
@@ -1517,6 +1521,7 @@
         <button class="rb-action primary" id="routeNavigate" type="button">Начать маршрут</button>
         <button class="rb-action secondary" id="routeLocateBtn" type="button" hidden>Разрешить геолокацию</button>
         <button class="rb-action secondary" id="routeFuelBtn" type="button" hidden>Указать расход авто</button>
+        <button class="rb-action secondary" id="routeClearBtn" type="button">Очистить маршрут</button>
       </div>
     </section>
     <section class="internal-nav" id="internalNav" hidden role="region" aria-label="Навигация SUPER DAY" aria-live="polite">
@@ -2928,11 +2933,19 @@
   var mapState = { map:null, layer:null, baseLayer:null, userLoc:null, userLocState:"unknown", locating:false,
     booted:false, renderSeq:0, tileFallback:false, tileErrors:0, routeRequest:null, lastRoute:null, lastTasks:[],
     userMarker:null, navigationActive:false, navigationTasks:[], navigationWatchId:null, navigationTimer:null, followUser:false,
-    navigationRouteOrigin:null, navigationRouteAt:0, navigationLocationAt:0 };
+    navigationRouteOrigin:null, navigationRouteAt:0, navigationLocationAt:0, dismissedRouteSignature:null };
   var IS_SELFTEST = /[?&]selftest=1/.test(location.search||"");
   function tasksForMap(){
-    if(mapState.navigationActive && mapState.navigationTasks.length) return mapState.navigationTasks.slice();
-    return planOrder().filter(function(t){ return t.loc && !t.done; });
+    var current=mapState.navigationActive && mapState.navigationTasks.length
+      ? mapState.navigationTasks.slice()
+      : planOrder().filter(function(t){ return t.loc && !t.done; });
+    if(current.length && routeTaskSignature(current)===mapState.dismissedRouteSignature) return [];
+    return current;
+  }
+  function routeTaskSignature(pts){
+    return (pts||[]).filter(function(t){ return t && validPoint(t.loc); }).map(function(t){
+      return String(t.id||"")+":"+Number(t.loc.lat).toFixed(6)+","+Number(t.loc.lon).toFixed(6);
+    }).join("|");
   }
   function setMapStatus(message){
     var el=document.getElementById("mapStatus"); if(!el) return;
@@ -3104,13 +3117,29 @@
   }
   (function initRouteBriefActions(){
     var nav=document.getElementById("routeNavigate"), locate=document.getElementById("routeLocateBtn"), fuel=document.getElementById("routeFuelBtn"),
-      recenter=document.getElementById("internalNavRecenter"), stop=document.getElementById("internalNavStop");
+      clear=document.getElementById("routeClearBtn"), recenter=document.getElementById("internalNavRecenter"), stop=document.getElementById("internalNavStop");
     if(nav) nav.addEventListener("click",function(){ startInternalNavigation(mapState.lastTasks); });
     if(locate) locate.addEventListener("click",function(){ locateRouteOrigin(true); });
     if(fuel) fuel.addEventListener("click",focusVehicleSettings);
+    if(clear) clear.addEventListener("click",clearActiveMapRoute);
     if(recenter) recenter.addEventListener("click",recenterInternalNavigation);
     if(stop) stop.addEventListener("click",stopInternalNavigation);
   })();
+
+  function clearActiveMapRoute(){
+    var current=(mapState.lastTasks&&mapState.lastTasks.length)?mapState.lastTasks:tasksForMap();
+    mapState.dismissedRouteSignature=routeTaskSignature(current);
+    mapState.renderSeq++;
+    if(mapState.routeRequest){ mapState.routeRequest.cancel(); mapState.routeRequest=null; }
+    if(mapState.navigationActive) stopInternalNavigation();
+    clearMapRouteLayer();
+    drawUserLoc();
+    mapState.lastRoute=null; mapState.lastTasks=[];
+    renderMapStats(null); renderRouteBrief(null,[]);
+    var live=document.getElementById("stageLive");
+    if(live && / · Маршрут:/.test(live.textContent||"")) live.textContent=live.textContent.split(" · Маршрут:")[0];
+    toast("Маршрут убран с карты. Дела и история сохранены.","success");
+  }
 
   function sameRouteTasks(a,b){
     if(!a || !b || a.length!==b.length) return false;

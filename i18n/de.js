@@ -149,6 +149,8 @@ window.__i18nDict("de", {
     "Маршрут к делам": "Route zu den Aufgaben",
     "Следующая остановка": "Nächster Halt",
     "Начать маршрут": "Route starten",
+    "Очистить маршрут": "Route löschen",
+    "Маршрут убран с карты. Дела и история сохранены.": "Die Route wurde von der Karte entfernt. Aufgaben und Verlauf bleiben gespeichert.",
     "Показать остановку на карте": "Halt auf Karte zeigen",
     "Навигация SUPER DAY": "SUPER DAY Navigation",
     "Маршрут активен": "Route aktiv",

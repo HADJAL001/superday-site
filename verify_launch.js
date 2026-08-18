@@ -93,7 +93,7 @@ const SEED = () => {
       "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v71/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v72/.test(workerSource), "версия кэша service worker обновлена");
     say(!/google\.com\/maps/i.test(appSource), "основной сценарий не содержит ссылок на внешний навигатор");
     say(/отправлен(?:о)? на модерацию в RuStore|отправлено в RuStore/.test(landingSource) &&
       /НА МОДЕРАЦИИ/.test(landingSource), "лендинг показывает актуальный статус публикации в RuStore");
@@ -515,7 +515,12 @@ const SEED = () => {
       if (!r) return route.abort();
       const type = rel.endsWith(".js") ? "application/javascript"
         : rel.endsWith(".css") ? "text/css" : rel.endsWith(".html") ? "text/html" : "";
-      route.fulfill({ status: r.status(), body: await r.body(), contentType: type || undefined });
+      try {
+        const status = r.status(), body = await r.body();
+        await route.fulfill({ status, body, contentType: type || undefined });
+      } catch (_) {
+        await route.abort().catch(() => {});
+      }
     });
     await page.goto("https://superday.fun/app.html", { waitUntil: "load" });
     await page.evaluate(SEED);
@@ -611,6 +616,18 @@ const SEED = () => {
       "расстояние, ETA, топливо и стоимость видны прямо на первом экране", routeBrief.title + " · " + routeBrief.values);
     say(routeBrief.tag === "BUTTON" && routeBrief.href === null && routeBrief.target === null && /Начать маршрут/.test(routeBrief.action),
       "маршрут запускается внутри SUPER DAY без внешней ссылки", routeBrief.action);
+    const mapTouch = await page.evaluate(() => {
+      const map = document.querySelector("#mapView.leaflet-container"), stage = document.getElementById("voiceStage"),
+        top = document.elementFromPoint(8, Math.round(innerHeight * 0.45));
+      return {
+        touchAction: map ? getComputedStyle(map).touchAction : "missing",
+        dragging: !!(map && map.classList.contains("leaflet-touch-drag")),
+        stagePasses: getComputedStyle(stage).pointerEvents === "none",
+        mapOnTop: !!(top && top.closest && top.closest("#mapView"))
+      };
+    });
+    say(mapTouch.dragging && mapTouch.touchAction === "none" && mapTouch.stagePasses && mapTouch.mapOnTop,
+      "карту можно двигать пальцем в свободной области первого экрана", JSON.stringify(mapTouch));
     const internalNavigation = await page.evaluate(() => {
       document.getElementById("routeNavigate").click();
       const panel = document.getElementById("internalNav"), guidance = document.getElementById("internalNavGuidance"),
@@ -775,6 +792,23 @@ const SEED = () => {
       mobileInternal.bottom <= 900 && !mobileInternal.overflow && mobileInternal.buttonsFit && mobileInternal.composerHidden &&
       mobileInternal.guidanceVisible && mobileInternal.detailsCollapsed,
       "встроенная навигация на 430×900 помещается целиком и не перекрывается вводом", JSON.stringify(mobileInternal));
+    await page.evaluate(() => document.getElementById("internalNavStop").click());
+    const clearedRoute = await page.evaluate(() => {
+      const beforeTasks = window.tasks.length, beforeHistory = localStorage.getItem("superday_route_history_v1");
+      document.getElementById("routeClearBtn").click();
+      return {
+        tasksPreserved: window.tasks.length === beforeTasks,
+        historyPreserved: localStorage.getItem("superday_route_history_v1") === beforeHistory,
+        briefHidden: document.getElementById("routeBrief").hidden,
+        statsHidden: document.getElementById("mapStats").hidden,
+        currentRouteCleared: window.mapState.lastRoute === null && window.mapState.lastTasks.length === 0,
+        redrawSuppressed: window.tasksForMap().length === 0,
+        buttonText: document.getElementById("routeClearBtn").textContent
+      };
+    });
+    say(clearedRoute.tasksPreserved && clearedRoute.historyPreserved && clearedRoute.briefHidden && clearedRoute.statsHidden &&
+      clearedRoute.currentRouteCleared && clearedRoute.redrawSuppressed && /Очистить маршрут/.test(clearedRoute.buttonText),
+      "кнопка очищает текущий маршрут, сохраняя дела и историю", JSON.stringify(clearedRoute));
     await page.screenshot({ path: artifact("stage-mobile.png") });
     await ctx.close();
   }
