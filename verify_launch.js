@@ -72,6 +72,7 @@ const SEED = () => {
     const supportSource = fs.readFileSync(path.join(siteDir, "support.html"), "utf8");
     const indexSource = fs.readFileSync(path.join(siteDir, "index.html"), "utf8");
     const appSource = fs.readFileSync(path.join(siteDir, "app.html"), "utf8");
+    const landingSource = fs.readFileSync(path.join(siteDir, "index.html"), "utf8");
     const workerSource = fs.readFileSync(path.join(siteDir, "sw.js"), "utf8");
     const legalScriptSource = fs.readFileSync(path.join(siteDir, "legal.js"), "utf8");
     const leafletPath = path.join(siteDir, "assets", "vendor", "leaflet-1.9.4.js");
@@ -92,8 +93,10 @@ const SEED = () => {
       "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v70/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v71/.test(workerSource), "версия кэша service worker обновлена");
     say(!/google\.com\/maps/i.test(appSource), "основной сценарий не содержит ссылок на внешний навигатор");
+    say(/отправлен(?:о)? на модерацию в RuStore|отправлено в RuStore/.test(landingSource) &&
+      /НА МОДЕРАЦИИ/.test(landingSource), "лендинг показывает актуальный статус публикации в RuStore");
     say(/assets\/vendor\/leaflet-1\.9\.4\.js/.test(appSource) && !/unpkg\.com\/leaflet/.test(appSource) &&
       workerSource.includes('"/assets/vendor/leaflet-1.9.4.js"') && /Leaflet 1\.9\.4/.test(leafletSource),
       "Leaflet 1.9.4 локален и входит в offline shell");

@@ -37,6 +37,7 @@ window.__i18nDict("es", {
     "Ранний доступ к приложению": "Acceso anticipado a la app",
     "Бесплатно и без установки: открыть → назвать дела → получить план.": "Gratis y sin instalar: abrir → decir las tareas → recibir el plan.",
     "Скоро в RuStore, Google Play и App Store.": "Pronto en RuStore, Google Play y App Store.",
+    "Приложение отправлено в RuStore и появится для скачивания сразу после модерации.": "La aplicación se ha enviado a RuStore y estará disponible para descargar en cuanto supere la revisión.",
 
     "План на сегодня": "Plan de hoy",
     "Созвон с инвестором": "Llamada con el inversor",
@@ -87,6 +88,9 @@ window.__i18nDict("es", {
     "уже доступна ранняя бета": "ya hay una beta temprana",
     "— установите приложение прямо сейчас по файлу ниже. На iPhone пока работает веб-версия (добавьте сайт на экран «Домой»), а релиз в App Store — на подходе.": "— instala la app ahora mismo con el archivo de abajo. En iPhone funciona de momento la versión web (añade el sitio a la pantalla de inicio); el lanzamiento en App Store está en camino.",
     "СКОРО": "PRONTO",
+    "НА МОДЕРАЦИИ": "EN REVISIÓN",
+    "на модерации": "en revisión",
+    "SUPER DAY уже отправлен на модерацию в RuStore и появится там для скачивания сразу после одобрения. Владельцам Android": "SUPER DAY se ha enviado a RuStore y estará disponible allí para descargar en cuanto sea aprobado. Los usuarios de Android",
     "Россия · Android": "Rusia · Android",
     "Android · ранняя бета": "Android · beta temprana",
     "Скачать для Samsung и других Android": "Descargar para Samsung y otros Android",
