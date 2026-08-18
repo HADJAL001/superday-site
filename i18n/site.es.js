@@ -1,6 +1,19 @@
 /* SUPER DAY — diccionario español de la página de inicio (ola 11). */
 window.__i18nDict("es", {
   t: {
+    "Открыть приложение": "Abrir aplicación",
+    "Выбрать тариф": "Elegir plan",
+    "₽ / 30 дней": "RUB / 30 días",
+    "Цена за": "Precio por",
+    "30 дней без автопродления": "30 días sin renovación automática",
+    "безопасная оплата через PlateGA": "pago seguro mediante PlateGA",
+    "Без лимита": "Sin límite",
+    "Оплата доступна сейчас:": "El pago ya está disponible:",
+    "карта или СБП через PlateGA": "tarjeta o transferencia instantánea mediante PlateGA",
+    ". Тариф действует 30 дней и не продлевается автоматически.": ". El plan dura 30 días y no se renueva automáticamente.",
+    "Есть бесплатный тариф — 3 AI-разбора задач в день. Платные: Start 490 ₽, Standard 790 ₽, Pro 1090 ₽, Business 1990 ₽ за 30 дней. Автопродления нет; оплата картой или через СБП на защищённой странице PlateGA.": "El plan gratuito incluye 3 análisis de tareas con IA al día. Planes de pago: Start 490 RUB, Standard 790 RUB, Pro 1090 RUB y Business 1990 RUB por 30 días. Sin renovación automática; paga con tarjeta o transferencia instantánea en la página segura de PlateGA.",
+    "— 3 AI-разбора задач в день. Платные:": "— 3 análisis de tareas con IA al día. Planes de pago:",
+    "1990 ₽ за 30 дней. Автопродления нет; оплата картой или через СБП на защищённой странице PlateGA.": "1990 RUB por 30 días. Sin renovación automática; paga con tarjeta o transferencia instantánea en la página segura de PlateGA.",
     "Документы": "Documentos",
     "Поддержка": "Soporte",
     "Документы и поддержка": "Documentos y soporte",

@@ -1,6 +1,19 @@
 /* SUPER DAY — dictionnaire français de la page d'accueil (vague 11). */
 window.__i18nDict("fr", {
   t: {
+    "Открыть приложение": "Ouvrir l'application",
+    "Выбрать тариф": "Choisir la formule",
+    "₽ / 30 дней": "RUB / 30 jours",
+    "Цена за": "Prix pour",
+    "30 дней без автопродления": "30 jours sans renouvellement automatique",
+    "безопасная оплата через PlateGA": "paiement sécurisé via PlateGA",
+    "Без лимита": "Illimité",
+    "Оплата доступна сейчас:": "Le paiement est disponible :",
+    "карта или СБП через PlateGA": "carte ou virement instantané via PlateGA",
+    ". Тариф действует 30 дней и не продлевается автоматически.": ". La formule dure 30 jours et ne se renouvelle pas automatiquement.",
+    "Есть бесплатный тариф — 3 AI-разбора задач в день. Платные: Start 490 ₽, Standard 790 ₽, Pro 1090 ₽, Business 1990 ₽ за 30 дней. Автопродления нет; оплата картой или через СБП на защищённой странице PlateGA.": "La formule gratuite comprend 3 analyses de tâches par IA par jour. Formules payantes : Start 490 RUB, Standard 790 RUB, Pro 1090 RUB et Business 1990 RUB pour 30 jours. Sans renouvellement automatique ; paiement par carte ou virement instantané sur la page sécurisée PlateGA.",
+    "— 3 AI-разбора задач в день. Платные:": "— 3 analyses de tâches par IA par jour. Formules payantes :",
+    "1990 ₽ за 30 дней. Автопродления нет; оплата картой или через СБП на защищённой странице PlateGA.": "1990 RUB pour 30 jours. Sans renouvellement automatique ; paiement par carte ou virement instantané sur la page sécurisée PlateGA.",
     "Документы": "Documents",
     "Поддержка": "Assistance",
     "Документы и поддержка": "Documents et assistance",

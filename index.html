@@ -86,7 +86,7 @@
     {"@type":"Question","name":"Что такое AI-дебаты приоритетов?","acceptedAnswer":{"@type":"Answer","text":"Две AI-модели спорят «за» и «против» важности каждой задачи и выдают взвешенный вердикт — что делать первым."}},
     {"@type":"Question","name":"Нужно ли печатать задачи вручную?","acceptedAnswer":{"@type":"Answer","text":"Нет. Продиктуй задачи голосом одним потоком — распознавание и разбор берёт на себя AI."}},
     {"@type":"Question","name":"Когда запуск и на каких платформах?","acceptedAnswer":{"@type":"Answer","text":"Готовится выход в RuStore, Google Play и App Store. Оставьте e-mail в списке ожидания, чтобы получить ссылку в день запуска."}},
-    {"@type":"Question","name":"Сколько это будет стоить?","acceptedAnswer":{"@type":"Answer","text":"Есть бесплатный тариф — 3 AI-разбора задач в день. Платные тарифы: Старт 490 ₽/мес (15 в день), Стандарт 790 ₽/мес (30), Про 1090 ₽/мес (50), Бизнес от 1990 ₽/мес (100). Оплата через YooKassa, годовая — 2 месяца в подарок."}}
+    {"@type":"Question","name":"Сколько это будет стоить?","acceptedAnswer":{"@type":"Answer","text":"Есть бесплатный тариф — 3 AI-разбора задач в день. Платные тарифы: Start 490 ₽, Standard 790 ₽, Pro 1090 ₽ и Business 1990 ₽ за 30 дней без автоматического продления. Оплата картой или через СБП на защищённой странице PlateGA."}}
   ]
 }
 </script>
@@ -501,6 +501,11 @@
   .plan .anchor{font-size:11px; color:var(--text-muted); margin:0 0 6px; letter-spacing:.01em}
   .plan .anchor b{color:var(--text-dim); font-weight:500}
   .plan .desc{font-size:12.5px; color:var(--text-dim); line-height:1.6}
+  .plan-buy{display:flex; align-items:center; justify-content:center; min-height:42px; margin-top:auto; padding:10px 12px;
+    border:1px solid var(--hair); border-radius:8px; color:var(--text); font-size:12.5px; font-weight:700;
+    text-decoration:none; transition:transform .18s ease,border-color .18s ease,background .18s ease}
+  .plan-buy:hover{transform:translateY(-1px); border-color:var(--gold-bright); background:rgba(232,237,246,.07)}
+  .plan.pop .plan-buy{background:var(--grad-plat); border-color:transparent; color:var(--on-accent)}
   @media(max-width:900px){ .pricing{grid-template-columns:repeat(2,1fr)} }
   @media(max-width:520px){ .pricing{grid-template-columns:1fr} }
   .pricing-note{text-align:center; color:var(--text-muted); font-size:13px; margin-top:22px}
@@ -964,7 +969,7 @@
         <a class="btn btn-ghost" href="#waitlist">Сообщить о релизе в сторах →</a>
         <button id="pwaInstall" class="btn btn-ghost" type="button" hidden>Установить веб-версию</button>
       </div>
-      <p class="pay-line reveal">Оплата подписки к запуску: для России — <b>СБП и YooKassa</b> (карты МИР, Visa, Mastercard); за рубежом — <b>Stripe и PayPal</b>.</p>
+      <p class="pay-line reveal">Оплата доступна сейчас: <b>карта или СБП через PlateGA</b>. Тариф действует 30 дней и не продлевается автоматически.</p>
     </div>
   </section>
 
@@ -977,13 +982,13 @@
         <p>Цена — за месяц, лимит — число AI-разборов задач в день. Подписка оформляется прямо в приложении.</p>
       </div>
       <div class="pricing">
-        <div class="plan reveal"><div class="pn">Free</div><div class="lim">0<small>₽ навсегда</small></div><div class="quota">3 задачи в день</div><div class="desc">Попробовать всё ядро без оплаты.</div></div>
-        <div class="plan reveal"><div class="pn">Start</div><div class="lim">490<small>₽ / мес</small></div><div class="quota">15 задач в день</div><div class="desc">Для личных дел и учёбы.</div></div>
-        <div class="plan pop reveal"><span class="tag">ПОПУЛЯРНЫЙ</span><div class="pn">Standard</div><div class="lim">790<small>₽ / мес</small></div><div class="quota">30 задач в день</div><div class="anchor"><b>≈ 26 ₽ в день</b> — дешевле кофе</div><div class="desc">Для насыщенного рабочего ритма.</div></div>
-        <div class="plan reveal"><div class="pn">Pro</div><div class="lim">1090<small>₽ / мес</small></div><div class="quota">50 задач в день</div><div class="desc">Максимум для профессионалов.</div></div>
-        <div class="plan reveal"><div class="pn">Business</div><div class="lim">от 1990<small>₽ / мес</small></div><div class="quota">100 задач в день</div><div class="desc">Команды и повышенные объёмы.</div></div>
+        <div class="plan reveal" data-plan="free"><div class="pn">Free</div><div class="lim"><span data-plan-price>0</span><small>₽ навсегда</small></div><div class="quota">3 задачи в день</div><div class="desc">Попробовать всё ядро без оплаты.</div><a class="plan-buy" href="app.html?buy=free">Открыть приложение</a></div>
+        <div class="plan reveal" data-plan="start"><div class="pn">Start</div><div class="lim"><span data-plan-price>490</span><small>₽ / 30 дней</small></div><div class="quota">15 задач в день</div><div class="desc">Для личных дел и учёбы.</div><a class="plan-buy" href="app.html?buy=start">Выбрать тариф</a></div>
+        <div class="plan pop reveal" data-plan="standard"><span class="tag">ПОПУЛЯРНЫЙ</span><div class="pn">Standard</div><div class="lim"><span data-plan-price>790</span><small>₽ / 30 дней</small></div><div class="quota">30 задач в день</div><div class="anchor"><b>≈ 26 ₽ в день</b> — дешевле кофе</div><div class="desc">Для насыщенного рабочего ритма.</div><a class="plan-buy" href="app.html?buy=standard">Выбрать тариф</a></div>
+        <div class="plan reveal" data-plan="pro"><div class="pn">Pro</div><div class="lim"><span data-plan-price>1090</span><small>₽ / 30 дней</small></div><div class="quota">50 задач в день</div><div class="desc">Максимум для профессионалов.</div><a class="plan-buy" href="app.html?buy=pro">Выбрать тариф</a></div>
+        <div class="plan reveal" data-plan="business"><div class="pn">Business</div><div class="lim"><span data-plan-price>1990</span><small>₽ / 30 дней</small></div><div class="quota">100 задач в день</div><div class="desc">Команды и повышенные объёмы.</div><a class="plan-buy" href="app.html?buy=business">Выбрать тариф</a></div>
       </div>
-      <p class="pricing-note">Годовая подписка — <b>2 месяца в подарок</b> · оплата через YooKassa</p>
+      <p class="pricing-note" id="pricingStatus">Цена за <b>30 дней без автопродления</b> · безопасная оплата через PlateGA</p>
     </div>
   </section>
 
@@ -1013,7 +1018,7 @@
         </details>
         <details>
           <summary><span class="qt">Сколько это будет стоить?</span><span class="q-ic" aria-hidden="true"></span></summary>
-          <div class="a">Есть <b>бесплатный тариф</b> — 3 AI-разбора задач в день, чтобы попробовать всё ядро. Платные: <b>Старт</b> 490 ₽/мес (15 в день), <b>Стандарт</b> 790 ₽/мес (30), <b>Про</b> 1090 ₽/мес (50), <b>Бизнес</b> от 1990 ₽/мес (100). Оплата через YooKassa, годовая подписка — 2 месяца в подарок.</div>
+          <div class="a">Есть <b>бесплатный тариф</b> — 3 AI-разбора задач в день. Платные: <b>Start</b> 490 ₽, <b>Standard</b> 790 ₽, <b>Pro</b> 1090 ₽, <b>Business</b> 1990 ₽ за 30 дней. Автопродления нет; оплата картой или через СБП на защищённой странице PlateGA.</div>
         </details>
       </div>
     </div>
@@ -1344,6 +1349,23 @@
       playPressSound();
     });
   });
+
+  // Витрина показывает значения из того же источника, по которому backend
+  // создаёт платёж. Если сеть недоступна, остаётся опубликованный прайс, но
+  // checkout всё равно повторно берёт цену с сервера и не доверяет HTML.
+  fetch("https://158.160.192.153/infra/billing/plans",{headers:{Accept:"application/json"}})
+    .then(function(res){if(!res.ok) throw new Error("plans"); return res.json();})
+    .then(function(plans){
+      (plans||[]).forEach(function(plan){
+        var card=document.querySelector('.plan[data-plan="'+String(plan.code).replace(/"/g,"")+'"]');
+        if(!card) return;
+        var price=card.querySelector("[data-plan-price]");
+        if(price) price.textContent=Math.round(Number(plan.price_rub_monthly)||0).toLocaleString("ru-RU");
+        var quota=card.querySelector(".quota");
+        if(quota) quota.textContent=plan.daily_request_limit<0 ? "Без лимита" : plan.daily_request_limit+" задач в день";
+        card.setAttribute("data-price-state","live");
+      });
+    }).catch(function(){});
 
   // ===== PWA: установка веб-версии на главный экран =====
   var pwaBtn = document.getElementById("pwaInstall");

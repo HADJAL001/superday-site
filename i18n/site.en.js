@@ -2,6 +2,19 @@
    Загружается только на лендинге (data-scope="site"), дополняя основной словарь. */
 window.__i18nDict("en", {
   t: {
+    "Открыть приложение": "Open app",
+    "Выбрать тариф": "Choose plan",
+    "₽ / 30 дней": "RUB / 30 days",
+    "Цена за": "Price for",
+    "30 дней без автопродления": "30 days with no auto-renewal",
+    "безопасная оплата через PlateGA": "secure payment via PlateGA",
+    "Без лимита": "Unlimited",
+    "Оплата доступна сейчас:": "Payment is available now:",
+    "карта или СБП через PlateGA": "card or instant bank transfer via PlateGA",
+    ". Тариф действует 30 дней и не продлевается автоматически.": ". The plan lasts 30 days and does not renew automatically.",
+    "Есть бесплатный тариф — 3 AI-разбора задач в день. Платные: Start 490 ₽, Standard 790 ₽, Pro 1090 ₽, Business 1990 ₽ за 30 дней. Автопродления нет; оплата картой или через СБП на защищённой странице PlateGA.": "There is a free plan with 3 AI task analyses per day. Paid plans: Start 490 RUB, Standard 790 RUB, Pro 1090 RUB, and Business 1990 RUB for 30 days. There is no auto-renewal; pay by card or instant bank transfer on PlateGA's secure page.",
+    "— 3 AI-разбора задач в день. Платные:": "— 3 AI task analyses per day. Paid plans:",
+    "1990 ₽ за 30 дней. Автопродления нет; оплата картой или через СБП на защищённой странице PlateGA.": "1990 RUB for 30 days. No auto-renewal; pay by card or instant bank transfer on PlateGA's secure page.",
     "Документы": "Documents",
     "Поддержка": "Support",
     "Документы и поддержка": "Documents and support",

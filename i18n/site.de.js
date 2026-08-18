@@ -1,6 +1,19 @@
 /* SUPER DAY — deutsches Wörterbuch der Startseite (Welle 11). */
 window.__i18nDict("de", {
   t: {
+    "Открыть приложение": "App öffnen",
+    "Выбрать тариф": "Tarif wählen",
+    "₽ / 30 дней": "RUB / 30 Tage",
+    "Цена за": "Preis für",
+    "30 дней без автопродления": "30 Tage ohne automatische Verlängerung",
+    "безопасная оплата через PlateGA": "sichere Zahlung über PlateGA",
+    "Без лимита": "Unbegrenzt",
+    "Оплата доступна сейчас:": "Zahlung ist jetzt verfügbar:",
+    "карта или СБП через PlateGA": "Karte oder Sofortüberweisung über PlateGA",
+    ". Тариф действует 30 дней и не продлевается автоматически.": ". Der Tarif gilt 30 Tage und verlängert sich nicht automatisch.",
+    "Есть бесплатный тариф — 3 AI-разбора задач в день. Платные: Start 490 ₽, Standard 790 ₽, Pro 1090 ₽, Business 1990 ₽ за 30 дней. Автопродления нет; оплата картой или через СБП на защищённой странице PlateGA.": "Der kostenlose Tarif umfasst 3 KI-Aufgabenanalysen pro Tag. Bezahlte Tarife: Start 490 RUB, Standard 790 RUB, Pro 1090 RUB und Business 1990 RUB für 30 Tage. Keine automatische Verlängerung; Zahlung per Karte oder Sofortüberweisung auf der geschützten PlateGA-Seite.",
+    "— 3 AI-разбора задач в день. Платные:": "— 3 KI-Aufgabenanalysen pro Tag. Bezahlte Tarife:",
+    "1990 ₽ за 30 дней. Автопродления нет; оплата картой или через СБП на защищённой странице PlateGA.": "1990 RUB für 30 Tage. Keine automatische Verlängerung; Zahlung per Karte oder Sofortüberweisung auf der geschützten PlateGA-Seite.",
     "Документы": "Dokumente",
     "Поддержка": "Support",
     "Документы и поддержка": "Dokumente und Support",

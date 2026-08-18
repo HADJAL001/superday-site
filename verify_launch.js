@@ -346,7 +346,7 @@ const SEED = () => {
     sign("блоки", marks.grid, 12);
     sign("панель", marks.bars, 12);
 
-    // Рельс разделов: десять знаков вместо цветных эмодзи — там их было видно
+    // Рельс разделов: одиннадцать знаков вместо цветных эмодзи — там их было видно
     // рядом с новым набором, и они выбивались сильнее всего.
     const rail = await page.evaluate(() => {
       const btns = Array.from(document.querySelectorAll("#rail button"));
@@ -358,13 +358,13 @@ const SEED = () => {
       });
     });
     console.log("\n=== 2б. Рельс разделов ===");
-    say(rail.length === 10, "все десять разделов на месте", rail.length + " шт");
+    say(rail.length === 11, "все одиннадцать разделов на месте", rail.length + " шт");
     say(rail.every(r => r.ok), "у каждого знак найден в спрайте",
       rail.filter(r => !r.ok).map(r => r.title + "→" + r.href).join(" | ") || "все");
     say(rail.every(r => !r.emoji), "эмодзи в рельсе не осталось",
       rail.filter(r => r.emoji).map(r => r.title).join(" | ") || "чисто");
     const uniq = new Set(rail.map(r => r.href));
-    say(uniq.size >= 9, "знаки разделов не повторяются (кроме голоса)", uniq.size + " разных на 10 разделов");
+    say(uniq.size >= 10, "знаки разделов не повторяются (кроме голоса)", uniq.size + " разных на 11 разделов");
 
     console.log("\n=== 3. Тексты ===");
     say(marks.texts.rollover === true, "карточка «Новый день» показана (иначе знак разворота не проверить)");
