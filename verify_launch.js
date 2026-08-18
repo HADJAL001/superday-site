@@ -73,6 +73,7 @@ const SEED = () => {
     const indexSource = fs.readFileSync(path.join(siteDir, "index.html"), "utf8");
     const appSource = fs.readFileSync(path.join(siteDir, "app.html"), "utf8");
     const workerSource = fs.readFileSync(path.join(siteDir, "sw.js"), "utf8");
+    const legalScriptSource = fs.readFileSync(path.join(siteDir, "legal.js"), "utf8");
     const leafletPath = path.join(siteDir, "assets", "vendor", "leaflet-1.9.4.js");
     const leafletSource = fs.readFileSync(leafletPath, "utf8");
     const sitemapSource = fs.readFileSync(path.join(siteDir, "sitemap.xml"), "utf8");
@@ -85,9 +86,13 @@ const SEED = () => {
       .every(s => documentsSource.includes(s)), "все обязательные разделы опубликованы");
     say(/\bmellivora\b/.test(documentsSource) && /\bmellivora\b/.test(supportSource),
       "кодовое слово mellivora доступно проверяющему");
+    say([documentsSource, supportSource].every(source => /class="verification-panel" id="verification"/.test(source) &&
+      /id="verificationCode"[^>]+value="mellivora"/.test(source) && /data-copy-codeword/.test(source)) &&
+      /navigator\.clipboard\.writeText/.test(legalScriptSource),
+      "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v64/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v65/.test(workerSource), "версия кэша service worker обновлена");
     say(!/google\.com\/maps/i.test(appSource), "основной сценарий не содержит ссылок на внешний навигатор");
     say(/assets\/vendor\/leaflet-1\.9\.4\.js/.test(appSource) && !/unpkg\.com\/leaflet/.test(appSource) &&
       workerSource.includes('"/assets/vendor/leaflet-1.9.4.js"') && /Leaflet 1\.9\.4/.test(leafletSource),
@@ -122,6 +127,35 @@ const SEED = () => {
         probe.path + ": отдельные кнопки видны на 320px без переполнения",
         nav.count + " кнопки, overflow=" + nav.overflow);
     }
+    for (const pathName of ["documents.html", "support.html"]) {
+      await navPage.goto(BASE.replace("app.html", pathName) + "#verification", { waitUntil: "load" });
+      const verification = await navPage.evaluate(() => {
+        const panel = document.getElementById("verification"), code = document.getElementById("verificationCode"),
+          button = panel && panel.querySelector("[data-copy-codeword]"), r = panel && panel.getBoundingClientRect();
+        return { value: code && code.value, top: r && r.top, bottom: r && r.bottom,
+          buttonFits: !!button && button.scrollWidth <= button.clientWidth + 1 && button.scrollHeight <= button.clientHeight + 1,
+          overflow: document.documentElement.scrollWidth > innerWidth };
+      });
+      say(verification.value === "mellivora" && verification.top >= 60 && verification.bottom <= 800 &&
+        verification.buttonFits && !verification.overflow,
+        pathName + ": прямой якорь показывает код на первом экране 320×800", JSON.stringify(verification));
+    }
+    await navPage.goto(BASE.replace("app.html", "documents.html") + "#verification", { waitUntil: "load" });
+    await navPage.evaluate(() => {
+      window.__copiedCodeword = "";
+      Object.defineProperty(navigator, "clipboard", { configurable: true, value: {
+        writeText: async text => { window.__copiedCodeword = text; }
+      } });
+    });
+    await navPage.click("[data-copy-codeword]");
+    await navPage.waitForFunction(() => window.__copiedCodeword === "mellivora");
+    const copiedCodeword = await navPage.evaluate(() => ({
+      value: window.__copiedCodeword,
+      status: document.querySelector("[data-copy-status]").textContent,
+      button: document.querySelector("[data-copy-codeword]").textContent
+    }));
+    say(copiedCodeword.value === "mellivora" && /скопирован/i.test(copiedCodeword.status) && /Скопировано/.test(copiedCodeword.button),
+      "кнопка копирует mellivora через Clipboard API", copiedCodeword.status);
     for (const lang of ["en", "de", "zh"]) {
       await navPage.goto(BASE.replace("app.html", "index.html") + "?lang=" + lang, { waitUntil: "load" });
       await navPage.waitForFunction(() => window.SuperDayI18n && window.SuperDayI18n.ready === true,

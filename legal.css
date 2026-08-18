@@ -157,6 +157,85 @@ textarea:focus-visible {
 
 .legal-meta { margin: 14px 0 0; color: var(--text-muted); font-size: 13px; }
 
+/* Проверяющий приходит за одной конкретной строкой, поэтому код вынесен в
+   первый экран и оформлен как отдельный проверочный талон, а не абзац оферты. */
+.verification-panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.8fr);
+  gap: 24px;
+  align-items: center;
+  margin: 28px 0 0;
+  padding: 18px 20px 18px 23px;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  scroll-margin-top: 88px;
+}
+
+.verification-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--accent);
+}
+
+.verification-eyebrow {
+  margin: 0 0 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.verification-copy h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0;
+}
+
+.verification-copy p:last-child { margin: 7px 0 0; color: var(--text-dim); font-size: 13px; }
+.verification-token { min-width: 0; }
+.verification-token label { display: block; margin-bottom: 6px; color: var(--text-muted); font-size: 11px; font-weight: 700; }
+
+.verification-code-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.verification-code-row input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 11px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #090d15;
+  color: var(--text);
+  font: 700 18px/1.2 ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+.verification-code-row button {
+  min-width: 116px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--accent);
+  color: var(--accent-text);
+  cursor: pointer;
+  font: 700 13px/1 var(--font-ui);
+}
+
+.verification-code-row button:hover { filter: brightness(0.92); }
+.verification-status { display: block; min-height: 18px; margin-top: 5px; color: var(--ok); font-size: 11px; }
+
 .legal-layout {
   display: grid;
   grid-template-columns: minmax(210px, 260px) minmax(0, 1fr);
@@ -335,6 +414,7 @@ textarea:focus-visible {
   .legal-layout, .support-layout { grid-template-columns: 1fr; gap: 30px; }
   .legal-toc { position: static; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .legal-toc strong { grid-column: 1 / -1; }
+  .verification-panel { grid-template-columns: 1fr; gap: 15px; }
 }
 
 @media (max-width: 580px) {
@@ -346,6 +426,10 @@ textarea:focus-visible {
   .legal-nav .nav-secondary { display: none; }
   .legal-hero { padding: 45px 0 30px; }
   .legal-lead { font-size: 15px; }
+  .verification-panel { margin-top: 22px; padding: 15px 13px 15px 17px; }
+  .verification-copy h2 { font-size: 26px; }
+  .verification-code-row { grid-template-columns: minmax(0, 1fr) 112px; }
+  .verification-code-row button { min-width: 112px; padding: 8px; }
   .legal-layout, .support-layout { padding: 30px 0 52px; }
   .legal-toc { grid-template-columns: 1fr; }
   .legal-section h2 { font-size: 29px; }

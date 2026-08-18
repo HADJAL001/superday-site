@@ -39,12 +39,28 @@
         <h1>Документы сервиса</h1>
         <p class="legal-lead">Здесь собраны условия использования, правила обработки данных, согласие пользователя и порядок оплаты, отмены и возврата.</p>
         <p class="legal-meta">Редакция действует с 16 августа 2026 года.</p>
+        <section class="verification-panel" id="verification" aria-labelledby="verificationTitle">
+          <div class="verification-copy">
+            <p class="verification-eyebrow">Проверка платёжного сервиса</p>
+            <h2 id="verificationTitle">Кодовое слово</h2>
+            <p>Для менеджера на период согласования и регистрации кассы.</p>
+          </div>
+          <div class="verification-token">
+            <label for="verificationCode">Код для проверки</label>
+            <div class="verification-code-row">
+              <input id="verificationCode" type="text" value="mellivora" readonly spellcheck="false" />
+              <button type="button" data-copy-codeword data-copy-target="verificationCode">Копировать</button>
+            </div>
+            <span class="verification-status" data-copy-status role="status" aria-live="polite"></span>
+          </div>
+        </section>
       </div>
     </section>
 
     <div class="legal-wrap legal-layout">
       <nav class="legal-toc" aria-label="Содержание документов">
         <strong>Содержание</strong>
+        <a href="#verification">Код для проверки</a>
         <a href="#terms">Условия и оферта</a>
         <a href="#privacy">Политика данных</a>
         <a href="#consent">Согласие</a>
@@ -138,8 +154,7 @@
         <section class="legal-section" id="support">
           <h2>5. Поддержка и кодовое слово</h2>
           <p>Все обращения по сервису, данным, оплате, отмене и возврату принимаются через отдельную <a class="inline-link" href="support.html">форму поддержки</a>. После успешной отправки сервис показывает номер обращения; если номер не показан, отправка не подтверждена.</p>
-          <div class="legal-callout"><strong>Кодовое слово на период согласования:</strong> <code>mellivora</code></div>
-          <p>Кодовое слово используется только для проверки проекта и может быть удалено после завершения согласования и регистрации кассы.</p>
+          <p>Кодовое слово <strong>mellivora</strong> опубликовано в <a class="inline-link" href="#verification">блоке проверки в начале страницы</a>. Оно используется только для проверки проекта и может быть удалено после завершения согласования и регистрации кассы.</p>
         </section>
       </article>
     </div>
