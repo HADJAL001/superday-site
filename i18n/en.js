@@ -69,6 +69,7 @@ window.__i18nDict("en", {
     "— горит по времени.": "— pressing by the clock.",
     "— двигает жизнь. Переложить можно перетаскиванием за ручку ☰.": "— moves life forward. Drag by the ☰ handle to move a task.",
     "ГОВОРИТЕ И ВАШ ИИ ПРОЛОЖИТ ЛУЧШИЙ ПУТЬ": "SPEAK AND YOUR AI WILL PLOT THE BEST PATH",
+    "Скажите или напишите дело": "Say or type a task",
     "ГОВОРИТЕ ИЛИ ВСТАВЬТЕ ВЕСЬ СПИСОК — ИИ РАЗЛОЖИТ ПО ВАЖНОСТИ": "SPEAK OR PASTE THE WHOLE LIST — THE AI WILL SORT IT BY IMPORTANCE",
     "СКАЖИТЕ ДЕЛА — ИИ ПОКАЖЕТ ИХ НА КАРТЕ И СОБЕРЁТ ПЛАН ДНЯ": "SPEAK YOUR TASKS — THE AI WILL SHOW THEM ON THE MAP AND BUILD THE DAY'S PLAN",
     "План на день": "Plan for the day",

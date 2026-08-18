@@ -93,7 +93,7 @@ const SEED = () => {
       "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v72/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v73/.test(workerSource), "версия кэша service worker обновлена");
     say(!/google\.com\/maps/i.test(appSource), "основной сценарий не содержит ссылок на внешний навигатор");
     say(/отправлен(?:о)? на модерацию в RuStore|отправлено в RuStore/.test(landingSource) &&
       /НА МОДЕРАЦИИ/.test(landingSource), "лендинг показывает актуальный статус публикации в RuStore");
@@ -130,6 +130,17 @@ const SEED = () => {
         probe.path + ": отдельные кнопки видны на 320px без переполнения",
         nav.count + " кнопки, overflow=" + nav.overflow);
     }
+    await navPage.goto(BASE, { waitUntil: "domcontentloaded" });
+    const appHeader = await navPage.evaluate(() => {
+      const controls = Array.from(document.querySelectorAll("header .right > a,header .right > button"))
+        .filter(el => getComputedStyle(el).display !== "none");
+      const rects = controls.map(el => {
+        const r = el.getBoundingClientRect(); return { w: r.width, h: r.height, left: r.left, right: r.right };
+      });
+      return { count: controls.length, rects, overflow: document.documentElement.scrollWidth > innerWidth };
+    });
+    say(appHeader.count === 5 && appHeader.rects.every(r => r.h >= 40 && r.left >= 0 && r.right <= 320) && !appHeader.overflow,
+      "app.html: мобильная шапка имеет удобные зоны касания на 320px", JSON.stringify(appHeader));
     for (const pathName of ["documents.html", "support.html"]) {
       await navPage.goto(BASE.replace("app.html", pathName) + "#verification", { waitUntil: "load" });
       const verification = await navPage.evaluate(() => {
@@ -372,7 +383,7 @@ const SEED = () => {
     console.log("\n=== 3. Тексты ===");
     say(marks.texts.rollover === true, "карточка «Новый день» показана (иначе знак разворота не проверить)");
     say(marks.emojiLeft.length === 0, "эмодзи в главных зонах не осталось", marks.emojiLeft.join(" | ") || "чисто");
-    say(marks.texts.placeholder === "ГОВОРИТЕ И ВАШ ИИ ПРОЛОЖИТ ЛУЧШИЙ ПУТЬ", "приглашение ввода заменено", marks.texts.placeholder);
+    say(marks.texts.placeholder === "Скажите или напишите дело", "приглашение ввода заменено", marks.texts.placeholder);
     say(/^\s*Срочно\s*$/.test(marks.texts.urgent), "тег «Срочно» без эмодзи", JSON.stringify(marks.texts.urgent));
     say(/^\s*Важно\s*$/.test(marks.texts.important), "тег «Важно» без эмодзи", JSON.stringify(marks.texts.important));
     say(/^\s*Фокус\s*$/.test(marks.texts.focusBtn), "кнопка «Фокус» без эмодзи", JSON.stringify(marks.texts.focusBtn));

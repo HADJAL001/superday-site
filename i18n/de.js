@@ -65,6 +65,7 @@ window.__i18nDict("de", {
     "— горит по времени.": "— drängt zeitlich.",
     "— двигает жизнь. Переложить можно перетаскиванием за ручку ☰.": "— bewegt das Leben. Verschieben geht durch Ziehen am Griff ☰.",
     "ГОВОРИТЕ И ВАШ ИИ ПРОЛОЖИТ ЛУЧШИЙ ПУТЬ": "SPRECHEN SIE — IHRE KI FINDET DEN BESTEN WEG",
+    "Скажите или напишите дело": "Aufgabe sagen oder eingeben",
     "ГОВОРИТЕ ИЛИ ВСТАВЬТЕ ВЕСЬ СПИСОК — ИИ РАЗЛОЖИТ ПО ВАЖНОСТИ": "SPRECHEN ODER GANZE LISTE EINFÜGEN — DIE KI SORTIERT NACH WICHTIGKEIT",
     "СКАЖИТЕ ДЕЛА — ИИ ПОКАЖЕТ ИХ НА КАРТЕ И СОБЕРЁТ ПЛАН ДНЯ": "SPRECHEN SIE IHRE AUFGABEN — DIE KI ZEIGT SIE AUF DER KARTE UND ERSTELLT DEN TAGESPLAN",
     "План на день": "Plan für den Tag",

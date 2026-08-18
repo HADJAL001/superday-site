@@ -789,18 +789,19 @@
   .bar .right{display:flex; align-items:center; gap:12px}
 
   @media(max-width:680px){
-    .bar{padding-left:12px;padding-right:12px;gap:8px}
+    header{padding-top:env(safe-area-inset-top,0px)}
+    .bar{height:58px;padding-left:10px;padding-right:10px;gap:8px}
     .brand .beta,.back{display:none}
     .bar .right{gap:5px}
-    .head-service{min-height:32px;padding:5px 7px;font-size:11px}
-    .panel-btn{width:34px;height:34px;padding:0;justify-content:center;border-radius:8px}
+    .head-service{min-height:40px;padding:6px 8px;font-size:11px}
+    .panel-btn{width:42px;height:42px;padding:0;justify-content:center;border-radius:9px}
     .panel-btn .pb-label{display:none}
-    .theme-btn{width:38px;min-width:38px;height:38px;min-height:38px;padding:0;border-radius:9px}
+    .theme-btn{width:42px;min-width:42px;height:42px;min-height:42px;padding:0;border-radius:9px}
     .theme-btn .theme-label{display:none}
   }
   @media(prefers-reduced-motion:reduce){.theme-btn{transition:none}}
-  @media(max-width:430px){.brand b{display:none}.brand{gap:0}.brand img{width:28px;height:28px}}
-  @media(max-width:340px){.head-service{padding:5px;font-size:10.5px}.panel-btn{width:32px;height:32px}}
+  @media(max-width:430px){.brand{display:none}}
+  @media(max-width:340px){.head-service{padding:5px 6px;font-size:10.5px}.bar .right{width:100%;justify-content:space-between;gap:3px}}
 
   .layout-pop{position:absolute; top:64px; right:16px; z-index:41; width:250px; padding:12px;
     border-radius:14px; border:1px solid var(--border); background:var(--panel-bg,var(--ink));
@@ -1389,7 +1390,7 @@
   .sp-meta .sp-dot{opacity:.5; margin:0 5px}
   .sp-items{font-size:11.5px; line-height:1.4; color:var(--champagne); margin-top:3px; word-break:break-word}
   @media(max-width:640px){
-    .stage{min-height:calc(100svh - 120px); gap:15px}
+    .stage{min-height:calc(100svh - 104px); gap:13px; padding-top:14px}
     .stage-mic{width:82px; height:82px}
     .stage-mic .sdi{width:34px; height:34px}
     .stage-say{font-size:11px; letter-spacing:.13em; max-width:330px}
@@ -1400,6 +1401,15 @@
     .in-title{font-size:18px}
     .in-guide{padding:10px 8px}
     .in-guide b{font-size:19px}
+    .composer{width:calc(100% - 16px); padding:10px 10px calc(10px + env(safe-area-inset-bottom,0px)); border-radius:16px 16px 0 0}
+    .composer .row1{display:grid; grid-template-columns:minmax(0,1fr) 46px 46px; gap:8px; align-items:stretch}
+    .composer input[type=text]{grid-column:1; min-height:46px; padding:12px 12px; font-size:16px}
+    .composer .mic-btn,.composer .bulk-btn{width:46px; min-width:46px; min-height:46px; height:46px; border-radius:11px}
+    .composer .add-btn{grid-column:1 / -1; min-height:46px; padding:0 16px}
+    .toggles{gap:7px; margin-top:9px; flex-wrap:nowrap}
+    .tg{min-height:38px; padding:8px 11px; font-size:12px}
+    .toggles .hint{display:none}
+    main.wrap{padding-bottom:178px}
   }
   .pg-lead .sdi{margin-right:1px}
 </style>
@@ -1618,7 +1628,7 @@
 </main>
 <section class="composer" id="composer" aria-label="Добавить задачу">
   <div class="row1">
-    <input type="text" id="taskInput" placeholder="ГОВОРИТЕ И ВАШ ИИ ПРОЛОЖИТ ЛУЧШИЙ ПУТЬ" autocomplete="off" />
+    <input type="text" id="taskInput" placeholder="Скажите или напишите дело" autocomplete="off" />
     <button class="mic-btn" id="micBtn" type="button" title="Продиктовать задачу голосом" aria-label="Продиктовать задачу голосом" aria-pressed="false"><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-mic"/></svg></button>
     <button class="bulk-btn" id="bulkBtn" type="button" title="Наговорить или вставить сразу весь список дел — ИИ разложит по важности" aria-label="Разобрать список дел"><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-stack"/></svg></button>
     <button class="add-btn" id="addBtn" type="button">Добавить</button>
