@@ -92,7 +92,7 @@ const SEED = () => {
       "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v65/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v66/.test(workerSource), "версия кэша service worker обновлена");
     say(!/google\.com\/maps/i.test(appSource), "основной сценарий не содержит ссылок на внешний навигатор");
     say(/assets\/vendor\/leaflet-1\.9\.4\.js/.test(appSource) && !/unpkg\.com\/leaflet/.test(appSource) &&
       workerSource.includes('"/assets/vendor/leaflet-1.9.4.js"') && /Leaflet 1\.9\.4/.test(leafletSource),
@@ -610,15 +610,32 @@ const SEED = () => {
       "маршрут запускается внутри SUPER DAY без внешней ссылки", routeBrief.action);
     const internalNavigation = await page.evaluate(() => {
       document.getElementById("routeNavigate").click();
-      const panel = document.getElementById("internalNav"), metrics = document.getElementById("internalNavMetrics"),
-        composer = document.getElementById("composer"), popup = window.mapPopup(window.mapState.lastTasks[0], 0, "#fff");
+      const panel = document.getElementById("internalNav"), guidance = document.getElementById("internalNavGuidance"),
+        trip = document.getElementById("internalNavTrip"), composer = document.getElementById("composer"),
+        popup = window.mapPopup(window.mapState.lastTasks[0], 0, "#fff"), realRoute = window.mapState.lastRoute,
+        realTasks = window.mapState.navigationTasks.slice();
+      const ready = {
+        guidance: guidance.textContent,
+        trip: trip.textContent,
+        tripCollapsed: !trip.hidden && !trip.open,
+        process: document.getElementById("internalNavProcessText").textContent,
+        state: document.getElementById("internalNavStatus").dataset.state
+      };
+      window.renderInternalNavigation(null, realTasks);
+      const routing = {
+        state: document.getElementById("internalNavStatus").dataset.state,
+        text: document.getElementById("internalNavProcessText").textContent,
+        guidanceHidden: guidance.hidden,
+        tripHidden: trip.hidden
+      };
+      window.renderInternalNavigation(realRoute, realTasks);
+      trip.open = true;
       return {
         visible: !panel.hidden,
         active: document.body.classList.contains("nav-active") && window.mapState.navigationActive,
         task: document.getElementById("internalNavTask").textContent,
         address: document.getElementById("internalNavAddress").textContent,
-        metrics: metrics.textContent,
-        note: document.getElementById("internalNavNote").textContent,
+        ready, routing, detailsOpen: trip.open,
         composerHidden: getComputedStyle(composer).display === "none",
         popupButton: !!popup.querySelector("button.mp-nav"),
         popupExternal: !!popup.querySelector("a[href*='google.com/maps']"),
@@ -626,11 +643,16 @@ const SEED = () => {
       };
     });
     say(internalNavigation.visible && internalNavigation.active && /Встреча/i.test(internalNavigation.task) &&
-      /Тверск/i.test(internalNavigation.address) && /4[,.]8\s*км/.test(internalNavigation.metrics) &&
-      /18\s*мин/.test(internalNavigation.metrics) && /0[,.]4\s*л/.test(internalNavigation.metrics) && /26\s*₽/.test(internalNavigation.metrics),
-      "внутренняя навигация показывает остановку, адрес, ETA, топливо и стоимость", internalNavigation.metrics);
+      /Тверск/i.test(internalNavigation.address) && /4[,.]8\s*км/.test(internalNavigation.ready.guidance) &&
+      /18\s*мин/.test(internalNavigation.ready.guidance) && /0[,.]4\s*л/.test(internalNavigation.ready.trip) &&
+      /26\s*₽/.test(internalNavigation.ready.trip) && internalNavigation.ready.tripCollapsed &&
+      internalNavigation.ready.state === "tracking" && internalNavigation.detailsOpen && !/%/.test(internalNavigation.ready.guidance),
+      "навигация оставляет главные данные на виду, а расход раскрывает по запросу", internalNavigation.ready.guidance);
+    say(internalNavigation.routing.state === "routing" && /сервера/.test(internalNavigation.routing.text) &&
+      internalNavigation.routing.guidanceHidden && internalNavigation.routing.tripHidden && !/%/.test(internalNavigation.routing.text),
+      "процесс показывает реальный запрос маршрута без фиктивного процента", internalNavigation.routing.text);
     say(internalNavigation.composerHidden && internalNavigation.popupButton && !internalNavigation.popupExternal && !internalNavigation.externalInDom,
-      "карта остаётся главным экраном, popup запускает маршрут внутри приложения", internalNavigation.note);
+      "карта остаётся главным экраном, popup запускает маршрут внутри приложения", internalNavigation.ready.process);
     const internalStopped = await page.evaluate(() => {
       document.getElementById("internalNavStop").click();
       return document.getElementById("internalNav").hidden && !document.body.classList.contains("nav-active") &&
@@ -740,12 +762,15 @@ const SEED = () => {
       const buttonsFit = Array.from(panel.querySelectorAll("button")).every(b => b.scrollWidth <= b.clientWidth + 1 && b.scrollHeight <= b.clientHeight + 1);
       const out = { visible: !panel.hidden, left: p.left, right: p.right, top: p.top, bottom: p.bottom,
         overflow: document.documentElement.scrollWidth > innerWidth, buttonsFit,
+        guidanceVisible: !document.getElementById("internalNavGuidance").hidden,
+        detailsCollapsed: !document.getElementById("internalNavTrip").hidden && !document.getElementById("internalNavTrip").open,
         composerHidden: getComputedStyle(document.getElementById("composer")).display === "none" };
       window.stopInternalNavigation();
       return out;
     });
     say(mobileInternal.visible && mobileInternal.left >= 0 && mobileInternal.right <= 430 && mobileInternal.top >= 0 &&
-      mobileInternal.bottom <= 900 && !mobileInternal.overflow && mobileInternal.buttonsFit && mobileInternal.composerHidden,
+      mobileInternal.bottom <= 900 && !mobileInternal.overflow && mobileInternal.buttonsFit && mobileInternal.composerHidden &&
+      mobileInternal.guidanceVisible && mobileInternal.detailsCollapsed,
       "встроенная навигация на 430×900 помещается целиком и не перекрывается вводом", JSON.stringify(mobileInternal));
     await page.screenshot({ path: artifact("stage-mobile.png") });
     await ctx.close();
