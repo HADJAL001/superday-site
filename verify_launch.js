@@ -87,7 +87,8 @@ const SEED = () => {
       "кодовое слово mellivora доступно проверяющему");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v63/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v64/.test(workerSource), "версия кэша service worker обновлена");
+    say(!/google\.com\/maps/i.test(appSource), "основной сценарий не содержит ссылок на внешний навигатор");
     say(/assets\/vendor\/leaflet-1\.9\.4\.js/.test(appSource) && !/unpkg\.com\/leaflet/.test(appSource) &&
       workerSource.includes('"/assets/vendor/leaflet-1.9.4.js"') && /Leaflet 1\.9\.4/.test(leafletSource),
       "Leaflet 1.9.4 локален и входит в offline shell");
@@ -563,14 +564,45 @@ const SEED = () => {
       visible: !document.getElementById("routeBrief").hidden,
       title: document.getElementById("routeBriefTitle").textContent,
       values: document.getElementById("routeBriefMetrics").textContent,
-      nav: document.getElementById("routeNavigate").href,
+      tag: document.getElementById("routeNavigate").tagName,
+      href: document.getElementById("routeNavigate").getAttribute("href"),
+      target: document.getElementById("routeNavigate").getAttribute("target"),
       action: document.getElementById("routeNavigate").textContent
     }));
     say(routeBrief.visible && /Тверск/i.test(routeBrief.title) && /4[,.]8\s*км/.test(routeBrief.values) &&
       /18\s*мин/.test(routeBrief.values) && /0[,.]4\s*л/.test(routeBrief.values) && /26\s*₽/.test(routeBrief.values),
       "расстояние, ETA, топливо и стоимость видны прямо на первом экране", routeBrief.title + " · " + routeBrief.values);
-    say(/origin=55\.751244%2C37\.618423/.test(routeBrief.nav) && /destination=55\.764812%2C37\.605511/.test(routeBrief.nav) &&
-      /Открыть навигацию/.test(routeBrief.action), "кнопка навигации передаёт явные старт и назначение", routeBrief.nav);
+    say(routeBrief.tag === "BUTTON" && routeBrief.href === null && routeBrief.target === null && /Начать маршрут/.test(routeBrief.action),
+      "маршрут запускается внутри SUPER DAY без внешней ссылки", routeBrief.action);
+    const internalNavigation = await page.evaluate(() => {
+      document.getElementById("routeNavigate").click();
+      const panel = document.getElementById("internalNav"), metrics = document.getElementById("internalNavMetrics"),
+        composer = document.getElementById("composer"), popup = window.mapPopup(window.mapState.lastTasks[0], 0, "#fff");
+      return {
+        visible: !panel.hidden,
+        active: document.body.classList.contains("nav-active") && window.mapState.navigationActive,
+        task: document.getElementById("internalNavTask").textContent,
+        address: document.getElementById("internalNavAddress").textContent,
+        metrics: metrics.textContent,
+        note: document.getElementById("internalNavNote").textContent,
+        composerHidden: getComputedStyle(composer).display === "none",
+        popupButton: !!popup.querySelector("button.mp-nav"),
+        popupExternal: !!popup.querySelector("a[href*='google.com/maps']"),
+        externalInDom: !!document.querySelector("a[href*='google.com/maps']")
+      };
+    });
+    say(internalNavigation.visible && internalNavigation.active && /Встреча/i.test(internalNavigation.task) &&
+      /Тверск/i.test(internalNavigation.address) && /4[,.]8\s*км/.test(internalNavigation.metrics) &&
+      /18\s*мин/.test(internalNavigation.metrics) && /0[,.]4\s*л/.test(internalNavigation.metrics) && /26\s*₽/.test(internalNavigation.metrics),
+      "внутренняя навигация показывает остановку, адрес, ETA, топливо и стоимость", internalNavigation.metrics);
+    say(internalNavigation.composerHidden && internalNavigation.popupButton && !internalNavigation.popupExternal && !internalNavigation.externalInDom,
+      "карта остаётся главным экраном, popup запускает маршрут внутри приложения", internalNavigation.note);
+    const internalStopped = await page.evaluate(() => {
+      document.getElementById("internalNavStop").click();
+      return document.getElementById("internalNav").hidden && !document.body.classList.contains("nav-active") &&
+        !window.mapState.navigationActive && getComputedStyle(document.getElementById("composer")).display !== "none";
+    });
+    say(internalStopped, "маршрут завершается внутри приложения и возвращает обычный экран");
     say(attempts.parse === 2 && attempts.geocode === 2 && attempts.route === 2,
       "временные 5xx parse/geocode/route повторены ровно один раз", JSON.stringify(attempts));
     say(new Set(parseBodies).size === 1 && new Set(geocodeQueries).size === 1 &&
@@ -633,7 +665,8 @@ const SEED = () => {
         note: document.getElementById("routeBriefNote").textContent,
         metricsHidden: document.getElementById("routeBriefMetrics").hidden,
         locateVisible: !document.getElementById("routeLocateBtn").hidden,
-        nav: document.getElementById("routeNavigate").href,
+        navTag: document.getElementById("routeNavigate").tagName,
+        navHref: document.getElementById("routeNavigate").getAttribute("href"),
         navText: document.getElementById("routeNavigate").textContent
       };
       window.mapState.userLoc = saved.loc;
@@ -641,7 +674,8 @@ const SEED = () => {
       return result;
     });
     say(/Тверская/.test(missingOrigin.title) && /текущей геопозиции/.test(missingOrigin.note) &&
-      missingOrigin.metricsHidden && missingOrigin.locateVisible && !/origin=/.test(missingOrigin.nav) && /Открыть адрес/.test(missingOrigin.navText),
+      missingOrigin.metricsHidden && missingOrigin.locateVisible && missingOrigin.navTag === "BUTTON" &&
+      missingOrigin.navHref === null && /Показать остановку на карте/.test(missingOrigin.navText),
       "без геолокации адрес и действия видны, фиктивных времени и километров нет", missingOrigin.note);
     await page.evaluate(() => window.renderMapCard());
     say(errs.length === 0, "нет ошибок исполнения на этом пути", errs.join(" | ") || "чисто");
@@ -659,6 +693,26 @@ const SEED = () => {
     say(mobileRoute.visible && mobileRoute.left >= 0 && mobileRoute.right <= 430 && !mobileRoute.overflow &&
       mobileRoute.bottom < mobileRoute.composerTop && mobileRoute.actionFits && mobileRoute.actionW >= 120,
       "маршрутная панель на 430×900 не перекрыта и не выходит за экран", JSON.stringify(mobileRoute));
+    const mobileInternal = await page.evaluate(() => {
+      const task = { id: "mobile-nav", text: "Встреча", time: "15:00", dur: 45,
+        loc: { lat: 55.764812, lon: 37.605511, label: "Тверская улица, 1" } };
+      window.mapState.userLoc = { lat: 55.751244, lon: 37.618423 };
+      window.mapState.userLocState = "ready";
+      window.mapState.lastTasks = [task];
+      window.mapState.lastRoute = { mode: "google", km: 4.8, distanceMeters: 4837, minutesTraffic: 18,
+        trafficLevel: "moderate", fuelLiters: .4, fuelCost: 26 };
+      window.startInternalNavigation([task]);
+      const panel = document.getElementById("internalNav"), p = panel.getBoundingClientRect();
+      const buttonsFit = Array.from(panel.querySelectorAll("button")).every(b => b.scrollWidth <= b.clientWidth + 1 && b.scrollHeight <= b.clientHeight + 1);
+      const out = { visible: !panel.hidden, left: p.left, right: p.right, top: p.top, bottom: p.bottom,
+        overflow: document.documentElement.scrollWidth > innerWidth, buttonsFit,
+        composerHidden: getComputedStyle(document.getElementById("composer")).display === "none" };
+      window.stopInternalNavigation();
+      return out;
+    });
+    say(mobileInternal.visible && mobileInternal.left >= 0 && mobileInternal.right <= 430 && mobileInternal.top >= 0 &&
+      mobileInternal.bottom <= 900 && !mobileInternal.overflow && mobileInternal.buttonsFit && mobileInternal.composerHidden,
+      "встроенная навигация на 430×900 помещается целиком и не перекрывается вводом", JSON.stringify(mobileInternal));
     await page.screenshot({ path: artifact("stage-mobile.png") });
     await ctx.close();
   }
