@@ -38,6 +38,7 @@
 <!-- Одна гарнитурная пара с лендингом (паритет платформ): Cormorant Garamond
      на заголовки + Jost на интерфейс. Кириллица полная у обеих. -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("superday_theme_v1")==="emerald"?"emerald":"platinum";}catch(e){document.documentElement.dataset.theme="platinum";}</script>
 <style>
   :root{
     /* ============ ПЛАТИНА: ОДИН ЦВЕТ ТИПОГРАФИКИ ============
@@ -80,6 +81,16 @@
        Jost — геометрический гротеск интерфейса. Кириллица полная у обеих. */
     --font-display:"Cormorant Garamond","Playfair Display",Georgia,"Times New Roman",serif;
     --font-ui:"Jost","Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+  html[data-theme="emerald"]{
+    --plat:245,218,148; --text:rgb(var(--plat)); --text-dim:rgba(var(--plat),.76); --text-muted:rgba(var(--plat),.54);
+    --bg:#0B2418; --bg-deep:#03110B; --ink:#061810; --surface:#0D2D1D; --surface-alt:#123A26; --border:#225C3D;
+    --gold:#E8BE63; --gold-bright:#FFF0B8; --gold-deep:#9B7025; --champagne:rgba(var(--plat),.9);
+    --platinum:#F5DA94; --plat-dim:#C9AD68; --plat-deep:#7F6837; --on-accent:#09150D;
+    --hair:rgba(232,190,99,.32); --hair-soft:rgba(232,190,99,.13);
+    --grad-gold:linear-gradient(120deg,#9B7025 0%,#D7A943 24%,#FFF0B8 47%,#E8BE63 66%,#8A5D1B 100%);
+    --grad-plat:linear-gradient(120deg,#9B7025 0%,#D7A943 24%,#FFF0B8 47%,#E8BE63 66%,#8A5D1B 100%);
+    --q1:#F1C57A; --q2:#E8D59B; --q3:#C6E0B5; --q4:#B7D4C3;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
@@ -187,6 +198,9 @@
   .vm-config input{background:var(--ink); border:1px solid var(--border); color:var(--text); border-radius:10px;
     padding:8px 12px; font-family:inherit; font-size:13.5px; width:170px; outline:none}
   .vm-config input:focus{border-color:var(--gold); box-shadow:0 0 0 3px rgba(200,214,240,.12)}
+  .vm-config select{background:var(--ink); border:1px solid var(--border); color:var(--text); border-radius:10px;
+    padding:8px 12px; font-family:inherit; font-size:13.5px; min-width:210px; outline:none}
+  .vm-config select:focus{border-color:var(--gold); box-shadow:0 0 0 3px rgba(200,214,240,.12)}
   .vm-config-hint{font-size:11.5px; color:var(--text-muted)}
 
   /* Заметки */
@@ -759,6 +773,19 @@
   .panel-btn .pb-dot{position:absolute; top:5px; right:6px; width:7px; height:7px; border-radius:50%;
     background:var(--gold); box-shadow:0 0 0 2px rgba(8,13,26,.9)}
   .panel-btn .pb-dot[hidden]{display:none}
+  .theme-btn{position:relative; isolation:isolate; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    min-height:38px; padding:8px 14px; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:700;
+    color:var(--on-accent); background:var(--grad-gold); border:1px solid rgba(255,240,184,.7); border-radius:999px;
+    box-shadow:0 8px 24px -10px rgba(232,190,99,.72),inset 0 1px 0 rgba(255,255,255,.45);
+    transition:transform .18s ease,filter .18s ease,box-shadow .18s ease}
+  .theme-btn::after{content:""; position:absolute; inset:2px; z-index:-1; border:1px solid rgba(6,24,16,.18); border-radius:inherit; pointer-events:none}
+  .theme-btn:hover{transform:translateY(-1px); filter:brightness(1.08); box-shadow:0 11px 28px -9px rgba(232,190,99,.88),inset 0 1px 0 rgba(255,255,255,.5)}
+  .theme-btn:active{transform:translateY(0); filter:brightness(.96)}
+  .theme-btn:focus-visible{outline:3px solid var(--gold-bright); outline-offset:3px}
+  .theme-btn .theme-swatch{width:18px; height:18px; flex:0 0 18px; border-radius:50%;
+    background:linear-gradient(135deg,#EAF0FA 0 48%,#111827 50% 100%); border:2px solid rgba(9,21,13,.72);
+    box-shadow:0 0 0 2px rgba(255,255,255,.3)}
+  .theme-btn[aria-pressed="true"] .theme-swatch{background:linear-gradient(135deg,#0B3B24 0 48%,#FFF0B8 50% 100%)}
   .bar .right{display:flex; align-items:center; gap:12px}
 
   @media(max-width:680px){
@@ -768,7 +795,10 @@
     .head-service{min-height:32px;padding:5px 7px;font-size:11px}
     .panel-btn{width:34px;height:34px;padding:0;justify-content:center;border-radius:8px}
     .panel-btn .pb-label{display:none}
+    .theme-btn{width:38px;min-width:38px;height:38px;min-height:38px;padding:0;border-radius:9px}
+    .theme-btn .theme-label{display:none}
   }
+  @media(prefers-reduced-motion:reduce){.theme-btn{transition:none}}
   @media(max-width:430px){.brand b{display:none}.brand{gap:0}.brand img{width:28px;height:28px}}
   @media(max-width:340px){.head-service{padding:5px;font-size:10.5px}.panel-btn{width:32px;height:32px}}
 
@@ -1442,6 +1472,9 @@
       <a class="back" href="index.html">← На сайт</a>
       <a class="head-service" href="documents.html">Документы</a>
       <a class="head-service" href="support.html">Поддержка</a>
+      <button class="theme-btn" id="themeBtn" type="button" aria-pressed="false" title="Переключить цвет интерфейса">
+        <span class="theme-swatch" aria-hidden="true"></span><span class="theme-label">Цвет</span>
+      </button>
       <button class="panel-btn" id="layoutBtn" type="button" aria-expanded="false" aria-controls="layoutPop"
               title="Выбери, какие блоки видны на главном экране">
         <span class="pb-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-grid"/></svg></span><span class="pb-label">Блоки</span>
@@ -1696,6 +1729,14 @@
           <label for="wakeInput">Своё слово-обращение (по желанию):</label>
           <input id="wakeInput" type="text" autocomplete="off" maxlength="24" placeholder="Супер день" />
           <span class="vm-config-hint">— произнеси его, и оно откликнется</span>
+          <label for="ttsVoice">Голос ответа:</label>
+          <select id="ttsVoice" aria-label="Голос ответа">
+            <option value="jane">Джейн — спокойный, деловой</option>
+            <option value="oksana">Оксана — мягкий, уверенный</option>
+            <option value="alena">Алёна — ясный, энергичный</option>
+            <option value="filipp">Филипп — низкий, деловой</option>
+          </select>
+          <span class="vm-config-hint">— голос хранится на этом устройстве</span>
         </div>
         <p class="vm-privacy">🔒 Запись передаётся по HTTPS в Whisper SUPER DAY, превращается в текст и удаляется сразу после распознавания. Для AI-разбора используется только расшифровка.</p>
       </section>
@@ -1864,6 +1905,30 @@
      синхронно, а не по событию загрузки. -->
 <script src="growth.js"></script>
 <script>
+  var THEME_KEY = "superday_theme_v1";
+  function applyTheme(theme){
+    var emerald=theme==="emerald";
+    document.documentElement.dataset.theme=emerald ? "emerald" : "platinum";
+    var button=document.getElementById("themeBtn");
+    if(button){
+      button.setAttribute("aria-pressed",emerald?"true":"false");
+      button.title=emerald ? "Вернуть платиновую тему" : "Включить зелёную тему с золотыми буквами";
+    }
+    var meta=document.querySelector('meta[name="theme-color"]');
+    if(meta) meta.setAttribute("content",emerald?"#03110B":"#05070C");
+  }
+  var initialTheme="platinum";
+  try{ if(localStorage.getItem(THEME_KEY)==="emerald") initialTheme="emerald"; }catch(e){}
+  applyTheme(initialTheme);
+  (function(){
+    var button=document.getElementById("themeBtn"); if(!button) return;
+    button.addEventListener("click",function(){
+      var next=document.documentElement.dataset.theme==="emerald" ? "platinum" : "emerald";
+      try{ localStorage.setItem(THEME_KEY,next); }catch(e){}
+      applyTheme(next);
+      if(typeof toast==="function") toast(next==="emerald" ? "Зелёная премиальная тема включена" : "Платиновая тема включена");
+    });
+  })();
   var STORE_KEY = "superday_tasks_v1";
   var tasks = [];
   var pend = { urgent:false, important:false };
@@ -1871,7 +1936,7 @@
   try{ tasks = JSON.parse(localStorage.getItem(STORE_KEY) || "[]") || []; }catch(e){ tasks = []; }
 
   // ===== Версия схемы данных + миграции (на будущее, чтобы не терять данные) =====
-  var SCHEMA = 9;
+  var SCHEMA = 10;
   var CTX_LIST = ["work","home","health"];
   var CTX_LABEL = {work:"Работа", home:"Дом", health:"Здоровье"};
   var CTX_ICON = {work:"💼", home:"🏠", health:"❤️"};
@@ -2012,6 +2077,7 @@
         out.text = String(t.text||""); out.urgent=!!t.urgent; out.important=!!t.important; out.done=!!t.done;
         out.time=tm; out.dur=du; out.defer=df; out.repeat=rp; out.doneOn=dn; out.loc=lc; out.context=cx;
         out.items=items;
+        out.routeRank=(typeof t.routeRank==="number" && isFinite(t.routeRank) && t.routeRank>=0 && t.routeRank<1000) ? Math.round(t.routeRank) : null;
         out.spokenPlace=(typeof t.spokenPlace==="string" && t.spokenPlace.trim().length<=80) ? t.spokenPlace.trim() : null;
         out.placeQuery=(typeof t.placeQuery==="string" && t.placeQuery.trim().length<=160) ? t.placeQuery.trim() : null;
         out.remindedOn = (typeof t.remindedOn==="string"? t.remindedOn : null);
@@ -3892,7 +3958,7 @@
     var f = quadFlags(q);
     return { id:uid(), text:title, urgent:f.urgent, important:f.important,
              done:false, time:null, dur: validDur(+p.minutes) ? +p.minutes : null, defer:null, repeat:null,
-             doneOn:null, remindedOn:null, batchId:batchId, provisional:!!p.provisional,
+             doneOn:null, remindedOn:null, batchId:batchId, provisional:!!p.provisional, routeRank:null,
               loc:null, items:normItems(p.items),
               placeQuery:(typeof p.placeQuery==="string" && p.placeQuery.trim()) ? p.placeQuery.trim().slice(0,160) : null,
               spokenPlace:(typeof p.spokenPlace==="string" && p.spokenPlace.trim()) ? p.spokenPlace.trim().slice(0,80) : null,
@@ -4003,7 +4069,7 @@
     if(!title && pi.items.length) title="Покупки";
     var t={id:uid(), text:title, urgent:false, important:false, done:false,
       time:pt.time, dur:pd.dur, defer:null, repeat:pr.repeat,
-      doneOn:null, remindedOn:null, batchId:batchId, provisional:false,
+      doneOn:null, remindedOn:null, batchId:batchId, provisional:false, routeRank:null,
       aiConf:null, aiReason:"AI provider unavailable; explicit fields parsed locally", aiSource:"unavailable", aiModel:null, loc:null,
       items:pi.items,spokenPlace:pp.spokenPlace,placeQuery:pp.place};
     return {task:t, place:pp.place};
@@ -4818,7 +4884,11 @@
       if(a.done!==b.done) return a.done?1:-1;
       var ka=timeSortKey(a), kb=timeSortKey(b);
       if(ka!==kb) return ka-kb;
-      return quadOf(a) - quadOf(b);
+      var qa=quadOf(a), qb=quadOf(b);
+      if(qa!==qb) return qa-qb;
+      var ra=typeof a.routeRank==="number" ? a.routeRank : Infinity;
+      var rb=typeof b.routeRank==="number" ? b.routeRank : Infinity;
+      return ra-rb;
     });
   }
   // Бюджет дня (минуты фокус-времени) — сколько дел «влезает». Правится кликом.
@@ -5538,57 +5608,75 @@
     return {key:key,cancel:function(){ cancelRouteRequest(key,pending); }};
   }
 
-  // ===== Маршрут по геолокации: с чего лучше начать =====
-  // Не вызов внешнего ИИ (у сайта нет бэкенда/ключей) — честная эвристика:
-  // среди дел без времени и одного приоритетного веса выбираем ближайшее к
-  // пользователю по геолокации браузера. Приоритет (🔥⭐) остаётся главным —
-  // геооптимизация только внутри одной группы квадранта. Ничего не переставляем
-  // без явного согласия — только предлагаем, кнопкой можно принять или закрыть.
+  // ===== Рекомендованный порядок остановок =====
+  // Фиксированное время и приоритет остаются главными. Внутри одного приоритета
+  // предлагаем ближайшую следующую точку, но применяем порядок только с согласия.
   var PLANSUGGEST_KEY = "superday_plansuggest_dismissed";
+  var PLANSUGGEST_SPOKEN_KEY = "superday_plansuggest_spoken";
+  function recommendedRouteOrder(candidates, origin){
+    var rest=(candidates||[]).slice(), out=[], cursor=origin;
+    while(rest.length){
+      var topQ=Math.min.apply(null,rest.map(quadOf));
+      var tier=rest.filter(function(t){ return quadOf(t)===topQ; });
+      var next=tier[0], best=cursor&&next.loc ? haversineKm(cursor,next.loc) : Infinity;
+      tier.forEach(function(t){
+        var d=cursor&&t.loc ? haversineKm(cursor,t.loc) : Infinity;
+        if(d<best){ best=d; next=t; }
+      });
+      out.push(next); rest=rest.filter(function(t){ return t!==next; });
+      cursor=next.loc;
+    }
+    return out;
+  }
   function suggestDayPlan(){
     var box=document.getElementById("planSuggest");
     if(!box || IS_SELFTEST) return;
-    if(!mapState.userLoc){ if(box) box.hidden=true; return; }
-    var candidates = planOrder().filter(function(t){ return t.loc && !t.done && timeToMin(t.time)===null; });
+    if(!mapState.userLoc){ box.hidden=true; return; }
+    var candidates=planOrder().filter(function(t){ return t.loc && !t.done && timeToMin(t.time)===null; });
     if(candidates.length<2){ box.hidden=true; return; }
-    var topQ = Math.min.apply(null, candidates.map(quadOf));
-    var tier = candidates.filter(function(t){ return quadOf(t)===topQ; });
-    if(tier.length<2){ box.hidden=true; return; }
-    var nearest = tier[0], best = haversineKm(mapState.userLoc, tier[0].loc);
-    tier.forEach(function(t){
-      var d = haversineKm(mapState.userLoc, t.loc);
-      if(d<best){ best=d; nearest=t; }
-    });
-    if(nearest.id === tier[0].id){ box.hidden=true; return; }
-    var dismissKey = nearest.id + "|" + new Date().toDateString();
-    var dismissed = null; try{ dismissed = localStorage.getItem(PLANSUGGEST_KEY); }catch(e){}
-    if(dismissed === dismissKey){ box.hidden=true; return; }
+    var recommended=recommendedRouteOrder(candidates,mapState.userLoc);
+    var same=recommended.every(function(t,i){ return candidates[i] && candidates[i].id===t.id; });
+    var dismissKey=recommended.map(function(t){ return t.id; }).join(",")+"|"+new Date().toDateString();
+    var dismissed=null; try{ dismissed=localStorage.getItem(PLANSUGGEST_KEY); }catch(e){}
+    if(dismissed===dismissKey){ box.hidden=true; return; }
     box.hidden=false; box.innerHTML="";
     var head=document.createElement("div"); head.className="ro-head";
     var ic=document.createElement("span"); ic.className="pg-ic"; ic.setAttribute("aria-hidden","true"); ic.textContent="🧭";
-    var title=document.createElement("span"); title.className="ro-title pg-title"; title.textContent="Маршрут по геолокации";
+    var title=document.createElement("span"); title.className="ro-title pg-title";
+    title.textContent=same ? "Маршрут уже в хорошем порядке" : "Предлагаю порядок остановок";
     head.appendChild(ic); head.appendChild(title);
     var text=document.createElement("div"); text.className="ro-text";
-    var b=document.createElement("b"); b.textContent="«"+nearest.text+"»"; text.appendChild(b);
-    text.appendChild(document.createTextNode(" — ближе всего по прямой, без учёта дорог."));
+    var b=document.createElement("b");
+    b.textContent=recommended.map(function(t,i){ return (i+1)+". "+(t.loc.label||t.text); }).join(" → ");
+    text.appendChild(b);
+    text.appendChild(document.createTextNode(" — сначала важное, затем ближайшее по пути. Фиксированное время всегда имеет приоритет."));
     var acts=document.createElement("div"); acts.className="ro-actions";
     var primary=document.createElement("button"); primary.type="button"; primary.className="ro-primary";
-    primary.textContent="Начать с этого";
-    primary.addEventListener("click", function(){
-      var idx = tasks.indexOf(nearest);
-      if(idx>=0){ tasks.splice(idx,1); tasks.unshift(nearest); }
-      nearest.time = null;
+    primary.textContent=same ? "Маршрут подходит" : "Принять маршрут";
+    primary.addEventListener("click",function(){
+      recommended.forEach(function(t,i){ t.routeRank=i; });
+      try{ localStorage.setItem(PLANSUGGEST_KEY,dismissKey); }catch(e){}
       save(); box.hidden=true; render();
-      toast("Порядок обновлён — начинаем с «"+nearest.text+"»");
+      toast("Маршрут принят — остановки расставлены по приоритету и расстоянию");
     });
     var ghost=document.createElement("button"); ghost.type="button"; ghost.className="ro-ghost";
     ghost.textContent="Оставить как есть";
-    ghost.addEventListener("click", function(){
-      try{ localStorage.setItem(PLANSUGGEST_KEY, dismissKey); }catch(e){}
+    ghost.addEventListener("click",function(){
+      try{ localStorage.setItem(PLANSUGGEST_KEY,dismissKey); }catch(e){}
       box.hidden=true;
     });
     acts.appendChild(primary); acts.appendChild(ghost);
     box.appendChild(head); box.appendChild(text); box.appendChild(acts);
+    var spoken=null; try{ spoken=localStorage.getItem(PLANSUGGEST_SPOKEN_KEY); }catch(e){}
+    if(spoken!==dismissKey){
+      try{ localStorage.setItem(PLANSUGGEST_SPOKEN_KEY,dismissKey); }catch(e){}
+      var labels=recommended.map(function(t){ return t.loc.label||t.text; });
+      var phrase="Сначала лучше поехать: "+labels[0]+(labels.length>1?", затем: "+labels.slice(1).join(", затем: "):"")+". Согласны?";
+      if(typeof stageSay==="function") stageSay(phrase);
+      if((typeof isMuted!=="function" || !isMuted()) && typeof window.__ttsSpeak==="function"){
+        try{ window.__ttsSpeak(phrase); }catch(e){}
+      }
+    }
   }
 
   // Вердикт дня — по РЕАЛЬНОЙ нагрузке (дела, бюджет, наложения, контекст).
@@ -6504,6 +6592,22 @@
     function wname(){ return escapeHtml(wakeInput.value.trim()||"Супер день"); }
 
     // — синтез речи (голосовые ответы): чёткий, премиальный русский голос —
+    var TTS_VOICE_KEY="superday_tts_voice";
+    var ttsVoiceSelect=document.getElementById("ttsVoice");
+    var selectedTtsVoice="jane";
+    try{
+      var savedTtsVoice=localStorage.getItem(TTS_VOICE_KEY);
+      if(savedTtsVoice && /^(jane|oksana|alena|filipp)$/.test(savedTtsVoice)) selectedTtsVoice=savedTtsVoice;
+    }catch(e){}
+    if(ttsVoiceSelect){
+      ttsVoiceSelect.value=selectedTtsVoice;
+      ttsVoiceSelect.addEventListener("change",function(){
+        if(!/^(jane|oksana|alena|filipp)$/.test(ttsVoiceSelect.value)) return;
+        selectedTtsVoice=ttsVoiceSelect.value;
+        try{ localStorage.setItem(TTS_VOICE_KEY,selectedTtsVoice); }catch(e){}
+        if(typeof toast==="function") toast("Голос ответа изменён");
+      });
+    }
     var speaking=false;
     var pickedVoice=null;
     // Оценка голоса: выше — «премиальнее» (нейросетевые/облачные, женские ru).
@@ -6590,7 +6694,7 @@
       var timer=setTimeout(function(){ try{ ctrl&&ctrl.abort(); }catch(e){} }, 4500);
       fetch(TTS_API, {
         method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({text:t}), signal: ctrl?ctrl.signal:undefined
+        body: JSON.stringify({text:t,voice:selectedTtsVoice,emotion:"good"}), signal: ctrl?ctrl.signal:undefined
       }).then(function(r){ clearTimeout(timer); if(!r.ok) throw new Error("tts_"+r.status); return r.blob(); })
         .then(function(blob){
           if(done || serial!==speechSerial) return;
@@ -7483,6 +7587,22 @@
     T("haversineKm: Москва—Петербург ≈ 600–670 км", function(){
       var km=haversineKm({lat:55.7558,lon:37.6173},{lat:59.9311,lon:30.3609});
       return km>600 && km<670;
+    });
+    T("recommendedRouteOrder: сначала высокий приоритет, затем ближайшая точка", function(){
+      var origin={lat:0,lon:0}, low={id:"low",urgent:false,important:false,loc:{lat:0,lon:.01}},
+        far={id:"far",urgent:true,important:true,loc:{lat:0,lon:.03}},
+        near={id:"near",urgent:true,important:true,loc:{lat:0,lon:.02}};
+      var order=recommendedRouteOrder([far,low,near],origin);
+      return order[0]===near && order[1]===far && order[2]===low;
+    });
+    T("planOrder: принятый routeRank сохраняет порядок внутри приоритета", function(){
+      var keep=tasks.slice();
+      try{
+        tasks.length=0;
+        tasks.push({id:"r2",urgent:false,important:true,done:false,time:null,defer:null,routeRank:1});
+        tasks.push({id:"r1",urgent:false,important:true,done:false,time:null,defer:null,routeRank:0});
+        var order=planOrder(); return order[0].id==="r1" && order[1].id==="r2";
+      } finally { tasks.length=0; keep.forEach(function(t){ tasks.push(t); }); }
     });
     // Ветка с реальными тайлами намеренно не тестируется здесь: локальный
     // Leaflet не требует CDN, но CARTO/OSM остаются сетевыми провайдерами.
