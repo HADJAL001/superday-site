@@ -629,7 +629,15 @@
   .tloc:hover{border-color:var(--gold); color:var(--text)}
   .tloc.empty{color:var(--text-muted); background:none; border-style:dashed; opacity:.5}
   .tloc.empty:hover{opacity:1; color:var(--champagne)}
+  .tloc.pending{border-style:dashed; color:var(--champagne)}
   .task.deferred .tloc,.task.offday .tloc{opacity:.35}
+
+  .titems{flex:0 1 auto; display:inline-flex; align-items:center; cursor:pointer; font-family:inherit;
+    font-size:11px; font-weight:600; color:var(--text); background:rgba(214,191,140,.09);
+    border:1px solid var(--hair); border-radius:8px; padding:3px 8px; margin-top:1px;
+    max-width:100%; white-space:normal; line-height:1.35; text-align:left; transition:.15s}
+  .titems:hover{border-color:var(--gold); color:var(--champagne)}
+  .task.deferred .titems,.task.offday .titems{opacity:.45}
 
   /* ===== Сфера жизни дела (баланс недели) ===== */
   .tctx{flex:0 0 auto; cursor:pointer; font-family:inherit; font-size:11px; font-weight:600; white-space:nowrap;
@@ -1345,6 +1353,7 @@
   .sp-text{font-size:14px; color:var(--text); line-height:1.35; word-break:break-word}
   .sp-meta{font-size:11.5px; color:var(--text-muted); margin-top:2px}
   .sp-meta .sp-dot{opacity:.5; margin:0 5px}
+  .sp-items{font-size:11.5px; line-height:1.4; color:var(--champagne); margin-top:3px; word-break:break-word}
   @media(max-width:640px){
     .stage{min-height:calc(100svh - 120px); gap:15px}
     .stage-mic{width:82px; height:82px}
@@ -1862,7 +1871,7 @@
   try{ tasks = JSON.parse(localStorage.getItem(STORE_KEY) || "[]") || []; }catch(e){ tasks = []; }
 
   // ===== Версия схемы данных + миграции (на будущее, чтобы не терять данные) =====
-  var SCHEMA = 8;
+  var SCHEMA = 9;
   var CTX_LIST = ["work","home","health"];
   var CTX_LABEL = {work:"Работа", home:"Дом", health:"Здоровье"};
   var CTX_ICON = {work:"💼", home:"🏠", health:"❤️"};
@@ -1893,6 +1902,80 @@
        typeof loc.label!=="string" || !loc.label.trim()) return null;
     return { lat:loc.lat, lon:loc.lon, label:loc.label, addr:(typeof loc.addr==="string"? loc.addr : loc.label) };
   }
+  function normItems(value){
+    if(Object.prototype.toString.call(value)!=="[object Array]") return [];
+    var seen={}, out=[];
+    for(var i=0;i<value.length && out.length<30;i++){
+      var item=String(value[i]||"").replace(/\s+/g," ").trim();
+      if(!item || item.length>80) continue;
+      var key=item.toLocaleLowerCase("ru-RU").replace(/ё/g,"е");
+      if(seen[key]) continue;
+      seen[key]=true; out.push(item);
+    }
+    return out;
+  }
+  // Словарь мест живёт локально: встроенное соответствие покрывает известное
+  // разговорное название, а новые соответствия появляются только после явного
+  // подтверждения пользователем в диалоге места.
+  var PLACE_ALIAS_KEY="superday_place_aliases_v1";
+  var BUILTIN_PLACE_ALIASES=[
+    {spoken:"ирчишка",canonical:"рынок Ирчи Казака"},
+    {spoken:"ирчишку",canonical:"рынок Ирчи Казака"}
+  ];
+  function aliasKey(value){ return String(value||"").normalize("NFC").toLowerCase().replace(/ё/g,"е").replace(/\s+/g," ").trim(); }
+  function validPlaceAlias(entry){
+    return !!entry && typeof entry.spoken==="string" && typeof entry.canonical==="string" &&
+      aliasKey(entry.spoken) && entry.spoken.trim().length<=80 && entry.canonical.trim().length<=160;
+  }
+  function readPlaceAliasMemory(){
+    try{
+      var value=JSON.parse(localStorage.getItem(PLACE_ALIAS_KEY)||"[]");
+      if(Object.prototype.toString.call(value)!=="[object Array]") return [];
+      var seen={}, out=[];
+      value.forEach(function(entry){
+        if(!validPlaceAlias(entry)) return;
+        var k=aliasKey(entry.spoken); if(seen[k]) return;
+        seen[k]=true; out.push({spoken:entry.spoken.trim(),canonical:entry.canonical.replace(/\s+/g," ").trim(),updatedAt:+entry.updatedAt||0});
+      });
+      return out.slice(-30);
+    }catch(e){ return []; }
+  }
+  function writePlaceAliasMemory(entries){
+    try{ localStorage.setItem(PLACE_ALIAS_KEY,JSON.stringify(entries.slice(-30))); }catch(e){}
+  }
+  function placeAliasEntries(){
+    var map=Object.create(null);
+    BUILTIN_PLACE_ALIASES.concat(readPlaceAliasMemory()).forEach(function(entry){
+      if(validPlaceAlias(entry)) map[aliasKey(entry.spoken)]={spoken:entry.spoken,canonical:entry.canonical};
+    });
+    return Object.keys(map).map(function(k){ return map[k]; }).sort(function(a,b){ return b.spoken.length-a.spoken.length; });
+  }
+  function rememberPlaceAlias(spoken,canonical){
+    var s=String(spoken||"").replace(/^\s*(?:в|на|к|до|у|около|возле)\s+/i,"").replace(/\s+/g," ").trim();
+    var c=String(canonical||"").replace(/\s+/g," ").trim();
+    if(!s || !c || s.length>80 || c.length>160 || aliasKey(s)===aliasKey(c)) return false;
+    var entries=readPlaceAliasMemory().filter(function(entry){ return aliasKey(entry.spoken)!==aliasKey(s); });
+    entries.push({spoken:s,canonical:c,updatedAt:Date.now()});
+    writePlaceAliasMemory(entries);
+    return true;
+  }
+  function placeAliasSnapshot(){
+    return readPlaceAliasMemory().map(function(entry){ return {spoken:entry.spoken,canonical:entry.canonical}; });
+  }
+  function mergePlaceAliasSnapshot(imported){
+    if(Object.prototype.toString.call(imported)!=="[object Array]") return 0;
+    var current=readPlaceAliasMemory(), changed=0;
+    imported.slice(0,30).forEach(function(entry){
+      if(!validPlaceAlias(entry)) return;
+      var key=aliasKey(entry.spoken), idx=-1;
+      current.forEach(function(old,i){ if(aliasKey(old.spoken)===key) idx=i; });
+      var next={spoken:entry.spoken.trim(),canonical:entry.canonical.replace(/\s+/g," ").trim(),updatedAt:+entry.updatedAt||Date.now()};
+      if(idx<0){ current.push(next); changed++; }
+      else if((+current[idx].updatedAt||0)<next.updatedAt){ current[idx]=next; changed++; }
+    });
+    if(changed) writePlaceAliasMemory(current);
+    return changed;
+  }
   (function migrate(){
     var cur = 0;
     try{ cur = parseInt(localStorage.getItem("superday_schema")||"0",10) || 0; }catch(e){ cur = 0; }
@@ -1907,6 +1990,8 @@
     // v7: поле context ("work"|"home"|"health"|null) — сфера жизни, для баланса недели.
     // v8: миграция сохраняет расширенные поля ИИ/наград и надёжно записывает
     //     нормализованный массив до фиксации номера схемы.
+    // v9: items, spokenPlace и placeQuery для покупок, разговорных мест и
+    //     канонического запроса геокодера.
     var migrated = false;
     try{
       tasks = (tasks||[]).map(function(t){
@@ -1916,6 +2001,7 @@
         var rp = normRepeat(t.repeat);
         var dn = (typeof t.doneOn==="string" && /^\d{4}-\d{2}-\d{2}$/.test(t.doneOn)) ? t.doneOn : null;
         var lc = normLoc(t.loc);
+        var items = normItems(t.items);
         var cx = normContext(t.context);
         // Не пересобираем объект из короткого белого списка: так прежняя
         // миграция стирала bonusXp, batchId, aiReason и другие уже используемые
@@ -1925,6 +2011,9 @@
         out.id = t.id || ("t"+Math.random().toString(36).slice(2));
         out.text = String(t.text||""); out.urgent=!!t.urgent; out.important=!!t.important; out.done=!!t.done;
         out.time=tm; out.dur=du; out.defer=df; out.repeat=rp; out.doneOn=dn; out.loc=lc; out.context=cx;
+        out.items=items;
+        out.spokenPlace=(typeof t.spokenPlace==="string" && t.spokenPlace.trim().length<=80) ? t.spokenPlace.trim() : null;
+        out.placeQuery=(typeof t.placeQuery==="string" && t.placeQuery.trim().length<=160) ? t.placeQuery.trim() : null;
         out.remindedOn = (typeof t.remindedOn==="string"? t.remindedOn : null);
         return out;
       });
@@ -1973,7 +2062,7 @@
     var out={ app:"SUPER DAY", kind:kind||"backup", backupVersion:BACKUP_VERSION,
       version:SCHEMA, exportedAt:new Date().toISOString(), wake:backupReadString("superday_wake"),
       tasks:tasks, notes:(typeof notes!=="undefined"?notes:[]), vehicle:vehicle,
-      analytics:analytics, routeHistory:routeHistory };
+      analytics:analytics, routeHistory:routeHistory, placeAliases:placeAliasSnapshot() };
     // Geometry can be large. Manual exports include it so a restored device
     // can use a previously measured route offline; the compact auto-backup
     // intentionally keeps only the analytics snapshots.
@@ -2260,33 +2349,66 @@
   var PLACE_RE_HOUSE = /(?:^|[\s,;])(?:(в|на|у|около|возле)\s+)?([A-ZА-ЯЁ][\wа-яёA-Za-z-]*(?:\s+[A-ZА-ЯЁ][\wа-яёA-Za-z-]*){0,2})\s+(\d{1,4}[а-яa-z]?)(?=$|[\s,.;!?])/;
   var PLACE_RE_HOUSE_SPOKEN = /(?:^|[\s,;])(?:по\s+адресу|в|на|у|около|возле)\s+([а-яёa-z][\wа-яёa-z-]*(?:\s+[а-яёa-z][\wа-яёa-z-]*){0,2})\s+(\d{1,4}[а-яa-z]?)(?=$|[\s,.;!?])/i;
   var PLACE_RE_PREP = /(?:^|[\s,;])(?:в|на|у|около|возле)\s+((?:[A-ZА-ЯЁ][\wа-яёA-Za-z-]*\s*){1,3}(?:,\s*[A-ZА-ЯЁ][\wа-яёA-Za-z-]*)?)/;
+  function escapeRegExp(value){ return String(value||"").replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
   function parsePlacePhrase(text){
     var s = String(text||"").trim();
+    var aliases=placeAliasEntries();
+    for(var ai=0;ai<aliases.length;ai++){
+      var alias=aliases[ai];
+      var aliasPattern=escapeRegExp(alias.spoken).replace(/\\\s+/g,"\\s+");
+      var aliasRe=new RegExp("(?:^|[\\s,;])(?:(?:в|на|к|до|у|около|возле)\\s+)?("+aliasPattern+")(?=$|[\\s,.;!?])","i");
+      var ma=s.match(aliasRe);
+      if(!ma) continue;
+      var cleanAlias=(s.slice(0,ma.index)+" "+s.slice(ma.index+ma[0].length)).replace(/^[\s,;:-]+|[\s,;:-]+$/g,"").replace(/\s+/g," ").trim();
+      return {text:cleanAlias,place:alias.canonical,spokenPlace:ma[1],alias:true};
+    }
     var me = s.match(PLACE_RE_EXPLICIT);
     if(me){
       var explicitPlace=me[1].replace(/^[\s,.-]+|[\s,.-]+$/g,"").replace(/\s*,\s*/g,", ").replace(/\s+/g," ").trim();
       if(explicitPlace){
         var cleanExplicit=(s.slice(0,me.index)+" "+s.slice(me.index+me[0].length))
           .replace(/[\s,;:-]+$/g,"").replace(/\s+/g," ").trim();
-        return { text:cleanExplicit || s, place:explicitPlace };
+        return { text:cleanExplicit || s, place:explicitPlace, spokenPlace:explicitPlace };
       }
     }
     var mh = s.match(PLACE_RE_HOUSE);
     if(mh && (mh[1] || mh.index>0)){
       var clean = (s.slice(0,mh.index) + " " + s.slice(mh.index+mh[0].length)).replace(/\s+/g," ").trim();
-      return { text: clean || s, place: (mh[2]+" "+mh[3]).trim() };
+      return { text: clean || s, place: (mh[2]+" "+mh[3]).trim(), spokenPlace:(mh[2]+" "+mh[3]).trim() };
     }
     var ms = s.match(PLACE_RE_HOUSE_SPOKEN);
     if(ms){
       var cleanSpoken = (s.slice(0,ms.index) + " " + s.slice(ms.index+ms[0].length)).replace(/\s+/g," ").trim();
-      return { text: cleanSpoken || s, place: (ms[1]+" "+ms[2]).trim() };
+      return { text: cleanSpoken || s, place: (ms[1]+" "+ms[2]).trim(), spokenPlace:(ms[1]+" "+ms[2]).trim() };
     }
     var mp = s.match(PLACE_RE_PREP);
     if(mp){
       var clean2 = (s.slice(0,mp.index) + " " + s.slice(mp.index+mp[0].length)).replace(/\s+/g," ").trim();
-      return { text: clean2 || s, place: mp[1].trim() };
+      return { text: clean2 || s, place: mp[1].trim(), spokenPlace:mp[1].trim() };
     }
-    return { text: s, place: null };
+    return { text: s, place: null, spokenPlace:null };
+  }
+
+  function splitPurchaseItems(value){
+    var source=String(value||"").replace(/[.!?]+$/g,"").replace(/\s+(?:а\s+также|и\s+ещё|и\s+еще)\s+/gi,",").trim();
+    if(!source) return [];
+    var parts=source.split(/\s*[,;]\s*|\s+и\s+/i).map(function(item){ return item.replace(/^[-–—\s]+|[-–—\s]+$/g,"").trim(); }).filter(Boolean);
+    // Разговорное «фрукты овощи и шуруповёрт» не содержит паузы между
+    // первыми двумя товарами. Для короткого ряда одиночных слов это всё равно
+    // однозначное перечисление; многословные товары оставляем целыми.
+    if(parts.length===2 && /^\S+\s+\S+$/.test(parts[0]) && /^\S+$/.test(parts[1])){
+      parts=parts[0].split(/\s+/).concat(parts[1]);
+    }
+    return normItems(parts);
+  }
+  function parsePurchaseItems(text){
+    var s=String(text||"").trim();
+    var match=s.match(/(?:^|[\s,;])(?:(?:мне|нам)\s+)?(?:надо\s+купить|нужно\s+купить|купить\s+(?:надо|нужно)|купить|возьм(?:и|ём|ем)|приобрести)\s+(.+)$/i);
+    if(!match) return {text:s,items:[]};
+    var items=splitPurchaseItems(match[1]);
+    if(!items.length) return {text:s,items:[]};
+    var clean=(s.slice(0,match.index)+" ").replace(/^[\s,;:-]+|[\s,;:-]+$/g,"").replace(/\s+/g," ").trim();
+    return {text:clean,items:items};
   }
 
   function taskPlaceLabel(place){
@@ -2389,6 +2511,17 @@
     t.dur=d; save(); render(); toast("Длительность: "+fmtDur(d));
   }
 
+  function editTaskItems(t){
+    var current=normItems(t.items).join(", ");
+    var ans=window.prompt("Покупки для дела «"+t.text+"»\n\nПеречисли через запятую. Оставь пустым, чтобы убрать список.",current);
+    if(ans===null) return;
+    ans=ans.trim();
+    if(!ans){ t.items=[]; save(); render(); toast("Список покупок убран"); return; }
+    var items=splitPurchaseItems(ans);
+    if(!items.length){ toast("Не удалось прочитать список покупок", "error"); return; }
+    t.items=items; save(); render(); toast("Покупки сохранены: "+items.length);
+  }
+
   // Инлайн-правка текста по клику: onSave(newText|null), null = отмена/пусто
   function inlineEdit(spanEl, current, onSave){
     if(spanEl.parentNode.querySelector(".edit-inp")) return; // уже правим
@@ -2451,10 +2584,15 @@
     var pd = parseDuration(pr.text || raw);
     var pt = parseTime(pd.text || pr.text || raw);
     var pp = parsePlacePhrase(pt.text || pd.text || pr.text || raw);
-    var text = pp.text || pt.text || pd.text || pr.text || raw;
+    var pi = parsePurchaseItems(pp.text || pt.text || pd.text || pr.text || raw);
+    var text = pi.text || "";
+    if(pp.place && (!text || /^(?:поедем|едем|поехать|съездить|заехать)$/i.test(text))) text="Поездка: "+taskPlaceLabel(pp.place);
+    if(!text && pi.items.length) text="Покупки";
+    if(!text) text=pp.text || pt.text || pd.text || pr.text || raw;
     if(opts.capitalize && text) text=text.charAt(0).toUpperCase()+text.slice(1);
     var task = { id:uid(), text:text, urgent:!!opts.urgent, important:!!opts.important, done:false,
-                 time:pt.time, dur:pd.dur, defer:null, repeat:pr.repeat, doneOn:null, remindedOn:null, loc:null };
+                 time:pt.time, dur:pd.dur, defer:null, repeat:pr.repeat, doneOn:null, remindedOn:null, loc:null,
+                 items:pi.items, spokenPlace:pp.spokenPlace, placeQuery:pp.place };
     tasks.push(task);
     if(opts.announceSchedule && (pt.time || pd.dur || pr.repeat)){
       var bits=[];
@@ -2469,19 +2607,25 @@
     // Фоновая, без confirm — молча пропускаем, если геокодер не нашёл: ручное
     // «＋место» (editTaskLoc) остаётся подстраховкой и спрашивает явно.
     if(pp.place){
+      task.geoPending=true; render();
       geocodeTaskPlace(task,pp.place, function(found){
-        if(!found || found.lat==null || found.lon==null) return;
-        var label = taskPlaceLabel(pp.place);
-        task.loc = { lat:found.lat, lon:found.lon, label:label, addr:found.addr || pp.place };
+        task.geoPending=false;
+        if(!found || found.lat==null || found.lon==null){
+          save(); render();
+          toast(found===undefined ? "Место сохранено, карта появится после подключения" : "Место записано, но точку на карте не нашёл", "warn");
+          return;
+        }
+        var label = taskPlaceLabel(task.placeQuery || pp.place);
+        task.loc = { lat:found.lat, lon:found.lon, label:label, addr:found.addr || task.placeQuery || pp.place };
         save(); render();
       });
     }
     // Один и тот же исходный текст уходит в модель и для клавиатуры, и для
     // голоса. Локальный объект уже сохранён, поэтому таймаут API не теряет дело.
     if(opts.ai!==false && typeof requestSingleTaskParse==="function" && !IS_SELFTEST){
-      requestSingleTaskParse(task, opts.aiRaw || raw, { explicitDuration:!!pd.dur });
+      requestSingleTaskParse(task, opts.aiRaw || raw, { explicitDuration:!!pd.dur, originalTaskText:task.text });
     }
-    return { task:task, time:pt.time, dur:pd.dur, repeat:pr.repeat, place:pp.place };
+    return { task:task, time:pt.time, dur:pd.dur, repeat:pr.repeat, place:pp.place, items:pi.items };
   }
 
   function addTask(options){
@@ -2572,17 +2716,31 @@
         else { setDefer(t, tomorrowKey()); toast("→ Завтра: "+t.text); }
       });
       var lc = document.createElement("button"); lc.type="button";
-      lc.className = "tloc" + (t.loc ? "" : " empty");
+      var unresolvedPlace=!t.loc && typeof t.placeQuery==="string" && !!t.placeQuery.trim();
+      lc.className = "tloc" + (t.loc ? "" : (unresolvedPlace ? " pending" : " empty"));
       if(t.loc){
         lc.textContent = "📍 "+t.loc.label;
         lc.title = (t.loc.addr && t.loc.addr!==t.loc.label ? t.loc.addr+" · " : "")+"Нажми, чтобы изменить место";
         lc.setAttribute("aria-label","Место: "+t.loc.label+". Нажми, чтобы изменить.");
+      } else if(unresolvedPlace){
+        lc.textContent="📍 "+taskPlaceLabel(t.placeQuery);
+        lc.title=(t.geoPending?"Ищу точку на карте · ":"Место записано, точка ещё не загружена · ")+"нажми, чтобы уточнить";
+        lc.setAttribute("aria-label","Место: "+taskPlaceLabel(t.placeQuery)+". Точка на карте ещё не загружена. Нажми, чтобы уточнить.");
       } else {
         lc.textContent = "📍";
         lc.title = "Задать место дела — появится на карте дел";
         lc.setAttribute("aria-label","Задать место дела");
       }
       lc.addEventListener("click", function(){ editTaskLoc(t); });
+      var ib = null;
+      var itemList=normItems(t.items);
+      if(itemList.length){
+        ib=document.createElement("button"); ib.type="button"; ib.className="titems";
+        ib.textContent="🛒 "+itemList.join(" · ");
+        ib.title="Покупки: "+itemList.join(", ")+" · нажми, чтобы изменить";
+        ib.setAttribute("aria-label","Покупки: "+itemList.join(", ")+". Нажми, чтобы изменить.");
+        ib.addEventListener("click",function(){ editTaskItems(t); });
+      }
       var cx = document.createElement("button"); cx.type="button";
       var ctxVal = normContext(t.context);
       cx.className = "tctx" + (ctxVal ? "" : " empty");
@@ -2618,7 +2776,9 @@
       // Бейджи живут отдельной строкой: иначе на узком экране текст дела
       // сжимается в столбик из двух букв, а он тут главное.
       var meta = document.createElement("span"); meta.className="tmeta";
-      meta.appendChild(tm); meta.appendChild(dr); meta.appendChild(rp); meta.appendChild(df); meta.appendChild(lc); meta.appendChild(cx);
+      meta.appendChild(tm); meta.appendChild(dr); meta.appendChild(rp); meta.appendChild(df); meta.appendChild(lc);
+      if(ib) meta.appendChild(ib);
+      meta.appendChild(cx);
       // Предпросмотр награды — до закрытия дела, а не после: цена усилия должна
       // быть видна в момент выбора, чем заняться. Максимум даёт квадрант
       // «важно, не срочно» — награда тянет туда, где рост.
@@ -3733,8 +3893,18 @@
     return { id:uid(), text:title, urgent:f.urgent, important:f.important,
              done:false, time:null, dur: validDur(+p.minutes) ? +p.minutes : null, defer:null, repeat:null,
              doneOn:null, remindedOn:null, batchId:batchId, provisional:!!p.provisional,
+              loc:null, items:normItems(p.items),
+              placeQuery:(typeof p.placeQuery==="string" && p.placeQuery.trim()) ? p.placeQuery.trim().slice(0,160) : null,
+              spokenPlace:(typeof p.spokenPlace==="string" && p.spokenPlace.trim()) ? p.spokenPlace.trim().slice(0,80) : null,
+              description:(typeof p.description==="string" && p.description.trim()) ? p.description.trim().slice(0,300) : null,
               aiConf: (typeof p.confidence==="number" ? p.confidence : null),
               aiReason: p.reasoning ? String(p.reasoning) : null };
+  }
+  function parseApiPayload(raw){
+    var learned=readPlaceAliasMemory().slice(-(30-BUILTIN_PLACE_ALIASES.length));
+    return {raw_text:String(raw||""),place_aliases:BUILTIN_PLACE_ALIASES.concat(learned).map(function(entry){
+      return {spoken:entry.spoken,canonical:entry.canonical};
+    })};
   }
   var singleTaskParseControllers={};
   function cancelTaskNetwork(taskId){
@@ -3758,7 +3928,7 @@
     var stableRaw=String(raw);
     return fetchIdempotent(PARSE_API, {
       method:"POST", headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ raw_text:stableRaw }),
+      body:JSON.stringify(parseApiPayload(stableRaw)),
       signal:ctrl ? ctrl.signal : undefined
     }).then(function(r){
       if(!r.ok) throw new Error("http_"+r.status);
@@ -3772,12 +3942,28 @@
       var q=parsedQuadrant(p); if(!p || q===null) throw new Error("invalid_model_task");
       var f=quadFlags(q);
       task.urgent=f.urgent; task.important=f.important;
+      if(meta && meta.originalTaskText && task.text===meta.originalTaskText && typeof p.title==="string" && p.title.trim()){
+        task.text=p.title.trim();
+      }
       if(!(meta && meta.explicitDuration) && validDur(+p.minutes)) task.dur=+p.minutes;
+      var parsedItems=normItems(p.items);
+      if(parsedItems.length) task.items=normItems(normItems(task.items).concat(parsedItems));
+      if(typeof p.description==="string" && p.description.trim()) task.description=p.description.trim().slice(0,300);
+      if(!task.spokenPlace && typeof p.spokenPlace==="string" && p.spokenPlace.trim()) task.spokenPlace=p.spokenPlace.trim().slice(0,80);
+      var oldPlaceQuery=task.placeQuery;
+      if(!task.placeQuery && typeof p.placeQuery==="string" && p.placeQuery.trim()) task.placeQuery=p.placeQuery.trim().slice(0,160);
       task.aiConf=typeof p.confidence==="number" ? p.confidence : null;
       task.aiReason=p.reasoning ? String(p.reasoning) : null;
       task.aiSource=data.source || "llm";
       task.aiModel=data.model || null;
       save(); render();
+      if(task.placeQuery && (!task.loc || aliasKey(oldPlaceQuery)!==aliasKey(task.placeQuery))){
+        geocodeTaskPlace(task,task.placeQuery,function(found){
+          if(!found || found.lat==null || found.lon==null) return;
+          task.loc={lat:found.lat,lon:found.lon,label:taskPlaceLabel(task.placeQuery),addr:found.addr||task.placeQuery};
+          save(); render();
+        });
+      }
       return data;
     }).catch(function(){
       clearTimeout(timer);
@@ -3804,16 +3990,23 @@
   }
   function bulkState(msg){ var el=document.getElementById("bulkState"); if(el) el.textContent=msg||""; }
 
-  // Keep one user-authored task when the model is unavailable, but do not
-  // attach locally inferred metadata. A failed AI request must never look like
-  // a successful model parse or trigger a map route from heuristic output.
+  // При недоступной модели сохраняем одну исходную задачу, но явные время,
+  // место, покупки и уже подтверждённые пользователем названия разбираем
+  // локально. Это не ответ AI: источник остаётся unavailable, приоритет не
+  // выдумывается, зато обученная память и кэш адресов продолжают работать офлайн.
   function literalFallbackItem(raw, batchId){
     var source=String(raw||"").trim();
-    var t={id:uid(), text:source, urgent:false, important:false, done:false,
-      time:null, dur:null, defer:null, repeat:null,
+    var pr=parseRepeatPhrase(source), pd=parseDuration(pr.text||source), pt=parseTime(pd.text||pr.text||source);
+    var pp=parsePlacePhrase(pt.text||pd.text||pr.text||source), pi=parsePurchaseItems(pp.text||pt.text||pd.text||pr.text||source);
+    var title=pi.text || pp.text || pt.text || pd.text || pr.text || source;
+    if(pp.place && (!title || /^(?:поедем|едем|поехать|съездить|заехать)$/i.test(title))) title="Поездка: "+taskPlaceLabel(pp.place);
+    if(!title && pi.items.length) title="Покупки";
+    var t={id:uid(), text:title, urgent:false, important:false, done:false,
+      time:pt.time, dur:pd.dur, defer:null, repeat:pr.repeat,
       doneOn:null, remindedOn:null, batchId:batchId, provisional:false,
-      aiConf:null, aiReason:"AI provider unavailable; kept original text", aiSource:"unavailable", aiModel:null, loc:null};
-    return {task:t, place:null};
+      aiConf:null, aiReason:"AI provider unavailable; explicit fields parsed locally", aiSource:"unavailable", aiModel:null, loc:null,
+      items:pi.items,spokenPlace:pp.spokenPlace,placeQuery:pp.place};
+    return {task:t, place:pp.place};
   }
   function saveLiteralFallback(raw, batchId){
     var item=literalFallbackItem(raw,batchId);
@@ -3838,7 +4031,7 @@
     var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, PARSE_TIMEOUT_MS);
     fetchIdempotent(PARSE_API, {
       method:"POST", headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ raw_text: text }),
+      body: JSON.stringify(parseApiPayload(text)),
       signal: ctrl ? ctrl.signal : undefined
     }).then(function(r){
       if(!r.ok) throw new Error("http_"+r.status);
@@ -3895,14 +4088,18 @@
     var basis = source || t.text;
     var pr=parseRepeatPhrase(basis), pd=parseDuration(pr.text||basis), pt=parseTime(pd.text||pr.text||basis);
     var pp=parsePlacePhrase(pt.text||pd.text||pr.text||basis);
+    var pi=parsePurchaseItems(pp.text||pt.text||pd.text||pr.text||basis);
     // Заголовок остаётся тем, что дала модель, если она его дала: он короче и
     // чище очищенного куска речи. Без модели берём разобранный кусок.
     if(!source) t.text = stageCap(pp.text || pt.text || pd.text || pr.text || t.text);
     if(pt.time) t.time = pt.time;
     if(validDur(pd.dur) && (!validDur(t.dur) || t.dur===30)) t.dur = pd.dur;
     if(pr.repeat) t.repeat = pr.repeat;
+    if(!normItems(t.items).length && pi.items.length) t.items=pi.items;
+    if(!t.placeQuery && pp.place) t.placeQuery=pp.place;
+    if(!t.spokenPlace && pp.spokenPlace) t.spokenPlace=pp.spokenPlace;
     if(t.loc===undefined) t.loc = null;
-    return pp.place || null;
+    return t.placeQuery || pp.place || null;
   }
   // Куски исходной речи: человек перечисляет дела через запятую, «и», «потом».
   function stageSegments(text){
@@ -3942,7 +4139,8 @@
       var t=taskFromParsed(p, batchId);
       if(!t) throw new Error("invalid_model_task");
       t.provisional=false;
-      var place=stageEnrich(t, stageTakeSegment(t.text,pool));
+      var source=rawList.length===1 ? sourceText : stageTakeSegment(t.text,pool);
+      var place=stageEnrich(t, source);
       list.push(t);
       added.push({task:t, place:place});
     });
@@ -3960,7 +4158,7 @@
     var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, PARSE_TIMEOUT_MS);
     fetchIdempotent(PARSE_API, {
       method:"POST", headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ raw_text: text }),
+      body: JSON.stringify(parseApiPayload(text)),
       signal: ctrl ? ctrl.signal : undefined
     }).then(function(r){
       if(!r.ok) throw new Error("http_"+r.status);
@@ -4029,10 +4227,16 @@
       var body=document.createElement("div"); body.className="sp-body";
       var txt=document.createElement("div"); txt.className="sp-text"; txt.textContent=t.text;
       body.appendChild(txt);
+      var stageItems=normItems(t.items);
+      if(stageItems.length){
+        var shopping=document.createElement("div"); shopping.className="sp-items";
+        shopping.textContent="🛒 "+stageItems.join(" · "); body.appendChild(shopping);
+      }
       var bits=[];
       if(t.time){ var et=endTime(t); bits.push(et ? (t.time+"–"+et) : t.time); }
       else if(validDur(t.dur)) bits.push(fmtDurShort(t.dur));
       if(t.loc) bits.push(t.loc.label);
+      else if(t.placeQuery) bits.push(taskPlaceLabel(t.placeQuery));
       bits.push(QUAD_SHORT[quadOf(t)]);
       if(bits.length){
         var meta=document.createElement("div"); meta.className="sp-meta";
@@ -4998,20 +5202,22 @@
     }) || token.abort;
   }
   function editTaskLoc(t){
-    var cur = t.loc ? (t.loc.label || t.loc.addr || "") : "";
+    var cur = t.placeQuery || (t.loc ? (t.loc.label || t.loc.addr || "") : "");
     var ans = window.prompt("Место дела — адрес или название (например «Тверская 1, Москва» или «Офис, ул. Ленина 5»).\n\nОставь пустым, чтобы убрать место.", cur);
     if(ans===null) return;
     ans = ans.trim();
-    if(ans===""){ t.loc = null; save(); render(); return; }
+    if(ans===""){ t.loc=null; t.placeQuery=null; t.spokenPlace=null; save(); render(); return; }
     toast("Ищу место…");
     geocodeTaskPlace(t,ans, function(found){
       if(found===undefined){ toast("Сеть недоступна — попробуй позже", "error"); return; }
       if(found===null){ toast("Это место не нашёл — попробуй проще: «улица, город»"); return; }
       var ok = window.confirm("Нашёл: " + found.addr + " — сохранить как место дела?");
       if(!ok){ toast("Не сохранил — попробуй ввести точнее", "error"); return; }
-      var label = ans.split(",")[0].trim().slice(0,40) || ans.slice(0,40);
+      var label = taskPlaceLabel(ans);
       t.loc = { lat:found.lat, lon:found.lon, label:label, addr:found.addr };
-      save(); render(); toast("Место сохранено: " + label);
+      t.placeQuery=ans.slice(0,160);
+      var learned=rememberPlaceAlias(t.spokenPlace,ans);
+      save(); render(); toast((learned?"Запомнил название · ":"Место сохранено: ") + label);
     });
   }
   // Сфера жизни дела: цикл по кругу (без сферы → работа → дом → здоровье → без
@@ -5996,6 +6202,7 @@
       return [String(t.text||"").trim().toLowerCase(), validTime(t.time)?t.time:"",
         validDur(+t.dur)?Math.round(+t.dur):"", typeof t.defer==="string"?t.defer:"",
         rp?rp.days.join(","):"", loc?loc.lat+","+loc.lon:"", normContext(t.context)||"",
+        normItems(t.items).join("\u001e").toLowerCase(), typeof t.placeQuery==="string"?t.placeQuery.toLowerCase():"",
         t.urgent?1:0, t.important?1:0, t.done?1:0, typeof t.doneOn==="string"?t.doneOn:""]
         .join("\u001f");
     }
@@ -6121,7 +6328,8 @@
       var analytics=backupRecord(data.analytics)?data.analytics:{};
       var routes=data.routeHistory || analytics.routes;
       var counts={stats:mergeStats(analytics.stats), completions:mergeCompletions(analytics.completions,idMap),
-        dayLog:mergeDayLog(analytics.dayLog), routes:mergeRouteHistory(routes,idMap), cache:mergeRouteCache(data.routeCache), geo:mergeGeoCache(data.geoCache)};
+        dayLog:mergeDayLog(analytics.dayLog), routes:mergeRouteHistory(routes,idMap), cache:mergeRouteCache(data.routeCache),
+        geo:mergeGeoCache(data.geoCache), aliases:mergePlaceAliasSnapshot(data.placeAliases)};
       var vehicleChanged=false;
       if(backupRecord(data.vehicle) && (validFuelRate(+data.vehicle.fuelLPer100Km) || validFuelPrice(+data.vehicle.fuelPricePerLiter))){
         var old=backupReadRecord("superday_vehicle_v1");
@@ -6147,7 +6355,8 @@
         Object.keys(payload.routeCache||{}).length || Object.keys(payload.geoCache||{}).length ||
         Object.keys((payload.analytics&&payload.analytics.stats)||{}).length ||
         Object.keys((payload.analytics&&payload.analytics.dayLog)||{}).length ||
-        Object.keys((payload.analytics&&payload.analytics.completions)||{}).length || payload.vehicle;
+        Object.keys((payload.analytics&&payload.analytics.completions)||{}).length ||
+        (payload.placeAliases||[]).length || payload.vehicle;
       if(!tasks.length && !notes.length && !hasPersistent){ flash("Пока нечего сохранять — добавь задачи или заметки."); return; }
       try{
         var blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
@@ -6171,7 +6380,7 @@
         try{ data=JSON.parse(reader.result); }
         catch(e){ flash("Не удалось прочитать файл — это не резервная копия SUPER DAY."); return; }
         var hasPersistent=data && (backupRecord(data.analytics) || backupRecord(data.routeHistory) ||
-          backupRecord(data.routeCache) || backupRecord(data.geoCache) || backupRecord(data.vehicle));
+          backupRecord(data.routeCache) || backupRecord(data.geoCache) || backupRecord(data.vehicle) || Array.isArray(data.placeAliases));
         if(!data || (typeof data.app==="string" && data.app!=="SUPER DAY") ||
            (!Array.isArray(data.tasks) && !Array.isArray(data.notes) && !hasPersistent)){
           flash("В файле нет данных SUPER DAY."); return;
@@ -6208,6 +6417,9 @@
           importedTask.dur=du; importedTask.defer=df; importedTask.repeat=rp; importedTask.doneOn=dn;
           importedTask.remindedOn=(typeof t.remindedOn==="string"?t.remindedOn:null);
           importedTask.loc=normLoc(t.loc); importedTask.context=normContext(t.context);
+          importedTask.items=normItems(t.items);
+          importedTask.spokenPlace=(typeof t.spokenPlace==="string" && t.spokenPlace.trim().length<=80)?t.spokenPlace.trim():null;
+          importedTask.placeQuery=(typeof t.placeQuery==="string" && t.placeQuery.trim().length<=160)?t.placeQuery.trim():null;
           tasks.push(importedTask);
           haveT[key]=importedTask; addedT++;
         });
@@ -6225,7 +6437,7 @@
         if(typeof paintVehicleSettings==="function") paintVehicleSettings();
         if(typeof renderStats==="function") renderStats();
         if(typeof renderMapCard==="function") renderMapCard();
-        var restoredN=restored.stats+restored.completions+restored.dayLog+restored.routes+restored.cache+restored.geo+(restored.vehicle?1:0)+(restored.wake?1:0);
+        var restoredN=restored.stats+restored.completions+restored.dayLog+restored.routes+restored.cache+restored.geo+restored.aliases+(restored.vehicle?1:0)+(restored.wake?1:0);
         if(addedT || addedN || restoredN) flash("Загружено: задач +"+addedT+", заметок +"+addedN+", история/кэш +"+restoredN+". Дубликаты пропущены.");
         else flash("Всё из файла уже есть — ничего не добавлено.");
       };
@@ -6690,11 +6902,11 @@
       var added=createTaskFromRaw(clean, { urgent:urgent, important:important, capitalize:true,
                                           announceSchedule:false, ai:true, aiRaw:text });
       if(!added){ awake=false; setStatus("Не удалось добавить задачу. Повтори ещё раз."); return; }
-      var tmClean=added.task.text, tm=added.time, du=added.dur, rp=added.repeat;
+      var tmClean=added.task.text, tm=added.time, du=added.dur, rp=added.repeat, buy=normItems(added.items);
       var q=quadOf({urgent:urgent,important:important});
       var QN={1:"сделать сейчас",2:"запланировать",3:"быстро закрыть",4:"на потом"};
-      setStatus("Добавлено: «<b>"+escapeHtml(tmClean)+"</b>»"+(rp?" 🔁 "+escapeHtml(fmtRepeat(rp)):"")+(tm?" ⏱ "+tm:"")+(du?" ⏳ "+fmtDurShort(du):"")+(added.place?" · ищу место на карте":"")+" → "+QN[q]+".");
-      speak("Добавил: "+tmClean+(rp?", "+fmtRepeat(rp):"")+(tm?", в "+tm.replace(":"," "):"")+(du?", "+fmtDur(du):""), keepListening);
+      setStatus("Добавлено: «<b>"+escapeHtml(tmClean)+"</b>»"+(rp?" 🔁 "+escapeHtml(fmtRepeat(rp)):"")+(tm?" ⏱ "+tm:"")+(du?" ⏳ "+fmtDurShort(du):"")+(added.place?" · место: "+escapeHtml(taskPlaceLabel(added.place)):"")+(buy.length?" · покупки: "+escapeHtml(buy.join(", ")):"")+" → "+QN[q]+".");
+      speak("Добавил: "+tmClean+(added.place?", место "+taskPlaceLabel(added.place):"")+(buy.length?", купить "+buy.join(", "):"")+(rp?", "+fmtRepeat(rp):"")+(tm?", в "+tm.replace(":"," "):"")+(du?", "+fmtDur(du):""), keepListening);
     }
 
     function processFinal(tr){
@@ -7365,6 +7577,23 @@
       var r = parsePlacePhrase("купить 5 яблок");
       return r.place===null && r.text==="купить 5 яблок";
     });
+    T("разговорное место и покупки: Ирчишка → рынок Ирчи Казака + три товара", function(){
+      var place=parsePlacePhrase("Поедем на Ирчишку, купить надо фрукты овощи и шуруповёрт");
+      var shopping=parsePurchaseItems(place.text);
+      return place.place==="рынок Ирчи Казака" && aliasKey(place.spokenPlace)==="ирчишку" &&
+        shopping.text==="Поедем" && shopping.items.join("|")==="фрукты|овощи|шуруповёрт";
+    });
+    T("подтверждённое название места повторно работает из локальной памяти", function(){
+      var before=localStorage.getItem(PLACE_ALIAS_KEY);
+      try{
+        localStorage.removeItem(PLACE_ALIAS_KEY);
+        if(!rememberPlaceAlias("моя точка","Тверская улица, 7")) return false;
+        var r=parsePlacePhrase("заехать в моя точка");
+        return r.place==="Тверская улица, 7" && r.spokenPlace==="моя точка";
+      } finally {
+        if(before===null) localStorage.removeItem(PLACE_ALIAS_KEY); else localStorage.setItem(PLACE_ALIAS_KEY,before);
+      }
+    });
     T("routeCacheKey: шесть знаков различают соседние точки, старый ключ читаем отдельно", function(){
       var a=[{lat:55.123456,lon:37.654321}], b=[{lat:55.123457,lon:37.654321}];
       return routeCacheKey(a)!==routeCacheKey(b) && legacyRouteCacheKey(a)===legacyRouteCacheKey(b) &&
@@ -7865,10 +8094,10 @@
         return xpEarnedToday()===30;
       } finally { tasks.length=0; keep.forEach(function(x){ tasks.push(x); }); render(); }
     });
-    T("сбой модели: исходный список остаётся одной дословной задачей без приоритета", function(){
+    T("сбой модели: исходный список остаётся одной задачей без выдуманного приоритета", function(){
       var d=literalFallbackItem("срочно к врачу\nпозвонить клиенту; купить хлеб", "b1");
-      return d.task.text==="срочно к врачу\nпозвонить клиенту; купить хлеб" &&
-        d.task.urgent===false && d.task.important===false && d.task.dur===null;
+      return d.task.text==="срочно к врачу позвонить клиенту" && d.task.items.join("|")==="хлеб" &&
+        d.task.urgent===false && d.task.important===false && d.task.dur===null && d.task.aiSource==="unavailable";
     });
     T("сбой модели: слово «сегодня» не превращается в выдуманный приоритет", function(){
       var d=literalFallbackItem("сегодня забрать посылку","b2");
@@ -7878,10 +8107,10 @@
       var d=literalFallbackItem("да\nох\nсходить в банк","b3");
       return d.task.text==="да\nох\nсходить в банк";
     });
-    T("сбой модели: время и адрес не выдаются за успешный разбор", function(){
+    T("сбой модели: явные время и адрес сохраняются локально без подмены AI", function(){
       var d=literalFallbackItem("В 14:00 встреча на Тверской 1","b4");
-      return d.task.text==="В 14:00 встреча на Тверской 1" && d.task.time===null &&
-        d.task.repeat===null && d.task.dur===null && d.place===null && d.task.aiSource==="unavailable";
+      return /встреча/i.test(d.task.text) && d.task.time==="14:00" &&
+        d.task.repeat===null && d.task.dur===null && d.place==="Тверской 1" && d.task.aiSource==="unavailable";
     });
     T("битый verdict спора не превращается во второй квадрант", function(){
       return validatedDebateVerdict({source:"llm",verdict:{quadrantNumber:9,confidence:2,reasoning:" "}})===null &&
