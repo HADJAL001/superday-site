@@ -793,10 +793,10 @@
     .bar{height:58px;padding-left:10px;padding-right:10px;gap:8px}
     .brand .beta,.back{display:none}
     .bar .right{gap:5px}
-    .head-service{min-height:40px;padding:6px 8px;font-size:11px}
-    .panel-btn{width:42px;height:42px;padding:0;justify-content:center;border-radius:9px}
+    .head-service{min-height:44px;padding:6px 8px;font-size:11px}
+    .panel-btn{width:44px;height:44px;padding:0;justify-content:center;border-radius:9px}
     .panel-btn .pb-label{display:none}
-    .theme-btn{width:42px;min-width:42px;height:42px;min-height:42px;padding:0;border-radius:9px}
+    .theme-btn{width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border-radius:9px}
     .theme-btn .theme-label{display:none}
   }
   @media(prefers-reduced-motion:reduce){.theme-btn{transition:none}}
@@ -1411,6 +1411,35 @@
     .toggles .hint{display:none}
     main.wrap{padding-bottom:178px}
   }
+  /* Mobile is the primary product surface. Secondary controls live in a small
+     bottom sheet; the three daily decisions stay visible and unobstructed. */
+  @media(max-width:680px){
+    *{scroll-behavior:auto!important}
+    .scrim{backdrop-filter:none;transition:opacity .08s linear}
+    .panel{top:auto;left:0;right:0;bottom:0;width:100%;max-height:min(78svh,680px);
+      border-left:0;border-top:1px solid var(--hair-soft);border-radius:16px 16px 0 0;
+      box-shadow:0 -18px 45px rgba(0,0,0,.55);transform:translateY(101%);
+      transition:transform .08s ease-out;will-change:auto}
+    .panel.open{transform:translateY(0)}
+    .panel-head{padding:10px 12px 9px;min-height:56px}
+    .panel-head::before{content:"";position:absolute;top:6px;left:50%;width:38px;height:4px;
+      border-radius:4px;background:var(--text-muted);transform:translateX(-50%);opacity:.6}
+    .panel-head h2{font-size:18px}
+    .panel-head .ph-sub{display:none}
+    .panel-close,.route-close{width:44px;height:44px;min-width:44px;border-radius:10px;font-size:25px}
+    .panel-body{padding:8px 12px calc(18px + env(safe-area-inset-bottom,0px))}
+    .pgroup{margin-bottom:7px}
+    .pg-head{min-height:48px;padding:11px 12px}
+    .pgroup[data-sec="remind"],.pgroup[data-sec="stats"],.pgroup[data-sec="growth"],
+    .pgroup[data-sec="tpl"],.pgroup[data-sec="notes"],.pgroup[data-sec="diag"]{display:none}
+    #layoutBtn,.layout-pop,.rail,.stage-links{display:none!important}
+    .route{max-height:82svh;transition:transform .08s ease-out}
+    .bulk{top:auto;bottom:0;left:0;width:100%;max-height:78svh;border-radius:16px 16px 0 0;
+      transform:none;padding:12px 12px calc(16px + env(safe-area-inset-bottom,0px))}
+    .composer,.composer button,.composer input,.tg{touch-action:manipulation}
+    .composer button,.tg,.panel button,.route button{transition:none!important}
+  }
+  @media(prefers-reduced-motion:reduce){.panel,.route,.scrim{transition:none!important}}
   .pg-lead .sdi{margin-right:1px}
 </style>
 </head>
@@ -2800,9 +2829,9 @@
       var unresolvedPlace=!t.loc && typeof t.placeQuery==="string" && !!t.placeQuery.trim();
       lc.className = "tloc" + (t.loc ? "" : (unresolvedPlace ? " pending" : " empty"));
       if(t.loc){
-        lc.textContent = "📍 "+t.loc.label;
+        lc.textContent = "📍 "+(t.loc.addr||t.loc.label);
         lc.title = (t.loc.addr && t.loc.addr!==t.loc.label ? t.loc.addr+" · " : "")+"Нажми, чтобы изменить место";
-        lc.setAttribute("aria-label","Место: "+t.loc.label+". Нажми, чтобы изменить.");
+        lc.setAttribute("aria-label","Место: "+(t.loc.addr||t.loc.label)+". Нажми, чтобы изменить.");
       } else if(unresolvedPlace){
         lc.textContent="📍 "+taskPlaceLabel(t.placeQuery);
         lc.title=(t.geoPending?"Ищу точку на карте · ":"Место записано, точка ещё не загружена · ")+"нажми, чтобы уточнить";
@@ -3023,7 +3052,7 @@
     var text=document.createElement("span"); text.className="mp-text"; text.textContent=t.text;
     wrap.appendChild(num); wrap.appendChild(text);
     if(t.time){ var tm=document.createElement("span"); tm.className="mp-time"; tm.textContent=t.time; wrap.appendChild(tm); }
-    var addr=document.createElement("span"); addr.className="mp-addr"; addr.textContent=t.loc.label||t.loc.addr;
+    var addr=document.createElement("span"); addr.className="mp-addr"; addr.textContent=t.loc.addr||t.loc.label;
     wrap.appendChild(addr);
     var actions=document.createElement("span"); actions.className="mp-actions";
     var nav=document.createElement("button"); nav.type="button"; nav.className="mp-nav";
@@ -4340,7 +4369,7 @@
       var bits=[];
       if(t.time){ var et=endTime(t); bits.push(et ? (t.time+"–"+et) : t.time); }
       else if(validDur(t.dur)) bits.push(fmtDurShort(t.dur));
-      if(t.loc) bits.push(t.loc.label);
+      if(t.loc) bits.push(t.loc.addr||t.loc.label);
       else if(t.placeQuery) bits.push(taskPlaceLabel(t.placeQuery));
       bits.push(QUAD_SHORT[quadOf(t)]);
       if(bits.length){
@@ -5271,7 +5300,7 @@
     input.addEventListener("change", function(){ saveVehicleRate(input.value); });
     if(price) price.addEventListener("change",function(){ saveVehiclePrice(price.value); });
   })();
-  var GEOCACHE_KEY = "superday_geocache_v1";
+  var GEOCACHE_KEY = "superday_geocache_v2";
   var GEOCODE_TIMEOUT_MS = 20000;
   var taskGeoControllers = {};
   function geoCacheKey(q){ return String(q||"").trim().toLowerCase().replace(/\s+/g," "); }
@@ -5285,12 +5314,20 @@
     var ownCtrl=!signal && window.AbortController?new AbortController():null;
     var requestSignal=signal || (ownCtrl?ownCtrl.signal:undefined);
     var timer=setTimeout(function(){ try{ if(ownCtrl) ownCtrl.abort(); }catch(e){} },GEOCODE_TIMEOUT_MS);
-    fetchIdempotent(API_BASE + "/geocode?q=" + encodeURIComponent(query),{signal:requestSignal})
+    var near=validPoint(mapState&&mapState.userLoc)?mapState.userLoc:null;
+    var geoUrl=API_BASE + "/geocode?q=" + encodeURIComponent(query);
+    if(near) geoUrl += "&lat="+encodeURIComponent(near.lat)+"&lon="+encodeURIComponent(near.lon);
+    fetchIdempotent(geoUrl,{signal:requestSignal})
       .then(function(r){ if(!r.ok) throw new Error("geocode_"+r.status); return r.json(); })
       .then(function(j){
         clearTimeout(timer);
         if(!j || j.error || typeof j.lat!=="number" || typeof j.lon!=="number"){ cb(null); return; }
-        var found = { lat:j.lat, lon:j.lon, addr: j.label || query };
+        var point={lat:j.lat,lon:j.lon};
+        if(!validPoint(point)){ cb(null); return; }
+        // A local spoken address resolving to another region is worse than no
+        // result: it creates a believable marker and absurd route metrics.
+        if(near && haversineKm(near,point)>250){ cb(null); return; }
+        var found = { lat:j.lat, lon:j.lon, addr: String(j.label || query).trim() };
         cache[key] = found; saveGeoCache(cache);
         cb(found);
       })
@@ -5507,6 +5544,13 @@
     var hasMeters=Object.prototype.hasOwnProperty.call(j,"distanceMeters");
     var distanceMeters=hasMeters ? numOrNull(j.distanceMeters) : km*1000;
     if(distanceMeters===null) return null;
+    if(Math.abs(km-distanceMeters/1000)>Math.max(.3,km*.05)) return null;
+    var straight=0;
+    for(var pi=1;pi<(pts||[]).length;pi++){
+      if(!validPoint(pts[pi-1])||!validPoint(pts[pi])) return null;
+      straight+=haversineKm(pts[pi-1],pts[pi]);
+    }
+    if(straight>0 && (km+0.05<straight || km>Math.max(25,straight*8+10))) return null;
     var coords=[];
     if(typeof j.polyline==="string" && j.polyline){ try{ coords=decodePolyline(j.polyline); }catch(e){ coords=[]; } }
     // Fuel is only derived from the rate the person entered locally. The route
@@ -6779,7 +6823,7 @@
     var useServerManual=canServerStt, useServerStage=canServerStt;
     var serverStageMic=document.getElementById("stageMic");
     var serverRecorder=null, serverStream=null, serverChunks=[], serverBase="", serverKind="manual";
-    var serverStarting=false, serverStopTimer=null, serverUploadCtrl=null, serverFailureUntil=0;
+    var serverStarting=false, serverStartSerial=0, serverStopTimer=null, serverUploadCtrl=null, serverFailureUntil=0;
     var serverAudioCtx=null, serverAnalyser=null, serverListenRaf=null, serverHeard=false, serverLastSound=0, serverStartedAt=0;
     function serverRecorderMime(){
       var types=["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus"];
@@ -6879,6 +6923,7 @@
     }
     function startServerRecording(kind){
       if(serverStarting || (serverRecorder && serverRecorder.state!=="inactive")) return;
+      var startSerial=++serverStartSerial;
       serverKind=kind==="stage"?"stage":"manual";
       cancelSpeech();
       if(typeof handsEnabled!=="undefined" && handsEnabled && typeof stopHands==="function") stopHands(true);
@@ -6887,8 +6932,14 @@
       }
       if(serverUploadCtrl){ try{ serverUploadCtrl.abort(); }catch(e){} serverUploadCtrl=null; }
       serverStarting=true; serverChunks=[]; serverBase=serverKind==="manual"?input.value.trim():"";
+      paintServerRecording(false,true,serverKind);
+      if(serverKind==="stage") stageSay("Подключаю микрофон…",true); else setStatus("<b>Подключаю микрофон…</b>");
       navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false})
         .then(function(stream){
+          if(startSerial!==serverStartSerial){
+            try{ stream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){}
+            return;
+          }
           serverStarting=false; serverStream=stream;
           var mime=serverRecorderMime();
           try{ serverRecorder=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream); }
@@ -6914,6 +6965,7 @@
           serverStopTimer=setTimeout(stopServerRecording,30000);
         })
         .catch(function(e){
+          if(startSerial!==serverStartSerial) return;
           serverStarting=false; releaseServerStream(); paintServerRecording(false,false);
           var denied=e && (e.name==="NotAllowedError" || e.name==="SecurityError");
           var message=denied?"Нет доступа к микрофону. Разрешите его в настройках браузера и повторите.":"Микрофон занят или недоступен.";
@@ -6925,7 +6977,8 @@
       // SpeechRecognition. Если его нет, сервер остаётся единственным реальным STT.
       if(Date.now()<serverFailureUntil && SR) return;
       event.preventDefault(); event.stopImmediatePropagation();
-      if(serverRecorder && serverRecorder.state!=="inactive") stopServerRecording();
+      if(serverStarting){ serverStartSerial++; serverStarting=false; paintServerRecording(false,false,kind); setStatus("Запись отменена."); }
+      else if(serverRecorder && serverRecorder.state!=="inactive") stopServerRecording();
       else startServerRecording(kind);
     }
     if(useServerManual){
@@ -7627,6 +7680,10 @@
       var km=haversineKm({lat:55.7558,lon:37.6173},{lat:59.9311,lon:30.3609});
       return km>600 && km<670;
     });
+    T("haversineKm: соседние городские точки ≈ 2 км", function(){
+      var km=haversineKm({lat:55.7500,lon:37.6100},{lat:55.7680,lon:37.6100});
+      return km>1.9 && km<2.1;
+    });
     T("recommendedRouteOrder: сначала высокий приоритет, затем ближайшая точка", function(){
       var origin={lat:0,lon:0}, low={id:"low",urgent:false,important:false,loc:{lat:0,lon:.01}},
         far={id:"far",urgent:true,important:true,loc:{lat:0,lon:.03}},
@@ -7792,6 +7849,11 @@
       } finally {
         if(before===null) localStorage.removeItem(VEHICLE_KEY); else localStorage.setItem(VEHICLE_KEY,before);
       }
+    });
+    T("normalizeRouteResult: отклоняет перепутанные единицы и неправдоподобный маршрут", function(){
+      var pts=[{lat:55.75,lon:37.61},{lat:55.768,lon:37.61}];
+      return normalizeRouteResult({km:3220,distanceMeters:3220000,minutes:10,minutesTraffic:10,trafficLevel:"light",polyline:null},pts)===null &&
+        normalizeRouteResult({km:2,distanceMeters:2000000,minutes:10,minutesTraffic:10,trafficLevel:"light",polyline:null},pts)===null;
     });
     T("старый route cache без distanceMeters остаётся рабочим", function(){
       var old={result:{mode:"google",km:4.8,minutes:13,minutesTraffic:18,fuelRate:8.2},at:1};

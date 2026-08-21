@@ -93,7 +93,7 @@ const SEED = () => {
       "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v73/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v74/.test(workerSource), "версия кэша service worker обновлена");
     say(!/google\.com\/maps/i.test(appSource), "основной сценарий не содержит ссылок на внешний навигатор");
     say(/отправлен(?:о)? на модерацию в RuStore|отправлено в RuStore/.test(landingSource) &&
       /НА МОДЕРАЦИИ/.test(landingSource), "лендинг показывает актуальный статус публикации в RuStore");
@@ -139,8 +139,21 @@ const SEED = () => {
       });
       return { count: controls.length, rects, overflow: document.documentElement.scrollWidth > innerWidth };
     });
-    say(appHeader.count === 5 && appHeader.rects.every(r => r.h >= 40 && r.left >= 0 && r.right <= 320) && !appHeader.overflow,
+    say(appHeader.count === 4 && appHeader.rects.every(r => r.h >= 44 && r.left >= 0 && r.right <= 320) && !appHeader.overflow,
       "app.html: мобильная шапка имеет удобные зоны касания на 320px", JSON.stringify(appHeader));
+    await navPage.click("#panelBtn");
+    await navPage.waitForTimeout(140);
+    const mobilePanel = await navPage.evaluate(() => {
+      const panel = document.getElementById("panel"), r = panel.getBoundingClientRect();
+      const hiddenSections = ["remind", "stats", "growth", "tpl", "notes", "diag"]
+        .every(id => getComputedStyle(document.querySelector(`[data-sec=\"${id}\"]`)).display === "none");
+      const dialogs = Array.from(document.querySelectorAll('[role="dialog"]'));
+      return { open: panel.classList.contains("open"), bottom: Math.round(r.bottom), viewportBottom: innerHeight, top: Math.round(r.top),
+        hiddenSections, everyDialogCloses: dialogs.every(d => !!d.querySelector('button[aria-label^="Закрыть"]')) };
+    });
+    say(mobilePanel.open && mobilePanel.bottom === mobilePanel.viewportBottom && mobilePanel.top > 100 && mobilePanel.hiddenSections && mobilePanel.everyDialogCloses,
+      "мобильная панель убирается вниз, лишние разделы скрыты, у каждого окна есть крестик", JSON.stringify(mobilePanel));
+    await navPage.click("#panelClose");
     for (const pathName of ["documents.html", "support.html"]) {
       await navPage.goto(BASE.replace("app.html", pathName) + "#verification", { waitUntil: "load" });
       const verification = await navPage.evaluate(() => {
