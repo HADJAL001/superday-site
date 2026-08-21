@@ -65,7 +65,7 @@ window.__i18nDict("es", {
     "— горит по времени.": "— aprieta por la hora.",
     "— двигает жизнь. Переложить можно перетаскиванием за ручку ☰.": "— mueve la vida. Se mueve arrastrando por el asa ☰.",
     "ГОВОРИТЕ И ВАШ ИИ ПРОЛОЖИТ ЛУЧШИЙ ПУТЬ": "HABLE Y SU IA TRAZARÁ EL MEJOR CAMINO",
-    "Скажите или напишите дело": "Di o escribe una tarea",
+    "Дело или адрес": "Tarea o dirección",
     "ГОВОРИТЕ ИЛИ ВСТАВЬТЕ ВЕСЬ СПИСОК — ИИ РАЗЛОЖИТ ПО ВАЖНОСТИ": "HABLE O PEGUE TODA LA LISTA — LA IA LA ORDENARÁ POR IMPORTANCIA",
     "СКАЖИТЕ ДЕЛА — ИИ ПОКАЖЕТ ИХ НА КАРТЕ И СОБЕРЁТ ПЛАН ДНЯ": "DIGA SUS TAREAS — LA IA LAS MOSTRARÁ EN EL MAPA Y ARMARÁ EL PLAN DEL DÍA",
     "План на день": "Plan del día",

@@ -1430,6 +1430,7 @@
     .panel-body{padding:8px 12px calc(18px + env(safe-area-inset-bottom,0px))}
     .pgroup{margin-bottom:7px}
     .pg-head{min-height:48px;padding:11px 12px}
+    .pgroup[data-sec="matrix"] .pg-lead{display:none}
     .pgroup[data-sec="remind"],.pgroup[data-sec="stats"],.pgroup[data-sec="growth"],
     .pgroup[data-sec="tpl"],.pgroup[data-sec="notes"],.pgroup[data-sec="diag"]{display:none}
     #layoutBtn,.layout-pop,.rail,.stage-links{display:none!important}
@@ -1657,7 +1658,7 @@
 </main>
 <section class="composer" id="composer" aria-label="Добавить задачу">
   <div class="row1">
-    <input type="text" id="taskInput" placeholder="Скажите или напишите дело" autocomplete="off" />
+    <input type="text" id="taskInput" placeholder="Дело или адрес" autocomplete="off" />
     <button class="mic-btn" id="micBtn" type="button" title="Продиктовать задачу голосом" aria-label="Продиктовать задачу голосом" aria-pressed="false"><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-mic"/></svg></button>
     <button class="bulk-btn" id="bulkBtn" type="button" title="Наговорить или вставить сразу весь список дел — ИИ разложит по важности" aria-label="Разобрать список дел"><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-stack"/></svg></button>
     <button class="add-btn" id="addBtn" type="button">Добавить</button>

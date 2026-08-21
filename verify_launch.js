@@ -93,7 +93,7 @@ const SEED = () => {
       "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v74/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v75/.test(workerSource), "версия кэша service worker обновлена");
     say(!/google\.com\/maps/i.test(appSource), "основной сценарий не содержит ссылок на внешний навигатор");
     say(/отправлен(?:о)? на модерацию в RuStore|отправлено в RuStore/.test(landingSource) &&
       /НА МОДЕРАЦИИ/.test(landingSource), "лендинг показывает актуальный статус публикации в RuStore");
@@ -396,7 +396,7 @@ const SEED = () => {
     console.log("\n=== 3. Тексты ===");
     say(marks.texts.rollover === true, "карточка «Новый день» показана (иначе знак разворота не проверить)");
     say(marks.emojiLeft.length === 0, "эмодзи в главных зонах не осталось", marks.emojiLeft.join(" | ") || "чисто");
-    say(marks.texts.placeholder === "Скажите или напишите дело", "приглашение ввода заменено", marks.texts.placeholder);
+    say(marks.texts.placeholder === "Дело или адрес", "приглашение ввода короткое и ясное", marks.texts.placeholder);
     say(/^\s*Срочно\s*$/.test(marks.texts.urgent), "тег «Срочно» без эмодзи", JSON.stringify(marks.texts.urgent));
     say(/^\s*Важно\s*$/.test(marks.texts.important), "тег «Важно» без эмодзи", JSON.stringify(marks.texts.important));
     say(/^\s*Фокус\s*$/.test(marks.texts.focusBtn), "кнопка «Фокус» без эмодзи", JSON.stringify(marks.texts.focusBtn));
