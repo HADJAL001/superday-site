@@ -889,6 +889,17 @@
   .billing-legal{display:flex; gap:12px; flex-wrap:wrap; margin-top:14px; padding-top:12px;
     border-top:1px solid var(--hair-soft); font-size:12px}
   .billing-legal a{color:var(--text-dim)}
+  .ai-chat{display:grid;gap:10px;margin-top:4px}
+  .ai-chat-log{min-height:120px;max-height:42svh;overflow:auto;padding:10px;border:1px solid var(--hair-soft);border-radius:8px;background:var(--ink)}
+  .ai-chat-msg{max-width:92%;margin:0 0 9px;padding:9px 10px;border-radius:8px;white-space:pre-wrap;line-height:1.45;font-size:12.5px}
+  .ai-chat-msg.user{margin-left:auto;background:var(--surface);color:var(--text)}
+  .ai-chat-msg.ai{background:rgba(231,197,110,.08);color:var(--text)}
+  .ai-chat-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  .ai-chat-form textarea,.ai-chat select{width:100%;border:1px solid var(--border);border-radius:8px;background:var(--ink);color:var(--text);font:inherit}
+  .ai-chat-form textarea{min-height:72px;padding:10px;resize:vertical;grid-column:1/-1}
+  .ai-chat select{min-height:42px;padding:8px 10px;grid-column:1/-1}
+  .ai-chat-send{min-height:42px;padding:8px 14px;border:0;border-radius:8px;background:var(--grad-plat);color:var(--on-accent);font-weight:700}
+  .ai-chat-state{min-height:18px;color:var(--text-muted);font-size:11.5px}
   @media(min-width:520px){.billing-plan .billing-action{grid-column:auto; width:auto}.billing-plan{grid-template-columns:minmax(0,1fr) auto auto}}
 
   /* Секции, переехавшие в панель, теряют «страничные» отступы и ширину. */
@@ -1853,6 +1864,20 @@
       </section>
     </div>
   </section>
+  <section class="pgroup" data-sec="chat">
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">AI</span><span class="pg-title">Помощник по делам</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
+    <div class="pg-body">
+      <div class="ai-chat" id="aiChat">
+        <select id="aiChatTask" aria-label="Связать вопрос с делом"><option value="">Общий вопрос</option></select>
+        <div class="ai-chat-log" id="aiChatLog" aria-live="polite"></div>
+        <form class="ai-chat-form" id="aiChatForm">
+          <textarea id="aiChatInput" maxlength="2000" placeholder="Например: завтра к адвокату на Ленина. Что спросить и как объяснить ситуацию?" required></textarea>
+          <div class="ai-chat-state" id="aiChatState"></div>
+          <button class="ai-chat-send" type="submit">Спросить</button>
+        </form>
+      </div>
+    </div>
+  </section>
   <section class="pgroup" data-sec="account">
     <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-user"/></svg></span><span class="pg-title">Аккаунт и тариф</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
     <div class="pg-body">
@@ -1981,13 +2006,17 @@
   try{ tasks = JSON.parse(localStorage.getItem(STORE_KEY) || "[]") || []; }catch(e){ tasks = []; }
 
   // ===== Версия схемы данных + миграции (на будущее, чтобы не терять данные) =====
-  var SCHEMA = 10;
+  var SCHEMA = 11;
   var CTX_LIST = ["work","home","health"];
   var CTX_LABEL = {work:"Работа", home:"Дом", health:"Здоровье"};
   var CTX_ICON = {work:"💼", home:"🏠", health:"❤️"};
   // Нормализация контекста жизни: только фиксированный список, иначе null
   // («без контекста» — законное состояние, не ошибка).
   function normContext(c){ return (CTX_LIST.indexOf(c)>=0) ? c : null; }
+  function normAiQuestion(value){
+    var text=typeof value==="string" ? value.replace(/\s+/g," ").trim() : "";
+    return text && text.length<=500 ? text : null;
+  }
   // Нормализация повтора: принимаем и {days:[...]} и голый массив — возвращаем
   // либо {days:[отсортированные уникальные 0..6]}, либо null. Пустой набор = нет повтора.
   function normRepeat(r){
@@ -2102,6 +2131,7 @@
     //     нормализованный массив до фиксации номера схемы.
     // v9: items, spokenPlace и placeQuery для покупок, разговорных мест и
     //     канонического запроса геокодера.
+    // v11: личный вопрос к делу для подготовки разговора с AI.
     var migrated = false;
     try{
       tasks = (tasks||[]).map(function(t){
@@ -2122,6 +2152,7 @@
         out.text = String(t.text||""); out.urgent=!!t.urgent; out.important=!!t.important; out.done=!!t.done;
         out.time=tm; out.dur=du; out.defer=df; out.repeat=rp; out.doneOn=dn; out.loc=lc; out.context=cx;
         out.items=items;
+        out.aiQuestion=normAiQuestion(t.aiQuestion);
         out.routeRank=(typeof t.routeRank==="number" && isFinite(t.routeRank) && t.routeRank>=0 && t.routeRank<1000) ? Math.round(t.routeRank) : null;
         out.spokenPlace=(typeof t.spokenPlace==="string" && t.spokenPlace.trim().length<=80) ? t.spokenPlace.trim() : null;
         out.placeQuery=(typeof t.placeQuery==="string" && t.placeQuery.trim().length<=160) ? t.placeQuery.trim() : null;
@@ -6375,6 +6406,7 @@
         validDur(+t.dur)?Math.round(+t.dur):"", typeof t.defer==="string"?t.defer:"",
         rp?rp.days.join(","):"", loc?loc.lat+","+loc.lon:"", normContext(t.context)||"",
         normItems(t.items).join("\u001e").toLowerCase(), typeof t.placeQuery==="string"?t.placeQuery.toLowerCase():"",
+        normAiQuestion(t.aiQuestion)||"",
         t.urgent?1:0, t.important?1:0, t.done?1:0, typeof t.doneOn==="string"?t.doneOn:""]
         .join("\u001f");
     }
@@ -6590,6 +6622,7 @@
           importedTask.remindedOn=(typeof t.remindedOn==="string"?t.remindedOn:null);
           importedTask.loc=normLoc(t.loc); importedTask.context=normContext(t.context);
           importedTask.items=normItems(t.items);
+          importedTask.aiQuestion=normAiQuestion(t.aiQuestion);
           importedTask.spokenPlace=(typeof t.spokenPlace==="string" && t.spokenPlace.trim().length<=80)?t.spokenPlace.trim():null;
           importedTask.placeQuery=(typeof t.placeQuery==="string" && t.placeQuery.trim().length<=160)?t.placeQuery.trim():null;
           tasks.push(importedTask);
@@ -8730,6 +8763,83 @@
     });
   }
 
+  // ===== Платный AI-помощник: локальная история + точный кэш ответов =====
+  var AI_CHAT_HISTORY_PREFIX="superday_ai_chat_history_v1_";
+  var AI_CHAT_CACHE_PREFIX="superday_ai_chat_cache_v1_";
+  function aiChatUserKey(){ return billingUser && billingUser.id ? String(billingUser.id) : "none"; }
+  function aiChatRead(prefix, fallback){
+    try{ var value=JSON.parse(localStorage.getItem(prefix+aiChatUserKey())||"null"); return value||fallback; }
+    catch(e){ return fallback; }
+  }
+  function aiChatWrite(prefix,value){ try{ localStorage.setItem(prefix+aiChatUserKey(),JSON.stringify(value)); }catch(e){} }
+  function aiChatHash(value){
+    var h=2166136261, text=String(value||"");
+    for(var i=0;i<text.length;i++){ h^=text.charCodeAt(i); h=Math.imul(h,16777619); }
+    return (h>>>0).toString(36);
+  }
+  function aiChatPaid(){ return !!(billingUser && billingUser.plan_code!=="free" && billingUser.plan_code!=="guest"); }
+  function refreshAiChatTasks(){
+    var select=document.getElementById("aiChatTask"); if(!select) return;
+    var selected=select.value; select.innerHTML='<option value="">Общий вопрос</option>';
+    tasks.filter(function(t){return t&&!t.done;}).forEach(function(t){
+      var option=document.createElement("option"); option.value=String(t.id);
+      option.textContent=t.text+(t.loc&&t.loc.label?" · "+t.loc.label:""); select.appendChild(option);
+    });
+    if([].some.call(select.options,function(o){return o.value===selected;})) select.value=selected;
+  }
+  function renderAiChat(){
+    var log=document.getElementById("aiChatLog"), state=document.getElementById("aiChatState"); if(!log) return;
+    refreshAiChatTasks(); log.innerHTML="";
+    if(!billingUser){ state.textContent="Войдите в аккаунт в разделе «Аккаунт и тариф»."; return; }
+    if(!aiChatPaid()){ state.textContent="AI-помощник доступен на платном тарифе."; return; }
+    var history=aiChatRead(AI_CHAT_HISTORY_PREFIX,[]);
+    history.slice(-60).forEach(function(item){
+      var row=document.createElement("div"); row.className="ai-chat-msg "+(item.role==="user"?"user":"ai");
+      row.textContent=String(item.text||""); log.appendChild(row);
+    });
+    state.textContent=history.length ? "История и полученные ответы доступны офлайн." : "Спросите, что сказать или подготовить к делу.";
+    log.scrollTop=log.scrollHeight;
+  }
+  function aiChatRequest(payload,retry){
+    var tokens=billingTokens(); if(!tokens) return Promise.reject(new Error("auth_required"));
+    return fetch(API_BASE+"/chat",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+tokens.access_token},body:JSON.stringify(payload)})
+      .then(function(res){
+        if(res.status===401 && retry!==false) return billingRefresh().then(function(){return aiChatRequest(payload,false);});
+        return res.text().then(function(raw){ var data=null; try{data=raw?JSON.parse(raw):null;}catch(e){}
+          if(!res.ok){var err=new Error(data&&data.error||"chat_failed");err.status=res.status;throw err;} return data; });
+      });
+  }
+  function initAiChat(){
+    var form=document.getElementById("aiChatForm"), input=document.getElementById("aiChatInput"), select=document.getElementById("aiChatTask"), state=document.getElementById("aiChatState");
+    if(!form||!input||!select) return;
+    form.addEventListener("submit",function(e){
+      e.preventDefault(); var message=input.value.replace(/\s+/g," ").trim(); if(!message) return;
+      if(!aiChatPaid()){ state.textContent="Сначала войдите и подключите платный тариф."; openPanel("account"); return; }
+      var task=tasks.filter(function(t){return String(t.id)===select.value;})[0]||null;
+      var context=task?{title:task.text,address:task.loc?(task.loc.addr||task.loc.label):null,question:message}:null;
+      var identity=JSON.stringify({message:message.toLowerCase(),task:context});
+      var key=aiChatHash(identity), cache=aiChatRead(AI_CHAT_CACHE_PREFIX,{}), history=aiChatRead(AI_CHAT_HISTORY_PREFIX,[]);
+      if(task){ task.aiQuestion=normAiQuestion(message); save(); }
+      history.push({role:"user",text:message,at:Date.now()});
+      if(cache[key]&&cache[key].answer){
+        history.push({role:"ai",text:cache[key].answer,at:Date.now(),cached:true});
+        aiChatWrite(AI_CHAT_HISTORY_PREFIX,history.slice(-100)); input.value=""; renderAiChat(); return;
+      }
+      aiChatWrite(AI_CHAT_HISTORY_PREFIX,history.slice(-100)); input.value=""; renderAiChat(); state.textContent="Готовлю ответ…";
+      aiChatRequest({message:message,task:context}).then(function(data){
+        cache[key]={answer:data.answer,at:Date.now()}; var keys=Object.keys(cache);
+        if(keys.length>200) keys.sort(function(a,b){return (cache[a].at||0)-(cache[b].at||0);}).slice(0,keys.length-200).forEach(function(k){delete cache[k];});
+        aiChatWrite(AI_CHAT_CACHE_PREFIX,cache); var next=aiChatRead(AI_CHAT_HISTORY_PREFIX,[]);
+        next.push({role:"ai",text:data.answer,at:Date.now(),cached:!!data.cached}); aiChatWrite(AI_CHAT_HISTORY_PREFIX,next.slice(-100)); renderAiChat();
+      }).catch(function(err){
+        state.textContent=err.status===403?"Нужен действующий платный тариф.":(navigator.onLine?"AI сейчас не ответил. Повторите запрос.":"Нет сети. Ранее полученные ответы доступны в истории.");
+      });
+    });
+    select.addEventListener("focus",refreshAiChatTasks);
+    var head=document.querySelector('.pgroup[data-sec="chat"] .pg-head'); if(head) head.addEventListener("click",function(){setTimeout(renderAiChat,0);});
+    renderAiChat();
+  }
+
   // ===== Правая панель: второй слой приложения =====
   // Главный экран отвечает на один вопрос — «что делать сейчас». Всё, что не
   // нужно каждую минуту (настройки, разбор, статистика, данные), живёт здесь и
@@ -8738,6 +8848,7 @@
   var PANEL_KEY = "superday_panel_v1";
   var PANEL_SECS = [
     { id:"account", ic:"user", name:"Аккаунт и тариф" },
+    { id:"chat", ic:"pen", name:"Помощник по делам" },
     { id:"matrix", ic:"matrix", name:"Разбор по важности" },
     { id:"remind", ic:"bell", name:"Напоминания и звук" },
     { id:"voice",  ic:"mic", name:"Голос" },
@@ -8995,6 +9106,7 @@
   })();
 
   initBilling();
+  initAiChat();
 
   // ===== Окно дел: модалка поверх карты (волна 35) =====
   // Список «Сегодня» раньше жил постоянной карточкой в потоке; теперь карта —
