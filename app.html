@@ -37,7 +37,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <!-- Одна гарнитурная пара с лендингом (паритет платформ): Cormorant Garamond
      на заголовки + Jost на интерфейс. Кириллица полная у обеих. -->
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Prata&display=swap" rel="stylesheet" />
 <script>try{document.documentElement.dataset.theme=localStorage.getItem("superday_theme_v1")==="emerald"?"emerald":"platinum";}catch(e){document.documentElement.dataset.theme="platinum";}</script>
 <style>
   :root{
@@ -1453,6 +1453,118 @@
   }
   @media(prefers-reduced-motion:reduce){.panel,.route,.scrim{transition:none!important}}
   .pg-lead .sdi{margin-right:1px}
+
+  /* Premium instrument system: one quiet surface language for every working window. */
+  :root{
+    --font-display:"Prata",Georgia,"Times New Roman",serif;
+    --font-ui:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --window:#101722;
+    --window-deep:#0A1019;
+    --window-raised:#151E2A;
+    --window-line:rgba(223,190,119,.30);
+    --window-line-soft:rgba(228,235,244,.11);
+    --window-gold:#DFBE77;
+    --window-gold-bright:#F4D99D;
+    --window-shadow:0 28px 80px -28px rgba(0,0,0,.88),0 1px 0 rgba(255,255,255,.035) inset;
+  }
+  html[data-theme="emerald"]{
+    --window:#0B2118;
+    --window-deep:#06150F;
+    --window-raised:#102C20;
+    --window-line:rgba(232,190,99,.38);
+    --window-line-soft:rgba(245,218,148,.13);
+    --window-gold:#E8BE63;
+    --window-gold-bright:#FFF0B8;
+  }
+  body{letter-spacing:0;font-weight:400}
+  h1,h2,h3,h4{letter-spacing:0}
+  button,input,textarea,select{font-family:var(--font-ui)}
+
+  .panel,.route,.bulk,.internal-nav{
+    background:linear-gradient(180deg,var(--window),var(--window-deep));
+    border-color:var(--window-line-soft);
+    box-shadow:var(--window-shadow);
+  }
+  .panel{border-left-color:var(--window-line-soft)}
+  .panel-head,.route-head{
+    position:relative;
+    min-height:64px;
+    border-bottom:1px solid var(--window-line-soft);
+  }
+  .panel-head::after,.route-head::after,.bulk::before,.internal-nav::before{
+    content:"";position:absolute;left:18px;bottom:-1px;width:74px;height:1px;
+    background:var(--window-gold);pointer-events:none;
+  }
+  .panel-head h2,.route h3,.bulk h3,.in-title{
+    font-family:var(--font-display);font-weight:400;letter-spacing:0;color:#F4F6F8;
+  }
+  .panel-head h2{font-size:21px;line-height:1.25}
+  .panel-head .ph-sub{
+    font-family:var(--font-ui);font-size:10px;line-height:1.4;letter-spacing:.08em;
+    color:var(--text-muted);font-weight:600;
+  }
+  .panel-close,.route-close{
+    display:grid;place-items:center;width:42px;height:42px;min-width:42px;
+    border:1px solid var(--window-line-soft);border-radius:6px;background:transparent;
+    color:var(--text-dim);font:400 23px/1 var(--font-ui);box-shadow:none;
+  }
+  .panel-close:hover,.route-close:hover{
+    color:var(--window-gold-bright);border-color:var(--window-line);background:rgba(255,255,255,.035)
+  }
+  .panel-close:focus-visible,.route-close:focus-visible,
+  .panel button:focus-visible,.route button:focus-visible,.bulk button:focus-visible{
+    outline:2px solid var(--window-gold);outline-offset:2px
+  }
+  .panel-body{scrollbar-color:var(--window-line) transparent}
+  .pgroup,.notes,.focus,.growth,.stats,.onboard,.ul-panel,.stage-plan,.route-brief{
+    background:rgba(255,255,255,.025);border-color:var(--window-line-soft);
+    border-radius:7px;box-shadow:none;backdrop-filter:none;
+  }
+  .pgroup{overflow:hidden}
+  .pg-head{background:transparent;border-color:var(--window-line-soft)}
+  .pg-head:hover{background:rgba(255,255,255,.025)}
+  .pg-title,.notes-head h3,.stats-head h3,.gr-lvl,.sp-title{
+    font-family:var(--font-display);font-weight:400;letter-spacing:0
+  }
+  .panel input,.panel textarea,.panel select,.bulk textarea,.ai-chat-form textarea,.ai-chat select{
+    color:var(--text);background:var(--window-deep);border:1px solid var(--window-line-soft);
+    border-radius:6px;box-shadow:0 1px 0 rgba(255,255,255,.025) inset;
+  }
+  .panel input:focus,.panel textarea:focus,.panel select:focus,.bulk textarea:focus,
+  .ai-chat-form textarea:focus,.ai-chat select:focus{
+    outline:none;border-color:var(--window-line);box-shadow:0 0 0 3px rgba(223,190,119,.09)
+  }
+  .ai-chat-log{background:var(--window-deep);border-color:var(--window-line-soft);border-radius:6px}
+  .ai-chat-msg{border-radius:6px;font-size:13px}
+  .ai-chat-msg.user{background:var(--window-raised);border:1px solid var(--window-line-soft)}
+  .ai-chat-msg.ai{background:rgba(223,190,119,.075);border-left:2px solid var(--window-gold)}
+  .ai-chat-send,.rb-action.primary{
+    background:var(--window-gold);color:#12100B;border-radius:6px;box-shadow:none
+  }
+  .bulk{border-radius:8px;padding:22px}
+  .bulk::before{top:0;bottom:auto;left:22px}
+  .route{border-radius:8px 8px 0 0}
+  .route-head{padding-bottom:12px;margin-bottom:8px}
+  .route-head::after{left:0}
+  .internal-nav{border-radius:8px}
+  .internal-nav::before{top:0;bottom:auto}
+  .triumph{
+    background:var(--window);border-color:var(--window-line);border-radius:7px;
+    box-shadow:var(--window-shadow)
+  }
+
+  @media(max-width:680px){
+    .panel,.route,.bulk{border-radius:8px 8px 0 0}
+    .panel-head{padding:14px 14px 10px;min-height:62px}
+    .panel-head::before{top:7px;width:32px;height:3px;background:var(--window-gold);opacity:.55}
+    .panel-head::after{left:14px;width:56px}
+    .panel-head h2{font-size:18px}
+    .panel-close,.route-close{width:44px;height:44px;min-width:44px;border-radius:6px}
+    .panel-body{padding:10px 12px calc(18px + env(safe-area-inset-bottom,0px))}
+    .pgroup{border-radius:6px}
+    .pg-head{min-height:50px}
+    .bulk{padding:18px 14px calc(18px + env(safe-area-inset-bottom,0px))}
+  }
 </style>
 </head>
 <body>
