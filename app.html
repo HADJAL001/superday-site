@@ -1466,6 +1466,13 @@
       animation-name:navFromBottom}
     @keyframes navFromBottom{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
     .in-title{font-size:18px}
+    .in-status,.in-kicker{font-size:12px; text-transform:none}
+    .in-time,.in-address{font-size:14px}
+    .in-process{font-size:13px; min-height:38px}
+    .in-guide span{font-size:11px; text-transform:none}
+    .in-actions{display:grid; grid-template-columns:1fr 1fr}
+    .in-actions .rb-action{font-size:13px; min-height:44px}
+    .in-actions .primary{grid-column:1/-1}
     .in-guide{padding:10px 8px}
     .in-guide b{font-size:19px}
     .composer{width:calc(100% - 16px); padding:10px 10px calc(10px + env(safe-area-inset-bottom,0px)); border-radius:16px 16px 0 0}
@@ -3195,6 +3202,7 @@
   // маршрута — асфальтовая (см. buildMapView) — маркеры не путать с дорогой.
   // Своя геолокация — отдельный красный мигающий значок человека (drawUserLoc).
   var MAP_STYLE_URL="https://tiles.openfreemap.org/styles/liberty";
+  var NAV_SESSION_KEY="sd_active_navigation_v1";
   function prefersLightMap(){
     return !!((navigator.deviceMemory&&navigator.deviceMemory<=4)||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)||
       (window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches));
@@ -3203,7 +3211,7 @@
     booted:false, ready:false, pendingTasks:null, renderSeq:0, routeRequest:null, lastRoute:null, lastTasks:[],
     userMarker:null, navigationActive:false, navigationTasks:[], navigationWatchId:null, navigationTimer:null, followUser:false,
     navigationRouteOrigin:null, navigationRouteAt:0, navigationLocationAt:0, dismissedRouteSignature:null,
-    navPanelHidden:false, navMinimized:false, cinemaFrame:null, styled:false, lowPower:prefersLightMap() };
+    navPanelHidden:false, navMinimized:false, navigationRestored:false, cinemaFrame:null, styled:false, lowPower:prefersLightMap() };
   var IS_SELFTEST = /[?&]selftest=1/.test(location.search||"");
   function tasksForMap(){
     var current=mapState.navigationActive && mapState.navigationTasks.length
@@ -3232,6 +3240,7 @@
         mapState.userLoc=validPoint(cachedLoc.loc)?cachedLoc.loc:null;
         mapState.userLocState=mapState.userLoc?"ready":"unavailable";
       }
+      restoreNavigationSession();
       loadMapEngine(function(){
         buildMapView(tasksForMap());
         if(typeof suggestDayPlan==="function") suggestDayPlan();
@@ -3521,11 +3530,48 @@
       renderInternalNavigation(mapState.lastRoute,mapState.navigationTasks);
     }
   }
+  function saveNavigationSession(pts){
+    try{
+      var ids=(pts||[]).map(function(t){ return String(t&&t.id||""); }).filter(Boolean);
+      if(ids.length) localStorage.setItem(NAV_SESSION_KEY,JSON.stringify({ids:ids,at:Date.now()}));
+    }catch(e){}
+  }
+  function clearNavigationSession(){
+    try{ localStorage.removeItem(NAV_SESSION_KEY); }catch(e){}
+  }
+  function restoreNavigationSession(){
+    if(mapState.navigationRestored) return;
+    mapState.navigationRestored=true;
+    try{
+      var saved=JSON.parse(localStorage.getItem(NAV_SESSION_KEY)||"null");
+      if(!saved || !Array.isArray(saved.ids) || !saved.ids.length || !saved.at || Date.now()-saved.at>86400000){
+        clearNavigationSession(); return;
+      }
+      var wanted=Object.create(null);
+      saved.ids.forEach(function(id){ wanted[String(id)]=true; });
+      var pts=planOrder().filter(function(t){ return wanted[String(t.id)] && t.loc && !t.done; });
+      if(!pts.length){ clearNavigationSession(); return; }
+      startInternalNavigation(pts);
+    }catch(e){ clearNavigationSession(); }
+  }
+  function refreshNavigationWatch(){
+    if(!mapState.navigationActive) return;
+    if(mapState.navigationWatchId!==null && navigator.geolocation && typeof navigator.geolocation.clearWatch==="function"){
+      try{ navigator.geolocation.clearWatch(mapState.navigationWatchId); }catch(e){}
+    }
+    mapState.navigationWatchId=null;
+    startNavigationWatch();
+    locateRouteOrigin(true);
+  }
+  document.addEventListener("visibilitychange",function(){
+    if(!document.hidden) refreshNavigationWatch();
+  });
   function startInternalNavigation(selectedTasks){
     var pts=(selectedTasks||mapState.lastTasks||[]).filter(function(t){ return t && validPoint(t.loc); });
     if(!pts.length) return;
     var canReuse=sameRouteTasks(pts,mapState.lastTasks), route=canReuse?mapState.lastRoute:null;
     mapState.navigationActive=true; mapState.navigationTasks=pts.slice(); mapState.followUser=true;
+    saveNavigationSession(pts);
     mapState.navPanelHidden=false; mapState.navMinimized=false; setNavigationPanelVisibility(false);
     mapState.navigationRouteOrigin=validPoint(mapState.userLoc)?{lat:mapState.userLoc.lat,lon:mapState.userLoc.lon}:null;
     mapState.navigationRouteAt=validPoint(mapState.navigationRouteOrigin)?Date.now():0; mapState.navigationLocationAt=0;
@@ -3557,6 +3603,7 @@
       try{ navigator.geolocation.clearWatch(mapState.navigationWatchId); }catch(e){}
     }
     mapState.navigationWatchId=null; mapState.navigationActive=false; mapState.navigationTasks=[];
+    clearNavigationSession();
     if(mapState.navigationTimer!==null){ clearInterval(mapState.navigationTimer); mapState.navigationTimer=null; }
     mapState.navigationRouteOrigin=null; mapState.navigationRouteAt=0; mapState.navigationLocationAt=0; mapState.followUser=false;
     mapState.navPanelHidden=false; mapState.navMinimized=false;
@@ -8433,7 +8480,7 @@
     });
     T("внутренняя навигация открывается, показывает реальные метрики и завершается", function(){
       var keep={loc:mapState.userLoc,state:mapState.userLocState,route:mapState.lastRoute,tasks:mapState.lastTasks,
-        watch:mapState.navigationWatchId,locationAt:mapState.navigationLocationAt};
+        watch:mapState.navigationWatchId,locationAt:mapState.navigationLocationAt,session:localStorage.getItem(NAV_SESSION_KEY)};
       try{
         var task={id:"nav1",text:"Встреча",time:"15:00",dur:45,loc:{lat:55.76,lon:37.62,label:"Тверская 1",addr:"Тверская улица, 1"}};
         mapState.userLoc={lat:55.70,lon:37.50}; mapState.userLocState="ready"; mapState.lastTasks=[task];
@@ -8445,18 +8492,21 @@
         var open=!panel.hidden && document.body.classList.contains("nav-active") && /Встреча/.test(panel.textContent) &&
           /4,8 км/.test(values) && /18 мин/.test(values) && !trip.hidden && !trip.open &&
           /0,4 л/.test(trip.textContent) && /26 ₽/.test(trip.textContent) && !/%/.test(panel.textContent);
+        var saved=JSON.parse(localStorage.getItem(NAV_SESSION_KEY)||"null"), persisted=saved && saved.ids && saved.ids[0]==="nav1";
         mapState.userLocState="unavailable"; renderInternalNavigation(mapState.lastRoute,[task]);
         var gpsLost=document.getElementById("internalNavGuidance").hidden &&
           /Сигнал GPS потерян/.test(document.getElementById("internalNavProcessText").textContent);
         mapState.userLocState="ready";
         mapState.navigationWatchId=null; stopInternalNavigation();
-        return open && gpsLost && panel.hidden && !document.body.classList.contains("nav-active") &&
+        var cleared=localStorage.getItem(NAV_SESSION_KEY)===null;
+        return open && persisted && cleared && gpsLost && panel.hidden && !document.body.classList.contains("nav-active") &&
           !mapState.navigationActive && mapState.navigationTimer===null;
       } finally {
         mapState.navigationWatchId=null; mapState.navigationActive=false; mapState.navigationTasks=[];
         document.body.classList.remove("nav-active"); document.getElementById("internalNav").hidden=true;
         mapState.userLoc=keep.loc; mapState.userLocState=keep.state; mapState.lastRoute=keep.route;
         mapState.lastTasks=keep.tasks; mapState.navigationLocationAt=keep.locationAt;
+        if(keep.session===null) localStorage.removeItem(NAV_SESSION_KEY); else localStorage.setItem(NAV_SESSION_KEY,keep.session);
       }
     });
     T("серверная расшифровка учитывает очередь и инференс", function(){ return SERVER_STT_TIMEOUT_MS===90000; });
