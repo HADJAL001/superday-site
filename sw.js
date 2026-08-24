@@ -2,7 +2,7 @@
    Стратегия: навигации — network-first с офлайн-фолбэком на кэш главной;
    статика (иконки, манифест, шрифты) — cache-first. Версия в имени кэша —
    меняй CACHE при обновлении, чтобы старый кэш очистился. */
-var CACHE = "superday-v77";
+var CACHE = "superday-v78";
 var SHELL = [
   "/",
   "/index.html",
@@ -21,6 +21,8 @@ var SHELL = [
   // Движок роста: без него приложение работает, но без уровней и серии — в
   // оболочке, потому что рендер обращается к нему на первом же кадре.
   "/growth.js",
+  "/assets/vendor/maplibre-gl-5.15.0.js",
+  "/assets/vendor/maplibre-gl-5.15.0.css",
   "/assets/vendor/leaflet-1.9.4.js",
   "/manifest.webmanifest",
   "/assets/mark.png",
@@ -46,7 +48,7 @@ self.addEventListener("activate", function (e) {
   e.waitUntil(
     caches.keys().then(function (keys) {
       return Promise.all(keys.map(function (k) {
-        if (k !== CACHE) { return caches.delete(k); }
+        if (k !== CACHE && k.indexOf("superday-city-") !== 0) { return caches.delete(k); }
       }));
     }).then(function () { return self.clients.claim(); })
   );

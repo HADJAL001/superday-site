@@ -554,7 +554,16 @@ window.__i18nDict("es", {
     "Каждая закрытая задача — кирпич в том, кем ты становишься.": "Cada tarea completada es un ladrillo en quien te estás convirtiendo.",
     "Ты не «был занят» — ты двигался к важному. Разница огромна.": "No solo estuviste ocupado: avanzaste hacia lo importante. La diferencia es enorme.",
     "Сделанное сегодня освободило голову на завтра. Отдохни с чистой совестью.": "Lo que completaste hoy te despejó la mente para mañana. Descansa con la conciencia tranquila.",
-    "Даже открыть план — это выбор в пользу себя. Завтра начнём с малого шага.": "Incluso abrir el plan es elegirte. Mañana empezaremos con un pequeño paso."
+    "Даже открыть план — это выбор в пользу себя. Завтра начнём с малого шага.": "Incluso abrir el plan es elegirte. Mañana empezaremos con un pequeño paso.",
+    "3D-просмотр": "Vista 3D", "Вернуть маршрут": "Mostrar ruta", "Города офлайн": "Ciudades sin conexión",
+    "Карта города": "Mapa de la ciudad", "Здания, улицы и подписи останутся на устройстве": "Los edificios, calles y etiquetas se guardan en este dispositivo",
+    "Москва, Казань, любой город": "Moscú, Kazán, cualquier ciudad", "Найти": "Buscar",
+    "Введите город. Перед загрузкой покажем число фрагментов и ориентировочный объём.": "Introduce una ciudad. Mostraremos las teselas y el tamaño estimado antes de descargar.",
+    "Скачать карту": "Descargar mapa", "Помощник по делам": "Asistente de tareas", "Общий вопрос": "Pregunta general",
+    "Войдите в аккаунт в разделе «Аккаунт и тариф».": "Inicia sesión en Cuenta y plan.", "Спросить": "Preguntar",
+    "Свернуть": "Minimizar", "Свернуть навигацию": "Minimizar navegación", "Скрыть": "Ocultar", "Скрыть навигацию": "Ocultar navegación",
+    "Связать вопрос с делом": "Vincular la pregunta a una tarea", "Например: завтра к адвокату на Ленина. Что спросить и как объяснить ситуацию?": "Por ejemplo: mañana con el abogado. ¿Qué preguntar y cómo explicar la situación?",
+    "Загрузка города": "Descarga de ciudad", "Закрыть": "Cerrar", "Название города": "Nombre de la ciudad"
   },
 
   re: [

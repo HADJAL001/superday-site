@@ -629,7 +629,16 @@ window.__i18nDict("en", {
     "Каждая закрытая задача — кирпич в том, кем ты становишься.": "Every completed task is a brick in who you are becoming.",
     "Ты не «был занят» — ты двигался к важному. Разница огромна.": "You were not just busy — you moved toward what matters. The difference is huge.",
     "Сделанное сегодня освободило голову на завтра. Отдохни с чистой совестью.": "What you completed today cleared your mind for tomorrow. Rest with a clear conscience.",
-    "Даже открыть план — это выбор в пользу себя. Завтра начнём с малого шага.": "Even opening the plan is a choice in your favor. Tomorrow we'll start with one small step."
+    "Даже открыть план — это выбор в пользу себя. Завтра начнём с малого шага.": "Even opening the plan is a choice in your favor. Tomorrow we'll start with one small step.",
+    "3D-просмотр": "3D preview", "Вернуть маршрут": "Show route", "Города офлайн": "Offline cities",
+    "Карта города": "City map", "Здания, улицы и подписи останутся на устройстве": "Buildings, streets and labels stay on this device",
+    "Москва, Казань, любой город": "Moscow, Kazan, any city", "Найти": "Find",
+    "Введите город. Перед загрузкой покажем число фрагментов и ориентировочный объём.": "Enter a city. We will show the tile count and estimated size before downloading.",
+    "Скачать карту": "Download map", "Помощник по делам": "Task assistant", "Общий вопрос": "General question",
+    "Войдите в аккаунт в разделе «Аккаунт и тариф».": "Sign in under Account and plan.", "Спросить": "Ask",
+    "Свернуть": "Minimize", "Свернуть навигацию": "Minimize navigation", "Скрыть": "Hide", "Скрыть навигацию": "Hide navigation",
+    "Связать вопрос с делом": "Link question to a task", "Например: завтра к адвокату на Ленина. Что спросить и как объяснить ситуацию?": "For example: lawyer appointment tomorrow. What should I ask and how should I explain the situation?",
+    "Загрузка города": "City download", "Закрыть": "Close", "Название города": "City name"
   },
 
   /* ===== Шаблоны с числами ===== */

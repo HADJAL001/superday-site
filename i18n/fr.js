@@ -554,7 +554,16 @@ window.__i18nDict("fr", {
     "Каждая закрытая задача — кирпич в том, кем ты становишься.": "Chaque tâche terminée est une brique de la personne que tu deviens.",
     "Ты не «был занят» — ты двигался к важному. Разница огромна.": "Tu n'as pas seulement été occupé : tu as avancé vers l'essentiel. La différence est immense.",
     "Сделанное сегодня освободило голову на завтра. Отдохни с чистой совестью.": "Ce que tu as terminé aujourd'hui t'a libéré l'esprit pour demain. Repose-toi l'esprit tranquille.",
-    "Даже открыть план — это выбор в пользу себя. Завтра начнём с малого шага.": "Même ouvrir le programme, c'est choisir de prendre soin de toi. Demain, nous commencerons par un petit pas."
+    "Даже открыть план — это выбор в пользу себя. Завтра начнём с малого шага.": "Même ouvrir le programme, c'est choisir de prendre soin de toi. Demain, nous commencerons par un petit pas.",
+    "3D-просмотр": "Aperçu 3D", "Вернуть маршрут": "Afficher l'itinéraire", "Города офлайн": "Villes hors ligne",
+    "Карта города": "Carte de la ville", "Здания, улицы и подписи останутся на устройстве": "Les bâtiments, rues et libellés restent sur cet appareil",
+    "Москва, Казань, любой город": "Moscou, Kazan, toute ville", "Найти": "Rechercher",
+    "Введите город. Перед загрузкой покажем число фрагментов и ориентировочный объём.": "Saisissez une ville. Le nombre de tuiles et la taille estimée seront affichés avant le téléchargement.",
+    "Скачать карту": "Télécharger la carte", "Помощник по делам": "Assistant de tâches", "Общий вопрос": "Question générale",
+    "Войдите в аккаунт в разделе «Аккаунт и тариф».": "Connectez-vous dans Compte et offre.", "Спросить": "Demander",
+    "Свернуть": "Réduire", "Свернуть навигацию": "Réduire la navigation", "Скрыть": "Masquer", "Скрыть навигацию": "Masquer la navigation",
+    "Связать вопрос с делом": "Lier la question à une tâche", "Например: завтра к адвокату на Ленина. Что спросить и как объяснить ситуацию?": "Par exemple : rendez-vous chez l'avocat demain. Que demander et comment expliquer la situation ?",
+    "Загрузка города": "Téléchargement de ville", "Закрыть": "Fermer", "Название города": "Nom de la ville"
   },
 
   re: [

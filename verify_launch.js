@@ -75,8 +75,8 @@ const SEED = () => {
     const landingSource = fs.readFileSync(path.join(siteDir, "index.html"), "utf8");
     const workerSource = fs.readFileSync(path.join(siteDir, "sw.js"), "utf8");
     const legalScriptSource = fs.readFileSync(path.join(siteDir, "legal.js"), "utf8");
-    const leafletPath = path.join(siteDir, "assets", "vendor", "leaflet-1.9.4.js");
-    const leafletSource = fs.readFileSync(leafletPath, "utf8");
+    const maplibrePath = path.join(siteDir, "assets", "vendor", "maplibre-gl-5.15.0.js");
+    const maplibreSource = fs.readFileSync(maplibrePath, "utf8");
     const sitemapSource = fs.readFileSync(path.join(siteDir, "sitemap.xml"), "utf8");
     const forbiddenDetails = /\b(?:ИП|ООО|ИНН|ОГРН|ОГРНИП)\b/iu;
 
@@ -93,13 +93,13 @@ const SEED = () => {
       "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v75/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v78/.test(workerSource), "версия кэша service worker обновлена");
     say(!/google\.com\/maps/i.test(appSource), "основной сценарий не содержит ссылок на внешний навигатор");
     say(/отправлен(?:о)? на модерацию в RuStore|отправлено в RuStore/.test(landingSource) &&
       /НА МОДЕРАЦИИ/.test(landingSource), "лендинг показывает актуальный статус публикации в RuStore");
-    say(/assets\/vendor\/leaflet-1\.9\.4\.js/.test(appSource) && !/unpkg\.com\/leaflet/.test(appSource) &&
-      workerSource.includes('"/assets/vendor/leaflet-1.9.4.js"') && /Leaflet 1\.9\.4/.test(leafletSource),
-      "Leaflet 1.9.4 локален и входит в offline shell");
+    say(/assets\/vendor\/maplibre-gl-5\.15\.0\.js/.test(appSource) && !/unpkg\.com\/maplibre/.test(appSource) &&
+      workerSource.includes('"/assets/vendor/maplibre-gl-5.15.0.js"') && /maplibre/i.test(maplibreSource),
+      "MapLibre локален и входит в offline shell");
     say(/https:\/\/superday\.fun\/documents\.html/.test(sitemapSource) &&
       /https:\/\/superday\.fun\/support\.html/.test(sitemapSource), "документы и поддержка добавлены в sitemap");
     say(/https:\/\/158\.160\.192\.153\/site-api\/waitlist/.test(indexSource) &&
@@ -373,7 +373,7 @@ const SEED = () => {
     sign("блоки", marks.grid, 12);
     sign("панель", marks.bars, 12);
 
-    // Рельс разделов: одиннадцать знаков вместо цветных эмодзи — там их было видно
+    // Рельс разделов: двенадцать знаков, включая платный AI-помощник.
     // рядом с новым набором, и они выбивались сильнее всего.
     const rail = await page.evaluate(() => {
       const btns = Array.from(document.querySelectorAll("#rail button"));
@@ -385,7 +385,7 @@ const SEED = () => {
       });
     });
     console.log("\n=== 2б. Рельс разделов ===");
-    say(rail.length === 11, "все одиннадцать разделов на месте", rail.length + " шт");
+    say(rail.length === 12, "все двенадцать разделов на месте", rail.length + " шт");
     say(rail.every(r => r.ok), "у каждого знак найден в спрайте",
       rail.filter(r => !r.ok).map(r => r.title + "→" + r.href).join(" | ") || "все");
     say(rail.every(r => !r.emoji), "эмодзи в рельсе не осталось",
@@ -549,7 +549,9 @@ const SEED = () => {
     await page.goto("https://superday.fun/app.html", { waitUntil: "load" });
     await page.evaluate(SEED);
     await page.goto("https://superday.fun/app.html", { waitUntil: "load" });
-    await page.waitForTimeout(1800);          // Leaflet локален; сеть нужна только реальным тайлам
+    await page.waitForFunction(() => document.body.classList.contains("map-live"), null, { timeout: 30000 });
+    await page.waitForFunction(() => performance.getEntriesByType("resource")
+      .some(e => /tiles\.openfreemap\.org\/.+\.(?:pbf|png)(?:$|\?)/.test(e.name)), null, { timeout: 30000 });
 
     console.log("\n=== 5б. Первый экран ===");
     const stage = await page.evaluate(() => {
@@ -571,9 +573,8 @@ const SEED = () => {
         intro: !!document.querySelector(".intro"),
         below: below,
         mapLive: document.body.classList.contains("map-live"),
-        tiles: document.querySelectorAll(".mapview img.leaflet-tile").length,
-        leafletLocal: performance.getEntriesByType("resource").some(e => /\/assets\/vendor\/leaflet-1\.9\.4\.js(?:$|\?)/.test(e.name)) &&
-          !performance.getEntriesByType("resource").some(e => /unpkg\.com\/leaflet/.test(e.name)),
+        tiles: performance.getEntriesByType("resource").filter(e => /tiles\.openfreemap\.org\/.+\.(?:pbf|png)(?:$|\?)/.test(e.name)).length,
+        maplibreLocal: !!window.maplibregl && Array.from(document.scripts).some(e => /\/assets\/vendor\/maplibre-gl-5\.15\.0\.js(?:$|\?)/.test(e.src)),
         veil: getComputedStyle(document.querySelector(".mapcard"), "::after").background.slice(0, 40)
       };
     });
@@ -583,7 +584,7 @@ const SEED = () => {
     say(stage.below.every(b => b.state !== "скрыт" ? !/НА ПЕРВОМ/.test(b.state) : true),
       "текстовые карточки ушли ниже сгиба", stage.below.map(b => b.sel + "=" + b.state).join(", "));
     say(stage.mapLive === true, "карта построена (класс map-live)");
-    say(stage.leafletLocal === true, "runtime карты загружен локально без CDN");
+    say(stage.maplibreLocal === true, "runtime карты загружен локально без CDN");
     say(stage.tiles > 0, "плитки карты реально загружены", stage.tiles + " шт");
 
     // Полный путь голоса без микрофона: подаём расшифровку прямо в разбор.
@@ -641,11 +642,11 @@ const SEED = () => {
     say(routeBrief.tag === "BUTTON" && routeBrief.href === null && routeBrief.target === null && /Начать маршрут/.test(routeBrief.action),
       "маршрут запускается внутри SUPER DAY без внешней ссылки", routeBrief.action);
     const mapTouch = await page.evaluate(() => {
-      const map = document.querySelector("#mapView.leaflet-container"), stage = document.getElementById("voiceStage"),
+      const map = document.querySelector("#mapView .maplibregl-canvas"), stage = document.getElementById("voiceStage"),
         top = document.elementFromPoint(8, Math.round(innerHeight * 0.45));
       return {
         touchAction: map ? getComputedStyle(map).touchAction : "missing",
-        dragging: !!(map && map.classList.contains("leaflet-touch-drag")),
+        dragging: !!(window.mapState && window.mapState.map && window.mapState.map.dragPan.isEnabled()),
         stagePasses: getComputedStyle(stage).pointerEvents === "none",
         mapOnTop: !!(top && top.closest && top.closest("#mapView"))
       };
@@ -793,7 +794,7 @@ const SEED = () => {
     say(mobileRoute.visible && mobileRoute.left >= 0 && mobileRoute.right <= 430 && !mobileRoute.overflow &&
       mobileRoute.bottom < mobileRoute.composerTop && mobileRoute.actionFits && mobileRoute.actionW >= 120,
       "маршрутная панель на 430×900 не перекрыта и не выходит за экран", JSON.stringify(mobileRoute));
-    const mobileInternal = await page.evaluate(() => {
+    const mobileInternal = await page.evaluate(async () => {
       const task = { id: "mobile-nav", text: "Встреча", time: "15:00", dur: 45,
         loc: { lat: 55.764812, lon: 37.605511, label: "Тверская улица, 1" } };
       window.mapState.userLoc = { lat: 55.751244, lon: 37.618423 };
@@ -802,6 +803,7 @@ const SEED = () => {
       window.mapState.lastRoute = { mode: "google", km: 4.8, distanceMeters: 4837, minutesTraffic: 18,
         trafficLevel: "moderate", fuelLiters: .4, fuelCost: 26 };
       window.startInternalNavigation([task]);
+      await new Promise(resolve => setTimeout(resolve, 240));
       const panel = document.getElementById("internalNav"), p = panel.getBoundingClientRect();
       const buttonsFit = Array.from(panel.querySelectorAll("button")).every(b => b.scrollWidth <= b.clientWidth + 1 && b.scrollHeight <= b.clientHeight + 1);
       const out = { visible: !panel.hidden, left: p.left, right: p.right, top: p.top, bottom: p.bottom,

@@ -554,7 +554,16 @@ window.__i18nDict("de", {
     "Каждая закрытая задача — кирпич в том, кем ты становишься.": "Jede erledigte Aufgabe ist ein Baustein dessen, wer du wirst.",
     "Ты не «был занят» — ты двигался к важному. Разница огромна.": "Du warst nicht nur beschäftigt — du bist dem Wichtigen nähergekommen. Ein großer Unterschied.",
     "Сделанное сегодня освободило голову на завтра. Отдохни с чистой совестью.": "Was du heute erledigt hast, schafft morgen freien Kopf. Ruh dich mit gutem Gewissen aus.",
-    "Даже открыть план — это выбор в пользу себя. Завтра начнём с малого шага.": "Schon den Plan zu öffnen ist eine Entscheidung für dich. Morgen beginnen wir mit einem kleinen Schritt."
+    "Даже открыть план — это выбор в пользу себя. Завтра начнём с малого шага.": "Schon den Plan zu öffnen ist eine Entscheidung für dich. Morgen beginnen wir mit einem kleinen Schritt.",
+    "3D-просмотр": "3D-Vorschau", "Вернуть маршрут": "Route anzeigen", "Города офлайн": "Offline-Städte",
+    "Карта города": "Stadtkarte", "Здания, улицы и подписи останутся на устройстве": "Gebäude, Straßen und Beschriftungen bleiben auf diesem Gerät",
+    "Москва, Казань, любой город": "Moskau, Kasan, beliebige Stadt", "Найти": "Suchen",
+    "Введите город. Перед загрузкой покажем число фрагментов и ориентировочный объём.": "Stadt eingeben. Vor dem Download zeigen wir Kachelzahl und geschätzte Größe.",
+    "Скачать карту": "Karte herunterladen", "Помощник по делам": "Aufgabenassistent", "Общий вопрос": "Allgemeine Frage",
+    "Войдите в аккаунт в разделе «Аккаунт и тариф».": "Melden Sie sich unter Konto und Tarif an.", "Спросить": "Fragen",
+    "Свернуть": "Minimieren", "Свернуть навигацию": "Navigation minimieren", "Скрыть": "Ausblenden", "Скрыть навигацию": "Navigation ausblenden",
+    "Связать вопрос с делом": "Frage mit Aufgabe verknüpfen", "Например: завтра к адвокату на Ленина. Что спросить и как объяснить ситуацию?": "Zum Beispiel: morgen zum Anwalt. Was soll ich fragen und wie erkläre ich die Situation?",
+    "Загрузка города": "Stadt herunterladen", "Закрыть": "Schließen", "Название города": "Stadtname"
   },
 
   re: [

@@ -6,7 +6,7 @@
 <!-- Заголовки безопасности (GitHub Pages → только через meta).
      upgrade-insecure-requests, object-src 'none', base-uri lock; инлайн требует 'unsafe-inline'.
      blob:/data: — для WebAudio-сигнала и экспорта резервной копии (URL.createObjectURL). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https:; connect-src 'self' https:; manifest-src 'self'; media-src 'self' data: blob:; form-action 'self' https: mailto:; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https:; worker-src 'self' blob:; connect-src 'self' https:; manifest-src 'self'; media-src 'self' data: blob:; form-action 'self' https: mailto:; upgrade-insecure-requests" />
 <meta name="referrer" content="strict-origin-when-cross-origin" />
 <meta name="color-scheme" content="dark" />
 <title>SUPER DAY — веб-планировщик (бета)</title>
@@ -30,6 +30,7 @@
 <link rel="icon" href="assets/mark.png" type="image/png" />
 <link rel="apple-touch-icon" href="assets/apple-touch-icon-180.png" />
 <link rel="manifest" href="manifest.webmanifest" />
+<link rel="stylesheet" href="assets/vendor/maplibre-gl-5.15.0.css" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-title" content="SUPER DAY" />
 <meta name="robots" content="index,follow" />
@@ -106,6 +107,10 @@
   a{color:inherit}
   .wrap{max-width:1080px; margin:0 auto; padding:0 22px}
   main.wrap,footer.wrap{position:relative; z-index:1}
+  main.wrap{pointer-events:none}
+  main.wrap > :not(.stage){pointer-events:auto}
+  main.wrap > .stage{pointer-events:none}
+  main.wrap > .stage > *{pointer-events:auto}
 
   /* Шапка */
   header{position:sticky; top:0; z-index:20; backdrop-filter:blur(12px);
@@ -1131,6 +1136,47 @@
   /* ===== Карта — фон всего главного экрана (как волна 31), не карточка ===== */
   .mapcard{position:fixed; inset:0; z-index:0; height:100vh; overflow:hidden; background:var(--ink)}
   .mapview{position:absolute; inset:0; width:100%; height:100%; background:var(--ink)}
+  .mapview .maplibregl-canvas{outline:0}
+  .mapview .maplibregl-ctrl-group{overflow:hidden; border:1px solid var(--hair); border-radius:8px;
+    background:rgba(8,11,18,.88); box-shadow:0 12px 30px rgba(0,0,0,.35)}
+  .mapview .maplibregl-ctrl-group button{width:36px; height:36px; background-color:transparent}
+  .mapview .maplibregl-ctrl-icon{filter:invert(1) opacity(.82)}
+  .mapview .maplibregl-ctrl-attrib{background:rgba(6,10,26,.74); color:var(--text-muted)}
+  .mapview .maplibregl-ctrl-attrib a{color:var(--text-dim)}
+  .map-tools{position:absolute; top:max(76px,calc(env(safe-area-inset-top) + 64px)); right:12px; z-index:520;
+    display:flex; flex-direction:column; align-items:flex-end; gap:8px; pointer-events:auto}
+  .map-tool{min-height:42px; display:inline-flex; align-items:center; gap:8px; padding:0 12px; border:1px solid var(--hair);
+    border-radius:8px; background:rgba(8,11,18,.88); color:var(--text); font:600 12px var(--font-ui);
+    box-shadow:0 12px 30px rgba(0,0,0,.35); backdrop-filter:blur(12px); cursor:pointer}
+  .map-tool:hover{border-color:var(--gold-bright)}
+  .map-tool[hidden]{display:none}
+  .map-tool svg{width:17px; height:17px}
+  .city-panel{width:min(380px,calc(100vw - 24px)); padding:16px; border:1px solid transparent; border-radius:8px;
+    background:var(--glass-deep) padding-box,var(--edge-strong) border-box; box-shadow:var(--shadow-lux),var(--inner-light);
+    backdrop-filter:var(--blur); color:var(--text)}
+  .city-panel[hidden]{display:none}
+  .city-head{display:flex; align-items:flex-start; justify-content:space-between; gap:14px}
+  .city-head b{font:400 18px var(--font-display)}
+  .city-head span{display:block; margin-top:3px; color:var(--text-muted); font-size:10.5px; line-height:1.4}
+  .window-tools{display:flex; align-items:center; gap:5px; flex:0 0 auto}
+  .window-icon{width:36px; height:36px; display:grid; place-items:center; border:1px solid var(--hair-soft); border-radius:7px;
+    background:rgba(255,255,255,.035); color:var(--text-dim); font-size:20px; line-height:1; cursor:pointer}
+  .window-icon:hover{border-color:var(--gold); color:var(--text)}
+  .city-search{display:flex; gap:7px; margin-top:14px}
+  .city-search input{min-width:0; flex:1; height:42px; padding:0 11px; border:1px solid var(--hair); border-radius:7px;
+    background:rgba(4,7,13,.72); color:var(--text); font:500 14px var(--font-ui)}
+  .city-search button,.city-download{min-height:42px; border:0; border-radius:7px; padding:0 13px; color:var(--on-accent);
+    background:var(--grad-plat); font:700 12px var(--font-ui); cursor:pointer}
+  .city-result{margin-top:10px; color:var(--text-dim); font-size:12px; line-height:1.45}
+  .city-progress{height:4px; margin-top:12px; overflow:hidden; border-radius:2px; background:rgba(255,255,255,.08)}
+  .city-progress[hidden]{display:none}
+  .city-progress i{display:block; width:0; height:100%; background:var(--grad-plat); transition:width .12s linear}
+  .city-packages{display:grid; gap:7px; margin-top:12px}
+  .city-package{display:flex; align-items:center; justify-content:space-between; gap:10px; padding-top:9px;
+    border-top:1px solid var(--hair-soft); font-size:11px; color:var(--text-dim)}
+  .city-package b{display:block; color:var(--text); font-size:12px}
+  .city-package button{width:34px; height:34px; border:1px solid var(--hair-soft); border-radius:7px;
+    background:transparent; color:var(--text-dim); cursor:pointer}
   .map-status{position:absolute; left:50%; bottom:18px; z-index:1001; max-width:min(520px,calc(100% - 32px));
     transform:translateX(-50%); margin:0; padding:8px 11px; border:1px solid var(--hair);
     border-radius:8px; background:rgba(6,10,26,.9); color:var(--text-dim); font-size:11px;
@@ -1147,6 +1193,8 @@
   /* Пока карта не построена, вуаль оставляем прежней плотности: на пустой
      подложке светлый градиент выглядит как незагрузившийся экран. */
   body:not(.map-live) .mapcard::after{background:radial-gradient(120% 90% at 50% 30%, rgba(10,20,48,.35) 0%, rgba(6,10,26,.82) 100%)}
+  body.map-live .mapcard::after{background:linear-gradient(180deg,rgba(5,9,16,.08),rgba(5,9,16,.12) 58%,rgba(5,9,16,.42));
+    box-shadow:inset 0 0 70px 10px rgba(4,8,15,.28)}
   .map-stats{margin:0 0 14px; font-size:12.5px; color:var(--text-dim); display:flex; gap:14px; flex-wrap:wrap}
   .map-stats b{color:var(--text); font-weight:700}
   .vehicle-settings{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin:0 0 14px;
@@ -1325,12 +1373,13 @@
   /* Встроенная навигация остаётся поверх живой карты SUPER DAY. Панель
      показывает только данные Directions API; пошаговые манёвры не выдумываем,
      пока сервер не отдаёт их как часть маршрута. */
-  .internal-nav{position:fixed; left:50%; bottom:calc(22px + env(safe-area-inset-bottom,0px)); z-index:40;
-    width:min(680px,calc(100vw - 32px)); transform:translateX(-50%); padding:16px;
+  .internal-nav{position:fixed; left:22px; top:84px; bottom:auto; z-index:40;
+    width:min(420px,calc(100vw - 44px)); transform:none; padding:16px;
     border:1px solid transparent; border-radius:8px; text-align:left;
     background:var(--glass-deep) padding-box,var(--edge-strong) border-box;
     -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur);
-    box-shadow:var(--shadow-lux),var(--inner-light); pointer-events:auto}
+    box-shadow:var(--shadow-lux),var(--inner-light); pointer-events:auto; animation:navFromLeft .2s var(--ease-out) both}
+  @keyframes navFromLeft{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
   .internal-nav[hidden]{display:none}
   .in-head{display:flex; align-items:flex-start; justify-content:space-between; gap:16px}
   .in-status{display:inline-flex; align-items:center; gap:7px; color:var(--text-dim); font-size:10px;
@@ -1380,6 +1429,11 @@
   body.nav-active .stage-mic,body.nav-active .stage-say,body.nav-active .stage-live,
   body.nav-active .route-brief,body.nav-active .stage-plan,body.nav-active .stage-links{display:none}
   body.nav-active .mapcard::after{background:rgba(6,10,26,.12); box-shadow:inset 0 0 70px 8px rgba(6,10,26,.38)}
+  .internal-nav.is-minimized > :not(.in-head){display:none}
+  .internal-nav.is-minimized{padding:10px 12px; cursor:pointer}
+  .internal-nav .in-head{align-items:center}
+  .in-head-tools{display:flex; align-items:center; gap:6px}
+  .in-head-tools .in-time{margin-right:3px}
 
   /* План дня поверх карты — стекло той же формулы, что панели. Номер строки
      совпадает с номером маркера на карте: одна нумерация на два представления,
@@ -1408,7 +1462,9 @@
     .stage-live{font-size:17px}
     .route-brief{width:calc(100vw - 30px); padding:11px}
     .rb-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
-    .internal-nav{bottom:calc(12px + env(safe-area-inset-bottom,0px)); width:calc(100vw - 24px); padding:13px}
+    .internal-nav{left:12px; top:auto; bottom:calc(12px + env(safe-area-inset-bottom,0px)); width:calc(100vw - 24px); padding:13px;
+      animation-name:navFromBottom}
+    @keyframes navFromBottom{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
     .in-title{font-size:18px}
     .in-guide{padding:10px 8px}
     .in-guide b{font-size:19px}
@@ -1682,6 +1738,7 @@
       <p class="rb-note" id="routeBriefNote"></p>
       <div class="rb-actions">
         <button class="rb-action primary" id="routeNavigate" type="button">Начать маршрут</button>
+        <button class="rb-action secondary" id="routeCinemaBtn" type="button">3D-просмотр</button>
         <button class="rb-action secondary" id="routeLocateBtn" type="button" hidden>Разрешить геолокацию</button>
         <button class="rb-action secondary" id="routeFuelBtn" type="button" hidden>Указать расход авто</button>
         <button class="rb-action secondary" id="routeClearBtn" type="button">Очистить маршрут</button>
@@ -1693,7 +1750,11 @@
           <div class="in-status" id="internalNavStatus">Маршрут активен</div>
           <div class="in-title" id="internalNavTitle">Навигация SUPER DAY</div>
         </div>
-        <div class="in-time" id="internalNavClock"></div>
+        <div class="in-head-tools">
+          <div class="in-time" id="internalNavClock"></div>
+          <button class="window-icon" id="internalNavMinimize" type="button" aria-label="Свернуть навигацию" title="Свернуть">⌄</button>
+          <button class="window-icon" id="internalNavClose" type="button" aria-label="Скрыть навигацию" title="Скрыть">×</button>
+        </div>
       </div>
       <div class="in-next">
         <div class="in-kicker">Следующая остановка</div>
@@ -1717,6 +1778,7 @@
         </div>
       </details>
       <div class="in-actions">
+        <button class="rb-action secondary" id="internalNavCinema" type="button">3D-просмотр</button>
         <button class="rb-action secondary" id="internalNavRecenter" type="button">К моей позиции</button>
         <button class="rb-action primary" id="internalNavStop" type="button">Завершить маршрут</button>
       </div>
@@ -2078,6 +2140,24 @@
      остановок внутри карты (её контейнер, маркеры, зум, атрибуция). Волна 34. -->
 <div class="mapcard" id="mapCard" role="region" aria-label="Карта дня">
   <div class="mapview" id="mapView" aria-label="Карта дня — точки дел и маршрут"></div>
+  <div class="map-tools">
+    <button class="map-tool" id="navRestoreBtn" type="button" hidden>Вернуть маршрут</button>
+    <button class="map-tool" id="cityMapsBtn" type="button" aria-expanded="false" aria-controls="cityMapsPanel">Города офлайн</button>
+    <section class="city-panel" id="cityMapsPanel" hidden aria-label="Загрузка города">
+      <div class="city-head">
+        <div><b>Карта города</b><span>Здания, улицы и подписи останутся на устройстве</span></div>
+        <div class="window-tools"><button class="window-icon" id="cityMapsClose" type="button" aria-label="Закрыть">×</button></div>
+      </div>
+      <form class="city-search" id="citySearchForm">
+        <input id="citySearchInput" type="search" autocomplete="address-level2" placeholder="Москва, Казань, любой город" aria-label="Название города" />
+        <button type="submit">Найти</button>
+      </form>
+      <div class="city-result" id="citySearchResult">Введите город. Перед загрузкой покажем число фрагментов и ориентировочный объём.</div>
+      <button class="city-download" id="cityDownloadBtn" type="button" hidden>Скачать карту</button>
+      <div class="city-progress" id="cityProgress" hidden><i></i></div>
+      <div class="city-packages" id="cityPackages"></div>
+    </section>
+  </div>
   <p class="map-status" id="mapStatus" hidden role="status" aria-live="polite"></p>
 </div>
 
@@ -2086,6 +2166,7 @@
 <!-- Движок роста грузится до основного скрипта: рендер обращается к SDGrowth
      синхронно, а не по событию загрузки. -->
 <script src="growth.js"></script>
+<script src="assets/vendor/maplibre-gl-5.15.0.js"></script>
 <script>
   var THEME_KEY = "superday_theme_v1";
   function applyTheme(theme){
@@ -3113,10 +3194,16 @@
   // по геолокации на каждый вызов. Маркеры дел — красные и мигающие, линия
   // маршрута — асфальтовая (см. buildMapView) — маркеры не путать с дорогой.
   // Своя геолокация — отдельный красный мигающий значок человека (drawUserLoc).
-  var mapState = { map:null, layer:null, baseLayer:null, userLoc:null, userLocState:"unknown", locating:false,
-    booted:false, renderSeq:0, tileFallback:false, tileErrors:0, routeRequest:null, lastRoute:null, lastTasks:[],
+  var MAP_STYLE_URL="https://tiles.openfreemap.org/styles/liberty";
+  function prefersLightMap(){
+    return !!((navigator.deviceMemory&&navigator.deviceMemory<=4)||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)||
+      (window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches));
+  }
+  var mapState = { map:null, engine:null, fallbackLayer:null, markers:[], popup:null, userLoc:null, userLocState:"unknown", locating:false,
+    booted:false, ready:false, pendingTasks:null, renderSeq:0, routeRequest:null, lastRoute:null, lastTasks:[],
     userMarker:null, navigationActive:false, navigationTasks:[], navigationWatchId:null, navigationTimer:null, followUser:false,
-    navigationRouteOrigin:null, navigationRouteAt:0, navigationLocationAt:0, dismissedRouteSignature:null };
+    navigationRouteOrigin:null, navigationRouteAt:0, navigationLocationAt:0, dismissedRouteSignature:null,
+    navPanelHidden:false, navMinimized:false, cinemaFrame:null, styled:false, lowPower:prefersLightMap() };
   var IS_SELFTEST = /[?&]selftest=1/.test(location.search||"");
   function tasksForMap(){
     var current=mapState.navigationActive && mapState.navigationTasks.length
@@ -3145,7 +3232,7 @@
         mapState.userLoc=validPoint(cachedLoc.loc)?cachedLoc.loc:null;
         mapState.userLocState=mapState.userLoc?"ready":"unavailable";
       }
-      loadLeaflet(function(){
+      loadMapEngine(function(){
         buildMapView(tasksForMap());
         if(typeof suggestDayPlan==="function") suggestDayPlan();
       }, function(){ setMapStatus("Не удалось загрузить модуль карты. Обновите страницу или проверьте соединение."); });
@@ -3153,42 +3240,13 @@
     }
     if(mapState.map) buildMapView(tasksForMap());
   }
-  function loadLeaflet(ok, fail){
-    if(window.L){ ok(); return; }
-    if(loadLeaflet._q){ loadLeaflet._q.push({ok:ok,fail:fail}); return; }
-    loadLeaflet._q = [{ok:ok,fail:fail}];
-    var s=document.createElement("script");
-    s.src="assets/vendor/leaflet-1.9.4.js";
-    s.onload=function(){ var q=loadLeaflet._q||[]; loadLeaflet._q=null; q.forEach(function(p){ p.ok(); }); };
-    s.onerror=function(){ var q=loadLeaflet._q||[]; loadLeaflet._q=null; q.forEach(function(p){ if(p.fail) p.fail(); }); };
-    document.head.appendChild(s);
+  function loadMapEngine(ok, fail){
+    if(window.maplibregl){ ok(); return; }
+    if(fail) fail();
   }
-  function installBaseMap(useFallback){
-    if(!mapState.map || !window.L) return;
-    if(mapState.baseLayer){ try{ mapState.map.removeLayer(mapState.baseLayer); }catch(e){} }
-    mapState.tileFallback=!!useFallback; mapState.tileErrors=0;
-    var url=useFallback ? "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        : "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png";
-    var options=useFallback
-      ? {maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}
-      : {subdomains:"abcd",maxZoom:19,attribution:'&copy; OpenStreetMap, &copy; CARTO'};
-    var layer=L.tileLayer(url,options);
-    mapState.baseLayer=layer;
-    layer.on("tileload",function(){
-      if(mapState.baseLayer===layer){ mapState.tileErrors=0; setMapStatus(""); }
-    });
-    layer.on("tileerror",function(){
-      if(mapState.baseLayer!==layer) return;
-      mapState.tileErrors++;
-      if(mapState.tileErrors<3) return;
-      if(!useFallback){
-        setMapStatus("Основная карта недоступна. Переключаемся на OpenStreetMap…");
-        installBaseMap(true);
-      }else{
-        setMapStatus("Не удалось загрузить тайлы карты. Проверьте соединение; маршрут и сохранённые данные останутся доступны.");
-      }
-    });
-    layer.addTo(mapState.map);
+  function loadLeafletFallback(ok,fail){
+    if(window.L){ ok(); return; }
+    var script=document.createElement("script"); script.src="assets/vendor/leaflet-1.9.4.js"; script.onload=ok; script.onerror=fail; document.head.appendChild(script);
   }
   function mapPopup(t, idx, color){
     var wrap=document.createElement("div"); wrap.className="mp-pop";
@@ -3203,13 +3261,13 @@
     nav.textContent="Начать маршрут";
     nav.addEventListener("click",function(e){
       e.preventDefault(); e.stopPropagation();
-      if(mapState.map) mapState.map.closePopup();
+      if(mapState.popup) mapState.popup.remove();
       startInternalNavigation([t]);
     });
     var edit=document.createElement("button"); edit.type="button"; edit.className="mp-edit"; edit.textContent="Открыть дело";
     edit.addEventListener("click",function(e){
       e.preventDefault(); e.stopPropagation();
-      if(mapState.map) mapState.map.closePopup();
+      if(mapState.popup) mapState.popup.remove();
       openTasksSheet(t.id);
     });
     actions.appendChild(nav); actions.appendChild(edit); wrap.appendChild(actions);
@@ -3238,7 +3296,7 @@
     var first=pts[0], title=document.getElementById("routeBriefTitle"), kicker=document.getElementById("routeBriefKicker"),
       origin=document.getElementById("routeBriefOrigin"), time=document.getElementById("routeBriefTime"),
       note=document.getElementById("routeBriefNote"), metrics=document.getElementById("routeBriefMetrics"),
-      nav=document.getElementById("routeNavigate"), locate=document.getElementById("routeLocateBtn"), fuel=document.getElementById("routeFuelBtn");
+      nav=document.getElementById("routeNavigate"), preview=document.getElementById("routeCinemaBtn"), locate=document.getElementById("routeLocateBtn"), fuel=document.getElementById("routeFuelBtn");
     brief.hidden=false;
     kicker.textContent=pts.length>1 ? "Маршрут дня · "+pts.length+" остановки" : "Следующая остановка";
     title.textContent=first.loc.label || first.loc.addr || first.text;
@@ -3247,6 +3305,7 @@
     metrics.innerHTML=""; metrics.hidden=true;
     locate.hidden=true; locate.disabled=false;
     fuel.hidden=true;
+    preview.hidden=true;
     if(!validPoint(mapState.userLoc)){
       if(mapState.userLocState==="requesting"){
         origin.textContent="Определяем текущую геопозицию для старта маршрута…";
@@ -3270,6 +3329,7 @@
     routeMetric(metrics,routeValue(typeof route.minutesTraffic==="number" ? route.minutesTraffic : route.minutes," мин"),"в пути");
     routeMetric(metrics,routeValue(route.fuelLiters," л"),"топливо");
     routeMetric(metrics,routeValue(route.fuelCost," ₽"),"стоимость");
+    preview.hidden=false;
     metrics.hidden=!metrics.children.length;
     if(!validFuelRate(+route.fuelRate)){
       note.textContent="Укажите реальный расход автомобиля, чтобы посчитать топливо.";
@@ -3298,15 +3358,58 @@
     openTasksSheet();
     setTimeout(function(){ var input=document.getElementById("vehicleFuelRate"); if(input) input.focus(); },100);
   }
+  function stopRouteCinema(){
+    if(mapState.cinemaFrame!==null){ cancelAnimationFrame(mapState.cinemaFrame); mapState.cinemaFrame=null; }
+  }
+  function routeBearing(a,b){
+    var d=(b[0]-a[0])*Math.PI/180, y=Math.sin(d)*Math.cos(b[1]*Math.PI/180),
+      x=Math.cos(a[1]*Math.PI/180)*Math.sin(b[1]*Math.PI/180)-Math.sin(a[1]*Math.PI/180)*Math.cos(b[1]*Math.PI/180)*Math.cos(d);
+    return Math.atan2(y,x)*180/Math.PI;
+  }
+  function startRouteCinema(){
+    var route=mapState.lastRoute, raw=route&&route.coords||[];
+    if(!mapState.map || raw.length<2){ toast("Сначала постройте маршрут по дорогам.","error"); return; }
+    stopRouteCinema(); mapState.followUser=false;
+    var coords=raw.map(function(p){ return [p[1],p[0]]; }), started=performance.now(), duration=Math.min(mapState.lowPower?20000:30000,Math.max(12000,coords.length*85));
+    function frame(now){
+      var progress=Math.min(1,(now-started)/duration), eased=progress<.5?2*progress*progress:1-Math.pow(-2*progress+2,2)/2,
+        at=eased*(coords.length-1), index=Math.min(coords.length-2,Math.floor(at)), mix=at-index,
+        a=coords[index],b=coords[index+1],center=[a[0]+(b[0]-a[0])*mix,a[1]+(b[1]-a[1])*mix];
+      if(mapState.engine==="leaflet") mapState.map.panTo([center[1],center[0]],{animate:false});
+      else mapState.map.jumpTo({center:center,zoom:mapState.lowPower?16.2:17,pitch:mapState.lowPower?50:67,bearing:routeBearing(a,b)});
+      if(progress<1) mapState.cinemaFrame=requestAnimationFrame(frame); else mapState.cinemaFrame=null;
+    }
+    mapState.cinemaFrame=requestAnimationFrame(frame);
+  }
+  function setNavigationPanelVisibility(hidden){
+    mapState.navPanelHidden=!!hidden;
+    var panel=document.getElementById("internalNav"), restore=document.getElementById("navRestoreBtn");
+    if(panel) panel.hidden=!!hidden;
+    if(restore) restore.hidden=!hidden || !mapState.navigationActive;
+  }
+  function toggleNavigationMinimized(){
+    mapState.navMinimized=!mapState.navMinimized;
+    var panel=document.getElementById("internalNav"), button=document.getElementById("internalNavMinimize");
+    if(panel) panel.classList.toggle("is-minimized",mapState.navMinimized);
+    if(button){ button.textContent=mapState.navMinimized?"⌃":"⌄"; button.setAttribute("aria-label",mapState.navMinimized?"Развернуть навигацию":"Свернуть навигацию"); }
+  }
   (function initRouteBriefActions(){
-    var nav=document.getElementById("routeNavigate"), locate=document.getElementById("routeLocateBtn"), fuel=document.getElementById("routeFuelBtn"),
-      clear=document.getElementById("routeClearBtn"), recenter=document.getElementById("internalNavRecenter"), stop=document.getElementById("internalNavStop");
+    var nav=document.getElementById("routeNavigate"), preview=document.getElementById("routeCinemaBtn"), locate=document.getElementById("routeLocateBtn"), fuel=document.getElementById("routeFuelBtn"),
+      clear=document.getElementById("routeClearBtn"), recenter=document.getElementById("internalNavRecenter"), stop=document.getElementById("internalNavStop"),
+      cinema=document.getElementById("internalNavCinema"), close=document.getElementById("internalNavClose"), minimize=document.getElementById("internalNavMinimize"),
+      restore=document.getElementById("navRestoreBtn"), panel=document.getElementById("internalNav");
     if(nav) nav.addEventListener("click",function(){ startInternalNavigation(mapState.lastTasks); });
+    if(preview) preview.addEventListener("click",startRouteCinema);
     if(locate) locate.addEventListener("click",function(){ locateRouteOrigin(true); });
     if(fuel) fuel.addEventListener("click",focusVehicleSettings);
     if(clear) clear.addEventListener("click",clearActiveMapRoute);
     if(recenter) recenter.addEventListener("click",recenterInternalNavigation);
     if(stop) stop.addEventListener("click",stopInternalNavigation);
+    if(cinema) cinema.addEventListener("click",startRouteCinema);
+    if(close) close.addEventListener("click",function(e){ e.stopPropagation(); setNavigationPanelVisibility(true); });
+    if(minimize) minimize.addEventListener("click",function(e){ e.stopPropagation(); toggleNavigationMinimized(); });
+    if(restore) restore.addEventListener("click",function(){ setNavigationPanelVisibility(false); });
+    if(panel) panel.addEventListener("click",function(){ if(mapState.navMinimized) toggleNavigationMinimized(); });
   })();
 
   function clearActiveMapRoute(){
@@ -3349,7 +3452,7 @@
       distance=document.getElementById("internalNavDistance"), duration=document.getElementById("internalNavDuration"),
       arrival=document.getElementById("internalNavArrival"), fuel=document.getElementById("internalNavFuel"),
       cost=document.getElementById("internalNavCost");
-    panel.hidden=false;
+    panel.hidden=mapState.navPanelHidden;
     clock.textContent=taskRouteTime(first);
     task.textContent=first.text || first.loc.label || first.loc.addr || "Следующая остановка";
     address.textContent=first.loc.label || first.loc.addr || "";
@@ -3382,12 +3485,10 @@
     processText.textContent=mapState.navigationLocationAt?"GPS отслеживает позицию":"Ожидаем новое положение GPS";
   }
   function updateUserLocationMarker(){
-    if(!mapState.map || !mapState.layer || !window.L || !validPoint(mapState.userLoc)) return;
-    if(mapState.userMarker && mapState.layer.hasLayer(mapState.userMarker)){
-      mapState.userMarker.setLatLng([mapState.userLoc.lat,mapState.userLoc.lon]);
-    }else{
-      drawUserLoc();
-    }
+    if(!mapState.map || !validPoint(mapState.userLoc)) return;
+    if(mapState.userMarker && mapState.engine==="leaflet") mapState.userMarker.setLatLng([mapState.userLoc.lat,mapState.userLoc.lon]);
+    else if(mapState.userMarker) mapState.userMarker.setLngLat([mapState.userLoc.lon,mapState.userLoc.lat]);
+    else drawUserLoc();
   }
   function handleNavigationPosition(pos){
     if(!mapState.navigationActive || !pos || !pos.coords) return;
@@ -3395,7 +3496,7 @@
     if(!validPoint(loc)) return;
     mapState.userLoc=loc; mapState.userLocState="ready"; mapState.navigationLocationAt=Date.now(); saveUserLocCache(loc);
     updateUserLocationMarker();
-    if(mapState.followUser && mapState.map){ try{ mapState.map.panTo([loc.lat,loc.lon]); }catch(e){} }
+    if(mapState.followUser && mapState.map){ try{ mapState.map.panTo(mapState.engine==="leaflet"?[loc.lat,loc.lon]:[loc.lon,loc.lat]); }catch(e){} }
     var moved=!validPoint(mapState.navigationRouteOrigin) || haversineKm(mapState.navigationRouteOrigin,loc)>=0.15;
     var due=Date.now()-mapState.navigationRouteAt>=30000;
     if(moved && due){
@@ -3425,6 +3526,7 @@
     if(!pts.length) return;
     var canReuse=sameRouteTasks(pts,mapState.lastTasks), route=canReuse?mapState.lastRoute:null;
     mapState.navigationActive=true; mapState.navigationTasks=pts.slice(); mapState.followUser=true;
+    mapState.navPanelHidden=false; mapState.navMinimized=false; setNavigationPanelVisibility(false);
     mapState.navigationRouteOrigin=validPoint(mapState.userLoc)?{lat:mapState.userLoc.lat,lon:mapState.userLoc.lon}:null;
     mapState.navigationRouteAt=validPoint(mapState.navigationRouteOrigin)?Date.now():0; mapState.navigationLocationAt=0;
     document.body.classList.add("nav-active");
@@ -3436,6 +3538,7 @@
     if(mapState.map && !canReuse) buildMapView(pts);
     if(validPoint(mapState.userLoc)) updateUserLocationMarker();
     startNavigationWatch();
+    locateRouteOrigin(true);
   }
   function recenterInternalNavigation(){
     if(!mapState.map || !validPoint(mapState.userLoc)){
@@ -3443,43 +3546,155 @@
       return;
     }
     mapState.followUser=true;
-    try{ mapState.map.setView([mapState.userLoc.lat,mapState.userLoc.lon],Math.max(mapState.map.getZoom(),15)); }catch(e){}
+    try{
+      if(mapState.engine==="leaflet") mapState.map.setView([mapState.userLoc.lat,mapState.userLoc.lon],Math.max(mapState.map.getZoom(),15));
+      else mapState.map.easeTo({center:[mapState.userLoc.lon,mapState.userLoc.lat],zoom:Math.max(mapState.map.getZoom(),16),pitch:58,duration:650});
+    }catch(e){}
   }
   function stopInternalNavigation(){
+    stopRouteCinema();
     if(mapState.navigationWatchId!==null && navigator.geolocation && typeof navigator.geolocation.clearWatch==="function"){
       try{ navigator.geolocation.clearWatch(mapState.navigationWatchId); }catch(e){}
     }
     mapState.navigationWatchId=null; mapState.navigationActive=false; mapState.navigationTasks=[];
     if(mapState.navigationTimer!==null){ clearInterval(mapState.navigationTimer); mapState.navigationTimer=null; }
     mapState.navigationRouteOrigin=null; mapState.navigationRouteAt=0; mapState.navigationLocationAt=0; mapState.followUser=false;
+    mapState.navPanelHidden=false; mapState.navMinimized=false;
     document.body.classList.remove("nav-active");
-    var panel=document.getElementById("internalNav"); if(panel) panel.hidden=true;
+    var panel=document.getElementById("internalNav"); if(panel){ panel.hidden=true; panel.classList.remove("is-minimized"); }
+    var restore=document.getElementById("navRestoreBtn"); if(restore) restore.hidden=true;
     if(mapState.map) buildMapView(tasksForMap());
   }
-  // Свой значок геолокации — человек, отдельно от нумерованных дел, чтобы
-  // не путать «где я» с «куда ехать». Перерисовывается вместе с
-  // mapState.layer.clearLayers(), поэтому вызывается после каждой очистки слоя.
+  // Свой значок геолокации отделён от нумерованных остановок.
   function drawUserLoc(){
-    if(!mapState.userLoc || !mapState.layer) return;
-    var icon = L.divIcon({ className:"mp-me-wrap", html:'<div class="mp-me">🧍</div>', iconSize:[30,30], iconAnchor:[15,15] });
-    mapState.userMarker=L.marker([mapState.userLoc.lat, mapState.userLoc.lon], { icon:icon, interactive:false, keyboard:false, zIndexOffset:1000 }).addTo(mapState.layer);
+    if(!mapState.userLoc || !mapState.map) return;
+    if(mapState.engine==="leaflet"){
+      if(mapState.userMarker){ mapState.userMarker.setLatLng([mapState.userLoc.lat,mapState.userLoc.lon]); return; }
+      var icon=L.divIcon({className:"mp-me-wrap",html:'<div class="mp-me">●</div>',iconSize:[30,30],iconAnchor:[15,15]});
+      mapState.userMarker=L.marker([mapState.userLoc.lat,mapState.userLoc.lon],{icon:icon,interactive:false}).addTo(mapState.fallbackLayer); return;
+    }
+    if(!window.maplibregl) return;
+    if(mapState.userMarker){ mapState.userMarker.setLngLat([mapState.userLoc.lon,mapState.userLoc.lat]); return; }
+    var wrap=document.createElement("div"); wrap.className="mp-me-wrap";
+    var dot=document.createElement("div"); dot.className="mp-me"; dot.textContent="●"; wrap.appendChild(dot);
+    mapState.userMarker=new maplibregl.Marker({element:wrap,anchor:"center"})
+      .setLngLat([mapState.userLoc.lon,mapState.userLoc.lat]).addTo(mapState.map);
   }
   function clearMapRouteLayer(){
-    if(!mapState.layer) return;
-    mapState.layer.clearLayers(); mapState.userMarker=null;
+    if(mapState.engine==="leaflet"){
+      if(mapState.fallbackLayer){ mapState.fallbackLayer.clearLayers(); mapState.userMarker=null; }
+      return;
+    }
+    (mapState.markers||[]).forEach(function(marker){ try{ marker.remove(); }catch(e){} });
+    mapState.markers=[];
+    if(mapState.popup){ try{ mapState.popup.remove(); }catch(e){} mapState.popup=null; }
+    if(!mapState.map || !mapState.ready) return;
+    ["sd-route-casing","sd-route"].forEach(function(id){ if(mapState.map.getLayer(id)) mapState.map.removeLayer(id); });
+    if(mapState.map.getSource("sd-route")) mapState.map.removeSource("sd-route");
+  }
+  function addThreeDimensionalBuildings(){
+    if(!mapState.map || mapState.map.getLayer("sd-buildings-3d")) return;
+    var firstSymbol=null;
+    (mapState.map.getStyle().layers||[]).some(function(layer){ if(layer.type==="symbol"){ firstSymbol=layer.id; return true; } return false; });
+    try{
+      mapState.map.addLayer({id:"sd-buildings-3d",type:"fill-extrusion",source:"openmaptiles","source-layer":"building",minzoom:13,
+        paint:{"fill-extrusion-color":["interpolate",["linear"],["get","render_height"],0,"#263849",35,"#3f8b83",90,"#a8b8c9",180,"#e4b85b"],
+          "fill-extrusion-height":["coalesce",["get","render_height"],8],"fill-extrusion-base":["coalesce",["get","render_min_height"],0],
+          "fill-extrusion-opacity":.88,"fill-extrusion-vertical-gradient":true}},firstSymbol||undefined);
+    }catch(e){ setMapStatus("3D-здания для этого участка пока отсутствуют в данных OpenStreetMap."); }
+  }
+  function applyPremiumMapStyle(){
+    if(!mapState.map || mapState.styled) return; mapState.styled=true;
+    (mapState.map.getStyle().layers||[]).forEach(function(layer){
+      try{
+        if(layer.type==="background") mapState.map.setPaintProperty(layer.id,"background-color","#07111c");
+        else if(layer.type==="raster") mapState.map.setPaintProperty(layer.id,"raster-opacity",.16);
+        else if(layer.type==="fill"){
+          var id=layer.id.toLowerCase(),color=id.indexOf("water")>=0?"#0e4054":id.indexOf("park")>=0||id.indexOf("wood")>=0?"#17462f":id.indexOf("building")>=0?"#314052":"#152131";
+          mapState.map.setPaintProperty(layer.id,"fill-color",color);
+          if(mapState.map.getPaintProperty(layer.id,"fill-opacity")!==undefined) mapState.map.setPaintProperty(layer.id,"fill-opacity",id.indexOf("building")>=0?.72:.88);
+        }else if(layer.type==="line"){
+          var lineId=layer.id.toLowerCase(),lineColor=lineId.indexOf("water")>=0?"#2b7897":lineId.indexOf("casing")>=0?"#080d15":
+            /motorway|trunk|primary/.test(lineId)?"#e1af54":/secondary|tertiary/.test(lineId)?"#8aa5b8":"#607487";
+          mapState.map.setPaintProperty(layer.id,"line-color",lineColor);
+        }else if(layer.type==="symbol"){
+          if(mapState.map.getPaintProperty(layer.id,"text-color")!==undefined) mapState.map.setPaintProperty(layer.id,"text-color","#dbe2ed");
+          if(mapState.map.getPaintProperty(layer.id,"text-halo-color")!==undefined) mapState.map.setPaintProperty(layer.id,"text-halo-color","#0b1019");
+        }
+      }catch(e){}
+    });
+  }
+  function makeMapMarker(t,i){
+    var el=document.createElement("button"); el.type="button"; el.className="mp-marker"; el.textContent=String(i+1);
+    el.setAttribute("aria-label",(t.text||"Остановка")+", "+(t.loc.label||t.loc.addr||""));
+    var marker=new maplibregl.Marker({element:el,anchor:"center"}).setLngLat([t.loc.lon,t.loc.lat]).addTo(mapState.map);
+    el.addEventListener("click",function(e){
+      e.stopPropagation(); if(mapState.popup) mapState.popup.remove();
+      mapState.popup=new maplibregl.Popup({offset:20,closeButton:true,maxWidth:"290px"})
+        .setLngLat([t.loc.lon,t.loc.lat]).setDOMContent(mapPopup(t,i,"#E8B7B0")).addTo(mapState.map);
+    });
+    mapState.markers.push(marker);
+  }
+  function buildLeafletFallback(pts){
+    if(!window.L){
+      if(mapState.fallbackLoading) return; mapState.fallbackLoading=true;
+      loadLeafletFallback(function(){ mapState.fallbackLoading=false; buildLeafletFallback(pts); },function(){ mapState.fallbackLoading=false; setMapStatus("Карта не поддерживается этим устройством."); });
+      return;
+    }
+    var view=document.getElementById("mapView"); if(!view) return;
+    if(!mapState.map){
+      mapState.engine="leaflet"; mapState.map=L.map(view,{attributionControl:true,zoomControl:true});
+      mapState.map.setView(mapState.userLoc?[mapState.userLoc.lat,mapState.userLoc.lon]:[55.7558,37.6176],mapState.userLoc?15:13);
+      L.tileLayer("https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; OpenStreetMap, &copy; CARTO'}).addTo(mapState.map);
+      mapState.fallbackLayer=L.layerGroup().addTo(mapState.map); mapState.ready=true;
+      mapState.map.on("dragstart zoomstart",function(){ mapState.followUser=false; });
+      document.body.classList.add("map-live"); setMapStatus("Включён облегчённый 2D-режим для этого устройства.");
+    }else clearMapRouteLayer();
+    var renderSeq=++mapState.renderSeq; drawUserLoc();
+    if(!pts.length){ renderMapStats(null); renderRouteBrief(null,[]); return; }
+    renderMapStats(null); renderRouteBrief(null,pts);
+    if(!validPoint(mapState.userLoc)&&mapState.userLocState==="unknown") locateRouteOrigin(false);
+    var routeHandle=buildRoute(pts,function(route){
+      if(renderSeq!==mapState.renderSeq) return;
+      clearMapRouteLayer(); drawUserLoc(); var bounds=[];
+      pts.forEach(function(t,i){
+        var icon=L.divIcon({className:"mp-marker-wrap",html:'<div class="mp-marker">'+(i+1)+'</div>',iconSize:[26,26],iconAnchor:[13,13]});
+        L.marker([t.loc.lat,t.loc.lon],{icon:icon}).addTo(mapState.fallbackLayer).bindPopup(mapPopup(t,i,"#E8B7B0"));
+        bounds.push([t.loc.lat,t.loc.lon]);
+      });
+      if(route&&route.mode!=="unavailable"&&route.coords.length){
+        L.polyline(route.coords,{color:"#EDF2FA",weight:5,opacity:.95}).addTo(mapState.fallbackLayer); bounds=route.coords;
+      }
+      renderMapStats(route); renderRouteBrief(route,pts); if(mapState.navigationActive) renderInternalNavigation(route,pts);
+      if(bounds.length) mapState.map.fitBounds(bounds,{padding:[26,26],maxZoom:16});
+    },mapState.userLoc);
+    if(routeHandle) mapState.routeRequest=routeHandle;
   }
   function buildMapView(pts){
     var view=document.getElementById("mapView");
-    if(!view || !window.L) return;
+    if(!view) return;
+    if(!window.maplibregl || (typeof maplibregl.supported==="function"&&!maplibregl.supported())){ buildLeafletFallback(pts); return; }
     if(!mapState.map){
-      mapState.map = L.map(view, { attributionControl:true, zoomControl:true });
-      mapState.map.setView(mapState.userLoc ? [mapState.userLoc.lat, mapState.userLoc.lon] : [20,10], mapState.userLoc?12:2);
-      installBaseMap(false);
-      mapState.layer = L.layerGroup().addTo(mapState.map);
-      // Метка «карта жива» ослабляет вуаль первого экрана: до загрузки плиток
-      // светлая вуаль показывала бы пустую подложку вместо карты.
-      try{ document.body.classList.add("map-live"); }catch(e){}
+      mapState.pendingTasks=pts;
+      mapState.engine="maplibre";
+      mapState.map = new maplibregl.Map({container:view,style:MAP_STYLE_URL,
+        center:mapState.userLoc?[mapState.userLoc.lon,mapState.userLoc.lat]:[37.6176,55.7558],
+        zoom:mapState.userLoc?15.5:13.7,pitch:mapState.lowPower?46:56,bearing:-18,antialias:!mapState.lowPower,maxPitch:mapState.lowPower?58:75,attributionControl:true});
+      mapState.map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),"bottom-right");
+      mapState.map.on("dragstart",function(){ mapState.followUser=false; });
+      mapState.map.on("zoomstart",function(e){ if(e && e.originalEvent) mapState.followUser=false; });
+      mapState.map.on("error",function(e){ if(e && e.error) setMapStatus("Часть карты не загрузилась. Загруженные города остаются доступны офлайн."); });
+      function finishMapBoot(){
+        if(mapState.ready) return;
+        var style=mapState.map.getStyle();
+        if(!style || !style.layers || !style.layers.length || !mapState.map.getSource("openmaptiles")){ setTimeout(finishMapBoot,100); return; }
+        mapState.ready=true; applyPremiumMapStyle(); addThreeDimensionalBuildings(); document.body.classList.add("map-live"); setMapStatus("");
+        var queued=mapState.pendingTasks||[]; mapState.pendingTasks=null; buildMapView(queued);
+      }
+      mapState.map.on("styledata",finishMapBoot); finishMapBoot();
+      return;
     } else {
+      if(!mapState.ready){ mapState.pendingTasks=pts; return; }
       clearMapRouteLayer();
     }
     var renderSeq = ++mapState.renderSeq;
@@ -3492,7 +3707,7 @@
     if(pts.length<1){
       renderMapStats(null);
       renderRouteBrief(null,[]);
-      setTimeout(function(){ if(mapState.map) mapState.map.invalidateSize(); }, 60);
+      setTimeout(function(){ if(mapState.map) mapState.map.resize(); }, 60);
       return;
     }
     // Старые цифры не должны висеть, пока считается новый набор остановок.
@@ -3508,24 +3723,21 @@
       drawUserLoc();
       var bounds=[];
       pts.forEach(function(t, i){
-        var color = "var(--grad-red)";
-        var icon = L.divIcon({ className:"mp-marker-wrap", html:'<div class="mp-marker" style="background:'+color+'">'+(i+1)+'</div>', iconSize:[26,26], iconAnchor:[13,13] });
-        var mk = L.marker([t.loc.lat, t.loc.lon], { icon:icon }).addTo(mapState.layer);
-        mk.bindPopup(mapPopup(t, i, color));
-        bounds.push([t.loc.lat, t.loc.lon]);
+        makeMapMarker(t,i);
+        bounds.push([t.loc.lon,t.loc.lat]);
       });
       if(route && route.mode!=="unavailable"){
-        // Асфальт — маркеры мест красные, дорога должна читаться как дорога
-        var style = route.mode==="google" ? { color:"#3A3F47", weight:4, opacity:.95 }
-                                           : { color:"#3A3F47", weight:2, opacity:.6, dashArray:"2 8" };
-        L.polyline(route.coords, style).addTo(mapState.layer);
-        if(route.coords.length) bounds = route.coords;
+        var coords=(route.coords||[]).map(function(point){ return [point[1],point[0]]; });
+        mapState.map.addSource("sd-route",{type:"geojson",data:{type:"Feature",properties:{},geometry:{type:"LineString",coordinates:coords}}});
+        mapState.map.addLayer({id:"sd-route-casing",type:"line",source:"sd-route",paint:{"line-color":"#05070C","line-width":9,"line-opacity":.72}});
+        mapState.map.addLayer({id:"sd-route",type:"line",source:"sd-route",layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":"#EDF2FA","line-width":4,"line-opacity":.96}});
+        if(coords.length) bounds=coords;
       }
       renderMapStats(route);
       renderRouteBrief(route,pts);
       if(mapState.navigationActive) renderInternalNavigation(route,pts);
-      if(bounds.length){ try{ mapState.map.fitBounds(bounds, {padding:[26,26]}); }catch(e){} }
-      setTimeout(function(){ if(mapState.map) mapState.map.invalidateSize(); }, 60);
+      if(bounds.length){ try{ var box=bounds.reduce(function(b,p){ return b.extend(p); },new maplibregl.LngLatBounds(bounds[0],bounds[0])); mapState.map.fitBounds(box,{padding:70,pitch:54,duration:900,maxZoom:16}); }catch(e){} }
+      setTimeout(function(){ if(mapState.map) mapState.map.resize(); }, 60);
     }, mapState.userLoc);
     if(routeHandle) mapState.routeRequest=routeHandle;
   }
@@ -5338,7 +5550,7 @@
   // платного провайдера. Результат кэшируется на 2 часа — повторный визит не
   // переспрашивает разрешение, а отказ не спрашивает снова эту же сессию.
   var USERLOC_KEY = "superday_userloc_v1";
-  var USERLOC_TTL_MS = 2*60*60*1000;
+  var USERLOC_TTL_MS = 15*60*1000;
   function loadUserLocCache(){
     try{ return JSON.parse(localStorage.getItem(USERLOC_KEY)||"null"); }catch(e){ return null; }
   }
@@ -5351,7 +5563,7 @@
     if(!("geolocation" in navigator)){ cb(null); return; }
     navigator.geolocation.getCurrentPosition(
       function(pos){
-        var loc = { lat:pos.coords.latitude, lon:pos.coords.longitude };
+        var loc = { lat:pos.coords.latitude, lon:pos.coords.longitude, accuracy:pos.coords.accuracy };
         saveUserLocCache(loc);
         cb(loc);
       },
@@ -5367,6 +5579,121 @@
   // в /api внутри контейнера; ключи провайдеров никогда не попадают в браузер.
   var API_BASE = "https://158.160.192.153/site-api";
   var STT_API = "https://158.160.192.153/voice/stt/transcribe";
+  var CITY_PACKAGES_KEY="superday_city_packages_v1", cityCandidate=null, cityDownloadController=null;
+  function loadCityPackages(){ try{ return JSON.parse(localStorage.getItem(CITY_PACKAGES_KEY)||"[]")||[]; }catch(e){ return []; } }
+  function saveCityPackages(items){ try{ localStorage.setItem(CITY_PACKAGES_KEY,JSON.stringify(items)); }catch(e){} }
+  function cityTileX(lon,z){ return Math.floor((lon+180)/360*Math.pow(2,z)); }
+  function cityTileY(lat,z){ var r=lat*Math.PI/180; return Math.floor((1-Math.asinh(Math.tan(r))/Math.PI)/2*Math.pow(2,z)); }
+  function cityTileUrls(point,template,maxZoom){
+    var urls=[],radiusKm=16,latDelta=radiusKm/111.32,lonDelta=radiusKm/(111.32*Math.max(.18,Math.cos(point.lat*Math.PI/180)));
+    for(var z=10;z<=(maxZoom||14);z++){
+      var minX=cityTileX(point.lon-lonDelta,z),maxX=cityTileX(point.lon+lonDelta,z),
+        minY=cityTileY(point.lat+latDelta,z),maxY=cityTileY(point.lat-latDelta,z);
+      for(var x=minX;x<=maxX;x++) for(var y=minY;y<=maxY;y++) urls.push(template.replace("{z}",z).replace("{x}",x).replace("{y}",y));
+    }
+    return urls;
+  }
+  function cityBytes(value){
+    if(!value) return "объём уточнится при загрузке";
+    if(value>1048576) return (value/1048576).toFixed(value>104857600?0:1)+" МБ";
+    return Math.ceil(value/1024)+" КБ";
+  }
+  function renderCityPackages(){
+    var host=document.getElementById("cityPackages"); if(!host) return; host.textContent="";
+    loadCityPackages().forEach(function(item){
+      var row=document.createElement("div"); row.className="city-package";
+      var text=document.createElement("div"),title=document.createElement("b"),meta=document.createElement("span");
+      title.textContent=item.name; meta.textContent=cityBytes(item.bytes)+" · "+new Date(item.savedAt).toLocaleDateString("ru-RU");
+      text.appendChild(title); text.appendChild(meta);
+      var remove=document.createElement("button"); remove.type="button"; remove.textContent="×"; remove.setAttribute("aria-label","Удалить карту "+item.name);
+      remove.addEventListener("click",function(){
+        caches.delete(item.cache).then(function(){ saveCityPackages(loadCityPackages().filter(function(x){ return x.cache!==item.cache; })); renderCityPackages(); });
+      });
+      row.appendChild(text); row.appendChild(remove); host.appendChild(row);
+    });
+  }
+  function setCityPanel(open){
+    var panel=document.getElementById("cityMapsPanel"),button=document.getElementById("cityMapsBtn");
+    if(panel) panel.hidden=!open; if(button) button.setAttribute("aria-expanded",open?"true":"false");
+    if(open) renderCityPackages();
+  }
+  function findCity(query){
+    var result=document.getElementById("citySearchResult"),download=document.getElementById("cityDownloadBtn");
+    cityCandidate=null; if(download) download.hidden=true; result.textContent="Ищем город…";
+    fetchIdempotent(API_BASE+"/geocode?q="+encodeURIComponent(query))
+      .then(function(r){ if(!r.ok) throw new Error("geocode"); return r.json(); })
+      .then(function(j){
+        if(!j || typeof j.lat!=="number" || typeof j.lon!=="number") throw new Error("not_found");
+        cityCandidate={name:String(j.label||query).trim(),lat:j.lat,lon:j.lon};
+        return fetch("https://tiles.openfreemap.org/planet").then(function(r){ if(!r.ok) throw new Error("tiles"); return r.json(); });
+      }).then(function(tilejson){
+        var template=tilejson.tiles&&tilejson.tiles[0]; if(!template) throw new Error("tiles");
+        cityCandidate.template=template;
+        cityCandidate.urls=mapState.engine==="leaflet"
+          ? cityTileUrls(cityCandidate,"https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",16)
+          : cityTileUrls(cityCandidate,template,14);
+        result.textContent=cityCandidate.name+" · "+cityCandidate.urls.length+" фрагментов · обычно "+Math.max(8,Math.round(cityCandidate.urls.length*.09))+"–"+Math.max(18,Math.round(cityCandidate.urls.length*.28))+" МБ";
+        download.textContent="Скачать карту"; download.hidden=false;
+      }).catch(function(){ result.textContent="Город не найден или сервер карт недоступен. Проверьте название и соединение."; });
+  }
+  function cityCoreUrls(){
+    var fonts=["Noto Sans Regular","Noto Sans Italic","Noto Sans Bold"],ranges=["0-255","1024-1279"],urls=[
+      MAP_STYLE_URL,"https://tiles.openfreemap.org/planet","https://tiles.openfreemap.org/sprites/ofm_f384/ofm.json",
+      "https://tiles.openfreemap.org/sprites/ofm_f384/ofm.png","https://tiles.openfreemap.org/sprites/ofm_f384/ofm@2x.json",
+      "https://tiles.openfreemap.org/sprites/ofm_f384/ofm@2x.png"];
+    fonts.forEach(function(font){ ranges.forEach(function(range){ urls.push("https://tiles.openfreemap.org/fonts/"+encodeURIComponent(font)+"/"+range+".pbf"); }); });
+    return urls;
+  }
+  function downloadCity(){
+    if(cityDownloadController){ cityDownloadController.abort(); return; }
+    if(!cityCandidate || !cityCandidate.urls) return;
+    var progress=document.getElementById("cityProgress"),bar=progress.querySelector("i"),result=document.getElementById("citySearchResult"),button=document.getElementById("cityDownloadBtn"),
+      urls=cityCoreUrls().concat(cityCandidate.urls),done=0,bytes=0,failed=0,index=0,controller=new AbortController(),
+      cacheName="superday-city-"+Math.abs(Math.round(cityCandidate.lat*10000))+"-"+Math.abs(Math.round(cityCandidate.lon*10000));
+    cityDownloadController=controller; progress.hidden=false; bar.style.width="0%"; button.textContent="Отменить";
+    var storageCheck=navigator.storage&&navigator.storage.estimate?navigator.storage.estimate():Promise.resolve(null);
+    storageCheck.then(function(storage){
+      var expected=urls.length*300000;
+      if(storage && (Number(storage.quota)||0)-(Number(storage.usage)||0)<expected*1.15) throw new Error("space");
+      if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(function(){});
+      return caches.open(cacheName);
+    }).then(function(cache){
+      function worker(){
+        function next(){
+          if(controller.signal.aborted || index>=urls.length) return Promise.resolve();
+          var url=urls[index++];
+          return fetch(url,{signal:controller.signal}).then(function(response){
+            if(!response.ok) throw new Error("tile_"+response.status);
+            var length=Number(response.headers.get("content-length")||0); if(isFinite(length)) bytes+=length;
+            return cache.put(url,response.clone());
+          }).catch(function(error){ if(error.name!=="AbortError") failed++; }).then(function(){
+            done++; bar.style.width=Math.round(done/urls.length*100)+"%";
+            result.textContent="Загружаем "+cityCandidate.name+": "+done+" из "+urls.length; return next();
+          });
+        }
+        return next();
+      }
+      return Promise.all([worker(),worker(),worker(),worker(),worker(),worker()]);
+    }).then(function(){
+      if(controller.signal.aborted){ return caches.delete(cacheName).then(function(){ throw new Error("cancelled"); }); }
+      if(failed>Math.max(3,Math.floor(urls.length*.05))){ return caches.delete(cacheName).then(function(){ throw new Error("incomplete"); }); }
+      var items=loadCityPackages().filter(function(x){ return x.cache!==cacheName; });
+      items.push({name:cityCandidate.name,lat:cityCandidate.lat,lon:cityCandidate.lon,cache:cacheName,bytes:bytes,tiles:cityCandidate.urls.length,savedAt:Date.now()});
+      saveCityPackages(items); result.textContent=cityCandidate.name+" загружен · "+cityBytes(bytes)+" · доступен без сети"; renderCityPackages();
+      if(mapState.map){
+        if(mapState.engine==="leaflet") mapState.map.setView([cityCandidate.lat,cityCandidate.lon],15);
+        else mapState.map.flyTo({center:[cityCandidate.lon,cityCandidate.lat],zoom:15.5,pitch:60,bearing:-18,duration:1800});
+      }
+    }).catch(function(error){ result.textContent=error.message==="cancelled"?"Загрузка отменена. Неполный пакет удалён.":error.message==="space"?"Недостаточно свободного места для этого города. Освободите память или удалите старую карту.":"Не удалось полностью загрузить город. Неполный пакет удалён; проверьте сеть и повторите."; })
+      .finally(function(){ cityDownloadController=null; button.textContent="Скачать карту"; progress.hidden=true; });
+  }
+  (function initCityMaps(){
+    var open=document.getElementById("cityMapsBtn"),close=document.getElementById("cityMapsClose"),form=document.getElementById("citySearchForm"),input=document.getElementById("citySearchInput"),download=document.getElementById("cityDownloadBtn");
+    if(open) open.addEventListener("click",function(){ setCityPanel(document.getElementById("cityMapsPanel").hidden); });
+    if(close) close.addEventListener("click",function(){ setCityPanel(false); });
+    if(form) form.addEventListener("submit",function(e){ e.preventDefault(); var q=input.value.trim(); if(q) findCity(q); });
+    if(download) download.addEventListener("click",downloadCity);
+  })();
   var STT_RETRY_ENABLED = true;
   var SERVER_STT_TIMEOUT_MS = 90000;
   var VEHICLE_KEY = "superday_vehicle_v1";
@@ -7846,11 +8173,11 @@
         var order=planOrder(); return order[0].id==="r1" && order[1].id==="r2";
       } finally { tasks.length=0; keep.forEach(function(t){ tasks.push(t); }); }
     });
-    // Ветка с реальными тайлами намеренно не тестируется здесь: локальный
-    // Leaflet не требует CDN, но CARTO/OSM остаются сетевыми провайдерами.
-    T("Leaflet загружается из локального PWA asset, а не с CDN", function(){
-      var src=loadLeaflet.toString();
-      return src.indexOf("assets/vendor/leaflet-1.9.4.js")>=0 && src.indexOf("unpkg.com")<0;
+    // Движок локальный; векторные данные приходят от картографического провайдера.
+    T("MapLibre загружается из локального PWA asset, а не с CDN", function(){
+      return !!window.maplibregl && Array.prototype.some.call(document.scripts,function(script){
+        return script.src.indexOf("assets/vendor/maplibre-gl-5.15.0.js")>=0;
+      });
     });
     T("renderMapCard: карта — фон главного экрана (волна 33 вернула fixed-фон)", function(){
       var card=document.getElementById("mapCard"), view=document.getElementById("mapView");
