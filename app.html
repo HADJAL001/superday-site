@@ -9135,7 +9135,9 @@
   function renderBillingPlans(plans,methods){
     var box=document.getElementById("billingPlans"); if(!box) return;
     box.innerHTML="";
-    var platega=(methods||[]).filter(function(method){return method.provider==="platega";})[0]||null;
+    var paymentMethod=(methods||[]).filter(function(method){return method.code==="freekassa_sbp";})[0]
+      ||(methods||[]).filter(function(method){return method.code==="freekassa_card";})[0]
+      ||(methods||[]).filter(function(method){return method.provider==="platega";})[0]||null;
     (plans||[]).forEach(function(plan){
       if(plan.code==="guest") return;
       var row=document.createElement("div"); row.className="billing-plan";
@@ -9154,10 +9156,10 @@
       var current=billingUser && billingUser.plan_code===plan.code;
       if(current){ button.textContent="Текущий тариф"; button.disabled=true; }
       else if(plan.code==="free"){ button.textContent="Бесплатный"; button.disabled=true; }
-      else if(!platega){ button.textContent="Оплата временно недоступна"; button.disabled=true; }
+      else if(!paymentMethod){ button.textContent="Оплата временно недоступна"; button.disabled=true; }
       else {
         button.classList.add("primary"); button.textContent="Оплатить "+rub.toLocaleString("ru-RU")+" ₽";
-        button.addEventListener("click",function(){ startCheckout(plan,platega); });
+        button.addEventListener("click",function(){ startCheckout(plan,paymentMethod); });
       }
       row.appendChild(copy); row.appendChild(price); row.appendChild(button); box.appendChild(row);
     });
@@ -9182,8 +9184,8 @@
         " · до "+new Date(billingSubscription.current_period_end).toLocaleDateString("ru-RU") : "";
       document.getElementById("billingCurrent").textContent="Тариф: "+billingUser.plan_code+until;
       renderBillingPlans(result[1],result[2]);
-      billingMessage(result[2].some(function(m){return m.provider==="platega";}) ?
-        "Оплата картой или через СБП. Данные карты вводятся только на защищённой странице PlateGA." :
+      billingMessage(result[2].length ?
+        "Оплата картой или через СБП. Платёжные данные вводятся только на защищённой странице кассы." :
         "Тарифы загружены, но касса ещё не принимает платежи.", result[2].length?"":"error");
       if(typeof updatePanelNotes==="function") updatePanelNotes();
     }).catch(function(err){
@@ -9213,14 +9215,16 @@
       body:JSON.stringify({plan_code:plan.code,provider:method.provider,method:method.code})
     }).then(function(result){
       var target=new URL(result.confirmation_url);
-      if(target.protocol!=="https:" || !/(^|\.)platega\.io$/i.test(target.hostname)) throw new Error("unsafe_payment_url");
+      var paymentHostAllowed=/(^|\.)platega\.io$/i.test(target.hostname)
+        || target.hostname==="pay.freekassa.net" || target.hostname==="pay.fk.life";
+      if(target.protocol!=="https:" || !paymentHostAllowed) throw new Error("unsafe_payment_url");
       billingMessage("Переходим к безопасной оплате…");
       window.location.assign(target.toString());
     }).catch(function(err){ billingMessage(billingError(err),"error"); billingBusy(false); });
   }
   function reconcileBilling(){
     if(!billingTokens()) return loadBilling();
-    billingMessage("Проверяем подтверждение оплаты в PlateGA…");
+    billingMessage("Проверяем подтверждение оплаты…");
     return billingRequest("/billing/reconcile",{method:"POST"}).then(function(){
       return billingRefresh().catch(function(){});
     }).then(function(){
