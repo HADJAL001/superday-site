@@ -224,7 +224,7 @@
   }
 
   function inviteLink() {
-    return "https://superday.fun/?ref=" + myCode();
+    return "https://superday.run/?ref=" + myCode();
   }
 
   // ===== Выдача подарков (настоящие шаблоны приложения) =====
@@ -409,7 +409,7 @@
     dayBtn.addEventListener("click", function () {
       var packed = encodePlan();
       if (!packed) { note(pick(T.emptyDay)); return; }
-      var url = "https://superday.fun/app.html#plan=" + packed;
+      var url = "https://superday.run/app.html#plan=" + packed;
       if (navigator.share) {
         navigator.share({ title: "SUPER DAY", url: url })
           .then(function () {}, function () { copy(url, function () { note(pick(T.copied)); }); });
