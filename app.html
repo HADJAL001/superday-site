@@ -19,14 +19,14 @@
 <meta property="og:url" content="https://superday.run/app.html" />
 <meta property="og:title" content="SUPER DAY — планируй день прямо в браузере" />
 <meta property="og:description" content="Выгрузи задачи голосом или текстом, разложи по матрице Эйзенхауэра и получи маршрут дня. Задачи и история сохраняются локально; голос, AI и маршруты используют защищённые серверные запросы." />
-<meta property="og:image" content="https://superday.fun/assets/og.png" />
+<meta property="og:image" content="https://superday.run/assets/og.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content="SUPER DAY — проживай день на максимум" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="SUPER DAY — планируй день прямо в браузере" />
 <meta name="twitter:description" content="Задачи голосом или текстом, AI-приоритеты и маршрут дня. История сохраняется локально и доступна офлайн." />
-<meta name="twitter:image" content="https://superday.fun/assets/og.png" />
+<meta name="twitter:image" content="https://superday.run/assets/og.png" />
 <link rel="icon" href="assets/mark.png" type="image/png" />
 <link rel="apple-touch-icon" href="assets/apple-touch-icon-180.png" />
 <link rel="manifest" href="manifest.webmanifest" />
@@ -6521,7 +6521,7 @@
     var cl=dayContextLine(); if(cl) foot += "\n\n"+cl;
     if(order.length) foot += (cl?"\n":"\n\n") + dayVerdict(order, conflict).phrase;
     return "Мой план на сегодня — SUPER DAY\n\n" + lines.join("\n") + foot +
-      "\n\nСоставлено в SUPER DAY · superday.fun";
+      "\n\nСоставлено в SUPER DAY · superday.run";
   }
 
   var copyBtn = document.getElementById("copyPlan");
@@ -6658,7 +6658,7 @@
       L.push("BEGIN:VEVENT");
       // UID стабилен между выгрузками — повторный импорт ОБНОВЛЯЕТ событие,
       // а не плодит дубли; SEQUENCE говорит календарю, что версия свежее.
-      L.push("UID:sd-"+icsEsc(t.id)+"@superday.fun");
+      L.push("UID:sd-"+icsEsc(t.id)+"@superday.run");
       L.push("SEQUENCE:"+seq);
       L.push("DTSTAMP:"+stamp);
       L.push("DTSTART:"+icsLocal(key, t.time));
@@ -6666,7 +6666,7 @@
       if(rr) L.push("RRULE:"+rr);
       L.push("SUMMARY:"+icsEsc(t.text));
       L.push("DESCRIPTION:"+icsEsc(ICS_QUAD[q] + (rr ? " · "+fmtRepeat(t.repeat) : "") +
-             "\nСоставлено в SUPER DAY · superday.fun"));
+             "\nСоставлено в SUPER DAY · superday.run"));
       L.push("CATEGORIES:"+icsEsc(ICS_QUAD[q]));
       L.push("PRIORITY:"+ICS_PRIO[q]);
       L.push("BEGIN:VALARM","ACTION:DISPLAY","TRIGGER:-PT10M",
@@ -6680,7 +6680,7 @@
     if(untimed.length){
       var dk=dayKeyOf(now), nx=new Date(now.getTime()); nx.setDate(nx.getDate()+1);
       L.push("BEGIN:VEVENT");
-      L.push("UID:sd-untimed-"+icsDate(dk)+"@superday.fun");
+      L.push("UID:sd-untimed-"+icsDate(dk)+"@superday.run");
       L.push("SEQUENCE:"+seq);
       L.push("DTSTAMP:"+stamp);
       L.push("DTSTART;VALUE=DATE:"+icsDate(dk));
@@ -6688,7 +6688,7 @@
       L.push("SUMMARY:"+icsEsc("SUPER DAY: "+untimed.length+" "+
              plural(untimed.length,["дело","дела","дел"])+" без времени"));
       L.push("DESCRIPTION:"+icsEsc(untimed.map(function(t){ return "• "+t.text; }).join("\n") +
-             "\n\nСоставлено в SUPER DAY · superday.fun"));
+             "\n\nСоставлено в SUPER DAY · superday.run"));
       L.push("END:VEVENT");
     }
     L.push("END:VCALENDAR");
@@ -8086,7 +8086,7 @@
       try{
         tasks=[{id:"t1",text:"созвон",time:"15:00",done:false}];
         var a=buildICS(new Date(2026,6,26,9,0,0), 3).text, b=buildICS(new Date(2026,6,26,10,0,0), 4).text;
-        return a.indexOf("UID:sd-t1@superday.fun")>-1 && b.indexOf("UID:sd-t1@superday.fun")>-1
+        return a.indexOf("UID:sd-t1@superday.run")>-1 && b.indexOf("UID:sd-t1@superday.run")>-1
             && a.indexOf("SEQUENCE:3")>-1 && b.indexOf("SEQUENCE:4")>-1;
       } finally { tasks=keep; }
     });

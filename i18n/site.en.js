@@ -191,7 +191,7 @@ window.__i18nDict("en", {
     "Проживай день на максимум": "Live your day to the fullest",
     "Создано с помощью": "Made with",
     "Создано с помощью OSGARD — открыть сайт платформы": "Made with OSGARD — open the platform website",
-    "© 2026 SUPER DAY · superday.fun · Все права защищены": "© 2026 SUPER DAY · superday.fun · All rights reserved",
+    "© 2026 SUPER DAY · superday.run · Все права защищены": "© 2026 SUPER DAY · superday.run · All rights reserved",
 
     /* Карточка после отправки формы (рисуется в JS) */
     "Ты в списке ожидания": "You are on the waitlist",
@@ -208,7 +208,7 @@ window.__i18nDict("en", {
     "Поделиться SUPER DAY": "Share SUPER DAY",
     "Ссылка скопирована — отправь её другу": "Link copied — send it to a friend",
     "Спасибо, что делишься 🙌": "Thanks for sharing 🙌",
-    "superday.fun — поделись этой ссылкой": "superday.fun — share this link",
+    "superday.run — поделись этой ссылкой": "superday.run — share this link",
     "SUPER DAY — планировщик дня: голосом выгружаешь дела, а он раскладывает их по приоритетам. Веб-версия уже работает.": "SUPER DAY — a day planner: you dump your tasks by voice and it sorts them by priority. The web version already works."
   }
 });

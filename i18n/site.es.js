@@ -180,7 +180,7 @@ window.__i18nDict("es", {
     "Проживай день на максимум": "Vive el día al máximo",
     "Создано с помощью": "Creado con",
     "Создано с помощью OSGARD — открыть сайт платформы": "Creado con OSGARD — abrir el sitio de la plataforma",
-    "© 2026 SUPER DAY · superday.fun · Все права защищены": "© 2026 SUPER DAY · superday.fun · Todos los derechos reservados",
+    "© 2026 SUPER DAY · superday.run · Все права защищены": "© 2026 SUPER DAY · superday.run · Todos los derechos reservados",
 
     "Ты в списке ожидания": "Estás en la lista de espera",
     "Место в первой волне SUPER DAY закреплено": "Tu sitio en la primera ola de SUPER DAY está reservado",
@@ -196,7 +196,7 @@ window.__i18nDict("es", {
     "Поделиться SUPER DAY": "Compartir SUPER DAY",
     "Ссылка скопирована — отправь её другу": "Enlace copiado: envíaselo a un amigo",
     "Спасибо, что делишься 🙌": "Gracias por compartir 🙌",
-    "superday.fun — поделись этой ссылкой": "superday.fun — comparte este enlace",
+    "superday.run — поделись этой ссылкой": "superday.run — comparte este enlace",
     "SUPER DAY — планировщик дня: голосом выгружаешь дела, а он раскладывает их по приоритетам. Веб-версия уже работает.": "SUPER DAY — un planificador del día: sueltas las tareas por voz y él las ordena por prioridad. La versión web ya funciona."
   }
 });
