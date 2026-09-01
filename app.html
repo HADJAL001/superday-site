@@ -1740,7 +1740,8 @@
   @media(max-width:680px){
     header .bar{height:56px}
     .brand{gap:7px}.brand img{width:28px;height:28px}.brand b{font-size:18px}.brand .beta{display:none}
-    header .right{gap:6px}header .back,header .head-service,.theme-btn .theme-label,.panel-btn .pb-label{display:none}
+    header .right{gap:5px}header .back,.theme-btn .theme-label,.panel-btn .pb-label{display:none}
+    header .head-service{min-width:44px;min-height:44px;padding:4px 6px;font-size:10px;border-radius:10px}
     .theme-btn,.panel-btn{width:44px;height:44px;min-height:44px;padding:0;border-radius:12px}
     .stage{min-height:calc(100svh - 56px);padding:18px 0 150px;justify-content:center}
     .stage-mic{width:70px;height:70px}.stage-mic .sdi{width:28px;height:28px}
@@ -1763,6 +1764,12 @@
     main.wrap{padding-bottom:154px}
     .map-tools{top:max(68px,calc(env(safe-area-inset-top) + 60px));right:8px}
     .map-tool{min-height:40px;padding:0 10px;background:rgba(228,238,233,.92);color:#193D2B}
+  }
+  @media(max-width:380px){
+    .brand b{display:none}
+    header .bar{gap:5px;padding-left:7px;padding-right:7px}
+    header .right{gap:4px}
+    header .head-service{font-size:9px;padding:3px 4px}
   }
 </style>
 </head>
@@ -2325,7 +2332,7 @@
     var meta=document.querySelector('meta[name="theme-color"]');
     if(meta) meta.setAttribute("content",theme==="daylight"?"#F3F7F4":emerald?"#03110B":"#05070C");
     var nextMapStyle=theme==="daylight"
-      ? "https://tiles.openfreemap.org/styles/bright"
+      ? "https://tiles.openfreemap.org/styles/liberty"
       : "https://tiles.openfreemap.org/styles/liberty";
     if(typeof MAP_STYLE_URL!=="undefined" && MAP_STYLE_URL!==nextMapStyle){
       MAP_STYLE_URL=nextMapStyle;
@@ -3353,7 +3360,7 @@
   // маршрута — асфальтовая (см. buildMapView) — маркеры не путать с дорогой.
   // Своя геолокация — отдельный красный мигающий значок человека (drawUserLoc).
   var MAP_STYLE_URL=document.documentElement.dataset.theme==="daylight"
-    ? "https://tiles.openfreemap.org/styles/bright"
+    ? "https://tiles.openfreemap.org/styles/liberty"
     : "https://tiles.openfreemap.org/styles/liberty";
   var NAV_SESSION_KEY="sd_active_navigation_v1";
   function prefersLightMap(){
@@ -3809,27 +3816,24 @@
   function applyPremiumMapStyle(){
     if(!mapState.map || mapState.styled) return; mapState.styled=true;
     var daylight=document.documentElement.dataset.theme==="daylight";
-    // Positron already has a carefully balanced daylight hierarchy. Repainting
-    // every source layer here erases minor roads and district boundaries.
-    if(daylight) return;
     (mapState.map.getStyle().layers||[]).forEach(function(layer){
       try{
-        if(layer.type==="background") mapState.map.setPaintProperty(layer.id,"background-color",daylight?"#EDF3EF":"#07111c");
+        if(layer.type==="background") mapState.map.setPaintProperty(layer.id,"background-color",daylight?"#17231E":"#07111c");
         else if(layer.type==="raster") mapState.map.setPaintProperty(layer.id,"raster-opacity",.16);
         else if(layer.type==="fill"){
           var id=layer.id.toLowerCase(),color=daylight
-            ? (id.indexOf("water")>=0?"#B8DDE4":id.indexOf("park")>=0||id.indexOf("wood")>=0?"#C9E2CE":id.indexOf("building")>=0?"#D7DFDA":"#EDF2EF")
+            ? (id.indexOf("water")>=0?"#244B55":id.indexOf("park")>=0||id.indexOf("wood")>=0?"#294736":id.indexOf("building")>=0?"#45524C":"#23312B")
             : (id.indexOf("water")>=0?"#0e4054":id.indexOf("park")>=0||id.indexOf("wood")>=0?"#17462f":id.indexOf("building")>=0?"#314052":"#152131");
           mapState.map.setPaintProperty(layer.id,"fill-color",color);
           if(mapState.map.getPaintProperty(layer.id,"fill-opacity")!==undefined) mapState.map.setPaintProperty(layer.id,"fill-opacity",id.indexOf("building")>=0?.72:.88);
         }else if(layer.type==="line"){
           var lineId=layer.id.toLowerCase(),lineColor=daylight
-            ? (lineId.indexOf("water")>=0?"#8BBFCB":lineId.indexOf("casing")>=0?"#CAD4CE":/motorway|trunk|primary/.test(lineId)?"#D8B766":/secondary|tertiary/.test(lineId)?"#C7D0CB":"#D7DFDB")
+            ? (lineId.indexOf("water")>=0?"#3B7480":lineId.indexOf("casing")>=0?"#17221D":/motorway|trunk|primary/.test(lineId)?"#B99143":/secondary|tertiary/.test(lineId)?"#718279":"#53645B")
             : (lineId.indexOf("water")>=0?"#2b7897":lineId.indexOf("casing")>=0?"#080d15":/motorway|trunk|primary/.test(lineId)?"#e1af54":/secondary|tertiary/.test(lineId)?"#8aa5b8":"#607487");
           mapState.map.setPaintProperty(layer.id,"line-color",lineColor);
         }else if(layer.type==="symbol"){
-          if(mapState.map.getPaintProperty(layer.id,"text-color")!==undefined) mapState.map.setPaintProperty(layer.id,"text-color",daylight?"#264637":"#dbe2ed");
-          if(mapState.map.getPaintProperty(layer.id,"text-halo-color")!==undefined) mapState.map.setPaintProperty(layer.id,"text-halo-color",daylight?"#F7FAF8":"#0b1019");
+          if(mapState.map.getPaintProperty(layer.id,"text-color")!==undefined) mapState.map.setPaintProperty(layer.id,"text-color",daylight?"#DCE7E1":"#dbe2ed");
+          if(mapState.map.getPaintProperty(layer.id,"text-halo-color")!==undefined) mapState.map.setPaintProperty(layer.id,"text-halo-color",daylight?"#18231E":"#0b1019");
         }
       }catch(e){}
     });

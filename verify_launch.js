@@ -139,7 +139,7 @@ const SEED = () => {
       });
       return { count: controls.length, rects, overflow: document.documentElement.scrollWidth > innerWidth };
     });
-    say(appHeader.count === 2 && appHeader.rects.every(r => r.h >= 44 && r.left >= 0 && r.right <= 320) && !appHeader.overflow,
+    say(appHeader.count === 4 && appHeader.rects.every(r => r.h >= 44 && r.left >= 0 && r.right <= 320) && !appHeader.overflow,
       "app.html: мобильная шапка имеет удобные зоны касания на 320px", JSON.stringify(appHeader));
     await navPage.click("#panelBtn");
     await navPage.waitForTimeout(140);
