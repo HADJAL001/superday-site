@@ -39,7 +39,7 @@
 <!-- Одна гарнитурная пара с лендингом (паритет платформ): Cormorant Garamond
      на заголовки + Jost на интерфейс. Кириллица полная у обеих. -->
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Prata&display=swap" rel="stylesheet" />
-<script>try{document.documentElement.dataset.theme=localStorage.getItem("superday_theme_v1")==="emerald"?"emerald":"platinum";}catch(e){document.documentElement.dataset.theme="platinum";}</script>
+<script>try{var saved=localStorage.getItem("superday_theme_v1");document.documentElement.dataset.theme=saved||"daylight";}catch(e){document.documentElement.dataset.theme="daylight";}</script>
 <style>
   :root{
     /* ============ ПЛАТИНА: ОДИН ЦВЕТ ТИПОГРАФИКИ ============
@@ -92,6 +92,23 @@
     --grad-gold:linear-gradient(120deg,#9B7025 0%,#D7A943 24%,#FFF0B8 47%,#E8BE63 66%,#8A5D1B 100%);
     --grad-plat:linear-gradient(120deg,#9B7025 0%,#D7A943 24%,#FFF0B8 47%,#E8BE63 66%,#8A5D1B 100%);
     --q1:#F1C57A; --q2:#E8D59B; --q3:#C6E0B5; --q4:#B7D4C3;
+  }
+  /* Daylight map workspace: clear surfaces keep routes and labels readable on phones. */
+  html[data-theme="daylight"]{
+    --plat:20,47,36; --text:rgb(var(--plat)); --text-dim:rgba(var(--plat),.72); --text-muted:rgba(var(--plat),.52);
+    --bg:#F3F7F4; --bg-deep:#E8F0EB; --ink:#FFFFFF; --surface:#FFFFFF; --surface-alt:#F7FAF8; --border:#C9D9CF;
+    --gold:#B88728; --gold-bright:#E5C875; --gold-deep:#8B651B; --champagne:#72551D;
+    --platinum:#1E4433; --plat-dim:#587263; --plat-deep:#769184; --on-accent:#FFFFFF;
+    --hair:rgba(41,91,64,.24); --hair-soft:rgba(41,91,64,.11);
+    --grad-gold:linear-gradient(120deg,#8B651B 0%,#C59A3D 28%,#F1D98B 52%,#B88728 76%,#795515 100%);
+    --grad-plat:linear-gradient(120deg,#DDEBE1,#FFFFFF 48%,#CFE0D4);
+    --q1:#D96B54; --q2:#B88728; --q3:#3C9A6A; --q4:#5685A6;
+    --glass:linear-gradient(168deg,rgba(255,255,255,.96),rgba(248,252,249,.92));
+    --glass-deep:linear-gradient(168deg,rgba(255,255,255,.98),rgba(239,247,242,.94));
+    --edge:linear-gradient(150deg,rgba(255,255,255,.96),rgba(195,216,202,.7));
+    --edge-strong:linear-gradient(150deg,rgba(255,255,255,1),rgba(169,199,178,.86));
+    --inner-light:inset 0 1px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(38,74,52,.08);
+    --shadow-lux:0 28px 70px -34px rgba(35,72,49,.34),0 10px 24px -14px rgba(35,72,49,.2);
   }
   *{box-sizing:border-box}
   html,body{margin:0}
