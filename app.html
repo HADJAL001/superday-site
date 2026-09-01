@@ -39,7 +39,7 @@
 <!-- Одна гарнитурная пара с лендингом (паритет платформ): Cormorant Garamond
      на заголовки + Jost на интерфейс. Кириллица полная у обеих. -->
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Prata&display=swap" rel="stylesheet" />
-<script>try{var saved=localStorage.getItem("superday_theme_v1");document.documentElement.dataset.theme=saved||"daylight";}catch(e){document.documentElement.dataset.theme="daylight";}</script>
+<script>try{var saved=localStorage.getItem("superday_theme_v2");document.documentElement.dataset.theme=/^(daylight|emerald|platinum)$/.test(saved||"")?saved:"daylight";}catch(e){document.documentElement.dataset.theme="daylight";}</script>
 <style>
   :root{
     /* ============ ПЛАТИНА: ОДИН ЦВЕТ ТИПОГРАФИКИ ============
@@ -92,6 +92,16 @@
     --grad-gold:linear-gradient(120deg,#9B7025 0%,#D7A943 24%,#FFF0B8 47%,#E8BE63 66%,#8A5D1B 100%);
     --grad-plat:linear-gradient(120deg,#9B7025 0%,#D7A943 24%,#FFF0B8 47%,#E8BE63 66%,#8A5D1B 100%);
     --q1:#F1C57A; --q2:#E8D59B; --q3:#C6E0B5; --q4:#B7D4C3;
+  }
+  html[data-theme="daylight"]{
+    --window:#FFFFFF;
+    --window-deep:#F3F8F5;
+    --window-raised:#EDF5F0;
+    --window-line:rgba(184,135,40,.34);
+    --window-line-soft:rgba(39,91,63,.14);
+    --window-gold:#B88728;
+    --window-gold-bright:#8B651B;
+    --window-shadow:0 24px 70px -34px rgba(25,70,44,.34),0 1px 0 rgba(255,255,255,.96) inset;
   }
   /* Daylight map workspace: clear surfaces keep routes and labels readable on phones. */
   html[data-theme="daylight"]{
@@ -1534,6 +1544,36 @@
   @media(prefers-reduced-motion:reduce){.panel,.route,.scrim{transition:none!important}}
   .pg-lead .sdi{margin-right:1px}
 
+  /* The map must remain the visual subject in daylight mode. */
+  html[data-theme="daylight"] .mapview .leaflet-tile-pane{filter:saturate(.92) contrast(1.02) brightness(1.03)}
+  html[data-theme="daylight"] .mapcard::after,
+  html[data-theme="daylight"] body:not(.map-live) .mapcard::after,
+  html[data-theme="daylight"] body.map-live .mapcard::after{
+    background:linear-gradient(180deg,rgba(236,245,239,.12),rgba(236,245,239,.02) 58%,rgba(224,238,229,.3));
+    box-shadow:inset 0 0 64px rgba(43,82,58,.09)
+  }
+  html[data-theme="daylight"] .mapview .maplibregl-ctrl-group,
+  html[data-theme="daylight"] .map-tool{background:rgba(255,255,255,.94);box-shadow:0 12px 32px rgba(35,72,49,.18)}
+  html[data-theme="daylight"] .mapview .maplibregl-ctrl-icon{filter:none;opacity:.72}
+  html[data-theme="daylight"] .mapview .maplibregl-ctrl-attrib,
+  html[data-theme="daylight"] .map-status,
+  html[data-theme="daylight"] .mapview .leaflet-control-attribution{background:rgba(255,255,255,.9)}
+  html[data-theme="daylight"] .city-search input{background:#fff}
+  html[data-theme="daylight"] .panel-head h2,
+  html[data-theme="daylight"] .route h3,
+  html[data-theme="daylight"] .bulk h3,
+  html[data-theme="daylight"] .in-title{color:#173D2B}
+  html[data-theme="daylight"] .panel-close:hover,
+  html[data-theme="daylight"] .route-close:hover{background:#EDF5F0;color:#765716}
+  html[data-theme="daylight"] .composer,
+  html[data-theme="daylight"] .voicebar,
+  html[data-theme="daylight"] .notes,
+  html[data-theme="daylight"] .quad,
+  html[data-theme="daylight"] .route,
+  html[data-theme="daylight"] .focus,
+  html[data-theme="daylight"] .stats,
+  html[data-theme="daylight"] .bulk{box-shadow:0 18px 46px -30px rgba(31,76,49,.32),var(--inner-light)}
+
   /* Premium instrument system: one quiet surface language for every working window. */
   :root{
     --font-display:"Prata",Georgia,"Times New Roman",serif;
@@ -1555,6 +1595,16 @@
     --window-line-soft:rgba(245,218,148,.13);
     --window-gold:#E8BE63;
     --window-gold-bright:#FFF0B8;
+  }
+  html[data-theme="daylight"]{
+    --window:#FFFFFF;
+    --window-deep:#F3F8F5;
+    --window-raised:#EDF5F0;
+    --window-line:rgba(184,135,40,.34);
+    --window-line-soft:rgba(39,91,63,.14);
+    --window-gold:#B88728;
+    --window-gold-bright:#765716;
+    --window-shadow:0 24px 70px -34px rgba(25,70,44,.34),0 1px 0 rgba(255,255,255,.96) inset;
   }
   body{letter-spacing:0;font-weight:400}
   h1,h2,h3,h4{letter-spacing:0}
@@ -2192,25 +2242,40 @@
 <script src="growth.js"></script>
 <script src="assets/vendor/maplibre-gl-5.15.0.js"></script>
 <script>
-  var THEME_KEY = "superday_theme_v1";
+  var THEME_KEY = "superday_theme_v2";
   function applyTheme(theme){
+    if(!/^(daylight|emerald|platinum)$/.test(theme)) theme="daylight";
     var emerald=theme==="emerald";
-    document.documentElement.dataset.theme=emerald ? "emerald" : "platinum";
+    document.documentElement.dataset.theme=theme;
     var button=document.getElementById("themeBtn");
     if(button){
       button.setAttribute("aria-pressed",emerald?"true":"false");
+      button.dataset.mode=theme;
       button.title=emerald ? "Вернуть платиновую тему" : "Включить зелёную тему с золотыми буквами";
     }
     var meta=document.querySelector('meta[name="theme-color"]');
-    if(meta) meta.setAttribute("content",emerald?"#03110B":"#05070C");
+    if(meta) meta.setAttribute("content",theme==="daylight"?"#F3F7F4":emerald?"#03110B":"#05070C");
+    var nextMapStyle=theme==="daylight"
+      ? "https://tiles.openfreemap.org/styles/bright"
+      : "https://tiles.openfreemap.org/styles/liberty";
+    if(typeof MAP_STYLE_URL!=="undefined" && MAP_STYLE_URL!==nextMapStyle){
+      MAP_STYLE_URL=nextMapStyle;
+      if(typeof mapState!=="undefined" && mapState && mapState.engine==="maplibre" && mapState.map){
+        mapState.ready=false;
+        mapState.styled=false;
+        mapState.pendingTasks=typeof tasksForMap==="function"?tasksForMap():[];
+        mapState.map.setStyle(MAP_STYLE_URL);
+      }
+    }
   }
-  var initialTheme="platinum";
-  try{ if(localStorage.getItem(THEME_KEY)==="emerald") initialTheme="emerald"; }catch(e){}
+  var initialTheme="daylight";
+  try{ var storedTheme=localStorage.getItem(THEME_KEY); if(/^(daylight|emerald|platinum)$/.test(storedTheme||"")) initialTheme=storedTheme; }catch(e){}
   applyTheme(initialTheme);
   (function(){
     var button=document.getElementById("themeBtn"); if(!button) return;
     button.addEventListener("click",function(){
-      var next=document.documentElement.dataset.theme==="emerald" ? "platinum" : "emerald";
+      var current=document.documentElement.dataset.theme;
+      var next=current==="daylight" ? "emerald" : current==="emerald" ? "platinum" : "daylight";
       try{ localStorage.setItem(THEME_KEY,next); }catch(e){}
       applyTheme(next);
       if(typeof toast==="function") toast(next==="emerald" ? "Зелёная премиальная тема включена" : "Платиновая тема включена");
@@ -3218,7 +3283,9 @@
   // по геолокации на каждый вызов. Маркеры дел — красные и мигающие, линия
   // маршрута — асфальтовая (см. buildMapView) — маркеры не путать с дорогой.
   // Своя геолокация — отдельный красный мигающий значок человека (drawUserLoc).
-  var MAP_STYLE_URL="https://tiles.openfreemap.org/styles/liberty";
+  var MAP_STYLE_URL=document.documentElement.dataset.theme==="daylight"
+    ? "https://tiles.openfreemap.org/styles/bright"
+    : "https://tiles.openfreemap.org/styles/liberty";
   var NAV_SESSION_KEY="sd_active_navigation_v1";
   function prefersLightMap(){
     return !!((navigator.deviceMemory&&navigator.deviceMemory<=4)||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)||
@@ -3658,32 +3725,42 @@
   }
   function addThreeDimensionalBuildings(){
     if(!mapState.map || mapState.map.getLayer("sd-buildings-3d")) return;
+    var daylight=document.documentElement.dataset.theme==="daylight";
     var firstSymbol=null;
     (mapState.map.getStyle().layers||[]).some(function(layer){ if(layer.type==="symbol"){ firstSymbol=layer.id; return true; } return false; });
     try{
       mapState.map.addLayer({id:"sd-buildings-3d",type:"fill-extrusion",source:"openmaptiles","source-layer":"building",minzoom:13,
-        paint:{"fill-extrusion-color":["interpolate",["linear"],["get","render_height"],0,"#263849",35,"#3f8b83",90,"#a8b8c9",180,"#e4b85b"],
+        paint:{"fill-extrusion-color":daylight
+          ? ["interpolate",["linear"],["get","render_height"],0,"#D8E2DC",35,"#BFD0C6",90,"#A9BEB2",180,"#D9B45A"]
+          : ["interpolate",["linear"],["get","render_height"],0,"#263849",35,"#3f8b83",90,"#a8b8c9",180,"#e4b85b"],
           "fill-extrusion-height":["coalesce",["get","render_height"],8],"fill-extrusion-base":["coalesce",["get","render_min_height"],0],
-          "fill-extrusion-opacity":.88,"fill-extrusion-vertical-gradient":true}},firstSymbol||undefined);
+          "fill-extrusion-opacity":daylight?.76:.88,"fill-extrusion-vertical-gradient":true}},firstSymbol||undefined);
     }catch(e){ setMapStatus("3D-здания для этого участка пока отсутствуют в данных OpenStreetMap."); }
   }
   function applyPremiumMapStyle(){
     if(!mapState.map || mapState.styled) return; mapState.styled=true;
+    var daylight=document.documentElement.dataset.theme==="daylight";
+    // Positron already has a carefully balanced daylight hierarchy. Repainting
+    // every source layer here erases minor roads and district boundaries.
+    if(daylight) return;
     (mapState.map.getStyle().layers||[]).forEach(function(layer){
       try{
-        if(layer.type==="background") mapState.map.setPaintProperty(layer.id,"background-color","#07111c");
+        if(layer.type==="background") mapState.map.setPaintProperty(layer.id,"background-color",daylight?"#EDF3EF":"#07111c");
         else if(layer.type==="raster") mapState.map.setPaintProperty(layer.id,"raster-opacity",.16);
         else if(layer.type==="fill"){
-          var id=layer.id.toLowerCase(),color=id.indexOf("water")>=0?"#0e4054":id.indexOf("park")>=0||id.indexOf("wood")>=0?"#17462f":id.indexOf("building")>=0?"#314052":"#152131";
+          var id=layer.id.toLowerCase(),color=daylight
+            ? (id.indexOf("water")>=0?"#B8DDE4":id.indexOf("park")>=0||id.indexOf("wood")>=0?"#C9E2CE":id.indexOf("building")>=0?"#D7DFDA":"#EDF2EF")
+            : (id.indexOf("water")>=0?"#0e4054":id.indexOf("park")>=0||id.indexOf("wood")>=0?"#17462f":id.indexOf("building")>=0?"#314052":"#152131");
           mapState.map.setPaintProperty(layer.id,"fill-color",color);
           if(mapState.map.getPaintProperty(layer.id,"fill-opacity")!==undefined) mapState.map.setPaintProperty(layer.id,"fill-opacity",id.indexOf("building")>=0?.72:.88);
         }else if(layer.type==="line"){
-          var lineId=layer.id.toLowerCase(),lineColor=lineId.indexOf("water")>=0?"#2b7897":lineId.indexOf("casing")>=0?"#080d15":
-            /motorway|trunk|primary/.test(lineId)?"#e1af54":/secondary|tertiary/.test(lineId)?"#8aa5b8":"#607487";
+          var lineId=layer.id.toLowerCase(),lineColor=daylight
+            ? (lineId.indexOf("water")>=0?"#8BBFCB":lineId.indexOf("casing")>=0?"#CAD4CE":/motorway|trunk|primary/.test(lineId)?"#D8B766":/secondary|tertiary/.test(lineId)?"#C7D0CB":"#D7DFDB")
+            : (lineId.indexOf("water")>=0?"#2b7897":lineId.indexOf("casing")>=0?"#080d15":/motorway|trunk|primary/.test(lineId)?"#e1af54":/secondary|tertiary/.test(lineId)?"#8aa5b8":"#607487");
           mapState.map.setPaintProperty(layer.id,"line-color",lineColor);
         }else if(layer.type==="symbol"){
-          if(mapState.map.getPaintProperty(layer.id,"text-color")!==undefined) mapState.map.setPaintProperty(layer.id,"text-color","#dbe2ed");
-          if(mapState.map.getPaintProperty(layer.id,"text-halo-color")!==undefined) mapState.map.setPaintProperty(layer.id,"text-halo-color","#0b1019");
+          if(mapState.map.getPaintProperty(layer.id,"text-color")!==undefined) mapState.map.setPaintProperty(layer.id,"text-color",daylight?"#264637":"#dbe2ed");
+          if(mapState.map.getPaintProperty(layer.id,"text-halo-color")!==undefined) mapState.map.setPaintProperty(layer.id,"text-halo-color",daylight?"#F7FAF8":"#0b1019");
         }
       }catch(e){}
     });
@@ -3709,7 +3786,10 @@
     if(!mapState.map){
       mapState.engine="leaflet"; mapState.map=L.map(view,{attributionControl:true,zoomControl:true});
       mapState.map.setView(mapState.userLoc?[mapState.userLoc.lat,mapState.userLoc.lon]:[55.7558,37.6176],mapState.userLoc?15:13);
-      L.tileLayer("https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; OpenStreetMap, &copy; CARTO'}).addTo(mapState.map);
+      var leafletTiles=document.documentElement.dataset.theme==="daylight"
+        ? "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
+        : "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png";
+      L.tileLayer(leafletTiles,{maxZoom:19,attribution:'&copy; OpenStreetMap, &copy; CARTO'}).addTo(mapState.map);
       mapState.fallbackLayer=L.layerGroup().addTo(mapState.map); mapState.ready=true;
       mapState.map.on("dragstart zoomstart",function(){ mapState.followUser=false; });
       document.body.classList.add("map-live"); setMapStatus("Включён облегчённый 2D-режим для этого устройства.");
@@ -3793,8 +3873,9 @@
       if(route && route.mode!=="unavailable"){
         var coords=(route.coords||[]).map(function(point){ return [point[1],point[0]]; });
         mapState.map.addSource("sd-route",{type:"geojson",data:{type:"Feature",properties:{},geometry:{type:"LineString",coordinates:coords}}});
-        mapState.map.addLayer({id:"sd-route-casing",type:"line",source:"sd-route",paint:{"line-color":"#05070C","line-width":9,"line-opacity":.72}});
-        mapState.map.addLayer({id:"sd-route",type:"line",source:"sd-route",layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":"#EDF2FA","line-width":4,"line-opacity":.96}});
+        var daylightRoute=document.documentElement.dataset.theme==="daylight";
+        mapState.map.addLayer({id:"sd-route-casing",type:"line",source:"sd-route",paint:{"line-color":daylightRoute?"#FFFFFF":"#05070C","line-width":9,"line-opacity":.82}});
+        mapState.map.addLayer({id:"sd-route",type:"line",source:"sd-route",layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":daylightRoute?"#B88728":"#EDF2FA","line-width":4,"line-opacity":.96}});
         if(coords.length) bounds=coords;
       }
       renderMapStats(route);

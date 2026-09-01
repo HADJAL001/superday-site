@@ -100,8 +100,8 @@ const SEED = () => {
     say(/assets\/vendor\/maplibre-gl-5\.15\.0\.js/.test(appSource) && !/unpkg\.com\/maplibre/.test(appSource) &&
       workerSource.includes('"/assets/vendor/maplibre-gl-5.15.0.js"') && /maplibre/i.test(maplibreSource),
       "MapLibre локален и входит в offline shell");
-    say(/https:\/\/superday\.fun\/documents\.html/.test(sitemapSource) &&
-      /https:\/\/superday\.fun\/support\.html/.test(sitemapSource), "документы и поддержка добавлены в sitemap");
+    say(/https:\/\/superday\.run\/documents\.html/.test(sitemapSource) &&
+      /https:\/\/superday\.run\/support\.html/.test(sitemapSource), "документы и поддержка добавлены в sitemap");
     say(/https:\/\/158\.160\.192\.153\/site-api\/waitlist/.test(indexSource) &&
       !/Formspree|mailto:hello@superday\.fun|WAITLIST_ENDPOINT\s*=\s*["']{2}/i.test(indexSource),
       "waitlist подключён к persistent API без пустого или mailto fallback");
