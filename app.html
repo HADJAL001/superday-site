@@ -1695,6 +1695,75 @@
     .pg-head{min-height:50px}
     .bulk{padding:18px 14px calc(18px + env(safe-area-inset-bottom,0px))}
   }
+
+  /* City daylight: the map is the product, UI is a restrained instrument layer. */
+  html[data-theme="daylight"]{
+    --plat:19,42,33;--text:rgb(var(--plat));--text-dim:rgba(var(--plat),.76);--text-muted:rgba(var(--plat),.56);
+    --bg:#DCE7E1;--bg-deep:#C9D8D0;--ink:#E8F0EC;--surface:#E4EDE8;--surface-alt:#D8E4DE;--border:#9FB6AA;
+    --gold:#A97A24;--gold-bright:#D6B45F;--gold-deep:#745116;--champagne:#75561D;--on-accent:#10251C;
+    --hair:rgba(28,69,49,.27);--hair-soft:rgba(28,69,49,.13);
+    --glass:linear-gradient(168deg,rgba(228,238,233,.93),rgba(203,218,210,.91));
+    --glass-deep:linear-gradient(168deg,rgba(220,232,226,.97),rgba(190,207,198,.95));
+    --edge:linear-gradient(150deg,rgba(255,255,255,.7),rgba(80,118,98,.42));
+    --edge-strong:linear-gradient(150deg,rgba(255,255,255,.84),rgba(66,104,84,.55));
+    --inner-light:inset 0 1px 0 rgba(255,255,255,.65),inset 0 -1px 0 rgba(20,55,37,.12);
+    --shadow-lux:0 26px 64px -30px rgba(13,39,26,.5),0 10px 24px -18px rgba(13,39,26,.36);
+    --window:#DFE9E4;--window-deep:#C9D8D0;--window-raised:#D4E1DA;
+    --window-line:rgba(145,103,28,.45);--window-line-soft:rgba(28,69,49,.18);
+    --window-gold:#A97A24;--window-gold-bright:#745116;
+    --window-shadow:0 26px 64px -32px rgba(13,39,26,.52),0 1px 0 rgba(255,255,255,.68) inset;
+  }
+  html[data-theme="daylight"] header{
+    background:linear-gradient(180deg,rgba(23,43,34,.94),rgba(30,55,43,.88));
+    border-bottom-color:rgba(222,190,113,.23);box-shadow:0 10px 32px rgba(10,29,20,.2)
+  }
+  html[data-theme="daylight"] header .brand b{color:#EDF4F0}
+  html[data-theme="daylight"] header .back,
+  html[data-theme="daylight"] header .head-service{color:rgba(237,244,240,.74);border-color:rgba(237,244,240,.24)}
+  html[data-theme="daylight"] header .panel-btn{background:rgba(238,245,241,.94);color:#244536;border-color:rgba(255,255,255,.58)}
+  html[data-theme="daylight"] .mapcard::after,
+  html[data-theme="daylight"] body:not(.map-live) .mapcard::after,
+  html[data-theme="daylight"] body.map-live .mapcard::after{
+    background:linear-gradient(180deg,rgba(16,40,28,.10),rgba(16,40,28,.025) 52%,rgba(16,40,28,.22));
+    box-shadow:inset 0 0 64px rgba(10,38,23,.16)
+  }
+  html[data-theme="daylight"] .composer{
+    background:linear-gradient(180deg,rgba(224,235,229,.94),rgba(198,215,206,.96));
+    border-color:rgba(35,76,55,.28);box-shadow:0 -18px 46px -25px rgba(10,38,23,.6);
+    backdrop-filter:blur(18px) saturate(115%)
+  }
+  html[data-theme="daylight"] .composer input[type=text],
+  html[data-theme="daylight"] .composer .mic-btn,
+  html[data-theme="daylight"] .composer .bulk-btn{background:rgba(244,248,246,.88);border-color:rgba(35,76,55,.24)}
+  html[data-theme="daylight"] .composer .add-btn{background:#1F5139;color:#F4F8F6;box-shadow:none}
+
+  @media(max-width:680px){
+    header .bar{height:56px}
+    .brand{gap:7px}.brand img{width:28px;height:28px}.brand b{font-size:18px}.brand .beta{display:none}
+    header .right{gap:6px}header .back,header .head-service,.theme-btn .theme-label,.panel-btn .pb-label{display:none}
+    .theme-btn,.panel-btn{width:44px;height:44px;min-height:44px;padding:0;border-radius:12px}
+    .stage{min-height:calc(100svh - 56px);padding:18px 0 150px;justify-content:center}
+    .stage-mic{width:70px;height:70px}.stage-mic .sdi{width:28px;height:28px}
+    .stage-say{max-width:270px;font-size:10px;line-height:1.55;letter-spacing:.08em;text-shadow:0 1px 8px rgba(255,255,255,.75)}
+    .stage-live{font-size:16px;max-width:310px}
+    .stage-links{display:none}
+    /* Morning prompts and the day verdict remain in data, but never cover the live map on phones. */
+    #rolloverBar,#dayArc,#timeCheck,#planSuggest{display:none!important}
+    .focus:not([hidden]){position:fixed;left:10px;right:10px;bottom:174px;z-index:29;margin:0;padding:9px 10px;
+      min-height:54px;display:grid;grid-template-columns:32px minmax(0,1fr) 42px;gap:8px;border-radius:14px;
+      background:rgba(221,233,227,.94);border:1px solid rgba(30,73,51,.22);box-shadow:0 14px 34px -22px rgba(9,34,20,.7)}
+    .focus .fx-ic{width:32px;height:32px;border-radius:9px}.focus .fx-eyebrow{font-size:9px;letter-spacing:.08em}
+    .focus .fx-task{font-size:13px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .focus .fx-meta{display:none}.focus .fx-focus{width:42px;height:38px;padding:0;font-size:0;border-radius:10px}
+    .focus .fx-focus .sdi{width:17px;height:17px}.focus .fx-done{display:none}
+    .composer{width:calc(100% - 16px);padding:9px 9px calc(9px + env(safe-area-inset-bottom,0px));border-radius:18px 18px 0 0}
+    .composer .row1{grid-template-columns:minmax(0,1fr) 44px 44px;gap:7px}
+    .composer input[type=text]{min-height:44px}.composer .mic-btn,.composer .bulk-btn{width:44px;min-width:44px;height:44px;min-height:44px}
+    .composer .add-btn{min-height:42px}.toggles{margin-top:7px}.tg{min-height:34px;padding:6px 10px}
+    main.wrap{padding-bottom:154px}
+    .map-tools{top:max(68px,calc(env(safe-area-inset-top) + 60px));right:8px}
+    .map-tool{min-height:40px;padding:0 10px;background:rgba(228,238,233,.92);color:#193D2B}
+  }
 </style>
 </head>
 <body>
