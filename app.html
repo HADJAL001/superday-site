@@ -1480,6 +1480,8 @@
   .sp-text{font-size:14px; color:var(--text); line-height:1.35; word-break:break-word}
   .sp-meta{font-size:11.5px; color:var(--text-muted); margin-top:2px}
   .sp-meta .sp-dot{opacity:.5; margin:0 5px}
+  .sp-start{width:100%; min-height:44px; margin-top:12px; border:0; border-radius:8px;
+    background:var(--grad-plat); color:var(--on-accent); font:700 13px var(--font-ui); cursor:pointer}
   .sp-items{font-size:11.5px; line-height:1.4; color:var(--champagne); margin-top:3px; word-break:break-word}
   @media(max-width:640px){
     .stage{min-height:calc(100svh - 104px); gap:13px; padding-top:14px}
@@ -4775,12 +4777,31 @@
   // → карта и план. Геокодер вызывается только для дел, где место названо: без
   // этого фильтра каждое «позвонить маме» уходило бы в сеть.
   function stageEl(id){ return document.getElementById(id); }
+  var PROFILE_NAME_KEY="superday_profile_name", awaitingVoiceName=false;
+  function profileName(){ try{ return (localStorage.getItem(PROFILE_NAME_KEY)||"").trim(); }catch(e){ return ""; } }
+  function beginVoiceIntroduction(){
+    if(profileName() || awaitingVoiceName) return false;
+    awaitingVoiceName=true;
+    var question="Как мне к вам обращаться?";
+    if(typeof window.__ttsSpeak==="function") window.__ttsSpeak(question);
+    stageSay(question);
+    return true;
+  }
   // Своя капитализация: cap() живёт внутри голосового модуля и снаружи не видна.
   function stageCap(s){ return s ? String(s).charAt(0).toUpperCase()+String(s).slice(1) : s; }
+  var stageStatusTimer=null;
   function stageSay(msg, thinking){
     var el=stageEl("stageLive"); if(!el) return;
+    if(stageStatusTimer){ clearTimeout(stageStatusTimer); stageStatusTimer=null; }
     el.textContent = msg || "";
+    el.hidden=!msg;
     el.classList.toggle("thinking", !!thinking);
+    // The map is primary. Completed status should never mask the route or tasks.
+    if(msg && !thinking){
+      stageStatusTimer=setTimeout(function(){
+        if(el.textContent===msg){ el.textContent=""; el.hidden=true; }
+      },2400);
+    }
   }
   // Речь несёт время, длительность, повтор и место в самой фразе. Модель отдаёт
   // только заголовок и приоритет, поэтому фразу разбирают эти же парсеры, что и
@@ -4857,6 +4878,19 @@
   function stageParseSpoken(text){
     text=(text||"").trim();
     if(!text) return;
+    if(awaitingVoiceName){
+      var name=text.replace(/^(меня зовут|я|это)\s+/i,"").replace(/[^а-яёa-z\-\s]/gi,"").trim().split(/\s+/)[0]||"";
+      awaitingVoiceName=false;
+      if(name.length>=2 && name.length<=24){
+        try{ localStorage.setItem(PROFILE_NAME_KEY,stageCap(name)); }catch(e){}
+        stageSay("Готово");
+        if(typeof window.__ttsSpeak==="function") window.__ttsSpeak("Приятно познакомиться, "+stageCap(name)+". Я готова записать ваши дела.");
+        return;
+      }
+      if(typeof window.__ttsSpeak==="function") window.__ttsSpeak("Не расслышала имя. Назовите его ещё раз.");
+      awaitingVoiceName=true;
+      return;
+    }
     var batchId="v"+Date.now();
     stageSay("Модель разбирает сказанное…", true);
     parseGlow(true);
@@ -4902,7 +4936,7 @@
       var it=queue.shift();
       if(!it){
         renderStagePlan();
-        if(failures.length) stageSay("План готов, но не удалось загрузить адрес: "+failures.join(", ")+". Проверьте соединение или уточните место.");
+        if(failures.length) stageSay("Не найден адрес. Откройте дело и уточните место.");
         return;
       }
       geocodeTaskPlace(it.task,it.place, function(found){
@@ -4958,6 +4992,14 @@
       row.addEventListener("click", function(){ openTasksSheet(t.id); });
       box.appendChild(row);
     });
+    var start=document.createElement("button"); start.type="button"; start.className="sp-start";
+    start.textContent="Начать день";
+    start.addEventListener("click",function(){
+      var stops=planOrder().filter(function(t){ return !t.done && validPoint(t.loc); });
+      if(!stops.length){ stageSay("Добавьте адрес к делу, чтобы начать маршрут."); return; }
+      startInternalNavigation(stops);
+    });
+    box.appendChild(start);
   }
 
   // Спор двух точек зрения о приоритете спорного дела.
@@ -6439,12 +6481,13 @@
     });
     acts.appendChild(primary); acts.appendChild(ghost);
     box.appendChild(head); box.appendChild(text); box.appendChild(acts);
+    // Route advice is intentionally spoken, not printed over the task map.
+    box.hidden=true;
     var spoken=null; try{ spoken=localStorage.getItem(PLANSUGGEST_SPOKEN_KEY); }catch(e){}
     if(spoken!==dismissKey){
       try{ localStorage.setItem(PLANSUGGEST_SPOKEN_KEY,dismissKey); }catch(e){}
       var labels=recommended.map(function(t){ return t.loc.label||t.text; });
       var phrase="Сначала лучше поехать: "+labels[0]+(labels.length>1?", затем: "+labels.slice(1).join(", затем: "):"")+". Согласны?";
-      if(typeof stageSay==="function") stageSay(phrase);
       if((typeof isMuted!=="function" || !isMuted()) && typeof window.__ttsSpeak==="function"){
         try{ window.__ttsSpeak(phrase); }catch(e){}
       }
@@ -7668,6 +7711,7 @@
       // SpeechRecognition. Если его нет, сервер остаётся единственным реальным STT.
       if(Date.now()<serverFailureUntil && SR) return;
       event.preventDefault(); event.stopImmediatePropagation();
+      if(kind==="stage" && typeof beginVoiceIntroduction==="function" && beginVoiceIntroduction()) return;
       if(serverStarting){ serverStartSerial++; serverStarting=false; paintServerRecording(false,false,kind); setStatus("Запись отменена."); }
       else if(serverRecorder && serverRecorder.state!=="inactive") stopServerRecording();
       else startServerRecording(kind);
@@ -7760,7 +7804,8 @@
         return (i+1)+". "+tm+t.text+dd;
       });
       var verdict=dayVerdict(full, findOverlaps(full)).phrase.replace(/[💪✨]/g,"").replace(/\s+/g," ").trim();
-      speak("Твой план на сегодня. "+parts.join(". ")+". "+verdict, cb); setStatus("Читаю план…");
+      var name=typeof profileName==="function" ? profileName() : "";
+      speak((name ? name+", " : "")+"твой план на сегодня. "+parts.join(". ")+". "+verdict, cb); setStatus("Читаю план…");
     }
     function speakNotes(cb){
       if(!notes.length){ speak("Заметок пока нет.", cb); return; }
@@ -7935,6 +7980,7 @@
     }
     if(stageMic){
       stageMic.addEventListener("click", function(){
+        if(typeof beginVoiceIntroduction==="function" && beginVoiceIntroduction()) return;
         if(mode==="stage"){ stageStop(); return; }
         if(mode==="hands"){ stopHands(true); }
         if(mode==="dictation"){ try{ rec.stop(); }catch(e){} mode=null; }
