@@ -29,6 +29,7 @@ window.__i18nDict("en", {
   },
 
   t: {
+    "Начать день": "Start day",
     "Аккаунт и тариф": "Account and plan",
     "войти": "sign in",
     "Войдите или создайте аккаунт, чтобы выбрать тариф.": "Sign in or create an account to choose a plan.",

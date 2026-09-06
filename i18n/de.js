@@ -25,6 +25,7 @@ window.__i18nDict("de", {
   },
 
   t: {
+    "Начать день": "Tag starten",
     "Аккаунт и тариф": "Konto und Tarif",
     "войти": "anmelden",
     "Войдите или создайте аккаунт, чтобы выбрать тариф.": "Melden Sie sich an oder erstellen Sie ein Konto, um einen Tarif zu wählen.",
