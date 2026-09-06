@@ -128,9 +128,9 @@
     background:var(--bg-deep);
     min-height:100vh; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
   }
-  /* Дисплейная антиква мельче гротеска по оптике: где раньше стоял вес 700,
-     Cormorant просит 600 и отрицательный трекинг — иначе заголовок «плывёт». */
-  h1,h2,h3,h4{letter-spacing:-.008em}
+  /* Дисплейная антиква мельче гротеска по оптике, поэтому заголовки используют
+     умеренный вес и нормальный трекинг: текст остается разборчивым на телефоне. */
+  h1,h2,h3,h4{letter-spacing:0}
   a{color:inherit}
   .wrap{max-width:1080px; margin:0 auto; padding:0 22px}
   main.wrap,footer.wrap{position:relative; z-index:1}
@@ -160,7 +160,7 @@
   /* Интро */
   .intro{padding:38px 0 8px; text-align:center; text-shadow:0 2px 18px rgba(6,10,26,.9)}
   .intro .eyebrow{font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--text-muted)}
-  .intro h1{font-family:var(--font-display); font-weight:700; font-size:clamp(28px,5vw,44px);
+  .intro h1{font-family:var(--font-display); font-weight:700; font-size:36px;
     line-height:1.05; margin:12px 0 10px}
   /* Акцент заголовка: светлые стопы металла. Тёмные кромки --grad-gold
      уместны на рамке, но в буквах читаются как выцветший серый. */
@@ -280,7 +280,7 @@
     line-height:1; padding:0 2px; opacity:.6}
   li.task .del:hover{opacity:1; color:#E8B7B0}
   li.task .grip{flex:0 0 auto; cursor:grab; color:var(--text-muted); font-size:13px; line-height:1;
-    padding:2px 1px 2px 3px; margin-top:1px; opacity:.45; touch-action:none; user-select:none; letter-spacing:-1px}
+    padding:2px 1px 2px 3px; margin-top:1px; opacity:.45; touch-action:none; user-select:none; letter-spacing:0}
   li.task .grip:hover{opacity:.9; color:var(--champagne)}
   li.task.dragging{opacity:.35}
   .quad.drop{border-color:var(--gold); box-shadow:0 0 0 3px rgba(200,214,240,.16); background:linear-gradient(180deg,rgba(23,29,42,.85),rgba(11,15,24,.6))}
@@ -778,7 +778,7 @@
     border:1px solid var(--hair-soft); border-radius:16px; padding:15px 18px}
   .rollover[hidden]{display:none}
   .ro-title{font-family:var(--font-display); font-size:17px; font-weight:700;
-    letter-spacing:-.01em; color:var(--text)}
+    letter-spacing:0; color:var(--text)}
   .ro-head{display:flex; align-items:center; gap:8px; margin-bottom:6px}
   .ro-head-btn{cursor:pointer; background:none; border:0; padding:4px 0; width:100%;
     text-align:left; font-family:inherit; color:inherit}
@@ -976,9 +976,9 @@
      выглядеть «ёлкой»: блестит ровно то, на что надо нажать.
      ========================================================================== */
   .intro .eyebrow{letter-spacing:.26em; font-weight:600; color:var(--plat-deep)}
-  .intro h1{line-height:1.06; letter-spacing:-.015em}
+  .intro h1{line-height:1.06; letter-spacing:0}
   .intro p{font-size:15px}
-  .route h3,.stats-head h3,.tpl-head h3,.notes-head h3,.panel-head h2{letter-spacing:-.01em}
+  .route h3,.stats-head h3,.tpl-head h3,.notes-head h3,.panel-head h2{letter-spacing:0}
   .pg-lead{line-height:1.62}
 
   /* Платиновая заливка — одна декларация на все первичные действия. */
@@ -1306,7 +1306,7 @@
   .day-summary,.remindbar,.voicebar,.dv-phrase{border-radius:18px}
   /* Заголовки панелей — дисплейной антиквой, вес под Cormorant */
   .notes-head h3,.route h3,.stats-head h3,.tpl-head h3,.bulk-head h3,.da-head,.gr-lvl{
-    font-weight:600; letter-spacing:-.008em;
+    font-weight:600; letter-spacing:0;
   }
 
   /* ============ ЗНАКИ ГЛАВНОГО ЭКРАНА ============
