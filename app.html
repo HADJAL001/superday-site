@@ -1171,15 +1171,14 @@
   .mapview .maplibregl-ctrl-icon{filter:invert(1) opacity(.82)}
   .mapview .maplibregl-ctrl-attrib{background:rgba(6,10,26,.74); color:var(--text-muted)}
   .mapview .maplibregl-ctrl-attrib a{color:var(--text-dim)}
-  .map-tools{position:absolute; top:max(76px,calc(env(safe-area-inset-top) + 64px)); right:12px; z-index:520;
-    display:flex; flex-direction:column; align-items:flex-end; gap:8px; pointer-events:auto}
+  .map-tools{display:contents}
   .map-tool{min-height:42px; display:inline-flex; align-items:center; gap:8px; padding:0 12px; border:1px solid var(--hair);
     border-radius:8px; background:rgba(8,11,18,.88); color:var(--text); font:600 12px var(--font-ui);
     box-shadow:0 12px 30px rgba(0,0,0,.35); backdrop-filter:blur(12px); cursor:pointer}
   .map-tool:hover{border-color:var(--gold-bright)}
   .map-tool[hidden]{display:none}
   .map-tool svg{width:17px; height:17px}
-  .city-panel{width:min(380px,calc(100vw - 24px)); padding:16px; border:1px solid transparent; border-radius:8px;
+  .city-panel{position:fixed; top:max(68px,calc(env(safe-area-inset-top) + 60px)); right:12px; z-index:520; width:min(380px,calc(100vw - 24px)); padding:16px; border:1px solid transparent; border-radius:8px;
     background:var(--glass-deep) padding-box,var(--edge-strong) border-box; box-shadow:var(--shadow-lux),var(--inner-light);
     backdrop-filter:var(--blur); color:var(--text)}
   .city-panel[hidden]{display:none}
@@ -1802,7 +1801,10 @@
     -webkit-backdrop-filter:blur(24px) saturate(125%); backdrop-filter:blur(24px) saturate(125%); box-shadow:0 -18px 50px -26px rgba(0,0,0,.86)}
   .composer input[type=text],.composer .mic-btn,.composer .bulk-btn{background:rgba(15,25,38,.72); border-color:rgba(212,175,55,.24)}
   .composer .mic-btn{color:#E8CB71; box-shadow:0 0 18px rgba(212,175,55,.12)}
-  .map-tool{width:42px; min-width:42px; padding:0; justify-content:center; overflow:hidden; color:transparent; border-color:rgba(212,175,55,.32); background:rgba(5,10,18,.72)}
+  .composer .add-btn{background:rgba(5,10,18,.92); border:1px solid rgba(212,175,55,.72); color:#E8CB71;
+    box-shadow:0 12px 28px -16px rgba(0,0,0,.88),inset 0 1px 0 rgba(255,255,255,.08)}
+  .composer .add-btn:hover{background:rgba(16,24,36,.98); color:#F4D97C}
+  .map-tool{display:none!important}
   .map-tool .sdi{width:19px; height:19px; color:#E8CB71; stroke-width:1.7; flex:0 0 auto}
   .map-tool .map-tool-label{display:none}.map-tool:hover{width:auto; padding:0 12px; color:#F7F3E7}.map-tool:hover .map-tool-label{display:inline;margin-left:4px}
   @media(max-width:680px){
@@ -3868,11 +3870,13 @@
         }else if(layer.type==="line"){
           var lineId=layer.id.toLowerCase(),lineColor=daylight
             ? (lineId.indexOf("water")>=0?"#3B7480":lineId.indexOf("casing")>=0?"#17221D":/motorway|trunk|primary/.test(lineId)?"#B99143":/secondary|tertiary/.test(lineId)?"#718279":"#53645B")
-            : (lineId.indexOf("water")>=0?"#236B93":lineId.indexOf("casing")>=0?"#060A11":/motorway|trunk|primary/.test(lineId)?"#D4AF37":/secondary|tertiary/.test(lineId)?"#7895AA":"#435B70");
+            : (lineId.indexOf("water")>=0?"#236B93":lineId.indexOf("casing")>=0?"#060A11":/motorway|trunk|primary/.test(lineId)?"#74756F":/secondary|tertiary/.test(lineId)?"#52697D":"#34495B");
           mapState.map.setPaintProperty(layer.id,"line-color",lineColor);
+          if(mapState.map.getPaintProperty(layer.id,"line-opacity")!==undefined) mapState.map.setPaintProperty(layer.id,"line-opacity",/motorway|trunk|primary/.test(lineId)?.76:.62);
         }else if(layer.type==="symbol"){
           if(mapState.map.getPaintProperty(layer.id,"text-color")!==undefined) mapState.map.setPaintProperty(layer.id,"text-color",daylight?"#DCE7E1":"#dbe2ed");
           if(mapState.map.getPaintProperty(layer.id,"text-halo-color")!==undefined) mapState.map.setPaintProperty(layer.id,"text-halo-color",daylight?"#18231E":"#0b1019");
+          if(mapState.map.getPaintProperty(layer.id,"text-halo-width")!==undefined) mapState.map.setPaintProperty(layer.id,"text-halo-width",1.25);
         }
       }catch(e){}
     });
@@ -9975,6 +9979,11 @@
         });
         pop.appendChild(item);
       });
+      var maps=document.createElement("button");
+      maps.type="button"; maps.className="lp-item"; maps.setAttribute("role","menuitem");
+      maps.textContent="Карты городов";
+      maps.addEventListener("click",function(){ setCityPanel(true); closePop(); });
+      pop.appendChild(maps);
     }
     function openPop(){ buildPop(); pop.hidden=false; btn.setAttribute("aria-expanded","true"); }
     function closePop(){ pop.hidden=true; btn.setAttribute("aria-expanded","false"); }
