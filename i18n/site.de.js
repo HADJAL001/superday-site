@@ -1,6 +1,7 @@
 /* SUPER DAY — deutsches Wörterbuch der Startseite (Welle 11). */
 window.__i18nDict("de", {
   t: {
+    "Начать день": "Tag starten",
     "Открыть приложение": "App öffnen",
     "Выбрать тариф": "Tarif wählen",
     "₽ / 30 дней": "RUB / 30 Tage",
