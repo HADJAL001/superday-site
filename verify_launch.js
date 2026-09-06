@@ -48,7 +48,9 @@ const SEED = () => {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
     const errs = [];
     page.on("pageerror", e => errs.push(String(e.message)));
-    await page.goto(BASE + "?selftest=1", { waitUntil: "load" });
+    // Map tiles are intentionally loaded independently. Waiting for every
+    // external resource makes this acceptance check hang on an otherwise ready app.
+    await page.goto(BASE + "?selftest=1", { waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => {
       const b = document.getElementById("selftestBox") || document.querySelector("pre,#stBox");
       return b && /пройдено/.test(b.textContent);
