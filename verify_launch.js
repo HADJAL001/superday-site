@@ -558,7 +558,8 @@ const SEED = () => {
     console.log("\n=== 5б. Первый экран ===");
     const stage = await page.evaluate(() => {
       const s = document.getElementById("voiceStage");
-      const mic = document.getElementById("stageMic");
+      const mic = document.getElementById("micBtn");
+      const stageMic = document.getElementById("stageMic");
       const r = s ? s.getBoundingClientRect() : null;
       const mr = mic ? mic.getBoundingClientRect() : null;
       // Всё, что было текстом, должно уехать ниже сгиба.
@@ -572,6 +573,7 @@ const SEED = () => {
         stageFound: !!s, stageH: r ? Math.round(r.height) : 0,
         micSize: mr ? Math.round(mr.width) : 0,
         micHasSign: !!(mic && mic.querySelector('svg.sdi use[href="#i-mic"]')),
+        stageMicHidden: !!(stageMic && getComputedStyle(stageMic).display === "none"),
         intro: !!document.querySelector(".intro"),
         below: below,
         mapLive: document.body.classList.contains("map-live"),
@@ -581,7 +583,7 @@ const SEED = () => {
       };
     });
     say(stage.stageFound && stage.stageH > 500, "сцена занимает первый экран", stage.stageH + "px");
-    say(stage.micSize >= 80 && stage.micHasSign, "крупный знак микрофона в центре", stage.micSize + "px, знак " + (stage.micHasSign ? "на месте" : "НЕТ"));
+    say(stage.micSize >= 44 && stage.micHasSign && stage.stageMicHidden, "микрофон в строке ввода", stage.micSize + "px, знак " + (stage.micHasSign ? "на месте" : "НЕТ"));
     say(stage.intro === false, "прежний текстовый заголовок убран");
     say(stage.below.every(b => b.state !== "скрыт" ? !/НА ПЕРВОМ/.test(b.state) : true),
       "текстовые карточки ушли ниже сгиба", stage.below.map(b => b.sel + "=" + b.state).join(", "));

@@ -38,8 +38,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <!-- Одна гарнитурная пара с лендингом (паритет платформ): Cormorant Garamond
      на заголовки + Jost на интерфейс. Кириллица полная у обеих. -->
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Prata&display=swap" rel="stylesheet" />
-<script>try{var saved=localStorage.getItem("superday_theme_v2");document.documentElement.dataset.theme=/^(daylight|emerald|platinum)$/.test(saved||"")?saved:"daylight";}catch(e){document.documentElement.dataset.theme="daylight";}</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700&family=Prata&display=swap" rel="stylesheet" />
+<script>try{var saved=localStorage.getItem("superday_theme_v2"),chosen=localStorage.getItem("superday_theme_choice_v1");document.documentElement.dataset.theme=/^(daylight|emerald|platinum)$/.test(saved||"")&&(saved!=="daylight"||chosen==="1")?saved:"platinum";}catch(e){document.documentElement.dataset.theme="platinum";}</script>
 <style>
   :root{
     /* ============ ПЛАТИНА: ОДИН ЦВЕТ ТИПОГРАФИКИ ============
@@ -57,16 +57,16 @@
     --border:#232B3B;
 
     /* «Золото» → платина: имена сохранены, тёплого акцента больше нет */
-    --gold:rgba(var(--plat),.90); --gold-bright:#F7FAFF; --gold-deep:#8E9AB1; --champagne:rgba(var(--plat),.86);
+    --gold:#D4AF37; --gold-bright:#F4D97C; --gold-deep:#8E6A14; --champagne:#E8CB71;
     --platinum:#E8EDF6; --plat-dim:#AFB9CC; --plat-deep:#78829A;
-    --on-accent:#070A11;
-    --hair:rgba(200,214,240,0.22); --hair-soft:rgba(200,214,240,0.09);
-    --grad-gold:linear-gradient(120deg,#7E8AA2 0%,#C8D2E2 20%,#F7FAFF 42%,#C2CCDD 58%,#8B96AC 76%,#E9EFF8 100%);
-    --grad-plat:linear-gradient(120deg,#7E8AA2 0%,#C8D2E2 20%,#F7FAFF 42%,#C2CCDD 58%,#8B96AC 76%,#E9EFF8 100%);
+    --on-accent:#090C12;
+    --hair:rgba(212,175,55,.30); --hair-soft:rgba(212,175,55,.13);
+    --grad-gold:linear-gradient(120deg,#9C7418 0%,#D4AF37 32%,#F4D97C 50%,#D4AF37 70%,#8E6A14 100%);
+    --grad-plat:linear-gradient(120deg,#9C7418 0%,#D4AF37 32%,#F4D97C 50%,#D4AF37 70%,#8E6A14 100%);
     --grad-red:linear-gradient(120deg,#E8C0BA,#DCA9A1);
     /* Квадранты Эйзенхауэра: тон платины с еле слышным подкрасом. Смысл
        различить можно, но текст читается как одна платиновая гамма. */
-    --q1:#E8B7B0; --q2:#E2DCC9; --q3:#C4DACE; --q4:#B9C4D8;
+    --q1:#FF8B5E; --q2:#D4AF37; --q3:#46B987; --q4:#7794B8;
     --ease-out:cubic-bezier(.22,1,.36,1);
 
     /* ============ ДОРОГИЕ КОНТЕЙНЕРЫ ============ */
@@ -81,7 +81,7 @@
     /* Cormorant Garamond — высококонтрастная антиква «кутюрной» подачи;
        Jost — геометрический гротеск интерфейса. Кириллица полная у обеих. */
     --font-display:"Cormorant Garamond","Playfair Display",Georgia,"Times New Roman",serif;
-    --font-ui:"Jost","Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --font-ui:"Inter","Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
   }
   html[data-theme="emerald"]{
     --plat:245,218,148; --text:rgb(var(--plat)); --text-dim:rgba(var(--plat),.76); --text-muted:rgba(var(--plat),.54);
@@ -206,7 +206,7 @@
   .tg{cursor:pointer; user-select:none; font-size:12.5px; color:var(--text-dim); border:1px solid var(--border);
     background:var(--ink); padding:8px 14px; border-radius:999px; transition:.18s}
   .tg[aria-pressed=true]{color:var(--on-accent); font-weight:700; border-color:transparent}
-  .tg.u[aria-pressed=true]{background:linear-gradient(120deg,#F0CCC6,#E8B7B0)}
+  .tg.u[aria-pressed=true]{background:linear-gradient(120deg,#FF9A61,#E66A43); box-shadow:0 0 18px rgba(255,120,74,.24)}
   .tg.i[aria-pressed=true]{background:var(--grad-gold)}
   .toggles .hint{font-size:11.5px; color:var(--text-muted); margin-left:auto}
 
@@ -266,10 +266,11 @@
   ul.tasks{list-style:none; margin:0; padding:0 0 4px 0; display:flex; flex-direction:column; gap:8px}
   li.task{display:flex; align-items:flex-start; gap:10px; background:var(--ink); border:1px solid var(--border);
     border-radius:11px; padding:11px 12px; font-size:13.5px; line-height:1.4}
-  li.task .chk{flex:0 0 auto; width:18px; height:18px; border-radius:6px; border:1.5px solid var(--text-muted);
-    cursor:pointer; margin-top:1px; display:grid; place-items:center; color:var(--on-accent); font-size:12px; transition:.15s}
-  li.task.done .chk{background:var(--grad-gold); border-color:transparent}
-  li.task.done .txt{text-decoration:line-through; color:var(--text-muted)}
+  li.task .chk{flex:0 0 auto; width:22px; height:22px; border-radius:50%; border:1.5px solid rgba(232,237,246,.56);
+    cursor:pointer; margin-top:1px; display:grid; place-items:center; color:var(--on-accent); font-size:13px; transition:background .16s ease,border-color .16s ease,transform .16s ease}
+  li.task .chk:hover{border-color:var(--gold-bright); transform:scale(1.06)}
+  li.task.done .chk{background:var(--grad-gold); border-color:transparent; box-shadow:0 0 16px rgba(212,175,55,.28)}
+  li.task.done .txt{text-decoration:line-through; text-decoration-thickness:1px; color:var(--text-muted)}
   li.task{flex-wrap:wrap}
   li.task .txt{flex:1 1 auto; min-width:0; word-break:break-word}
   /* Вторая строка карточки: время · длительность · повтор · перенос. */
@@ -1258,9 +1259,11 @@
   .mp-pop .mp-edit{border:1px solid var(--hair); color:var(--text-dim); background:rgba(255,255,255,.035)}
   .mp-pop .mp-nav:hover,.mp-pop .mp-edit:hover{color:var(--text)}
   .mp-marker-wrap{animation:pulse 1.6s infinite}
-  .mp-marker{width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-    font-size:11px; font-weight:700; color:var(--ink); border:2px solid rgba(255,255,255,.85);
-    box-shadow:0 2px 10px rgba(0,0,0,.5), 0 0 14px 2px rgba(232,183,176,.55); animation:rowIn .38s var(--ease-out) both}
+  .mp-marker{min-height:32px; max-width:210px; padding:0 10px 0 4px; border-radius:17px; display:inline-flex; align-items:center; gap:7px;
+    font:600 11px/1.2 var(--font-ui); color:#F7F3E7; border:1px solid rgba(212,175,55,.78); background:rgba(5,10,18,.88);
+    box-shadow:0 8px 22px rgba(0,0,0,.58),inset 0 1px 0 rgba(255,255,255,.12); animation:rowIn .38s var(--ease-out) both}
+  .mp-marker-index{flex:0 0 23px; width:23px; height:23px; border-radius:50%; display:grid; place-items:center; background:var(--grad-gold); color:var(--on-accent); font-weight:700}
+  .mp-marker-label{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:left}
   .mp-me-wrap{animation:pulse 1s infinite; z-index:1000 !important}
   .mp-me{width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center;
     font-size:15px; background:var(--grad-red); border:2px solid rgba(255,255,255,.9);
@@ -1591,7 +1594,7 @@
   /* Premium instrument system: one quiet surface language for every working window. */
   :root{
     --font-display:"Prata",Georgia,"Times New Roman",serif;
-    --font-ui:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --font-ui:"Inter","Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
     --window:#101722;
     --window-deep:#0A1019;
     --window-raised:#151E2A;
@@ -1784,6 +1787,28 @@
     header .bar{gap:5px;padding-left:7px;padding-right:7px}
     header .right{gap:4px}
     header .head-service{font-size:9px;padding:3px 4px}
+  }
+
+  /* Premium map workspace: the route is the product, controls stay compact. */
+  .stage{align-items:flex-start; justify-content:flex-end; padding:24px 0 166px}
+  .stage-mic,.stage-say{display:none}
+  .stage-live:not(:empty){align-self:center; max-width:min(520px,calc(100vw - 36px)); padding:9px 13px;
+    border:1px solid rgba(212,175,55,.34); border-radius:8px; background:rgba(5,10,18,.82); color:#F6F1E4;
+    font:500 13px/1.4 var(--font-ui); text-align:center; -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px)}
+  .stage-plan{align-self:center; margin-bottom:0; background:linear-gradient(145deg,rgba(5,12,22,.95),rgba(8,22,36,.92)) padding-box,
+    linear-gradient(130deg,rgba(212,175,55,.68),rgba(212,175,55,.12)) border-box; box-shadow:0 24px 54px rgba(0,0,0,.56),inset 0 1px 0 rgba(255,255,255,.10)}
+  .sp-title,.sp-text{color:#F8F4E9}.sp-sum,.sp-meta{color:rgba(235,226,204,.62)}.sp-items{color:#E8CB71}
+  .composer{background:linear-gradient(160deg,rgba(8,15,27,.88),rgba(5,10,18,.94)); border-color:rgba(212,175,55,.30);
+    -webkit-backdrop-filter:blur(24px) saturate(125%); backdrop-filter:blur(24px) saturate(125%); box-shadow:0 -18px 50px -26px rgba(0,0,0,.86)}
+  .composer input[type=text],.composer .mic-btn,.composer .bulk-btn{background:rgba(15,25,38,.72); border-color:rgba(212,175,55,.24)}
+  .composer .mic-btn{color:#E8CB71; box-shadow:0 0 18px rgba(212,175,55,.12)}
+  .map-tool{width:42px; min-width:42px; padding:0; justify-content:center; overflow:hidden; color:transparent; border-color:rgba(212,175,55,.32); background:rgba(5,10,18,.72)}
+  .map-tool .sdi{width:19px; height:19px; color:#E8CB71; stroke-width:1.7; flex:0 0 auto}
+  .map-tool .map-tool-label{display:none}.map-tool:hover{width:auto; padding:0 12px; color:#F7F3E7}.map-tool:hover .map-tool-label{display:inline;margin-left:4px}
+  @media(max-width:680px){
+    .stage{min-height:calc(100svh - 56px); padding:18px 0 150px; justify-content:flex-end}
+    .stage-plan{max-height:min(44svh,380px)}
+    .map-tool{background:rgba(5,10,18,.78); color:transparent}
   }
 </style>
 </head>
@@ -2306,7 +2331,7 @@
   <div class="mapview" id="mapView" aria-label="Карта дня — точки дел и маршрут"></div>
   <div class="map-tools">
     <button class="map-tool" id="navRestoreBtn" type="button" hidden>Вернуть маршрут</button>
-    <button class="map-tool" id="cityMapsBtn" type="button" aria-expanded="false" aria-controls="cityMapsPanel">Города офлайн</button>
+    <button class="map-tool" id="cityMapsBtn" type="button" title="Карты городов" aria-label="Карты городов" aria-expanded="false" aria-controls="cityMapsPanel"><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-layers"/></svg><span class="map-tool-label">Города офлайн</span></button>
     <section class="city-panel" id="cityMapsPanel" hidden aria-label="Загрузка города">
       <div class="city-head">
         <div><b>Карта города</b><span>Здания, улицы и подписи останутся на устройстве</span></div>
@@ -2358,15 +2383,15 @@
       }
     }
   }
-  var initialTheme="daylight";
-  try{ var storedTheme=localStorage.getItem(THEME_KEY); if(/^(daylight|emerald|platinum)$/.test(storedTheme||"")) initialTheme=storedTheme; }catch(e){}
+  var initialTheme="platinum";
+  try{ var storedTheme=localStorage.getItem(THEME_KEY), themeChosen=localStorage.getItem("superday_theme_choice_v1"); if(/^(daylight|emerald|platinum)$/.test(storedTheme||"") && (storedTheme!=="daylight" || themeChosen==="1")) initialTheme=storedTheme; }catch(e){}
   applyTheme(initialTheme);
   (function(){
     var button=document.getElementById("themeBtn"); if(!button) return;
     button.addEventListener("click",function(){
       var current=document.documentElement.dataset.theme;
       var next=current==="daylight" ? "emerald" : current==="emerald" ? "platinum" : "daylight";
-      try{ localStorage.setItem(THEME_KEY,next); }catch(e){}
+      try{ localStorage.setItem(THEME_KEY,next); localStorage.setItem("superday_theme_choice_v1","1"); }catch(e){}
       applyTheme(next);
       if(typeof toast==="function") toast(next==="emerald" ? "Зелёная премиальная тема включена" : "Платиновая тема включена");
     });
@@ -3822,7 +3847,7 @@
       mapState.map.addLayer({id:"sd-buildings-3d",type:"fill-extrusion",source:"openmaptiles","source-layer":"building",minzoom:13,
         paint:{"fill-extrusion-color":daylight
           ? ["interpolate",["linear"],["get","render_height"],0,"#D8E2DC",35,"#BFD0C6",90,"#A9BEB2",180,"#D9B45A"]
-          : ["interpolate",["linear"],["get","render_height"],0,"#263849",35,"#3f8b83",90,"#a8b8c9",180,"#e4b85b"],
+          : ["interpolate",["linear"],["get","render_height"],0,"#101C2B",35,"#1B3145",90,"#314B61",180,"#C69D35"],
           "fill-extrusion-height":["coalesce",["get","render_height"],8],"fill-extrusion-base":["coalesce",["get","render_min_height"],0],
           "fill-extrusion-opacity":daylight?.76:.88,"fill-extrusion-vertical-gradient":true}},firstSymbol||undefined);
     }catch(e){ setMapStatus("3D-здания для этого участка пока отсутствуют в данных OpenStreetMap."); }
@@ -3832,18 +3857,18 @@
     var daylight=document.documentElement.dataset.theme==="daylight";
     (mapState.map.getStyle().layers||[]).forEach(function(layer){
       try{
-        if(layer.type==="background") mapState.map.setPaintProperty(layer.id,"background-color",daylight?"#17231E":"#07111c");
+        if(layer.type==="background") mapState.map.setPaintProperty(layer.id,"background-color",daylight?"#17231E":"#050B14");
         else if(layer.type==="raster") mapState.map.setPaintProperty(layer.id,"raster-opacity",.16);
         else if(layer.type==="fill"){
           var id=layer.id.toLowerCase(),color=daylight
             ? (id.indexOf("water")>=0?"#244B55":id.indexOf("park")>=0||id.indexOf("wood")>=0?"#294736":id.indexOf("building")>=0?"#45524C":"#23312B")
-            : (id.indexOf("water")>=0?"#0e4054":id.indexOf("park")>=0||id.indexOf("wood")>=0?"#17462f":id.indexOf("building")>=0?"#314052":"#152131");
+            : (id.indexOf("water")>=0?"#082C45":id.indexOf("park")>=0||id.indexOf("wood")>=0?"#123A30":id.indexOf("building")>=0?"#172A3B":"#0C1725");
           mapState.map.setPaintProperty(layer.id,"fill-color",color);
           if(mapState.map.getPaintProperty(layer.id,"fill-opacity")!==undefined) mapState.map.setPaintProperty(layer.id,"fill-opacity",id.indexOf("building")>=0?.72:.88);
         }else if(layer.type==="line"){
           var lineId=layer.id.toLowerCase(),lineColor=daylight
             ? (lineId.indexOf("water")>=0?"#3B7480":lineId.indexOf("casing")>=0?"#17221D":/motorway|trunk|primary/.test(lineId)?"#B99143":/secondary|tertiary/.test(lineId)?"#718279":"#53645B")
-            : (lineId.indexOf("water")>=0?"#2b7897":lineId.indexOf("casing")>=0?"#080d15":/motorway|trunk|primary/.test(lineId)?"#e1af54":/secondary|tertiary/.test(lineId)?"#8aa5b8":"#607487");
+            : (lineId.indexOf("water")>=0?"#236B93":lineId.indexOf("casing")>=0?"#060A11":/motorway|trunk|primary/.test(lineId)?"#D4AF37":/secondary|tertiary/.test(lineId)?"#7895AA":"#435B70");
           mapState.map.setPaintProperty(layer.id,"line-color",lineColor);
         }else if(layer.type==="symbol"){
           if(mapState.map.getPaintProperty(layer.id,"text-color")!==undefined) mapState.map.setPaintProperty(layer.id,"text-color",daylight?"#DCE7E1":"#dbe2ed");
@@ -3853,7 +3878,10 @@
     });
   }
   function makeMapMarker(t,i){
-    var el=document.createElement("button"); el.type="button"; el.className="mp-marker"; el.textContent=String(i+1);
+    var el=document.createElement("button"); el.type="button"; el.className="mp-marker";
+    var index=document.createElement("span"); index.className="mp-marker-index"; index.textContent=String(i+1);
+    var label=document.createElement("span"); label.className="mp-marker-label"; label.textContent=t.loc.addr||t.loc.label||t.text||"Остановка";
+    el.appendChild(index); el.appendChild(label);
     el.setAttribute("aria-label",(t.text||"Остановка")+", "+(t.loc.label||t.loc.addr||""));
     var marker=new maplibregl.Marker({element:el,anchor:"center"}).setLngLat([t.loc.lon,t.loc.lat]).addTo(mapState.map);
     el.addEventListener("click",function(e){
@@ -3889,7 +3917,8 @@
       if(renderSeq!==mapState.renderSeq) return;
       clearMapRouteLayer(); drawUserLoc(); var bounds=[];
       pts.forEach(function(t,i){
-        var icon=L.divIcon({className:"mp-marker-wrap",html:'<div class="mp-marker">'+(i+1)+'</div>',iconSize:[26,26],iconAnchor:[13,13]});
+        var markerLabel=String(t.loc.addr||t.loc.label||t.text||"Остановка").replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});
+        var icon=L.divIcon({className:"mp-marker-wrap",html:'<div class="mp-marker"><span class="mp-marker-index">'+(i+1)+'</span><span class="mp-marker-label">'+markerLabel+'</span></div>',iconSize:[210,32],iconAnchor:[16,16]});
         L.marker([t.loc.lat,t.loc.lon],{icon:icon}).addTo(mapState.fallbackLayer).bindPopup(mapPopup(t,i,"#E8B7B0"));
         bounds.push([t.loc.lat,t.loc.lon]);
       });
