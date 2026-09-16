@@ -1765,14 +1765,14 @@
     .stage-live{font-size:16px;max-width:310px}
     .stage-links{display:none}
     /* Morning prompts and the day verdict remain in data, but never cover the live map on phones. */
-    #rolloverBar,#dayArc,#timeCheck,#planSuggest{display:none!important}
-    .focus:not([hidden]){position:fixed;left:10px;right:10px;bottom:174px;z-index:29;margin:0;padding:9px 10px;
-      min-height:54px;display:grid;grid-template-columns:32px minmax(0,1fr) 42px;gap:8px;border-radius:14px;
-      background:rgba(221,233,227,.94);border:1px solid rgba(30,73,51,.22);box-shadow:0 14px 34px -22px rgba(9,34,20,.7)}
-    .focus .fx-ic{width:32px;height:32px;border-radius:9px}.focus .fx-eyebrow{font-size:9px;letter-spacing:.08em}
-    .focus .fx-task{font-size:13px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .focus .fx-meta{display:none}.focus .fx-focus{width:42px;height:38px;padding:0;font-size:0;border-radius:10px}
-    .focus .fx-focus .sdi{width:17px;height:17px}.focus .fx-done{display:none}
+    /* «Начни с этого» дублирует первую строку «Плана на день» — на телефоне это уже
+       две карточки поверх одной задачи, поэтому здесь показываем только план. */
+    #rolloverBar,#dayArc,#timeCheck,#planSuggest,.focus{display:none!important}
+    .stage-plan{touch-action:pan-x; transition:transform .22s ease, opacity .22s ease}
+    .stage-plan.sp-dragging{transition:none}
+    .stage-plan.sp-dismissed{display:none!important}
+    .sp-swipe-hint{display:block; text-align:center; font-size:10px; letter-spacing:.06em; color:rgba(235,226,204,.5);
+      margin-top:6px}
     .composer{width:calc(100% - 16px);padding:9px 9px calc(9px + env(safe-area-inset-bottom,0px));border-radius:18px 18px 0 0}
     .composer .row1{grid-template-columns:minmax(0,1fr) 44px 44px;gap:7px}
     .composer input[type=text]{min-height:44px}.composer .mic-btn,.composer .bulk-btn{width:44px;min-width:44px;height:44px;min-height:44px}
@@ -4999,7 +4999,11 @@
   function renderStagePlan(){
     var box=stageEl("stagePlan"); if(!box) return;
     var order=planOrder().filter(function(t){ return !t.done; });
-    if(!order.length){ box.hidden=true; box.innerHTML=""; return; }
+    if(!order.length){
+      box.hidden=true; box.innerHTML="";
+      var stalePill=document.getElementById("spReopen"); if(stalePill) stalePill.remove();
+      return;
+    }
     box.hidden=false; box.innerHTML="";
     var head=document.createElement("div"); head.className="sp-head";
     var title=document.createElement("span"); title.className="sp-title"; title.textContent="План на день";
@@ -5045,6 +5049,53 @@
       startInternalNavigation(stops);
     });
     box.appendChild(start);
+    if(window.matchMedia && window.matchMedia("(max-width:680px)").matches){
+      var hint=document.createElement("div"); hint.className="sp-swipe-hint"; hint.textContent="Свайп вниз, чтобы скрыть";
+      box.appendChild(hint);
+    }
+    box.classList.remove("sp-dismissed");
+    initStagePlanSwipe(box);
+  }
+
+  // Свайп вниз пальцем скрывает «План на день» на телефоне, открывая карту под ним.
+  function initStagePlanSwipe(box){
+    if(box.__swipeInit) return; box.__swipeInit=true;
+    var startY=0, dy=0, dragging=false;
+    box.addEventListener("touchstart", function(e){
+      if(!(window.matchMedia && window.matchMedia("(max-width:680px)").matches)) return;
+      startY=e.touches[0].clientY; dy=0; dragging=true; box.classList.add("sp-dragging");
+    }, {passive:true});
+    box.addEventListener("touchmove", function(e){
+      if(!dragging) return;
+      dy=Math.max(0, e.touches[0].clientY-startY);
+      box.style.transform="translateY("+dy+"px)"; box.style.opacity=String(Math.max(.25,1-dy/220));
+    }, {passive:true});
+    box.addEventListener("touchend", function(){
+      if(!dragging) return; dragging=false; box.classList.remove("sp-dragging");
+      if(dy>90){
+        box.style.transform="translateY(160px)"; box.style.opacity="0";
+        setTimeout(function(){ box.classList.add("sp-dismissed"); box.style.transform=""; box.style.opacity=""; showStagePlanReopen(); },200);
+      } else {
+        box.style.transform=""; box.style.opacity="";
+      }
+    });
+  }
+
+  function showStagePlanReopen(){
+    var pill=document.getElementById("spReopen");
+    if(!pill){
+      pill=document.createElement("button"); pill.type="button"; pill.id="spReopen";
+      pill.textContent="План на день";
+      pill.style.cssText="position:fixed;left:50%;transform:translateX(-50%);bottom:150px;z-index:29;"+
+        "padding:8px 16px;border-radius:20px;border:1px solid rgba(212,175,55,.5);"+
+        "background:rgba(8,15,27,.9);color:#E8CB71;font:600 12px var(--font-ui,sans-serif);"+
+        "box-shadow:0 10px 24px -14px rgba(0,0,0,.7)";
+      document.body.appendChild(pill);
+      pill.addEventListener("click", function(){
+        pill.remove();
+        var box=stageEl("stagePlan"); if(box) box.classList.remove("sp-dismissed");
+      });
+    }
   }
 
   // Спор двух точек зрения о приоритете спорного дела.
@@ -9264,7 +9315,7 @@
     // Самая опасная поломка этой волны — переезд секций в панель: узел уехал,
     // а скрипт продолжает искать его по id. Проверяем сам себя: вытаскиваем из
     // собственного текста все getElementById и убеждаемся, что они находятся.
-    var DYNAMIC={ unloadPanel:1 };                    // создаётся кодом на лету
+    var DYNAMIC={ unloadPanel:1, spReopen:1 };         // создаются кодом на лету
     var src="";
     try{
       var sc=document.querySelectorAll("script");
