@@ -10597,6 +10597,15 @@
       go=document.getElementById("activityGo"), steps=document.getElementById("activitySteps"),
       heart=document.getElementById("heartRate"), watch=document.getElementById("watchConnect"), support=document.getElementById("watchSupport");
     if(!stepCount || !locate || !go || !steps) return;
+    function nativePedometerCommand(type){
+      try{
+        if(window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage==="function"){
+          window.ReactNativeWebView.postMessage(JSON.stringify({type:type}));
+          return true;
+        }
+      }catch(e){}
+      return false;
+    }
     try{ var saved=JSON.parse(localStorage.getItem(ACTIVITY_KEY)||"null"); if(saved && saved.day===todayKey()) state.steps=Math.max(0,Math.round(+saved.steps||0)); }catch(e){}
     function saveActivity(){ try{ localStorage.setItem(ACTIVITY_KEY,JSON.stringify({day:todayKey(),steps:state.steps})); }catch(e){} }
     function showActivity(message){
@@ -10662,7 +10671,16 @@
     }
     locate.addEventListener("click",getLocationAndStart);
     go.addEventListener("click",function(){ if(validPoint(mapState.userLoc)) { var stops=(mapState.lastTasks||[]).filter(function(t){ return t && validPoint(t.loc); }); if(stops.length) startInternalNavigation(stops); else showActivity("Добавьте адрес к делу для маршрута"); } else getLocationAndStart(); });
-    steps.addEventListener("click",function(){ if(state.running) disableSteps(); else enableSteps(); }); watch.addEventListener("click",connectHeartRate);
+    window.__superdayNativePedometer=function(payload){
+      payload=payload||{};
+      if(typeof payload.steps==="number" && payload.steps>=0) state.steps=Math.round(payload.steps);
+      if(typeof payload.running==="boolean") state.running=payload.running;
+      showActivity(typeof payload.status==="string" ? payload.status : "");
+    };
+    steps.addEventListener("click",function(){
+      if(nativePedometerCommand(state.running?"superday-pedometer-stop":"superday-pedometer-start")) return;
+      if(state.running) disableSteps(); else enableSteps();
+    }); watch.addEventListener("click",connectHeartRate);
     showActivity();
   })();
 </script>
