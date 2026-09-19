@@ -57,7 +57,18 @@ jobs:
           # Пушим ровно текущую ветку, а НЕ --mirror: зеркальный push удалил бы
           # в Forgejo всё, чего нет здесь, включая ветки, заведённые на нашей
           # стороне. Источник истины — GitHub, но не тиран.
-          git push osgard "HEAD:refs/heads/${GITHUB_REF_NAME}"
+          # Публичный GitHub runner иногда не может кратко достучаться до SSH-порта.
+          # Повторяем только сетевую отправку: commit и ref остаются теми же.
+          attempt=1
+          until GIT_SSH_COMMAND='ssh -o ConnectTimeout=20 -o ConnectionAttempts=1' git push osgard "HEAD:refs/heads/${GITHUB_REF_NAME}"; do
+            if [ "$attempt" -ge 3 ]; then
+              echo "Не удалось доставить ветку после ${attempt} попыток" >&2
+              exit 1
+            fi
+            echo "Попытка ${attempt} не удалась; повтор через $((attempt * 10)) с" >&2
+            sleep $((attempt * 10))
+            attempt=$((attempt + 1))
+          done
           echo "доставлено: ${GITHUB_SHA} -> ${GITHUB_REF_NAME}"
 
       - name: Удаление ветки в Forgejo
