@@ -1969,7 +1969,7 @@
         <button class="activity-action" id="activityGo" type="button">В путь</button>
         <button class="activity-action" id="activitySteps" type="button">Включить шагомер</button>
       </div>
-      <div class="activity-health"><strong id="heartRate">Пульс: нет данных</strong><span id="watchSupport"> · подключите совместимый пульсометр</span> <button id="watchConnect" type="button">Подключить часы</button></div>
+      <div class="activity-health"><strong id="heartRate">Пульс: нет данных</strong><span id="watchSupport"> · подключите совместимый пульсометр</span> <button id="watchConnect" type="button">Подключить пульсометр</button></div>
     </section>
     <section class="route-brief" id="routeBrief" hidden aria-label="Маршрут к делам" aria-live="polite">
       <div class="rb-top">
@@ -10646,19 +10646,19 @@
     function connectHeartRate(){
       if(state.heartDevice && state.heartDevice.gatt && state.heartDevice.gatt.connected){ state.heartDevice.gatt.disconnect(); return; }
       function resetWatch(message){
-        state.heartRate=null; state.heartDevice=null; watch.disabled=false; watch.textContent="Подключить часы";
-        support.textContent=" · подключите совместимый пульсометр"; showActivity(message||"Часы отключены");
+        state.heartRate=null; state.heartDevice=null; watch.disabled=false; watch.textContent="Подключить пульсометр";
+        support.textContent=" · подключите совместимый пульсометр"; showActivity(message||"Пульсометр отключён");
       }
-      if(!navigator.bluetooth){ support.textContent=" · часы подключаются в Chrome на Android по Bluetooth"; return; }
+      if(!navigator.bluetooth){ support.textContent=" · пульсометр подключается в Chrome на Android по Bluetooth"; return; }
       watch.disabled=true; watch.textContent="Подключаем...";
       navigator.bluetooth.requestDevice({filters:[{services:["heart_rate"]}],optionalServices:["heart_rate"]}).then(function(device){
         state.heartDevice=device;
-        device.addEventListener("gattserverdisconnected",function(){ resetWatch("Часы отключены"); });
+        device.addEventListener("gattserverdisconnected",function(){ resetWatch("Пульсометр отключён"); });
         return device.gatt.connect();
       }).then(function(server){ return server.getPrimaryService("heart_rate"); }).then(function(service){ return service.getCharacteristic("heart_rate_measurement"); }).then(function(characteristic){
-        function onPulse(event){ var v=event.target.value, flags=v.getUint8(0), bpm=(flags&1)?v.getUint16(1,true):v.getUint8(1); if(bpm>0 && bpm<300){ state.heartRate=bpm; showActivity("Пульс с часов подключён"); } }
+        function onPulse(event){ var v=event.target.value, flags=v.getUint8(0), bpm=(flags&1)?v.getUint16(1,true):v.getUint8(1); if(bpm>0 && bpm<300){ state.heartRate=bpm; showActivity("Пульс с датчика подключён"); } }
         characteristic.addEventListener("characteristicvaluechanged",onPulse); return characteristic.startNotifications();
-      }).then(function(){ watch.textContent="Отключить часы"; watch.disabled=false; support.textContent=" · значения приходят с подключённого датчика"; }).catch(function(){ resetWatch("Не удалось подключить совместимый пульсометр"); });
+      }).then(function(){ watch.textContent="Отключить пульсометр"; watch.disabled=false; support.textContent=" · значения приходят с подключённого датчика"; }).catch(function(){ resetWatch("Не удалось подключить совместимый пульсометр"); });
     }
     locate.addEventListener("click",getLocationAndStart);
     go.addEventListener("click",function(){ if(validPoint(mapState.userLoc)) { var stops=(mapState.lastTasks||[]).filter(function(t){ return t && validPoint(t.loc); }); if(stops.length) startInternalNavigation(stops); else showActivity("Добавьте адрес к делу для маршрута"); } else getLocationAndStart(); });
