@@ -10762,6 +10762,7 @@
         if(!payload.running){
           state.nativeStepBase=null;
           state.nativeStepSession=null;
+          saveActivity();
         }
       }
       showActivity(typeof payload.status==="string" ? payload.status : "");

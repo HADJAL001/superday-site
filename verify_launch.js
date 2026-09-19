@@ -95,7 +95,7 @@ const SEED = () => {
       "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v102/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v103/.test(workerSource), "версия кэша service worker обновлена");
     say(/requested\.origin === self\.location\.origin/.test(workerSource) && /windows\[i\]\.navigate\(target\)\.catch/.test(workerSource),
       "push-уведомление открывает только безопасный маршрут внутри приложения");
     const referSource = fs.readFileSync(path.join(siteDir, "refer.js"), "utf8");
@@ -504,6 +504,13 @@ const SEED = () => {
       return document.getElementById("stepCount").textContent.replace(/\s/g, "");
     });
     say(restoredPedometer === "4235", "native pedometer retains its base through a WebView reload", restoredPedometer);
+    const stoppedPedometer = await page.evaluate(() => {
+      window.__superdayNativePedometer({ session: "native-test", running: false });
+      const saved = JSON.parse(localStorage.getItem("superday_activity_v1") || "null");
+      return { steps: saved && saved.steps, session: saved && saved.nativeStepSession, base: saved && saved.nativeStepBase };
+    });
+    say(!!stoppedPedometer && stoppedPedometer.steps === 4235 && stoppedPedometer.session === null && stoppedPedometer.base === null,
+      "stopped native pedometer clears its persisted session", JSON.stringify(stoppedPedometer));
     const effortLabels = await page.evaluate(() => Array.from(document.querySelectorAll(".txp")).map(el => el.textContent));
     say(effortLabels.every(label => !/\bXP\b/.test(label)),
       "task cards describe effort without game points", effortLabels.join(" | ") || "no open task cards");
