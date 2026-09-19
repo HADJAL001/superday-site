@@ -884,11 +884,20 @@ const SEED = () => {
   // ===== 6. Покрытие перевода: непереведённых строк не должно появиться =====
   for (const lang of ["en", "de", "zh"]) {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+    const openLanguage = async () => {
+      try {
+        await page.goto(BASE + "?lang=" + lang, { waitUntil: "domcontentloaded" });
+      } catch (err) {
+        // The selector can replace a transient language URL during initialization.
+        if (!/ERR_ABORTED/.test(String(err && err.message))) throw err;
+      }
+      await page.waitForFunction(() => document.readyState !== "loading" && typeof window.__i18ntest === "function", { timeout: 10000 });
+    };
     // Язык берётся из ?lang= — он читается раньше сохранённого выбора, а сам
     // выбор пишется в superday_lang_v1 (ключ подсмотрен в i18n.js, не угадан).
-    await page.goto(BASE + "?lang=" + lang, { waitUntil: "load" });
+    await openLanguage();
     await page.evaluate(SEED);
-    await page.goto(BASE + "?lang=" + lang, { waitUntil: "load" });
+    await openLanguage();
     await page.waitForTimeout(2000);
     const left = await page.evaluate(() => {
       if (typeof window.__i18ntest !== "function") return { err: "штатный аудит перевода недоступен" };
