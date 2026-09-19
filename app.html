@@ -1208,6 +1208,7 @@
   .activity-action.primary{background:#E8CB71;border-color:#E8CB71;color:#111827}.activity-action:disabled{opacity:.48;cursor:wait}
   .activity-health{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:var(--text-muted);line-height:1.4}
   .activity-health strong{color:var(--text);font-weight:700}.activity-health button{padding:0;border:0;background:none;color:#E8CB71;font:600 11px var(--font-ui,sans-serif);cursor:pointer}
+  .activity-expand{display:none}
   body.nav-active .activity-dock{bottom:18px}
   /* Input capabilities choose the layout: desktop pointer gets a map-side tool,
      touch devices keep it above the thumb-reachable composer. */
@@ -1218,9 +1219,21 @@
     .stage-links{display:none}
   }
   @media(max-width:680px), (hover:none) and (pointer:coarse){
-    .activity-dock{left:12px;bottom:178px;width:calc(100vw - 24px)}
+    .activity-dock{left:8px;bottom:calc(var(--composer-height,178px) + 12px);width:calc(100vw - 16px);padding:10px;max-height:min(54svh,440px);overflow:auto}
     body.nav-active .activity-dock{bottom:12px}
     .stage-links{display:none}
+    .activity-top{min-height:28px}
+    .activity-title{font-size:13px}
+    .activity-status{font-size:10px}
+    .activity-expand{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:32px;height:32px;padding:0;border:1px solid var(--hair);border-radius:6px;background:rgba(255,255,255,.04);color:var(--gold-bright);cursor:pointer}
+    .activity-expand .sdi{width:17px;height:17px;transition:transform .16s ease}
+    .activity-dock:not(.is-collapsed) .activity-expand .sdi{transform:rotate(180deg)}
+    .activity-progress{margin:7px 0}
+    .activity-values{margin-bottom:8px}.activity-values b{font-size:20px}.activity-values span{font-size:10px}
+    .activity-actions{display:grid;grid-template-columns:minmax(0,1fr) 76px;gap:7px}
+    .activity-action{min-height:42px;padding:0 9px;font-size:11px;white-space:normal;line-height:1.2}
+    .activity-action.primary{min-width:0}
+    .activity-dock.is-collapsed #activitySteps,.activity-dock.is-collapsed .activity-health{display:none}
   }
   .city-panel{position:fixed; top:max(68px,calc(env(safe-area-inset-top) + 60px)); right:12px; z-index:520; width:min(380px,calc(100vw - 24px)); padding:16px; border:1px solid transparent; border-radius:8px;
     background:var(--glass-deep) padding-box,var(--edge-strong) border-box; box-shadow:var(--shadow-lux),var(--inner-light);
@@ -1852,7 +1865,7 @@
   .map-tool .sdi{width:19px; height:19px; color:#E8CB71; stroke-width:1.7; flex:0 0 auto}
   .map-tool .map-tool-label{display:none}.map-tool:hover{width:auto; padding:0 12px; color:#F7F3E7}.map-tool:hover .map-tool-label{display:inline;margin-left:4px}
   @media(max-width:680px){
-    .stage{min-height:calc(100svh - 56px); padding:18px 0 150px; justify-content:flex-end}
+    .stage{min-height:calc(100svh - 56px); padding:18px 0 calc(var(--composer-height,154px) + var(--activity-dock-height,150px) + 24px); justify-content:flex-end}
     .stage-plan{max-height:min(44svh,380px)}
     .map-tool{background:rgba(5,10,18,.78); color:transparent}
   }
@@ -1961,7 +1974,7 @@
     <div class="stage-say" id="stageSay">СКАЖИТЕ ДЕЛА — ИИ ПОКАЖЕТ ИХ НА КАРТЕ И СОБЕРЁТ ПЛАН ДНЯ</div>
     <div class="stage-live" id="stageLive" aria-live="polite"></div>
     <section class="activity-dock" id="activityDock" aria-label="Активность и маршрут">
-      <div class="activity-top"><div class="activity-title">Движение сегодня</div><div class="activity-status" id="activityStatus">Готово к прогулке</div></div>
+      <div class="activity-top"><div class="activity-title">Движение сегодня</div><div class="activity-status" id="activityStatus">Готово к прогулке</div><button class="activity-expand" id="activityExpand" type="button" title="Показать шагомер и пульс" aria-label="Показать шагомер и пульс" aria-controls="activityDock" aria-expanded="true"><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg></button></div>
       <div class="activity-progress" aria-hidden="true"><b id="activityProgress"></b></div>
       <div class="activity-values"><b id="stepCount">0</b><span id="stepGoal">из 8 000 шагов</span></div>
       <div class="activity-actions">
@@ -10595,8 +10608,33 @@
     var stepCount=document.getElementById("stepCount"), progress=document.getElementById("activityProgress"),
       status=document.getElementById("activityStatus"), locate=document.getElementById("activityLocate"),
       go=document.getElementById("activityGo"), steps=document.getElementById("activitySteps"),
-      heart=document.getElementById("heartRate"), watch=document.getElementById("watchConnect"), support=document.getElementById("watchSupport");
+      heart=document.getElementById("heartRate"), watch=document.getElementById("watchConnect"), support=document.getElementById("watchSupport"),
+      dock=document.getElementById("activityDock"), expand=document.getElementById("activityExpand");
     if(!stepCount || !locate || !go || !steps) return;
+    var wasCompact=false;
+    function syncActivityDock(){
+      if(!dock || !expand) return;
+      var compact=window.matchMedia && window.matchMedia("(max-width:680px)").matches;
+      var composer=document.getElementById("composer");
+      if(!compact){ wasCompact=false; document.documentElement.style.removeProperty("--composer-height"); document.documentElement.style.removeProperty("--activity-dock-height"); dock.classList.remove("is-collapsed"); expand.setAttribute("aria-expanded","true"); return; }
+      if(!wasCompact) dock.classList.add("is-collapsed");
+      wasCompact=true;
+      if(composer) document.documentElement.style.setProperty("--composer-height",Math.ceil(composer.getBoundingClientRect().height)+"px");
+      var collapsed=dock.classList.contains("is-collapsed");
+      expand.setAttribute("aria-expanded",collapsed?"false":"true");
+      expand.title=collapsed?"Показать шагомер и пульс":"Скрыть шагомер и пульс";
+      expand.setAttribute("aria-label",expand.title);
+      document.documentElement.style.setProperty("--activity-dock-height",Math.ceil(dock.getBoundingClientRect().height)+"px");
+    }
+    if(dock && expand){
+      syncActivityDock();
+      expand.addEventListener("click",function(){ dock.classList.toggle("is-collapsed"); syncActivityDock(); });
+      window.addEventListener("resize",syncActivityDock,{passive:true});
+      if(window.ResizeObserver){
+        var composer=document.getElementById("composer");
+        if(composer) new ResizeObserver(syncActivityDock).observe(composer);
+      }
+    }
     function nativeActivityCommand(type){
       try{
         if(window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage==="function"){

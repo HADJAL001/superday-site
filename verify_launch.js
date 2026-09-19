@@ -95,7 +95,7 @@ const SEED = () => {
       "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v87/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v90/.test(workerSource), "версия кэша service worker обновлена");
     say(!/google\.com\/maps/i.test(appSource), "основной сценарий не содержит ссылок на внешний навигатор");
     say(/отправлен(?:о)? на модерацию в RuStore|отправлено в RuStore/.test(landingSource) &&
       /НА МОДЕРАЦИИ/.test(landingSource), "лендинг показывает актуальный статус публикации в RuStore");
@@ -455,6 +455,29 @@ const SEED = () => {
     }
     await page.setViewportSize({ width: 430, height: 900 });
     await page.waitForTimeout(400);
+    const mobileActivity = await page.evaluate(() => {
+      const dock = document.getElementById("activityDock"), composer = document.getElementById("composer"), plan = document.getElementById("stagePlan");
+      const d = dock.getBoundingClientRect(), c = composer.getBoundingClientRect(), p = plan.getBoundingClientRect();
+      return {
+        compact: dock.classList.contains("is-collapsed"), locationVisible: getComputedStyle(document.getElementById("activityLocate")).display !== "none",
+        dockBottom: Math.round(d.bottom), composerTop: Math.round(c.top), planBottom: Math.round(p.bottom), dockTop: Math.round(d.top),
+        planVisible: !plan.hidden && p.height > 0, overflow: document.documentElement.scrollWidth > innerWidth
+      };
+    });
+    say(mobileActivity.compact && mobileActivity.locationVisible && mobileActivity.dockBottom < mobileActivity.composerTop &&
+      (!mobileActivity.planVisible || mobileActivity.planBottom < mobileActivity.dockTop) && !mobileActivity.overflow,
+      "mobile activity dock is compact and does not cover the plan or composer", JSON.stringify(mobileActivity));
+    await page.click("#activityExpand");
+    await page.waitForTimeout(100);
+    const expandedActivity = await page.evaluate(() => ({
+      expanded: document.getElementById("activityExpand").getAttribute("aria-expanded") === "true",
+      stepsVisible: getComputedStyle(document.getElementById("activitySteps")).display !== "none",
+      healthVisible: getComputedStyle(document.querySelector(".activity-health")).display !== "none"
+    }));
+    say(expandedActivity.expanded && expandedActivity.stepsVisible && expandedActivity.healthVisible,
+      "mobile activity dock expands to step counter and heart rate controls", JSON.stringify(expandedActivity));
+    await page.click("#activityExpand");
+    await page.waitForTimeout(60);
     await page.screenshot({ path: artifact("shot-mobile.png"), fullPage: false });
 
     // Обрезка приглашения на узком экране: если текст не влезает, это видно замером.

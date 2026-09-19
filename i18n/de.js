@@ -34,6 +34,8 @@ window.__i18nDict("de", {
     "из 8 000 шагов": "von 8.000 Schritten",
     "Определить моё местоположение": "Meinen Standort finden",
     "В путь": "Route starten",
+    "Показать шагомер и пульс": "Schrittzaehler und Puls anzeigen",
+    "Скрыть шагомер и пульс": "Schrittzaehler und Puls ausblenden",
     "Включить шагомер": "Schrittzaehler aktivieren",
     "Остановить шагомер": "Schrittzaehler stoppen",
     "Шагомер включён": "Schrittzaehler aktiviert",

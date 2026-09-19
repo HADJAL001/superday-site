@@ -34,6 +34,8 @@ window.__i18nDict("fr", {
     "из 8 000 шагов": "sur 8 000 pas",
     "Определить моё местоположение": "Trouver ma position",
     "В путь": "Demarrer l'itineraire",
+    "Показать шагомер и пульс": "Afficher le compteur de pas et la frequence cardiaque",
+    "Скрыть шагомер и пульс": "Masquer le compteur de pas et la frequence cardiaque",
     "Включить шагомер": "Activer le compteur de pas",
     "Остановить шагомер": "Arreter le compteur de pas",
     "Шагомер включён": "Compteur de pas active",

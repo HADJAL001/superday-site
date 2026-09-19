@@ -38,6 +38,8 @@ window.__i18nDict("en", {
     "из 8 000 шагов": "of 8,000 steps",
     "Определить моё местоположение": "Find my location",
     "В путь": "Start route",
+    "Показать шагомер и пульс": "Show step counter and heart rate",
+    "Скрыть шагомер и пульс": "Hide step counter and heart rate",
     "Включить шагомер": "Enable step counter",
     "Остановить шагомер": "Stop step counter",
     "Шагомер включён": "Step counter enabled",
