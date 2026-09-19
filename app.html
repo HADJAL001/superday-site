@@ -2995,6 +2995,10 @@
   // отдельная ветка с обязательным предлогом: распознаватели часто возвращают
   // адрес строчными буквами ("на тверской 1").
   var PLACE_RE_EXPLICIT = /(?:^|[\s,;])по\s+адресу\s+(.+?)(?=\s+(?:и\s+потом|затем|после\s+этого)(?:\s|$)|$|[;!?])/i;
+  // «В Москве, улица Ленина 1» нельзя сокращать до «Ленина 1»: одинаковые
+  // улицы есть в тысячах городов, а геокодер тогда честно, но неверно выберет
+  // ближайший результат. Полный городской адрес разбираем раньше короткого.
+  var PLACE_RE_CITY_STREET = /(?:^|[\s,;])(?:в|на|у|около|возле)\s+([а-яёa-z][\wа-яёa-z-]*(?:\s+[а-яёa-z][\wа-яёa-z-]*){0,2})\s*,\s*((?:(?:ул(?:ица)?|пр(?:оспект)?|пер(?:еулок)?|пл(?:ощадь)?|ш(?:оссе)?)\.?\s+)?[а-яёa-z][\wа-яёa-z-]*(?:\s+[а-яёa-z][\wа-яёa-z-]*){0,3}\s+\d{1,4}[а-яa-z]?)(?=$|[\s.;!?])/i;
   var PLACE_RE_HOUSE = /(?:^|[\s,;])(?:(в|на|у|около|возле)\s+)?([A-ZА-ЯЁ][\wа-яёA-Za-z-]*(?:\s+[A-ZА-ЯЁ][\wа-яёA-Za-z-]*){0,2})\s+(\d{1,4}[а-яa-z]?)(?=$|[\s,.;!?])/;
   var PLACE_RE_HOUSE_SPOKEN = /(?:^|[\s,;])(?:по\s+адресу|в|на|у|около|возле)\s+([а-яёa-z][\wа-яёa-z-]*(?:\s+[а-яёa-z][\wа-яёa-z-]*){0,2})\s+(\d{1,4}[а-яa-z]?)(?=$|[\s,.;!?])/i;
   var PLACE_RE_PREP = /(?:^|[\s,;])(?:в|на|у|около|возле)\s+((?:[A-ZА-ЯЁ][\wа-яёA-Za-z-]*\s*){1,3}(?:,\s*[A-ZА-ЯЁ][\wа-яёA-Za-z-]*)?)/;
@@ -3019,6 +3023,12 @@
           .replace(/[\s,;:-]+$/g,"").replace(/\s+/g," ").trim();
         return { text:cleanExplicit || s, place:explicitPlace, spokenPlace:explicitPlace };
       }
+    }
+    var mc = s.match(PLACE_RE_CITY_STREET);
+    if(mc){
+      var cityPlace=(mc[1]+", "+mc[2]).replace(/\s+/g," ").trim();
+      var cleanCity=(s.slice(0,mc.index)+" "+s.slice(mc.index+mc[0].length)).replace(/\s+/g," ").trim();
+      return { text:cleanCity || s, place:cityPlace, spokenPlace:cityPlace };
     }
     var mh = s.match(PLACE_RE_HOUSE);
     if(mh && (mh[1] || mh.index>0)){
@@ -8836,6 +8846,10 @@
       var r = parsePlacePhrase("Завтра встреча с клиентом по адресу Москва, Тверская улица, 1");
       return r.place==="Москва, Тверская улица, 1" && r.text==="Завтра встреча с клиентом" &&
         taskPlaceLabel(r.place)==="Тверская улица, 1";
+    });
+    T("parsePlacePhrase: город сохраняется в адресе без слов «по адресу»", function(){
+      var r = parsePlacePhrase("Встреча в Москве, улица Ленина 1");
+      return r.place==="Москве, улица Ленина 1" && r.text==="Встреча";
     });
     T("parsePlacePhrase: «съездить в Meridian Mall» → место «Meridian Mall»", function(){
       var r = parsePlacePhrase("съездить в Meridian Mall");
