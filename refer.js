@@ -24,8 +24,6 @@
   var INVITED_BY_KEY = "superday_invited_by_v1";
   var GIFT_HOST_KEY = "superday_gift_host_v1";   // подарок приглашающему выдан
   var GIFT_GUEST_KEY = "superday_gift_guest_v1"; // подарок приглашённому выдан
-  var FRIENDS_KEY = "superday_friends_v1";  // принятые коды благодарности
-  var SALT_KEY = "superday_ref_salt_v1";    // своя соль как приглашённого
   var ALPH = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";  // без похожих символов
 
   function lang() {
@@ -43,12 +41,12 @@
     title: { ru: "Друзья и подарки", en: "Friends and gifts", es: "Amigos y regalos",
       de: "Freunde und Geschenke", fr: "Amis et cadeaux", zh: "朋友与礼物" },
     lead: {
-      ru: "Позови того, кто тонет в делах. Он получит подарок сразу, ты — сразу за приглашение.",
-      en: "Invite someone drowning in tasks. They get a gift right away, and so do you — for inviting.",
-      es: "Invita a quien se ahoga en tareas. Recibe un regalo al instante, y tú también, por invitar.",
-      de: "Lad jemanden ein, der in Aufgaben versinkt. Er bekommt sofort ein Geschenk — und du auch, fürs Einladen.",
-      fr: "Invite quelqu'un qui se noie dans ses tâches. Il reçoit un cadeau tout de suite, et toi aussi, pour l'invitation.",
-      zh: "邀请那个被事情淹没的人。他会立刻收到礼物，你也一样——因为你发出了邀请。"
+      ru: "Поделись ссылкой с тем, кому нужен более спокойный день. Подарки-шаблоны приходят сразу по ссылке.",
+      en: "Share a link with someone who needs a calmer day. Gift templates arrive right through the link.",
+      es: "Comparte el enlace con alguien que necesita un día más tranquilo. Las plantillas regalo llegan con el enlace.",
+      de: "Teile den Link mit jemandem, der einen ruhigeren Tag braucht. Geschenkvorlagen kommen direkt über den Link.",
+      fr: "Partage le lien avec quelqu'un qui a besoin d'une journée plus calme. Les modèles-cadeaux arrivent par le lien.",
+      zh: "把链接分享给需要更平静一天的人。礼物模板会通过链接直接送达。"
     },
     share: { ru: "Позвать друга", en: "Invite a friend", es: "Invitar a un amigo",
       de: "Freund einladen", fr: "Inviter un ami", zh: "邀请朋友" },
@@ -176,40 +174,6 @@
     if (!c) { c = randCode(6); write(REF_KEY, c); }
     return c;
   }
-  // Короткий детерминированный отпечаток (не криптография — защита от опечаток,
-  // а не от подделки; про это честно написано в интерфейсе).
-  function fingerprint(str) {
-    var h1 = 0x811c9dc5, h2 = 0x1000193;
-    for (var i = 0; i < str.length; i++) {
-      h1 ^= str.charCodeAt(i); h1 = (h1 * 0x01000193) >>> 0;
-      h2 = ((h2 << 5) - h2 + str.charCodeAt(i)) >>> 0;
-    }
-    var mix = (h1 ^ h2) >>> 0, out = "";
-    for (var k = 0; k < 4; k++) { out += ALPH[mix % ALPH.length]; mix = Math.floor(mix / ALPH.length) + 7; }
-    return out;
-  }
-  // Код благодарности = соль(3) + отпечаток(4). Соль своя у каждого приглашённого,
-  // поэтому друг с той же ссылкой даёт другу другой код, а повтор отсекается.
-  function makeThanks(hostCode) {
-    var salt = read(SALT_KEY, "");
-    if (!salt) { salt = randCode(3); write(SALT_KEY, salt); }
-    return salt + fingerprint(hostCode + ":" + salt);
-  }
-  function checkThanks(code, hostCode) {
-    code = String(code || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-    if (code.length !== 7) return false;
-    return fingerprint(hostCode + ":" + code.slice(0, 3)) === code.slice(3);
-  }
-  function friends() {
-    try { return JSON.parse(read(FRIENDS_KEY, "[]")) || []; } catch (e) { return []; }
-  }
-  function addFriend(code) {
-    var list = friends();
-    if (list.indexOf(code) >= 0) return false;
-    list.push(code); write(FRIENDS_KEY, JSON.stringify(list));
-    return true;
-  }
-
   function inviteLink() {
     return "https://superday.run/?ref=" + myCode();
   }
@@ -334,8 +298,7 @@
       '<span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true">▶</span>';
     head.querySelector(".pg-title").textContent = pick(T.title);
     var noteEl = head.querySelector(".pg-note");
-    function paintCount() { noteEl.textContent = friends().length ? (pick(T.friends) + ": " + friends().length) : ""; }
-    paintCount();
+    noteEl.textContent = "";
 
     var inner = document.createElement("div");
     inner.className = "pg-body";
@@ -371,24 +334,6 @@
     });
     inner.appendChild(shareBtn);
 
-    // Ввод кода благодарности
-    var row = document.createElement("div");
-    row.className = "refer-row";
-    var input = document.createElement("input");
-    input.type = "text"; input.className = "refer-input"; input.maxLength = 9;
-    input.placeholder = pick(T.enterCode);
-    input.setAttribute("aria-label", pick(T.enterCode));
-    var apply = document.createElement("button");
-    apply.type = "button"; apply.className = "refer-btn refer-btn-ghost"; apply.textContent = pick(T.apply);
-    apply.addEventListener("click", function () {
-      var code = String(input.value || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-      if (!checkThanks(code, myCode())) { note(pick(T.badCode)); return; }
-      if (!addFriend(code)) { note(pick(T.usedCode)); return; }
-      input.value = ""; paintCount(); note(pick(T.okCode));
-    });
-    row.appendChild(input); row.appendChild(apply);
-    inner.appendChild(row);
-
     // Поделиться днём по ссылке
     var dayBtn = document.createElement("button");
     dayBtn.type = "button"; dayBtn.className = "refer-btn refer-btn-ghost";
@@ -408,19 +353,6 @@
     dayNote.className = "refer-fine";
     dayNote.textContent = pick(T.shareDayNote);
     inner.appendChild(dayNote);
-
-    // Если сам пришёл по ссылке — можно поблагодарить друга кодом.
-    var host = read(INVITED_BY_KEY, "");
-    if (host) {
-      var thanks = document.createElement("button");
-      thanks.type = "button"; thanks.className = "refer-btn refer-btn-ghost";
-      thanks.textContent = pick(T.thanksBtn);
-      thanks.addEventListener("click", function () {
-        var code = makeThanks(host);
-        copy(code, function () { note(pick(T.thanksMade) + " " + code); });
-      });
-      inner.appendChild(thanks);
-    }
 
     head.addEventListener("click", function () {
       var open = sec.classList.toggle("open");
@@ -503,8 +435,7 @@
     // перезагрузки не будет, поэтому слушаем и это.
     window.addEventListener("hashchange", catchPlan);
     window.__referLayer = {
-      code: myCode, link: inviteLink, friends: friends,
-      makeThanks: makeThanks, checkThanks: checkThanks,
+      code: myCode, link: inviteLink,
       encodePlan: encodePlan, decodePlan: decodePlan, importPlan: importPlan
     };
   }
