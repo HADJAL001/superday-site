@@ -95,7 +95,7 @@ const SEED = () => {
       "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v100/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v101/.test(workerSource), "версия кэша service worker обновлена");
     say(/requested\.origin === self\.location\.origin/.test(workerSource) && /windows\[i\]\.navigate\(target\)\.catch/.test(workerSource),
       "push-уведомление открывает только безопасный маршрут внутри приложения");
     const referSource = fs.readFileSync(path.join(siteDir, "refer.js"), "utf8");
@@ -484,21 +484,23 @@ const SEED = () => {
     const nativePedometerPersistence = await page.evaluate(() => {
       window.__superdayNativePedometer({ steps: 4217, running: true });
       window.__superdayNativePedometer({ steps: Infinity, running: true });
+      window.__superdayNativePedometer({ steps: 0, incremental: true, running: true });
+      window.__superdayNativePedometer({ steps: 15, incremental: true, running: true });
       try {
         const saved = JSON.parse(localStorage.getItem("superday_activity_v1") || "null");
         return { rendered: document.getElementById("stepCount").textContent, saved: saved && saved.steps, day: saved && saved.day };
       } catch (_) { return null; }
     });
-    say(!!nativePedometerPersistence && nativePedometerPersistence.rendered.replace(/\s/g, "") === "4217" &&
-      nativePedometerPersistence.saved === 4217 && !!nativePedometerPersistence.day,
-      "native pedometer readings persist for the current day and reject invalid values", JSON.stringify(nativePedometerPersistence));
+    say(!!nativePedometerPersistence && nativePedometerPersistence.rendered.replace(/\s/g, "") === "4232" &&
+      nativePedometerPersistence.saved === 4232 && !!nativePedometerPersistence.day,
+      "native pedometer preserves daily steps and rejects invalid values", JSON.stringify(nativePedometerPersistence));
     const source = await fs.promises.readFile(path.join(__dirname, "app.html"), "utf8");
     say(/if\(!v \|\| v\.byteLength<2\) return;/.test(source) && /if\(\(flags&1\) && v\.byteLength<3\) return;/.test(source),
       "heart-rate listener ignores truncated Bluetooth packets");
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForTimeout(120);
     const restoredPedometer = await page.evaluate(() => document.getElementById("stepCount").textContent.replace(/\s/g, ""));
-    say(restoredPedometer === "4217", "native pedometer reading survives a page reload", restoredPedometer);
+    say(restoredPedometer === "4232", "native pedometer reading survives a page reload", restoredPedometer);
     const effortLabels = await page.evaluate(() => Array.from(document.querySelectorAll(".txp")).map(el => el.textContent));
     say(effortLabels.every(label => !/\bXP\b/.test(label)),
       "task cards describe effort without game points", effortLabels.join(" | ") || "no open task cards");

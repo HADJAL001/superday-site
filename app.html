@@ -10603,7 +10603,7 @@
   // доступа к системной истории шагов, поэтому старые шаги не выдумываются.
   (function initActivityDock(){
     var ACTIVITY_KEY="superday_activity_v1", GOAL=8000;
-    var state={steps:0, day:"", running:false, lastPeak:0, lastMagnitude:0, heartRate:null, heartDevice:null, nativeHeart:false};
+    var state={steps:0, day:"", running:false, lastPeak:0, lastMagnitude:0, nativeStepBase:null, heartRate:null, heartDevice:null, nativeHeart:false};
     var stepCount=document.getElementById("stepCount"), progress=document.getElementById("activityProgress"),
       status=document.getElementById("activityStatus"), locate=document.getElementById("activityLocate"),
       go=document.getElementById("activityGo"), steps=document.getElementById("activitySteps"),
@@ -10730,12 +10730,19 @@
     window.__superdayNativePedometer=function(payload){
       payload=payload||{};
       if(typeof payload.steps==="number" && isFinite(payload.steps) && payload.steps>=0){
-        state.steps=Math.round(payload.steps);
-        // Native bridges report the phone's accumulated daily count. Persist it too,
-        // otherwise a reload discards an already received measurement.
+        // Expo Pedometer reports steps since the active subscription began.
+        // Preserve the already accumulated daily total when native tracking starts.
+        if(payload.incremental===true){
+          if(state.nativeStepBase===null) state.nativeStepBase=state.steps;
+          state.steps=state.nativeStepBase+Math.round(payload.steps);
+        } else state.steps=Math.round(payload.steps);
+        // Persist every native reading so a reload keeps the current daily total.
         saveActivity();
       }
-      if(typeof payload.running==="boolean") state.running=payload.running;
+      if(typeof payload.running==="boolean"){
+        state.running=payload.running;
+        if(!payload.running) state.nativeStepBase=null;
+      }
       showActivity(typeof payload.status==="string" ? payload.status : "");
     };
     window.__superdayNativeHeartRate=function(payload){
