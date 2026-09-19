@@ -2,7 +2,7 @@
    Стратегия: навигации — network-first с офлайн-фолбэком на кэш главной;
    статика (иконки, манифест, шрифты) — cache-first. Версия в имени кэша —
    меняй CACHE при обновлении, чтобы старый кэш очистился. */
-var CACHE = "superday-v94";
+var CACHE = "superday-v95";
 var SHELL = [
   "/",
   "/index.html",
@@ -59,18 +59,30 @@ self.addEventListener("push", function (e) {
   try { payload = e.data ? e.data.json() : {}; } catch (_) {}
   var title = typeof payload.title === "string" ? payload.title.slice(0, 120) : "SUPER DAY";
   var body = typeof payload.body === "string" ? payload.body.slice(0, 500) : "У вас новое напоминание";
+  var target = "/app.html";
+  try {
+    var requested = new URL(String(payload.url || target), self.location.origin);
+    if (requested.origin === self.location.origin) target = requested.pathname + requested.search + requested.hash;
+  } catch (_) {}
   e.waitUntil(self.registration.showNotification(title, {
     body: body, icon: "/assets/icon-192.png", badge: "/assets/icon-192.png",
     tag: typeof payload.tag === "string" ? payload.tag.slice(0, 100) : "superday-notification",
-    data: { url: "/app.html" }
+    data: { url: target }
   }));
 });
 
 self.addEventListener("notificationclick", function (e) {
   e.notification.close();
+  var target = "/app.html";
+  try {
+    var requested = new URL(String(e.notification.data && e.notification.data.url || target), self.location.origin);
+    if (requested.origin === self.location.origin) target = requested.pathname + requested.search + requested.hash;
+  } catch (_) {}
   e.waitUntil(clients.matchAll({type:"window",includeUncontrolled:true}).then(function(windows){
-    for(var i=0;i<windows.length;i++) if(new URL(windows[i].url).origin===self.location.origin) return windows[i].focus();
-    return clients.openWindow("/app.html");
+    for(var i=0;i<windows.length;i++) if(new URL(windows[i].url).origin===self.location.origin){
+      return windows[i].navigate(target).then(function(client){ return (client || windows[i]).focus(); });
+    }
+    return clients.openWindow(target);
   }));
 });
 
