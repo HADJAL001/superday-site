@@ -10643,7 +10643,10 @@
       }catch(e){}
       return false;
     }
-    try{ var saved=JSON.parse(localStorage.getItem(ACTIVITY_KEY)||"null"); if(saved && saved.day===todayKey()) state.steps=Math.max(0,Math.round(+saved.steps||0)); }catch(e){}
+    try{
+      var saved=JSON.parse(localStorage.getItem(ACTIVITY_KEY)||"null"), savedSteps=saved && +saved.steps;
+      if(saved && saved.day===todayKey() && isFinite(savedSteps) && savedSteps>=0) state.steps=Math.round(savedSteps);
+    }catch(e){}
     function saveActivity(){ try{ localStorage.setItem(ACTIVITY_KEY,JSON.stringify({day:todayKey(),steps:state.steps})); }catch(e){} }
     function showActivity(message){
       stepCount.textContent=state.steps.toLocaleString("ru-RU");
@@ -10717,7 +10720,7 @@
     go.addEventListener("click",function(){ if(validPoint(mapState.userLoc)) { var stops=(mapState.lastTasks||[]).filter(function(t){ return t && validPoint(t.loc); }); if(stops.length) startInternalNavigation(stops); else showActivity("Добавьте адрес к делу для маршрута"); } else getLocationAndStart(); });
     window.__superdayNativePedometer=function(payload){
       payload=payload||{};
-      if(typeof payload.steps==="number" && payload.steps>=0){
+      if(typeof payload.steps==="number" && isFinite(payload.steps) && payload.steps>=0){
         state.steps=Math.round(payload.steps);
         // Native bridges report the phone's accumulated daily count. Persist it too,
         // otherwise a reload discards an already received measurement.
