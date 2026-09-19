@@ -10603,7 +10603,7 @@
   // доступа к системной истории шагов, поэтому старые шаги не выдумываются.
   (function initActivityDock(){
     var ACTIVITY_KEY="superday_activity_v1", GOAL=8000;
-    var state={steps:0, day:"", running:false, lastPeak:0, lastMagnitude:0, nativeStepBase:null, heartRate:null, heartDevice:null, nativeHeart:false};
+    var state={steps:0, day:"", running:false, lastPeak:0, lastMagnitude:0, nativeStepBase:null, nativeStepSession:null, heartRate:null, heartDevice:null, nativeHeart:false};
     var stepCount=document.getElementById("stepCount"), progress=document.getElementById("activityProgress"),
       status=document.getElementById("activityStatus"), locate=document.getElementById("activityLocate"),
       go=document.getElementById("activityGo"), steps=document.getElementById("activitySteps"),
@@ -10645,9 +10645,18 @@
     }
     try{
       var saved=JSON.parse(localStorage.getItem(ACTIVITY_KEY)||"null"), savedSteps=saved && +saved.steps;
-      if(saved && saved.day===todayKey() && isFinite(savedSteps) && savedSteps>=0) state.steps=Math.round(savedSteps);
+      if(saved && saved.day===todayKey() && isFinite(savedSteps) && savedSteps>=0){
+        state.steps=Math.round(savedSteps);
+        if(typeof saved.nativeStepSession==="string" && saved.nativeStepSession){
+          var savedBase=+saved.nativeStepBase;
+          if(isFinite(savedBase) && savedBase>=0){
+            state.nativeStepSession=saved.nativeStepSession;
+            state.nativeStepBase=Math.round(savedBase);
+          }
+        }
+      }
     }catch(e){}
-    function saveActivity(){ try{ localStorage.setItem(ACTIVITY_KEY,JSON.stringify({day:todayKey(),steps:state.steps})); }catch(e){} }
+    function saveActivity(){ try{ localStorage.setItem(ACTIVITY_KEY,JSON.stringify({day:todayKey(),steps:state.steps,nativeStepSession:state.nativeStepSession,nativeStepBase:state.nativeStepBase})); }catch(e){} }
     function showActivity(message){
       stepCount.textContent=state.steps.toLocaleString("ru-RU");
       progress.style.width=Math.min(100,state.steps/GOAL*100)+"%";
@@ -10731,17 +10740,29 @@
       payload=payload||{};
       if(typeof payload.steps==="number" && isFinite(payload.steps) && payload.steps>=0){
         // Expo Pedometer reports steps since the active subscription began.
-        // Preserve the already accumulated daily total when native tracking starts.
+        // Preserve the daily total, including when a WebView reload reconnects
+        // to the same active native subscription.
         if(payload.incremental===true){
-          if(state.nativeStepBase===null) state.nativeStepBase=state.steps;
+          var session=typeof payload.session==="string" && payload.session ? payload.session : null;
+          if(session && session!==state.nativeStepSession){
+            state.nativeStepSession=session;
+            state.nativeStepBase=state.steps;
+          } else if(state.nativeStepBase===null) state.nativeStepBase=state.steps;
           state.steps=state.nativeStepBase+Math.round(payload.steps);
-        } else state.steps=Math.round(payload.steps);
+        } else {
+          state.steps=Math.round(payload.steps);
+          state.nativeStepBase=null;
+          state.nativeStepSession=null;
+        }
         // Persist every native reading so a reload keeps the current daily total.
         saveActivity();
       }
       if(typeof payload.running==="boolean"){
         state.running=payload.running;
-        if(!payload.running) state.nativeStepBase=null;
+        if(!payload.running){
+          state.nativeStepBase=null;
+          state.nativeStepSession=null;
+        }
       }
       showActivity(typeof payload.status==="string" ? payload.status : "");
     };

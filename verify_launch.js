@@ -95,7 +95,7 @@ const SEED = () => {
       "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v101/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v102/.test(workerSource), "версия кэша service worker обновлена");
     say(/requested\.origin === self\.location\.origin/.test(workerSource) && /windows\[i\]\.navigate\(target\)\.catch/.test(workerSource),
       "push-уведомление открывает только безопасный маршрут внутри приложения");
     const referSource = fs.readFileSync(path.join(siteDir, "refer.js"), "utf8");
@@ -484,8 +484,8 @@ const SEED = () => {
     const nativePedometerPersistence = await page.evaluate(() => {
       window.__superdayNativePedometer({ steps: 4217, running: true });
       window.__superdayNativePedometer({ steps: Infinity, running: true });
-      window.__superdayNativePedometer({ steps: 0, incremental: true, running: true });
-      window.__superdayNativePedometer({ steps: 15, incremental: true, running: true });
+      window.__superdayNativePedometer({ steps: 0, incremental: true, session: "native-test", running: true });
+      window.__superdayNativePedometer({ steps: 15, incremental: true, session: "native-test", running: true });
       try {
         const saved = JSON.parse(localStorage.getItem("superday_activity_v1") || "null");
         return { rendered: document.getElementById("stepCount").textContent, saved: saved && saved.steps, day: saved && saved.day };
@@ -499,8 +499,11 @@ const SEED = () => {
       "heart-rate listener ignores truncated Bluetooth packets");
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForTimeout(120);
-    const restoredPedometer = await page.evaluate(() => document.getElementById("stepCount").textContent.replace(/\s/g, ""));
-    say(restoredPedometer === "4232", "native pedometer reading survives a page reload", restoredPedometer);
+    const restoredPedometer = await page.evaluate(() => {
+      window.__superdayNativePedometer({ steps: 18, incremental: true, session: "native-test", running: true });
+      return document.getElementById("stepCount").textContent.replace(/\s/g, "");
+    });
+    say(restoredPedometer === "4235", "native pedometer retains its base through a WebView reload", restoredPedometer);
     const effortLabels = await page.evaluate(() => Array.from(document.querySelectorAll(".txp")).map(el => el.textContent));
     say(effortLabels.every(label => !/\bXP\b/.test(label)),
       "task cards describe effort without game points", effortLabels.join(" | ") || "no open task cards");
