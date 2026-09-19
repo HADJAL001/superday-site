@@ -10712,7 +10712,16 @@
         device.addEventListener("gattserverdisconnected",function(){ resetWatch("Пульсометр отключён"); });
         return device.gatt.connect();
       }).then(function(server){ return server.getPrimaryService("heart_rate"); }).then(function(service){ return service.getCharacteristic("heart_rate_measurement"); }).then(function(characteristic){
-        function onPulse(event){ var v=event.target.value, flags=v.getUint8(0), bpm=(flags&1)?v.getUint16(1,true):v.getUint8(1); if(bpm>0 && bpm<300){ state.heartRate=bpm; showActivity("Пульс с датчика подключён"); } }
+        function onPulse(event){
+          var v=event && event.target && event.target.value;
+          // A disconnected or imperfect BLE peripheral can emit a truncated packet.
+          // Ignore it rather than letting one bad measurement break the listener.
+          if(!v || v.byteLength<2) return;
+          var flags=v.getUint8(0);
+          if((flags&1) && v.byteLength<3) return;
+          var bpm=(flags&1)?v.getUint16(1,true):v.getUint8(1);
+          if(bpm>0 && bpm<300){ state.heartRate=bpm; showActivity("Пульс с датчика подключён"); }
+        }
         characteristic.addEventListener("characteristicvaluechanged",onPulse); return characteristic.startNotifications();
       }).then(function(){ watch.textContent="Отключить пульсометр"; watch.disabled=false; support.textContent=" · значения приходят с подключённого датчика"; }).catch(function(){ resetWatch("Не удалось подключить совместимый пульсометр"); });
     }
