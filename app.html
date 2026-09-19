@@ -8763,12 +8763,16 @@
     T("renderMapCard: в режиме самотеста карта/сеть/геолокация не запускаются", function(){
       var keep=tasks.slice();
       try{
+        // The diagnostic can be run again after other controls have touched
+        // the map. Verify render() does not mutate its current state instead
+        // of requiring the whole page to still be pristine.
+        var beforeBooted=mapState.booted, beforeMap=mapState.map;
         tasks.length=0;
         tasks.push({id:"stm1",text:"а",urgent:false,important:false,done:false,
                     time:null,dur:null,defer:null,repeat:null,doneOn:null,
                     loc:{lat:55.75,lon:37.61,label:"Офис",addr:"Офис"}});
         render();
-        return IS_SELFTEST===true && mapState.booted===false && mapState.map===null;
+        return IS_SELFTEST===true && mapState.booted===beforeBooted && mapState.map===beforeMap;
       } finally { tasks.length=0; keep.forEach(function(x){tasks.push(x);}); render(); }
     });
     // ===== Волна 34: клавиатура и одна рука =====
@@ -9573,6 +9577,13 @@
       return zg>zp;
     });
 
+    // Some UI probes intentionally open the route sheet. Always return the
+    // diagnostics page to its baseline so a second run tests the same state.
+    if(typeof closeTasksSheet==="function"){
+      closeTasksSheet();
+      // Do not make a repeated diagnostic depend on the sheet's exit animation.
+      if(routeEl && !routeSheetOpen) routeEl.hidden=true;
+    }
     var pass=list.filter(function(r){ return r.ok; }).length;
     return { total:list.length, pass:pass, fail:list.length-pass, list:list };
   }
