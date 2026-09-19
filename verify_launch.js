@@ -28,7 +28,7 @@ const SEED = () => {
 
 (async () => {
   const browser = await chromium.launch({
-    executablePath: "C:/Users/HADJAL/AppData/Local/ms-playwright/chromium-1232/chrome-win64/chrome.exe",
+    executablePath: "A:/HADJAL/tools-cache/ms-playwright/chromium-1232/chrome-win64/chrome.exe",
     headless: true
   });
   const fails = [], brokenProbe = [];
@@ -95,7 +95,7 @@ const SEED = () => {
       "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v79/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v84/.test(workerSource), "версия кэша service worker обновлена");
     say(!/google\.com\/maps/i.test(appSource), "основной сценарий не содержит ссылок на внешний навигатор");
     say(/отправлен(?:о)? на модерацию в RuStore|отправлено в RuStore/.test(landingSource) &&
       /НА МОДЕРАЦИИ/.test(landingSource), "лендинг показывает актуальный статус публикации в RuStore");
@@ -431,6 +431,21 @@ const SEED = () => {
     mustFail(zero >= 8, "скрытый знак измерен как нулевой (" + zero + "px) — замер видит display:none");
 
     await page.screenshot({ path: artifact("shot-desktop.png"), fullPage: false });
+    const desktopActivity = await page.evaluate(() => {
+      const dock = document.getElementById("activityDock");
+      const rail = document.getElementById("rail");
+      if (!dock || !rail) return null;
+      const d = dock.getBoundingClientRect(), r = rail.getBoundingClientRect();
+      return {
+        visible: !dock.hidden && d.width > 0 && d.height > 0,
+        clearOfRail: d.right <= r.left,
+        dockRight: Math.round(d.right), railLeft: Math.round(r.left),
+        overflow: document.documentElement.scrollWidth > innerWidth
+      };
+    });
+    say(!!desktopActivity && desktopActivity.visible && desktopActivity.clearOfRail && !desktopActivity.overflow,
+      "desktop activity panel is visible and clear of the section rail",
+      desktopActivity ? JSON.stringify(desktopActivity) : "activity panel or rail was not found");
     // Кропы крупным планом: замер говорит «отрисован», но кривизну видно только глазом.
     for (const [sel, name] of [["#composer", "crop-composer.png"], ["#focusCard", "crop-focus.png"],
                                ["#rolloverBar", "crop-rollover.png"], ["header", "crop-header.png"],

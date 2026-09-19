@@ -131,6 +131,8 @@ window.__i18nDict("fr", {
     "Для насыщенного рабочего ритма.": "Pour un rythme de travail soutenu.",
     "50 задач в день": "50 tâches par jour",
     "Максимум для профессионалов.": "Le maximum, pour les professionnels.",
+    "AUTOPILOT MODE": "AUTOPILOT MODE",
+    "Команды, повышенные объёмы и безлимитный доступ к «Как отказаться» и «Аудиту жизни».": "Équipes, volumes plus élevés et accès illimité à « Comment dire non » et à l'« Audit de vie ».",
     "от 1990": "à partir de 1990",
     "100 задач в день": "100 tâches par jour",
     "Команды и повышенные объёмы.": "Équipes et volumes élevés.",

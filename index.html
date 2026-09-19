@@ -412,7 +412,8 @@
     box-shadow:0 8px 18px -8px rgba(200,214,240,.6), inset 0 1px 0 rgba(255,255,255,.6)}
   .voice-bar span{font-size:11.5px;color:var(--text-dim); letter-spacing:.008em}
   @media(max-width:900px){ .hero-grid{grid-template-columns:1fr; gap:36px} .phone-stage{order:-1} }
-  @media(max-width:380px){ .phone-frame{width:280px} .phone-screen{min-height:520px} }
+  @media(max-width:620px){ .hero h1{font-size:42px} }
+  @media(max-width:380px){ .phone-frame{width:280px} .phone-screen{min-height:520px} .hero h1{font-size:34px} }
 
   /* ---------- SECTIONS ---------- */
   section{padding:64px 0}
@@ -449,6 +450,8 @@
   .card p{font-size:13px; color:var(--text-dim); margin:0; line-height:1.66}
   @media(max-width:900px){ .features{grid-template-columns:repeat(2,1fr)} }
   @media(max-width:520px){ .features{grid-template-columns:1fr} }
+  @media(max-width:620px){ .sec-head h2{font-size:32px} }
+  @media(max-width:380px){ .sec-head h2{font-size:27px} }
 
   /* Как это работает */
   .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:22px}
@@ -486,12 +489,13 @@
     background:radial-gradient(circle at 50% 0,rgba(200,214,240,.18),transparent 60%);
     pointer-events:none;
   }
-  .plan.pop .tag{
+  .plan .tag{
     position:absolute; top:-1px; left:50%; transform:translateX(-50%); z-index:2;
     background:var(--grad-plat); color:var(--on-accent);
     font-size:9px; font-weight:600; letter-spacing:.16em; padding:5px 15px; border-radius:0 0 10px 10px;
     box-shadow:0 10px 22px -8px rgba(200,214,240,.6), inset 0 1px 0 rgba(255,255,255,.6);
   }
+  .plan .tag-autopilot{background:var(--grad-gold); color:var(--on-accent)}
   .plan .pn{font-size:11px; letter-spacing:.24em; text-transform:uppercase; font-weight:500; color:var(--text-dim); position:relative}
   .plan .lim{font-family:var(--font-display); font-size:46px; font-weight:500; margin:6px 0 2px; position:relative;
     letter-spacing:0; color:var(--text)}
@@ -655,6 +659,8 @@
   /* Курсив Cormorant вместо смены цвета: акцент — начертанием, тон один */
   .manifesto blockquote em{font-style:italic; font-weight:600; color:var(--text)}
   .manifesto .m-sub{margin:26px auto 0; max-width:600px; color:var(--text-dim); font-size:15.5px; line-height:1.68}
+  @media(max-width:640px){ .manifesto blockquote{font-size:36px} }
+  @media(max-width:380px){ .manifesto blockquote{font-size:28px} }
 
   /* ---------- FAQ ---------- */
   .faq{max-width:768px; margin:0 auto; display:grid; gap:12px}
@@ -987,7 +993,7 @@
         <div class="plan reveal" data-plan="start"><div class="pn">Start</div><div class="lim"><span data-plan-price>490</span><small>₽ / 30 дней</small></div><div class="quota">15 задач в день</div><div class="desc">Для личных дел и учёбы.</div><a class="plan-buy" href="app.html?buy=start">Выбрать тариф</a></div>
         <div class="plan pop reveal" data-plan="standard"><span class="tag">ПОПУЛЯРНЫЙ</span><div class="pn">Standard</div><div class="lim"><span data-plan-price>790</span><small>₽ / 30 дней</small></div><div class="quota">30 задач в день</div><div class="anchor"><b>≈ 26 ₽ в день</b> — дешевле кофе</div><div class="desc">Для насыщенного рабочего ритма.</div><a class="plan-buy" href="app.html?buy=standard">Выбрать тариф</a></div>
         <div class="plan reveal" data-plan="pro"><div class="pn">Pro</div><div class="lim"><span data-plan-price>1090</span><small>₽ / 30 дней</small></div><div class="quota">50 задач в день</div><div class="desc">Максимум для профессионалов.</div><a class="plan-buy" href="app.html?buy=pro">Выбрать тариф</a></div>
-        <div class="plan reveal" data-plan="business"><div class="pn">Business</div><div class="lim"><span data-plan-price>1990</span><small>₽ / 30 дней</small></div><div class="quota">100 задач в день</div><div class="desc">Команды и повышенные объёмы.</div><a class="plan-buy" href="app.html?buy=business">Выбрать тариф</a></div>
+        <div class="plan reveal" data-plan="business"><span class="tag tag-autopilot">AUTOPILOT MODE</span><div class="pn">Business</div><div class="lim"><span data-plan-price>1990</span><small>₽ / 30 дней</small></div><div class="quota">100 задач в день</div><div class="desc">Команды, повышенные объёмы и безлимитный доступ к «Как отказаться» и «Аудиту жизни».</div><a class="plan-buy" href="app.html?buy=business">Выбрать тариф</a></div>
       </div>
       <p class="pricing-note" id="pricingStatus">Цена за <b>30 дней без автопродления</b> · безопасная оплата через PlateGA</p>
     </div>

@@ -1,13 +1,8 @@
 /* SUPER DAY — приглашения, подарки и «день по ссылке» (волна 13).
 
-   Честная рамка, из которой выросла вся механика: бэкенда у веб-версии нет,
-   значит проверить «друг действительно пришёл» криптографически невозможно —
-   код открыт, подделать его может тот, кто знает алгоритм. Поэтому:
-
-   • за приглашения дарятся ТОЛЬКО те вещи, которые приложение может выдать
-     само и честно: рабочие шаблоны дня (они реально грузятся в маршрут);
-   • ни денег, ни подписки, ни «двигаем очередь» — таких обещаний нет;
-   • ограничение написано прямо в интерфейсе, а не умолчано.
+   Слой работает только с локальными шаблонами и ссылкой на план. Он не выдаёт
+   деньги, подписки или другие серверные преимущества и не заявляет, что
+   подтверждает действия другого человека.
 
    Что здесь:
    1. свой код приглашения (superday_ref_v1) и ссылка ?ref=КОД;
@@ -100,14 +95,6 @@
       de: "Freund angerechnet ✓", fr: "Ami validé ✓", zh: "已记入朋友 ✓" },
     friends: { ru: "Друзей рядом", en: "Friends alongside", es: "Amigos contigo",
       de: "Freunde dabei", fr: "Amis à tes côtés", zh: "同行的朋友" },
-    honest: {
-      ru: "Честно: без сервера приложение верит коду на слово — поэтому за друзей дарятся шаблоны и оформление, а не деньги или подписка.",
-      en: "Honestly: with no server the app takes the code at its word — that is why friends bring templates and design, not money or a subscription.",
-      es: "Con franqueza: sin servidor la app se fía del código — por eso los amigos traen plantillas y estilo, no dinero ni suscripción.",
-      de: "Ehrlich: ohne Server glaubt die App dem Code aufs Wort — deshalb bringen Freunde Vorlagen und Gestaltung, kein Geld und kein Abo.",
-      fr: "Honnêtement : sans serveur, l'app croit le code sur parole — c'est pourquoi les amis apportent des modèles et du style, pas de l'argent ni un abonnement.",
-      zh: "老实说：没有服务器，应用只能相信这个码——所以朋友带来的是模板和外观，而不是钱或订阅。"
-    },
     shareDay: { ru: "Поделиться днём по ссылке", en: "Share the day as a link",
       es: "Compartir el día por enlace", de: "Den Tag als Link teilen",
       fr: "Partager la journée par lien", zh: "用链接分享这一天" },
@@ -434,11 +421,6 @@
       });
       inner.appendChild(thanks);
     }
-
-    var honest = document.createElement("div");
-    honest.className = "refer-fine";
-    honest.textContent = pick(T.honest);
-    inner.appendChild(honest);
 
     head.addEventListener("click", function () {
       var open = sec.classList.toggle("open");

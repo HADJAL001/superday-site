@@ -933,6 +933,20 @@
   .ai-chat select{min-height:42px;padding:8px 10px;grid-column:1/-1}
   .ai-chat-send{min-height:42px;padding:8px 14px;border:0;border-radius:8px;background:var(--grad-plat);color:var(--on-accent);font-weight:700}
   .ai-chat-state{min-height:18px;color:var(--text-muted);font-size:11.5px}
+  .negotiator{display:grid;gap:10px;margin-top:4px}
+  .negotiator-hint{margin:0;color:var(--text-muted);font-size:12px;line-height:1.5}
+  .negotiator textarea,.negotiator input,.negotiator select{width:100%;border:1px solid var(--border);border-radius:8px;background:var(--ink);color:var(--text);font:inherit;padding:9px 10px}
+  .negotiator textarea{min-height:72px;resize:vertical}
+  .negotiator-state{min-height:18px;color:var(--text-muted);font-size:11.5px}
+  .negotiator-result{display:grid;gap:10px}
+  .negotiator-text{padding:10px;border:1px solid var(--hair-soft);border-radius:8px;background:var(--ink);white-space:pre-wrap;line-height:1.5;font-size:12.5px}
+  .negotiator-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .negotiator-disclaimer{margin:0;color:var(--text-muted);font-size:11px;line-height:1.5}
+  .life-audit{display:grid;gap:10px;margin-top:4px}
+  .life-audit-text{padding:10px;border:1px solid var(--hair-soft);border-radius:8px;background:var(--ink);line-height:1.55;font-size:12.5px}
+  .life-audit-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--text-muted)}
+  .emergency-exit{display:grid;gap:10px;margin-top:4px}
+  .life-audit-controls select{border:1px solid var(--border);border-radius:8px;background:var(--ink);color:var(--text);font:inherit;padding:6px 8px}
   @media(min-width:520px){.billing-plan .billing-action{grid-column:auto; width:auto}.billing-plan{grid-template-columns:minmax(0,1fr) auto auto}}
 
   /* Секции, переехавшие в панель, теряют «страничные» отступы и ширину. */
@@ -1178,6 +1192,36 @@
   .map-tool:hover{border-color:var(--gold-bright)}
   .map-tool[hidden]{display:none}
   .map-tool svg{width:17px; height:17px}
+  /* Activity controls belong to the map: route, location and movement stay in one quiet dock. */
+  .activity-dock{position:fixed;z-index:1002;left:18px;bottom:148px;width:min(360px,calc(100vw - 36px));padding:13px;
+    border:1px solid rgba(232,203,113,.28);border-radius:8px;background:rgba(7,13,23,.93);color:var(--text);
+    box-shadow:0 16px 42px rgba(0,0,0,.3);backdrop-filter:blur(14px)}
+  .activity-dock[hidden]{display:none}
+  .activity-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .activity-title{font:700 13px var(--font-ui,sans-serif);letter-spacing:0;color:var(--text)}
+  .activity-status{font-size:11px;color:var(--text-muted);text-align:right}
+  .activity-progress{height:5px;background:rgba(255,255,255,.1);margin:10px 0 11px;overflow:hidden;border-radius:3px}
+  .activity-progress b{display:block;height:100%;width:0;background:#6ed7a0;transition:width .35s ease}
+  .activity-values{display:flex;align-items:baseline;gap:8px;margin-bottom:11px}.activity-values b{font:700 23px var(--font-display,serif)}
+  .activity-values span{font-size:11px;color:var(--text-muted)}
+  .activity-actions{display:flex;gap:7px;flex-wrap:wrap}.activity-action{min-height:38px;padding:0 10px;border:1px solid var(--hair);border-radius:6px;background:transparent;color:var(--text);font:600 11px var(--font-ui,sans-serif);cursor:pointer}
+  .activity-action.primary{background:#E8CB71;border-color:#E8CB71;color:#111827}.activity-action:disabled{opacity:.48;cursor:wait}
+  .activity-health{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:var(--text-muted);line-height:1.4}
+  .activity-health strong{color:var(--text);font-weight:700}.activity-health button{padding:0;border:0;background:none;color:#E8CB71;font:600 11px var(--font-ui,sans-serif);cursor:pointer}
+  body.nav-active .activity-dock{bottom:18px}
+  /* Input capabilities choose the layout: desktop pointer gets a map-side tool,
+     touch devices keep it above the thumb-reachable composer. */
+  @media(min-width:681px) and (hover:hover) and (pointer:fine){
+    /* Keep the activity controls clear of the fixed right-hand section rail. */
+    .activity-dock{left:auto;right:62px;top:84px;bottom:auto;width:350px}
+    body.nav-active .activity-dock{top:auto;bottom:18px}
+    .stage-links{display:none}
+  }
+  @media(max-width:680px), (hover:none) and (pointer:coarse){
+    .activity-dock{left:12px;bottom:178px;width:calc(100vw - 24px)}
+    body.nav-active .activity-dock{bottom:12px}
+    .stage-links{display:none}
+  }
   .city-panel{position:fixed; top:max(68px,calc(env(safe-area-inset-top) + 60px)); right:12px; z-index:520; width:min(380px,calc(100vw - 24px)); padding:16px; border:1px solid transparent; border-radius:8px;
     background:var(--glass-deep) padding-box,var(--edge-strong) border-box; box-shadow:var(--shadow-lux),var(--inner-light);
     backdrop-filter:var(--blur); color:var(--text)}
@@ -1916,6 +1960,17 @@
     </button>
     <div class="stage-say" id="stageSay">СКАЖИТЕ ДЕЛА — ИИ ПОКАЖЕТ ИХ НА КАРТЕ И СОБЕРЁТ ПЛАН ДНЯ</div>
     <div class="stage-live" id="stageLive" aria-live="polite"></div>
+    <section class="activity-dock" id="activityDock" aria-label="Активность и маршрут">
+      <div class="activity-top"><div class="activity-title">Движение сегодня</div><div class="activity-status" id="activityStatus">Готово к прогулке</div></div>
+      <div class="activity-progress" aria-hidden="true"><b id="activityProgress"></b></div>
+      <div class="activity-values"><b id="stepCount">0</b><span id="stepGoal">из 8 000 шагов</span></div>
+      <div class="activity-actions">
+        <button class="activity-action primary" id="activityLocate" type="button">Определить моё местоположение</button>
+        <button class="activity-action" id="activityGo" type="button">В путь</button>
+        <button class="activity-action" id="activitySteps" type="button">Включить шагомер</button>
+      </div>
+      <div class="activity-health"><strong id="heartRate">Пульс: нет данных</strong><span id="watchSupport"> · подключите совместимый пульсометр</span> <button id="watchConnect" type="button">Подключить часы</button></div>
+    </section>
     <section class="route-brief" id="routeBrief" hidden aria-label="Маршрут к делам" aria-live="polite">
       <div class="rb-top">
         <div>
@@ -2132,7 +2187,7 @@
                 title="Тихий режим — выключить все звуки приложения (напоминания останутся на экране)">
           <span aria-hidden="true" id="muteIc">🔊</span><span id="muteLabel">Звук включён</span>
         </button>
-        <span class="remind-note" id="remindNote">Когда наступит время дела — приложение подскажет уведомлением и голосом. <b>Работает, пока открыта эта вкладка.</b> Нужны напоминания при закрытом приложении — <button type="button" class="inline-link" id="icsFromRemind">выгрузи день в календарь</button>: события лягут в системный календарь с будильниками.</span>
+        <span class="remind-note" id="remindNote">Когда наступит время дела — приложение подскажет уведомлением и голосом. Для надёжных напоминаний при закрытом приложении <button type="button" class="inline-link" id="icsFromRemind">выгрузи день в календарь</button>: события лягут в системный календарь с будильниками. Web Push станет доступен после настройки сервера, входа и разрешения браузера; расписание дел пока хранится только на этом устройстве.</span>
       </section>
     </div>
   </section>
@@ -2184,11 +2239,11 @@
     </div>
   </section>
   <section class="pgroup" data-sec="growth">
-    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-medal"/></svg></span><span class="pg-title">Рост</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chart"/></svg></span><span class="pg-title">Рабочий ритм</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
     <div class="pg-body">
-      <section class="growth" id="growthCard" aria-label="Уровень и достижения">
+      <section class="growth" id="growthCard" aria-label="Рабочий ритм и аналитика">
         <div class="gr-head">
-          <span class="gr-lvl" id="grLevel">Уровень 1</span>
+          <span class="gr-lvl" id="grLevel">Завершено: 0 дел</span>
           <span class="gr-xp" id="grXp"></span>
         </div>
         <div class="gr-bar" role="progressbar" aria-labelledby="grLevel" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="grBar"><i id="grFill"></i></div>
@@ -2236,10 +2291,63 @@
         <select id="aiChatTask" aria-label="Связать вопрос с делом"><option value="">Общий вопрос</option></select>
         <div class="ai-chat-log" id="aiChatLog" aria-live="polite"></div>
         <form class="ai-chat-form" id="aiChatForm">
-          <textarea id="aiChatInput" maxlength="2000" placeholder="Например: завтра к адвокату на Ленина. Что спросить и как объяснить ситуацию?" required></textarea>
+          <textarea id="aiChatInput" maxlength="2000" placeholder="Задайте любой вопрос или выберите дело выше, чтобы получить ответ с контекстом" required></textarea>
           <div class="ai-chat-state" id="aiChatState"></div>
           <button class="ai-chat-send" type="submit">Спросить</button>
         </form>
+      </div>
+    </div>
+  </section>
+  <section class="pgroup" data-sec="lifeaudit">
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">📊</span><span class="pg-title">Аудит жизни</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
+    <div class="pg-body">
+      <div class="life-audit" id="lifeAudit">
+        <div class="life-audit-text" id="lifeAuditText"></div>
+        <div class="life-audit-controls">
+          <label for="lifeAuditTone">Тон вердикта</label>
+          <select id="lifeAuditTone" aria-label="Тон вердикта">
+            <option value="supportive">Поддерживающий</option>
+            <option value="hard">Жёсткий</option>
+          </select>
+          <button type="button" class="ro-ghost" id="lifeAuditSoften">Слишком жёстко — сделай мягче</button>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="pgroup" data-sec="exit">
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">🚪</span><span class="pg-title">Emergency Exit</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
+    <div class="pg-body">
+      <div class="emergency-exit" id="emergencyExit">
+        <p class="negotiator-hint">Переносит все несделанные необязательные и важные-но-не-срочные дела на завтра одним нажатием. Срочные и уже начатые дела остаются на сегодня.</p>
+        <button type="button" class="ro-primary" id="exitGo">Выйти из дня</button>
+        <button type="button" class="ro-primary" id="exitBuy" hidden>Купить разово — 499 ₽</button>
+        <div class="negotiator-state" id="exitState"></div>
+      </div>
+    </div>
+  </section>
+  <section class="pgroup" data-sec="negotiator">
+    <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true">💬</span><span class="pg-title">Как отказаться</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
+    <div class="pg-body">
+      <div class="negotiator" id="negotiator">
+        <p class="negotiator-hint">ИИ сочинит черновик вежливого отказа или переноса. Это только текст для вас — приложение никому не звонит и ничего не отправляет само.</p>
+        <textarea id="negoSituation" maxlength="600" placeholder="Например: не хочу идти на встречу с боссом в 15:00, хочу перенести на завтра" required></textarea>
+        <input type="text" id="negoRecipient" maxlength="120" placeholder="Кому адресовано (необязательно)" autocomplete="off" />
+        <select id="negoTone" aria-label="Тон сообщения">
+          <option value="polite" selected>Вежливый</option>
+          <option value="firm">Уверенный</option>
+          <option value="humorous">С юмором</option>
+        </select>
+        <button class="ai-chat-send" type="button" id="negoGenerate">Сочинить черновик</button>
+        <div class="negotiator-state" id="negoState"></div>
+        <button type="button" class="ro-primary" id="negoBuy" hidden>Купить разово — 99 ₽</button>
+        <div class="negotiator-result" id="negoResult" hidden>
+          <div class="negotiator-text" id="negoText"></div>
+          <div class="negotiator-actions">
+            <button type="button" class="ro-primary" id="negoSpeak">Прослушать черновик</button>
+            <button type="button" class="ro-ghost" id="negoCopy">Скопировать текст</button>
+          </div>
+          <p class="negotiator-disclaimer">Это черновик от ИИ, не отправленное сообщение. Прочитайте и решите сами, отправлять ли его и в каком виде.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -2618,7 +2726,7 @@
     catch(e){}
   }
 
-  function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(tasks)); }catch(e){} autoBackup(); }
+  function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(tasks)); }catch(e){} autoBackup(); if(typeof window.__syncPushSchedule==="function") window.__syncPushSchedule(); }
   function uid(){ return "t" + (tasks.reduce(function(m,t){return Math.max(m, +String(t.id).slice(1)||0);},0) + 1) + "_" + tasks.length; }
   // Короткое подтверждение действия в подсказке композера (потом восстанавливается).
   var _toastTimer=null;
@@ -5252,34 +5360,28 @@
       s.intentionFocus.replace(/^Тот,\s*кто\s*/i,"") + "."));
   }
 
-  // ===== Рост: уровень, опыт, ближайшее достижение, недельный ритм =====
+  // ===== Рабочий ритм: завершения, покрытие приоритетов, недельный ритм =====
   function renderGrowth(){
     if(!window.SDGrowth) return;
     var card = document.getElementById("growthCard"); if(!card) return;
-    var p = SDGrowth.computeProgress();
+    var ledger = SDGrowth.readLedger();
     var lvl = document.getElementById("grLevel");
     var xp = document.getElementById("grXp");
     var bar = document.getElementById("grBar");
     var fill = document.getElementById("grFill");
     var next = document.getElementById("grNext");
-    if(lvl) lvl.textContent = "Уровень " + p.level;
-    if(xp) xp.textContent = p.xp + " XP всего";
-    var pct = Math.max(0, Math.min(100, Math.round(p.barIntoLevel / p.barForNextLevel * 100)));
+    var covered = [1,2,3,4].filter(function(q){ return ledger.quads[q] > 0; }).length;
+    if(lvl) lvl.textContent = "Завершено: " + ledger.totalDone + " дел";
+    if(xp) xp.textContent = "за всё время";
+    var pct = Math.round(covered / 4 * 100);
     if(fill) fill.style.width = pct + "%";
-    if(bar) bar.setAttribute("aria-valuenow", String(pct));
+    if(bar){ bar.setAttribute("aria-valuemax", "4"); bar.setAttribute("aria-valuenow", String(covered)); }
     if(next){
-      // Goal-gradient: чем ближе цель, тем настойчивее подпись.
-      var tail = p.xpToNext <= 20 ? " — один рывок!" : "";
-      var endow = p.endowed ? " · 🎁 " + p.endowed + " XP аванс уже в счёт" : "";
-      next.textContent = "Ещё " + p.xpToNext + " XP до уровня " + (p.level + 1) + tail + endow;
+      next.textContent = "Приоритеты: " + covered + " из 4 зон закрыты";
     }
-    var dig = SDGrowth.achievementDigest(SDGrowth.achievements(null, (tasks||[]).length));
     var ach = document.getElementById("grAch");
     if(ach){
-      var html = "<b>" + dig.unlocked + " из " + dig.total + "</b> достижений";
-      if(dig.next) html += " · дальше: <b>" + dig.next.title + "</b> — " + dig.next.desc;
-      else html += " · все открыты 🏆";
-      ach.innerHTML = html;
+      ach.textContent = "Лучший день: " + ledger.bestDay + " дел";
     }
     // Личная поправка ко времени живёт рядом с уровнем: это тоже про рост, а
     // не про настройки. Пока данных мало — видно, сколько ответов осталось.
@@ -5302,7 +5404,7 @@
     }
     var note = card.closest ? card.closest(".pgroup") : null;
     var noteEl = note ? note.querySelector("[data-note]") : null;
-    if(noteEl) noteEl.textContent = "ур. " + p.level + " · " + p.xp + " XP";
+    if(noteEl) noteEl.textContent = ledger.totalDone ? (ledger.totalDone + " завершено") : "нет завершений";
   }
 
   var STATS_KEY="superday_stats_v1";
@@ -5330,6 +5432,7 @@
     while(keys.length>2500){ delete h[keys.shift()]; }
     writeCompletionHistory(h);
     adjustCompletionCount(day,1);
+    if(typeof renderLifeAudit==="function") try{ renderLifeAudit(); }catch(e){}
   }
   function revokeCompletion(t){
     if(!t) return;
@@ -5338,6 +5441,7 @@
     // До v8 событийного журнала не было, но счётчик уже существовал. Поэтому
     // снятие старой галочки тоже корректно уменьшает агрегат, не уходя ниже нуля.
     adjustCompletionCount(day,-1);
+    if(typeof renderLifeAudit==="function") try{ renderLifeAudit(); }catch(e){}
   }
   function completionRowsWithLegacy(list){
     var h=readCompletionHistory(), rows=[], seen={};
@@ -5352,6 +5456,85 @@
       rows.push(t);
     });
     return rows;
+  }
+
+  // ===== Аудит жизни: вердикт по неделе завершённых дел =====
+  // Тон выбирает пользователь при первом открытии; при негативной реакции
+  // ("слишком жёстко") автоматически смягчается и не спрашивает повторно.
+  var LIFE_AUDIT_TONE_KEY="superday_life_audit_tone";
+  var LIFE_AUDIT_SOFT_KEY="superday_life_audit_softened";
+  function lifeAuditTone(){
+    try{ var t=localStorage.getItem(LIFE_AUDIT_TONE_KEY); return (t==="hard"||t==="supportive") ? t : "supportive"; }
+    catch(e){ return "supportive"; }
+  }
+  function setLifeAuditTone(t){ try{ localStorage.setItem(LIFE_AUDIT_TONE_KEY, t==="hard"?"hard":"supportive"); }catch(e){} }
+  function lifeAuditSoftened(){ try{ return localStorage.getItem(LIFE_AUDIT_SOFT_KEY)==="1"; }catch(e){ return false; } }
+  function softenLifeAudit(){
+    try{ localStorage.setItem(LIFE_AUDIT_SOFT_KEY,"1"); }catch(e){}
+    if(lifeAuditTone()==="hard") setLifeAuditTone("supportive");
+  }
+  function lifeAuditWeek(){
+    var h=readCompletionHistory(), today=new Date(), byDay={}, days=[];
+    for(var i=6;i>=0;i--){
+      var d=new Date(today); d.setDate(d.getDate()-i);
+      function p(n){return n<10?"0"+n:""+n;}
+      var k=d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());
+      days.push(k); byDay[k]=[];
+    }
+    Object.keys(h).forEach(function(key){
+      var e=h[key]; if(!e || !e.day || !byDay[e.day]) return;
+      byDay[e.day].push(e);
+    });
+    var entries=[]; days.forEach(function(k){ entries=entries.concat(byDay[k]); });
+    var total=entries.length;
+    var usefulMin=0, wastedMin=0, usefulN=0;
+    entries.forEach(function(e){
+      var minutes=validDur(e.dur) ? e.dur : 30;
+      var useful = e.quadrant===1 || e.quadrant===2; // важные квадранты — реальный вклад в цели
+      if(useful){ usefulMin+=minutes; usefulN++; } else { wastedMin+=minutes; }
+    });
+    var totalMin=usefulMin+wastedMin;
+    var usefulRatio = totalMin>0 ? usefulN/total : null;
+    var usefulPct = total>0 ? Math.round((usefulN/total)*100) : null;
+    return { days:days, total:total, usefulN:usefulN, usefulPct:usefulPct, wastedMin:wastedMin, usefulMin:usefulMin };
+  }
+  function lifeAuditVerdict(){
+    var a=lifeAuditWeek();
+    if(a.total<3) return { text:"Пока маловато завершённых дел за неделю для честного вердикта — отмечайте выполненное, вернусь с разбором позже.", stat:a };
+    var tone=lifeAuditTone();
+    var wastedHours=Math.round(a.wastedMin/60*10)/10;
+    var pct=a.usefulPct;
+    var text;
+    if(tone==="hard"){
+      if(pct!==null && pct<40){
+        text="За неделю "+a.total+" дел, но только "+pct+"% из них двигали тебя к целям. Остальное — "+wastedHours+" ч на то, что можно было не делать вовсе. Перестроить завтрашний день так, чтобы это не повторилось?";
+      } else if(pct!==null && pct<70){
+        text="Из "+a.total+" дел за неделю "+pct+"% — по-настоящему важные, остальное съело "+wastedHours+" ч. Не катастрофа, но есть что вырезать.";
+      } else {
+        text="Неделя вышла осмысленной: "+pct+"% дел из "+a.total+" — важные. Так и держи темп.";
+      }
+    } else {
+      if(pct!==null && pct<40){
+        text="За неделю сделано "+a.total+" дел, из них "+pct+"% — по-настоящему важные для целей. Остальное отняло "+wastedHours+" ч — возможно, стоит присмотреться, что из этого можно делегировать или убрать.";
+      } else if(pct!==null && pct<70){
+        text="Из "+a.total+" дел за неделю "+pct+"% двигали к целям — уже неплохо. Готова помочь пересобрать завтрашний день, если хочешь меньше рутины.";
+      } else {
+        text="Хорошая неделя: "+pct+"% из "+a.total+" дел — по-настоящему важные. Так и продолжай.";
+      }
+    }
+    return { text:text, stat:a };
+  }
+  function renderLifeAudit(){
+    var box=document.getElementById("lifeAudit"); if(!box) return;
+    var v=lifeAuditVerdict();
+    var textEl=document.getElementById("lifeAuditText"); if(textEl) textEl.textContent=v.text;
+    var toneSel=document.getElementById("lifeAuditTone"); if(toneSel) toneSel.value=lifeAuditTone();
+  }
+  function initLifeAudit(){
+    var toneSel=document.getElementById("lifeAuditTone"), softenBtn=document.getElementById("lifeAuditSoften");
+    if(toneSel) toneSel.addEventListener("change",function(){ setLifeAuditTone(toneSel.value); renderLifeAudit(); });
+    if(softenBtn) softenBtn.addEventListener("click",function(){ softenLifeAudit(); renderLifeAudit(); if(toneSel) toneSel.value=lifeAuditTone(); toast("Сделаю мягче"); });
+    renderLifeAudit();
   }
 
   // ===== Статистика недели (последние 7 дней) + серия ✕ =====
@@ -5915,7 +6098,9 @@
   }
   function requestUserLocation(cb, force){
     var cached = loadUserLocCache();
-    if(!force && cached && cached.at && (Date.now()-cached.at)<USERLOC_TTL_MS){ cb(cached.loc); return; }
+    // A rejected/failed request is cached as null only for state restoration;
+    // it must not suppress a later explicit attempt from the location button.
+    if(!force && cached && validPoint(cached.loc) && cached.at && (Date.now()-cached.at)<USERLOC_TTL_MS){ cb(cached.loc); return; }
     if(!("geolocation" in navigator)){ cb(null); return; }
     navigator.geolocation.getCurrentPosition(
       function(pos){
@@ -8247,6 +8432,35 @@
       if(label) label.textContent = on ? "Напоминания включены" : "Напоминать о делах со временем";
     }
     function persist(){ try{ localStorage.setItem(REM_KEY, on?"1":"0"); }catch(e){} }
+    function urlBase64ToBytes(value){
+      var padded=value.replace(/-/g,"+").replace(/_/g,"/");
+      while(padded.length%4) padded+="=";
+      var raw=atob(padded), out=new Uint8Array(raw.length);
+      for(var i=0;i<raw.length;i++) out[i]=raw.charCodeAt(i);
+      return out;
+    }
+    function connectPush(){
+      if(!window.Notification || Notification.permission!=="granted" || !("serviceWorker" in navigator) || !("PushManager" in window)) return Promise.resolve(false);
+      var tokens=(typeof billingTokens==="function") ? billingTokens() : null;
+      if(!tokens || !tokens.access_token) return Promise.resolve(false);
+      return navigator.serviceWorker.ready.then(function(reg){
+        return fetch(API_BASE+"/push-config").then(function(res){ return res.ok ? res.json() : null; }).then(function(config){
+          if(!config || !config.enabled || typeof config.public_key!=="string") return false;
+          return reg.pushManager.getSubscription().then(function(current){ return current || reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToBytes(config.public_key)}); }).then(function(subscription){
+            return fetch(API_BASE+"/push-subscription",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+tokens.access_token},body:JSON.stringify({subscription:subscription.toJSON()})});
+          }).then(function(res){ return res.ok; });
+        });
+      }).catch(function(){ return false; });
+    }
+    window.__removePushSubscription=function(tokenOverride){
+      if(!("serviceWorker" in navigator) || !("PushManager" in window)) return Promise.resolve(false);
+      var tokens=tokenOverride || (typeof billingTokens==="function" ? billingTokens() : null);
+      if(!tokens || !tokens.access_token) return Promise.resolve(false);
+      return navigator.serviceWorker.ready.then(function(reg){ return reg.pushManager.getSubscription(); }).then(function(subscription){
+        if(!subscription) return false;
+        return fetch(API_BASE+"/push-subscription",{method:"DELETE",headers:{"Content-Type":"application/json","Authorization":"Bearer "+tokens.access_token},body:JSON.stringify({subscription:subscription.toJSON()})}).then(function(res){ return res.ok; });
+      }).catch(function(){ return false; });
+    };
 
     function fire(t){
       var msg = "Пора: "+t.text + (t.time?" ("+t.time+")":"");
@@ -8289,17 +8503,18 @@
     function stopTimer(){ if(timer){ clearInterval(timer); timer=null; } }
 
     function enable(){
-      on=true; persist(); paint();
+      on=true; persist(); paint(); if(typeof window.__syncPushSchedule==="function") window.__syncPushSchedule();
       // Запрос разрешения на уведомления (не блокирует — при отказе работает голос+подсветка).
       try{
         if(window.Notification && Notification.permission==="default"){
-          Notification.requestPermission().catch(function(){});
+          Notification.requestPermission().then(function(permission){ if(permission==="granted") return connectPush(); }).catch(function(){});
         }
+        else if(window.Notification && Notification.permission==="granted") connectPush();
       }catch(e){}
       startTimer(); tick();
       if(typeof toast==="function") toast("Напоминания включены — подскажу, когда наступит время дела");
     }
-    function disable(){ on=false; persist(); paint(); stopTimer(); }
+    function disable(){ on=false; persist(); paint(); stopTimer(); if(typeof window.__syncPushSchedule==="function") window.__syncPushSchedule(true); if(typeof window.__removePushSubscription==="function") window.__removePushSubscription(); }
 
     toggle.addEventListener("click", function(){ if(on) disable(); else enable(); });
 
@@ -9062,7 +9277,7 @@
         if(t.bonusXp!==afterDone.xp) throw new Error("исход броска не зафиксирован на задаче");
         if(afterDone.quads["2"]!==1) throw new Error("квадрант не учтён");
         renderGrowth();
-        if(document.getElementById("grLevel").textContent.indexOf("Уровень")!==0) throw new Error("карточка роста не нарисовалась");
+        if(document.getElementById("grLevel").textContent.indexOf("Завершено:")!==0) throw new Error("карточка рабочего ритма не нарисовалась");
         var bonus=t.bonusXp;
         t.done=false; t.doneOn=null; revokeFor(t);
         var afterUndo=SDGrowth.readLedger();
@@ -9428,6 +9643,33 @@
       });
     });
   }
+  var pushScheduleTimer=null;
+  window.__syncPushSchedule=function(forceClear,tokenOverride){
+    if(pushScheduleTimer) clearTimeout(pushScheduleTimer);
+    pushScheduleTimer=setTimeout(function(){
+      pushScheduleTimer=null;
+      var tokens=tokenOverride||billingTokens(), reminders=false;
+      try{ reminders=localStorage.getItem("superday_remind")==="1"; }catch(e){}
+      if((!reminders&&!forceClear) || !tokens || !tokens.access_token || typeof API_BASE!=="string") return;
+      var now=new Date(), entries=[], seen={};
+      for(var offset=0;!forceClear&&offset<=30;offset++){
+        var day=new Date(now.getFullYear(),now.getMonth(),now.getDate()+offset), dayKey=dayKeyOf(day), weekday=day.getDay();
+        (tasks||[]).forEach(function(t){
+          if(!t || !t.time || !/^\d{2}:\d{2}$/.test(t.time)) return;
+          var repeated=repeatDays(t), deferred=(typeof t.defer==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(t.defer))?t.defer:null;
+          if(repeated){ if(repeated.indexOf(weekday)===-1 || (deferred&&dayKey<deferred) || (t.done&&offset===0)) return; }
+          else if(t.done || (deferred ? dayKey!==deferred : offset!==0)) return;
+          var hm=t.time.split(":"), at=new Date(day.getFullYear(),day.getMonth(),day.getDate(),+hm[0],+hm[1],0,0).getTime();
+          if(at<Date.now()-5*60*1000) return;
+          var id=String(t.id||"task").replace(/[^A-Za-z0-9_-]/g,"_")+"_"+dayKey.replace(/-/g,"");
+          if(seen[id+":"+at]) return; seen[id+":"+at]=true;
+          entries.push({id:id,title:String(t.text||"Дело").slice(0,160),at:at});
+        });
+      }
+      if(entries.length>500) entries=entries.slice(0,500);
+      fetch(API_BASE+"/push-schedule",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+tokens.access_token},body:JSON.stringify({entries:entries})}).catch(function(){});
+    },800);
+  };
   function billingError(err){
     if(err && err.status===409) return "Аккаунт с таким e-mail уже существует. Войдите с паролем.";
     if(err && err.status===401) return "Неверный e-mail или пароль.";
@@ -9445,12 +9687,16 @@
       }
     });
   }
+  var billingPaymentMethod=null;
+  function pickPaymentMethod(methods){
+    return (methods||[]).filter(function(method){return method.code==="freekassa_sbp";})[0]
+      ||(methods||[]).filter(function(method){return method.code==="freekassa_card";})[0]
+      ||(methods||[]).filter(function(method){return method.provider==="platega";})[0]||null;
+  }
   function renderBillingPlans(plans,methods){
     var box=document.getElementById("billingPlans"); if(!box) return;
     box.innerHTML="";
-    var paymentMethod=(methods||[]).filter(function(method){return method.code==="freekassa_sbp";})[0]
-      ||(methods||[]).filter(function(method){return method.code==="freekassa_card";})[0]
-      ||(methods||[]).filter(function(method){return method.provider==="platega";})[0]||null;
+    var paymentMethod=pickPaymentMethod(methods);
     (plans||[]).forEach(function(plan){
       if(plan.code==="guest") return;
       var row=document.createElement("div"); row.className="billing-plan";
@@ -9491,7 +9737,8 @@
       billingRequest("/auth/me"), billingRequest("/billing/plans"), billingRequest("/billing/payment-methods"),
       billingRequest("/billing/subscription").catch(function(){return null;})
     ]).then(function(result){
-      billingUser=result[0]; billingSubscription=result[3]; auth.hidden=true; account.hidden=false;
+      billingUser=result[0]; billingSubscription=result[3]; auth.hidden=true; account.hidden=false; window.__syncPushSchedule();
+      billingPaymentMethod=pickPaymentMethod(result[2]);
       document.getElementById("billingUserEmail").textContent=billingUser.email;
       var until=billingSubscription && billingSubscription.current_period_end ?
         " · до "+new Date(billingSubscription.current_period_end).toLocaleDateString("ru-RU") : "";
@@ -9501,9 +9748,28 @@
         "Оплата картой или через СБП. Платёжные данные вводятся только на защищённой странице кассы." :
         "Тарифы загружены, но касса ещё не принимает платежи.", result[2].length?"":"error");
       if(typeof updatePanelNotes==="function") updatePanelNotes();
+      if(typeof refreshNegotiatorAccess==="function") refreshNegotiatorAccess();
     }).catch(function(err){
       if(err && (err.status===401 || err.message==="session_expired")){ setBillingTokens(null); return loadBilling(); }
       billingMessage(billingError(err),"error");
+    });
+  }
+  function checkoutProduct(productCode,method){
+    return billingRequest("/billing/checkout-product",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({product_code:productCode,provider:method.provider,method:method.code})
+    }).then(function(result){
+      var target=new URL(result.confirmation_url);
+      var paymentHostAllowed=/(^|\.)platega\.io$/i.test(target.hostname)
+        || target.hostname==="pay.freekassa.net" || target.hostname==="pay.fk.life";
+      if(target.protocol!=="https:" || !paymentHostAllowed) throw new Error("unsafe_payment_url");
+      window.location.assign(target.toString());
+    });
+  }
+  function consumeOneTime(productCode){
+    return billingRequest("/billing/one-time/consume",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({product_code:productCode})
     });
   }
   function submitBilling(register){
@@ -9555,6 +9821,8 @@
     register.addEventListener("click",function(){submitBilling(true);});
     document.getElementById("billingLogout").addEventListener("click",function(){
       var tokens=billingTokens(); billingBusy(true);
+      if(typeof window.__syncPushSchedule==="function" && tokens) window.__syncPushSchedule(true,tokens);
+      if(typeof window.__removePushSubscription==="function" && tokens) window.__removePushSubscription(tokens);
       var done=function(){setBillingTokens(null);billingBusy(false);loadBilling();};
       if(!tokens){done();return;}
       billingRequest("/auth/logout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({refresh_token:tokens.refresh_token})})
@@ -9615,6 +9883,133 @@
           if(!res.ok){var err=new Error(data&&data.error||"chat_failed");err.status=res.status;throw err;} return data; });
       });
   }
+  // ===== AI Negotiator: черновик отказа/переноса, без авторизации =====
+  function negoRequest(payload){
+    return fetch(API_BASE+"/negotiator",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
+      .then(function(res){
+        return res.text().then(function(raw){ var data=null; try{data=raw?JSON.parse(raw):null;}catch(e){}
+          if(!res.ok){var err=new Error(data&&data.error||"negotiator_failed");err.status=res.status;throw err;} return data; });
+      });
+  }
+  var NEGOTIATOR_PRODUCT="negotiator_single";
+  function negotiatorHasFreeAccess(){ return aiChatPaid(); }
+  function refreshNegotiatorAccess(){
+    var buyBtn=document.getElementById("negoBuy"), state=document.getElementById("negoState");
+    if(!buyBtn) return;
+    if(negotiatorHasFreeAccess()){ buyBtn.hidden=true; return; }
+    if(!billingTokens() || !billingPaymentMethod){ buyBtn.hidden=true; return; }
+    buyBtn.hidden=false;
+    if(state) state.textContent="Без платного тарифа — 1 черновик за 99 ₽.";
+  }
+  function initNegotiator(){
+    var situation=document.getElementById("negoSituation"), recipient=document.getElementById("negoRecipient"),
+        tone=document.getElementById("negoTone"), btn=document.getElementById("negoGenerate"),
+        buyBtn=document.getElementById("negoBuy"),
+        state=document.getElementById("negoState"), resultBox=document.getElementById("negoResult"),
+        textBox=document.getElementById("negoText"), speakBtn=document.getElementById("negoSpeak"),
+        copyBtn=document.getElementById("negoCopy");
+    if(!situation||!btn||!state||!resultBox||!textBox) return;
+    var lastMessage="";
+    function runGenerate(){
+      var text=situation.value.replace(/\s+/g," ").trim();
+      if(!text){ state.textContent="Опишите ситуацию, из которой нужно вежливо выйти."; return; }
+      btn.disabled=true; resultBox.hidden=true; state.textContent="Сочиняю черновик…";
+      negoRequest({situation:text,recipient:recipient?recipient.value.trim():"",tone:tone?tone.value:"polite"})
+        .then(function(data){
+          lastMessage=String(data&&data.message||"").trim();
+          if(!lastMessage){ state.textContent="Не получилось сочинить черновик. Попробуйте ещё раз."; return; }
+          textBox.textContent=lastMessage; resultBox.hidden=false;
+          state.textContent=data.cached ? "Черновик готов (из кэша)." : "Черновик готов.";
+        })
+        .catch(function(err){
+          state.textContent = err && err.status===429 ? "Слишком много запросов, попробуйте через минуту."
+            : "Не получилось получить черновик. Попробуйте ещё раз.";
+        })
+        .finally(function(){ btn.disabled=false; refreshNegotiatorAccess(); });
+    }
+    btn.addEventListener("click",function(){
+      if(negotiatorHasFreeAccess()){ runGenerate(); return; }
+      if(!billingTokens()){ state.textContent="Войдите или купите черновик разово, чтобы продолжить."; openPanel("account"); return; }
+      btn.disabled=true; state.textContent="Проверяем оплаченный доступ…";
+      consumeOneTime(NEGOTIATOR_PRODUCT).then(function(data){
+        if(data && data.consumed){ runGenerate(); return; }
+        btn.disabled=false;
+        state.textContent="Нет оплаченного черновика. Купите один за 99 ₽, чтобы сочинить сообщение.";
+        refreshNegotiatorAccess();
+      }).catch(function(err){
+        btn.disabled=false;
+        state.textContent = err && err.status===401 ? "Сессия закончилась. Войдите снова." : "Не получилось проверить оплату. Попробуйте ещё раз.";
+      });
+    });
+    if(buyBtn) buyBtn.addEventListener("click",function(){
+      if(!billingTokens()){ state.textContent="Сначала войдите или создайте аккаунт."; openPanel("account"); return; }
+      if(!billingPaymentMethod){ state.textContent="Оплата временно недоступна."; return; }
+      buyBtn.disabled=true; state.textContent="Создаём защищённую платёжную ссылку…";
+      checkoutProduct(NEGOTIATOR_PRODUCT,billingPaymentMethod).catch(function(err){
+        buyBtn.disabled=false; state.textContent=billingError(err);
+      });
+    });
+    if(speakBtn) speakBtn.addEventListener("click",function(){
+      if(!lastMessage) return;
+      if(typeof window.__ttsSpeak==="function"){ try{ window.__ttsSpeak(lastMessage); }catch(e){} }
+    });
+    if(copyBtn) copyBtn.addEventListener("click",function(){
+      if(!lastMessage) return;
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(lastMessage).then(function(){ toast("Текст скопирован"); }).catch(function(){});
+      }
+    });
+    refreshNegotiatorAccess();
+  }
+
+  // ===== Emergency Exit: перенос всех не-срочных незакрытых дел на завтра =====
+  var EMERGENCY_EXIT_PRODUCT="emergency_exit";
+  function emergencyExitHasFreeAccess(){ return aiChatPaid(); }
+  function refreshEmergencyExitAccess(){
+    var buyBtn=document.getElementById("exitBuy");
+    if(!buyBtn) return;
+    if(emergencyExitHasFreeAccess()){ buyBtn.hidden=true; return; }
+    buyBtn.hidden=!(billingTokens() && billingPaymentMethod);
+  }
+  function runEmergencyExit(state){
+    var candidates=(tasks||[]).filter(function(t){ return t && !t.done && !isDeferred(t) && quadOf(t)!==1; });
+    if(!candidates.length){
+      state.textContent="Ничего переносить не нужно — на сегодня остались только срочные и важные дела.";
+      return;
+    }
+    var day=tomorrowKey();
+    candidates.forEach(function(t){ t.defer=day; t.remindedOn=null; });
+    save(); render();
+    state.textContent="Перенесено на завтра: "+candidates.length+" "+plural(candidates.length,["дело","дела","дел"])+". Срочные дела остались на сегодня.";
+  }
+  function initEmergencyExit(){
+    var btn=document.getElementById("exitGo"), buyBtn=document.getElementById("exitBuy"), state=document.getElementById("exitState");
+    if(!btn||!state) return;
+    btn.addEventListener("click",function(){
+      if(emergencyExitHasFreeAccess()){ runEmergencyExit(state); return; }
+      if(!billingTokens()){ state.textContent="Войдите или купите разовый выход, чтобы продолжить."; openPanel("account"); return; }
+      btn.disabled=true; state.textContent="Проверяем оплаченный доступ…";
+      consumeOneTime(EMERGENCY_EXIT_PRODUCT).then(function(data){
+        btn.disabled=false;
+        if(data && data.consumed){ runEmergencyExit(state); return; }
+        state.textContent="Нет оплаченного выхода. Купите один за 499 ₽.";
+        refreshEmergencyExitAccess();
+      }).catch(function(err){
+        btn.disabled=false;
+        state.textContent = err && err.status===401 ? "Сессия закончилась. Войдите снова." : "Не получилось проверить оплату. Попробуйте ещё раз.";
+      });
+    });
+    if(buyBtn) buyBtn.addEventListener("click",function(){
+      if(!billingTokens()){ state.textContent="Сначала войдите или создайте аккаунт."; openPanel("account"); return; }
+      if(!billingPaymentMethod){ state.textContent="Оплата временно недоступна."; return; }
+      buyBtn.disabled=true; state.textContent="Создаём защищённую платёжную ссылку…";
+      checkoutProduct(EMERGENCY_EXIT_PRODUCT,billingPaymentMethod).catch(function(err){
+        buyBtn.disabled=false; state.textContent=billingError(err);
+      });
+    });
+    refreshEmergencyExitAccess();
+  }
+
   function initAiChat(){
     var form=document.getElementById("aiChatForm"), input=document.getElementById("aiChatInput"), select=document.getElementById("aiChatTask"), state=document.getElementById("aiChatState");
     if(!form||!input||!select) return;
@@ -9632,7 +10027,7 @@
         aiChatWrite(AI_CHAT_HISTORY_PREFIX,history.slice(-100)); input.value=""; renderAiChat(); return;
       }
       aiChatWrite(AI_CHAT_HISTORY_PREFIX,history.slice(-100)); input.value=""; renderAiChat(); state.textContent="Готовлю ответ…";
-      aiChatRequest({message:message,task:context}).then(function(data){
+      aiChatRequest({message:message,locale:document.documentElement.lang||"ru",task:context}).then(function(data){
         cache[key]={answer:data.answer,at:Date.now()}; var keys=Object.keys(cache);
         if(keys.length>200) keys.sort(function(a,b){return (cache[a].at||0)-(cache[b].at||0);}).slice(0,keys.length-200).forEach(function(k){delete cache[k];});
         aiChatWrite(AI_CHAT_CACHE_PREFIX,cache); var next=aiChatRead(AI_CHAT_HISTORY_PREFIX,[]);
@@ -9901,8 +10296,10 @@
       else if(!s.open && dx>90) closePanel();
     }, {passive:true});
 
-    document.getElementById("introPanel").addEventListener("click", function(){ openPanel(); });
-    document.getElementById("introHelp").addEventListener("click", function(){ openPanel("help"); });
+    // The map is the desktop workspace. These legacy scene links may remain in
+    // cached markup, but never open a dimming modal over the map.
+    document.getElementById("introPanel").addEventListener("click", function(){ toast("Настройки доступны в кнопке «Панель» в шапке."); });
+    document.getElementById("introHelp").addEventListener("click", function(){ toast("Добавьте дело или адрес, определите местоположение и нажмите «В путь»."); });
     var rt=document.getElementById("remindToggle");
     if(rt) rt.addEventListener("click", function(){ setTimeout(updatePanelDot, 0); });
 
@@ -9913,6 +10310,9 @@
 
   initBilling();
   initAiChat();
+  initNegotiator();
+  initEmergencyExit();
+  initLifeAudit();
 
   // ===== Окно дел: модалка поверх карты (волна 35) =====
   // Список «Сегодня» раньше жил постоянной карточкой в потоке; теперь карта —
@@ -10160,6 +10560,86 @@
     } else {
       startFocusInterval(); focusTick();
     }
+  })();
+
+  // ===== Активность: шаги телефона и пульс совместимого Bluetooth-датчика =====
+  // Шагомер считает только события датчика после явного включения: в браузере нет
+  // доступа к системной истории шагов, поэтому старые шаги не выдумываются.
+  (function initActivityDock(){
+    var ACTIVITY_KEY="superday_activity_v1", GOAL=8000;
+    var state={steps:0, day:"", running:false, lastPeak:0, lastMagnitude:0, heartRate:null, heartDevice:null};
+    var stepCount=document.getElementById("stepCount"), progress=document.getElementById("activityProgress"),
+      status=document.getElementById("activityStatus"), locate=document.getElementById("activityLocate"),
+      go=document.getElementById("activityGo"), steps=document.getElementById("activitySteps"),
+      heart=document.getElementById("heartRate"), watch=document.getElementById("watchConnect"), support=document.getElementById("watchSupport");
+    if(!stepCount || !locate || !go || !steps) return;
+    try{ var saved=JSON.parse(localStorage.getItem(ACTIVITY_KEY)||"null"); if(saved && saved.day===todayKey()) state.steps=Math.max(0,Math.round(+saved.steps||0)); }catch(e){}
+    function saveActivity(){ try{ localStorage.setItem(ACTIVITY_KEY,JSON.stringify({day:todayKey(),steps:state.steps})); }catch(e){} }
+    function showActivity(message){
+      stepCount.textContent=state.steps.toLocaleString("ru-RU");
+      progress.style.width=Math.min(100,state.steps/GOAL*100)+"%";
+      status.textContent=message || (state.running ? "Шагомер включён" : "Готово к прогулке");
+      steps.textContent=state.running ? "Остановить шагомер" : "Включить шагомер";
+      steps.setAttribute("aria-pressed",state.running?"true":"false");
+      heart.textContent=state.heartRate ? "Пульс: "+state.heartRate+" уд/мин" : "Пульс: нет данных";
+    }
+    function motionStep(event){
+      var a=event.accelerationIncludingGravity; if(!a) return;
+      var m=Math.sqrt((a.x||0)*(a.x||0)+(a.y||0)*(a.y||0)+(a.z||0)*(a.z||0)), now=Date.now();
+      // A conservative peak crossing filters most incidental phone movement.
+      if(m>12.2 && state.lastMagnitude<=12.2 && now-state.lastPeak>330){ state.steps+=1; state.lastPeak=now; saveActivity(); showActivity(); }
+      state.lastMagnitude=m;
+    }
+    function enableSteps(){
+      function start(){
+        if(state.running) return;
+        if(!window.DeviceMotionEvent){ showActivity("Шагомер недоступен на этом устройстве"); return; }
+        window.addEventListener("devicemotion",motionStep,{passive:true}); state.running=true; showActivity("Шагомер включён");
+      }
+      if(window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission==="function"){
+        DeviceMotionEvent.requestPermission().then(function(result){ if(result==="granted") start(); else showActivity("Датчик движения не разрешён"); }).catch(function(){ showActivity("Не удалось включить датчик движения"); });
+      } else start();
+    }
+    function disableSteps(){
+      if(!state.running) return;
+      window.removeEventListener("devicemotion",motionStep);
+      state.running=false; state.lastMagnitude=0; state.lastPeak=0;
+      showActivity("Шагомер остановлен");
+    }
+    function getLocationAndStart(){
+      if(mapState.navigationActive){ showActivity("Маршрут уже идёт"); return; }
+      locate.disabled=true; locate.textContent="Определяем позицию...";
+      mapState.userLocState="requesting"; renderRouteBrief(mapState.lastRoute,mapState.lastTasks);
+      requestUserLocation(function(loc){
+        mapState.userLoc=validPoint(loc)?loc:null; mapState.userLocState=mapState.userLoc?"ready":"unavailable";
+        locate.disabled=false; locate.textContent="Определить моё местоположение"; buildMapView(tasksForMap());
+        if(!mapState.userLoc){ showActivity("Не удалось определить местоположение"); return; }
+        showActivity("Местоположение определено");
+        var stops=(mapState.lastTasks||[]).filter(function(t){ return t && validPoint(t.loc); });
+        if(stops.length) startInternalNavigation(stops); else showActivity("Точка на карте готова. Добавьте адрес, чтобы построить маршрут");
+      },true);
+    }
+    function connectHeartRate(){
+      if(state.heartDevice && state.heartDevice.gatt && state.heartDevice.gatt.connected){ state.heartDevice.gatt.disconnect(); return; }
+      function resetWatch(message){
+        state.heartRate=null; state.heartDevice=null; watch.disabled=false; watch.textContent="Подключить часы";
+        support.textContent=" · подключите совместимый пульсометр"; showActivity(message||"Часы отключены");
+      }
+      if(!navigator.bluetooth){ support.textContent=" · часы подключаются в Chrome на Android по Bluetooth"; return; }
+      watch.disabled=true; watch.textContent="Подключаем...";
+      navigator.bluetooth.requestDevice({filters:[{services:["heart_rate"]}],optionalServices:["heart_rate"]}).then(function(device){
+        state.heartDevice=device;
+        device.addEventListener("gattserverdisconnected",function(){ resetWatch("Часы отключены"); });
+        return device.gatt.connect();
+      }).then(function(server){ return server.getPrimaryService("heart_rate"); }).then(function(service){ return service.getCharacteristic("heart_rate_measurement"); }).then(function(characteristic){
+        function onPulse(event){ var v=event.target.value, flags=v.getUint8(0), bpm=(flags&1)?v.getUint16(1,true):v.getUint8(1); if(bpm>0 && bpm<300){ state.heartRate=bpm; showActivity("Пульс с часов подключён"); } }
+        characteristic.addEventListener("characteristicvaluechanged",onPulse); return characteristic.startNotifications();
+      }).then(function(){ watch.textContent="Отключить часы"; watch.disabled=false; support.textContent=" · значения приходят с подключённого датчика"; }).catch(function(){ resetWatch("Не удалось подключить совместимый пульсометр"); });
+    }
+    locate.addEventListener("click",getLocationAndStart);
+    go.addEventListener("click",function(){ if(validPoint(mapState.userLoc)) { var stops=(mapState.lastTasks||[]).filter(function(t){ return t && validPoint(t.loc); }); if(stops.length) startInternalNavigation(stops); else showActivity("Добавьте адрес к делу для маршрута"); } else getLocationAndStart(); });
+    steps.addEventListener("click",function(){ if(state.running) disableSteps(); else enableSteps(); }); watch.addEventListener("click",connectHeartRate);
+    showActivity();
   })();
 </script>
 <!-- Язык интерфейса по настройкам браузера (волна 11). Внешний слой: переводит
