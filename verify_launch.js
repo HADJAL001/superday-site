@@ -95,7 +95,7 @@ const SEED = () => {
       "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v99/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v100/.test(workerSource), "версия кэша service worker обновлена");
     say(/requested\.origin === self\.location\.origin/.test(workerSource) && /windows\[i\]\.navigate\(target\)\.catch/.test(workerSource),
       "push-уведомление открывает только безопасный маршрут внутри приложения");
     const referSource = fs.readFileSync(path.join(siteDir, "refer.js"), "utf8");
@@ -908,7 +908,7 @@ const SEED = () => {
   }
 
   // ===== 6. Покрытие перевода: непереведённых строк не должно появиться =====
-  for (const lang of ["en", "de", "zh"]) {
+  for (const lang of ["en", "es", "de", "fr", "zh"]) {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
     const openLanguage = async () => {
       try {

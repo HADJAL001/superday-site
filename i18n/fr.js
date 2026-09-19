@@ -591,6 +591,19 @@ window.__i18nDict("fr", {
     "Свернуть": "Réduire", "Свернуть навигацию": "Réduire la navigation", "Скрыть": "Masquer", "Скрыть навигацию": "Masquer la navigation",
     "Связать вопрос с делом": "Lier la question à une tâche", "Задайте любой вопрос или выберите дело выше, чтобы получить ответ с контекстом": "Posez toute question ou choisissez une tache pour une reponse avec contexte",
     "Загрузка города": "Téléchargement de ville", "Закрыть": "Fermer", "Название города": "Nom de la ville"
+    ,"Начать день": "Commencer la journée",
+    "Когда наступит время дела — приложение подскажет уведомлением и голосом. Для надёжных напоминаний при закрытом приложении": "Quand l'heure de la tâche arrive, l'app prévient par une notification et par la voix. Pour des rappels fiables lorsque l'app est fermée",
+    ": события лягут в системный календарь с будильниками. Web Push доступен после входа и разрешения в браузере; расписание дел пока хранится только на этом устройстве.": ": les événements seront ajoutés au calendrier système avec des alarmes. Web Push est disponible après la connexion et l'autorisation du navigateur ; le planning reste pour l'instant sur cet appareil.",
+    ": события лягут в системный календарь с будильниками. Web Push подключается после входа и разрешения браузера; расписание дел пока хранится только на этом устройстве.": ": les événements seront ajoutés au calendrier système avec des alarmes. Web Push est disponible après la connexion et l'autorisation du navigateur ; le planning reste pour l'instant sur cet appareil.",
+    "Аудит жизни": "Bilan de la semaine", "Пока маловато завершённых дел за неделю для честного вердикта — отмечайте выполненное, вернусь с разбором позже.": "Il y a encore trop peu de tâches terminées cette semaine pour un bilan honnête. Marquez ce qui est fait et je reviendrai avec une analyse plus tard.",
+    "Тон вердикта": "Ton du bilan", "Поддерживающий": "Bienveillant", "Жёсткий": "Direct", "Слишком жёстко — сделай мягче": "Trop direct : adoucir",
+    "Переносит все несделанные необязательные и важные-но-не-срочные дела на завтра одним нажатием. Срочные и уже начатые дела остаются на сегодня.": "Reporte à demain d'un geste toutes les tâches facultatives et importantes mais non urgentes qui ne sont pas faites. Les tâches urgentes et déjà commencées restent aujourd'hui.",
+    "Выйти из дня": "Clore la journée", "Купить разово — 499 ₽": "Acheter une fois — 499 ₽", "Как отказаться": "Comment refuser",
+    "ИИ сочинит черновик вежливого отказа или переноса. Это только текст для вас — приложение никому не звонит и ничего не отправляет само.": "L'IA rédigera un brouillon pour refuser ou reporter poliment. C'est seulement du texte pour vous : l'app n'appelle ni n'envoie rien toute seule.",
+    "Вежливый": "Poli", "Уверенный": "Assuré", "С юмором": "Avec humour", "Сочинить черновик": "Créer un brouillon", "Купить разово — 99 ₽": "Acheter une fois — 99 ₽",
+    "Прослушать черновик": "Écouter le brouillon", "Скопировать текст": "Copier le texte", "Это черновик от ИИ, не отправленное сообщение. Прочитайте и решите сами, отправлять ли его и в каком виде.": "C'est un brouillon d'IA, pas un message envoyé. Lisez-le et décidez vous-même de l'envoyer ou non, et sous quelle forme.",
+    "Например: не хочу идти на встречу с боссом в 15:00, хочу перенести на завтра": "Par exemple : je ne veux pas aller à la réunion avec mon chef à 15 h, je veux la reporter à demain",
+    "Кому адресовано (необязательно)": "Destinataire (facultatif)", "Тон сообщения": "Ton du message"
   },
 
   re: [
