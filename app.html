@@ -10327,8 +10327,9 @@
 
   // ===== Окно дел: модалка поверх карты (волна 35) =====
   // Список «Сегодня» раньше жил постоянной карточкой в потоке; теперь карта —
-  // фон всего экрана, и список открывается по требованию: клик по маркеру
-  // карты (с подсветкой конкретного дела) или фокус на поле ввода композера.
+  // фон всего экрана, и список открывается по явному действию: клик по маркеру
+  // карты (с подсветкой конкретного дела) или настройка маршрута. Фокус в поле
+  // ввода остаётся обычным вводом и не должен затемнять рабочую карту.
   // Использует общий #scrim с панелью настроек — обе модалки взаимоисключающие.
   function openTasksSheet(spotId){
     if(!routeEl) return;
@@ -10369,11 +10370,9 @@
     routeEl=document.getElementById("routeSheet");
     composerEl=document.getElementById("composer");
     var closeBtn=document.getElementById("routeClose");
-    var input=document.getElementById("taskInput");
     if(!routeEl || !scrimEl) return;
     if(closeBtn) closeBtn.addEventListener("click", function(){ closeTasksSheet(); });
     scrimEl.addEventListener("click", function(){ closeTasksSheet(); });
-    if(input) input.addEventListener("focus", function(){ openTasksSheet(); });
     document.addEventListener("keydown", function(e){
       if(e.key==="Escape" && routeSheetOpen){ e.preventDefault(); closeTasksSheet(); }
     });
