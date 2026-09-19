@@ -290,6 +290,7 @@ window.__i18nDict("en", {
     "события лягут в системный календарь с будильниками.": "events will be added to the system calendar with alarms.",
     "Канал Web Push подключается после входа и разрешения браузера; расписание дел пока хранится только на этом устройстве.": "Web Push is available after sign-in and browser permission; the task schedule is currently stored only on this device.",
     "Web Push станет доступен после настройки сервера, входа и разрешения браузера; расписание дел пока хранится только на этом устройстве.": "Web Push becomes available after server setup, sign-in and browser permission; the task schedule is currently stored only on this device.",
+    "Web Push подключается после входа и разрешения браузера; расписание дел пока хранится только на этом устройстве.": "Web Push is available after sign-in and browser permission; the task schedule is currently stored only on this device.",
     "Работает, пока открыта эта вкладка.": "Works while this tab is open.",
     "Нужны напоминания при закрытом приложении —": "Need reminders while the app is closed —",
     "выгрузи день в календарь": "export the day to your calendar",

@@ -276,6 +276,7 @@ window.__i18nDict("fr", {
     "выгрузи день в календарь": "exporte la journée vers le calendrier",
     ": события лягут в системный календарь с будильниками.": " : les événements entrent dans le calendrier du système avec des alarmes.",
     "Web Push станет доступен после настройки сервера, входа и разрешения браузера; расписание дел пока хранится только на этом устройстве.": "Web Push sera disponible après la configuration du serveur, la connexion et l'autorisation du navigateur ; le planning reste pour l'instant sur cet appareil.",
+    "Web Push подключается после входа и разрешения браузера; расписание дел пока хранится только на этом устройстве.": "Web Push est disponible après la connexion et l'autorisation du navigateur ; le planning reste pour l'instant sur cet appareil.",
 
     "Голос": "Voix",
     "Голосовой режим": "Mode vocal",

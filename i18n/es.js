@@ -276,6 +276,7 @@ window.__i18nDict("es", {
     "выгрузи день в календарь": "exporta el día al calendario",
     ": события лягут в системный календарь с будильниками.": ": los eventos entran en el calendario del sistema con alarmas.",
     "Web Push станет доступен после настройки сервера, входа и разрешения браузера; расписание дел пока хранится только на этом устройстве.": "Web Push estará disponible después de configurar el servidor, iniciar sesión y conceder permiso en el navegador; el horario de tareas por ahora se guarda solo en este dispositivo.",
+    "Web Push подключается после входа и разрешения браузера; расписание дел пока хранится только на этом устройстве.": "Web Push está disponible después de iniciar sesión y conceder permiso en el navegador; el horario de tareas por ahora se guarda solo en este dispositivo.",
 
     "Голос": "Voz",
     "Голосовой режим": "Modo de voz",

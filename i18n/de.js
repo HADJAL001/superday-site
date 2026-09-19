@@ -276,6 +276,7 @@ window.__i18nDict("de", {
     "события лягут в системный календарь с будильниками.": "werden die Termine mit Weckern in den Systemkalender übertragen.",
     "Канал Web Push подключается после входа и разрешения браузера; расписание дел пока хранится только на этом устройстве.": "Web Push ist nach Anmeldung und Browserfreigabe verfügbar; der Aufgabenplan wird derzeit nur auf diesem Gerät gespeichert.",
     "Web Push станет доступен после настройки сервера, входа и разрешения браузера; расписание дел пока хранится только на этом устройстве.": "Web Push wird nach der Servereinrichtung, Anmeldung und Browserfreigabe verfügbar; der Aufgabenplan wird derzeit nur auf diesem Gerät gespeichert.",
+    "Web Push подключается после входа и разрешения браузера; расписание дел пока хранится только на этом устройстве.": "Web Push ist nach Anmeldung und Browserfreigabe verfügbar; der Aufgabenplan wird derzeit nur auf diesem Gerät gespeichert.",
     "Работает, пока открыта эта вкладка.": "Funktioniert, solange dieser Tab offen ist.",
     "Нужны напоминания при закрытом приложении —": "Erinnerungen bei geschlossener App —",
     "выгрузи день в календарь": "exportiere den Tag in den Kalender",
