@@ -945,6 +945,19 @@ const SEED = () => {
     }));
     say(!/ГОВОРИТЕ/.test(spot.ph), "приглашение переведено", spot.ph);
     say(!/Срочно/.test(spot.u) && !/Важно/.test(spot.i), "теги переведены", spot.u + " / " + spot.i);
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.waitForTimeout(120);
+    const mobileFit = await page.evaluate(() => {
+      const dock = document.getElementById("activityDock"), composer = document.getElementById("composer");
+      const locate = document.getElementById("activityLocate"), go = document.getElementById("activityGo");
+      if (!dock || !composer || !locate || !go) return null;
+      const d = dock.getBoundingClientRect(), c = composer.getBoundingClientRect();
+      const l = locate.getBoundingClientRect(), g = go.getBoundingClientRect();
+      return { overflow: document.documentElement.scrollWidth > innerWidth, clear: d.bottom < c.top,
+        buttonsFit: l.width > 0 && g.width > 0 && l.left >= 0 && g.right <= innerWidth };
+    });
+    say(!!mobileFit && !mobileFit.overflow && mobileFit.clear && mobileFit.buttonsFit,
+      "mobile activity controls fit at 320px", mobileFit ? JSON.stringify(mobileFit) : "activity controls not found");
     await page.close();
   }
 
