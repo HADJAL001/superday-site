@@ -10717,7 +10717,12 @@
     go.addEventListener("click",function(){ if(validPoint(mapState.userLoc)) { var stops=(mapState.lastTasks||[]).filter(function(t){ return t && validPoint(t.loc); }); if(stops.length) startInternalNavigation(stops); else showActivity("Добавьте адрес к делу для маршрута"); } else getLocationAndStart(); });
     window.__superdayNativePedometer=function(payload){
       payload=payload||{};
-      if(typeof payload.steps==="number" && payload.steps>=0) state.steps=Math.round(payload.steps);
+      if(typeof payload.steps==="number" && payload.steps>=0){
+        state.steps=Math.round(payload.steps);
+        // Native bridges report the phone's accumulated daily count. Persist it too,
+        // otherwise a reload discards an already received measurement.
+        saveActivity();
+      }
       if(typeof payload.running==="boolean") state.running=payload.running;
       showActivity(typeof payload.status==="string" ? payload.status : "");
     };

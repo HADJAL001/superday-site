@@ -95,7 +95,7 @@ const SEED = () => {
       "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v96/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v97/.test(workerSource), "версия кэша service worker обновлена");
     say(/requested\.origin === self\.location\.origin/.test(workerSource) && /windows\[i\]\.navigate\(target\)\.catch/.test(workerSource),
       "push-уведомление открывает только безопасный маршрут внутри приложения");
     const referSource = fs.readFileSync(path.join(siteDir, "refer.js"), "utf8");
@@ -481,6 +481,16 @@ const SEED = () => {
     }));
     say(expandedActivity.expanded && expandedActivity.stepsVisible && expandedActivity.healthVisible,
       "mobile activity dock expands to step counter and heart rate controls", JSON.stringify(expandedActivity));
+    const nativePedometerPersistence = await page.evaluate(() => {
+      window.__superdayNativePedometer({ steps: 4217, running: true });
+      try {
+        const saved = JSON.parse(localStorage.getItem("superday_activity_v1") || "null");
+        return { rendered: document.getElementById("stepCount").textContent, saved: saved && saved.steps, day: saved && saved.day };
+      } catch (_) { return null; }
+    });
+    say(!!nativePedometerPersistence && nativePedometerPersistence.rendered.replace(/\s/g, "") === "4217" &&
+      nativePedometerPersistence.saved === 4217 && !!nativePedometerPersistence.day,
+      "native pedometer readings persist for the current day", JSON.stringify(nativePedometerPersistence));
     const effortLabels = await page.evaluate(() => Array.from(document.querySelectorAll(".txp")).map(el => el.textContent));
     say(effortLabels.every(label => !/\bXP\b/.test(label)),
       "task cards describe effort without game points", effortLabels.join(" | ") || "no open task cards");
