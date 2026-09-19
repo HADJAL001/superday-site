@@ -95,7 +95,7 @@ const SEED = () => {
       "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v90/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v91/.test(workerSource), "версия кэша service worker обновлена");
     say(!/google\.com\/maps/i.test(appSource), "основной сценарий не содержит ссылок на внешний навигатор");
     say(/отправлен(?:о)? на модерацию в RuStore|отправлено в RuStore/.test(landingSource) &&
       /НА МОДЕРАЦИИ/.test(landingSource), "лендинг показывает актуальный статус публикации в RuStore");
@@ -476,6 +476,9 @@ const SEED = () => {
     }));
     say(expandedActivity.expanded && expandedActivity.stepsVisible && expandedActivity.healthVisible,
       "mobile activity dock expands to step counter and heart rate controls", JSON.stringify(expandedActivity));
+    const effortLabels = await page.evaluate(() => Array.from(document.querySelectorAll(".txp")).map(el => el.textContent));
+    say(effortLabels.every(label => !/\bXP\b/.test(label)),
+      "task cards describe effort without game points", effortLabels.join(" | ") || "no open task cards");
     await page.click("#activityExpand");
     await page.waitForTimeout(60);
     await page.screenshot({ path: artifact("shot-mobile.png"), fullPage: false });

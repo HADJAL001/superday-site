@@ -459,6 +459,7 @@ window.__i18nDict("fr", {
     "Есть результат": "Il y a un résultat",
     "Закрыть первое дело": "Boucler la première tâche",
     "Хозяин матрицы": "Maître de la matrice",
+    "Баланс приоритетов": "Equilibre des priorites",
     "Закрыть дела во всех четырёх квадрантах": "Boucler des tâches dans les quatre quadrants",
     "Плотный день": "Journée dense",
     "Закрыть 5 дел за один день": "Boucler 5 tâches en une journée",

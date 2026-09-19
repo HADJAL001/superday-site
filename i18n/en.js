@@ -550,6 +550,7 @@ window.__i18nDict("en", {
     "Есть результат": "There is a result",
     "Закрыть первое дело": "Close your first task",
     "Хозяин матрицы": "Master of the matrix",
+    "Баланс приоритетов": "Priority balance",
     "Закрыть дела во всех четырёх квадрантах": "Close tasks in all four quadrants",
     "Плотный день": "A packed day",
     "Закрыть 5 дел за один день": "Close 5 tasks in one day",

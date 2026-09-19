@@ -154,7 +154,7 @@
     return [
       { id:"first_step",      title:"Первый шаг",       desc:"Добавить хотя бы одно дело",        unlocked: (tasksCount||0) > 0 || l.totalDone > 0 },
       { id:"first_done",      title:"Есть результат",   desc:"Закрыть первое дело",               unlocked: l.totalDone >= 1 },
-      { id:"quadrant_master", title:"Хозяин матрицы",   desc:"Закрыть дела во всех четырёх квадрантах", unlocked: quadsCovered },
+      { id:"quadrant_master", title:"Баланс приоритетов", desc:"Закрыть дела во всех четырёх квадрантах", unlocked: quadsCovered },
       { id:"productive_day",  title:"Плотный день",     desc:"Закрыть 5 дел за один день",        unlocked: l.bestDay >= 5 },
       { id:"debater",         title:"Спорщик",          desc:"Разобрать спорное дело ИИ-дебатом",  unlocked: l.debated >= 1 },
       { id:"veteran",         title:"Ветеран",          desc:"Закрыть 25 дел",                    unlocked: l.totalDone >= 25 }

@@ -463,6 +463,7 @@ window.__i18nDict("de", {
     "Есть результат": "Es gibt ein Ergebnis",
     "Закрыть первое дело": "Die erste Aufgabe abschließen",
     "Хозяин матрицы": "Herr der Matrix",
+    "Баланс приоритетов": "Prioritaeten im Gleichgewicht",
     "Закрыть дела во всех четырёх квадрантах": "Aufgaben in allen vier Quadranten abschließen",
     "Плотный день": "Dichter Tag",
     "Закрыть 5 дел за один день": "5 Aufgaben an einem Tag abschließen",

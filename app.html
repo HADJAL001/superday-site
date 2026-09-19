@@ -3457,8 +3457,8 @@
       if(window.SDGrowth && !t.done){
         var d = SDGrowth.difficultyOf(validDur(t.dur) ? t.dur : null, quadOf(t));
         var xpb = document.createElement("span"); xpb.className = "txp";
-        xpb.textContent = d.emoji + " +" + d.xp + " XP";
-        xpb.title = d.label + " · " + d.xp + " XP за закрытие";
+        xpb.textContent = d.emoji + " " + d.label;
+        xpb.title = d.label;
         meta.appendChild(xpb);
       }
       // Черновик разбора: тильда у минут вместо отдельной строки.
@@ -4565,10 +4565,9 @@
     var box = document.getElementById("triumphBox");
     if(!box) return;
     var r = res.reward;
-    var kicker = res.levelUp ? "Новый уровень" : (r.kind === "critical" ? "Критический успех" : r.difficulty.label);
-    var value = res.levelUp ? String(res.level) : ("+" + r.xp);
-    var note = res.levelUp ? ("Уровень " + res.level + " — " + r.difficulty.emoji + " +" + r.xp + " XP")
-                           : (r.insight || (r.difficulty.emoji + " " + r.difficulty.label));
+    var kicker = r.kind === "critical" ? "Критический успех" : r.difficulty.label;
+    var value = "Готово";
+    var note = r.insight || (r.difficulty.emoji + " " + r.difficulty.label);
     box.innerHTML = '<div class="tr-kicker"></div><div class="tr-value"></div><div class="tr-note"></div>';
     box.querySelector(".tr-kicker").textContent = kicker;
     box.querySelector(".tr-value").textContent = value;
@@ -4578,7 +4577,7 @@
     if(triumph._t1) clearTimeout(triumph._t1);
     if(triumph._t2) clearTimeout(triumph._t2);
     requestAnimationFrame(function(){ box.classList.add("show"); });
-    var hold = (res.levelUp || r.insight) ? 2300 : 1000;
+    var hold = r.insight ? 2300 : 1000;
     triumph._t1 = setTimeout(function(){ box.classList.add("leave"); box.classList.remove("show"); }, hold);
     triumph._t2 = setTimeout(function(){ box.hidden = true; box.classList.remove("leave"); }, hold + 460);
     // Вибрацию без предшествующего касания браузер отклоняет и пишет ошибку в
@@ -5372,7 +5371,7 @@
     box.appendChild(arcEl("div","da-eyebrow","Итог дня"));
     box.appendChild(arcEl("div","da-head", s.headline));
     var row=arcEl("div","da-sum");
-    if(s.xpEarned) row.appendChild(arcEl("span",null,"+"+s.xpEarned+" XP за день"));
+    if(done) row.appendChild(arcEl("span",null,"Завершено: "+done+" дел"));
     if(s.focusQuadrantLabel) row.appendChild(arcEl("span",null,"Фокус: "+s.focusQuadrantLabel));
     row.appendChild(arcEl("span",null,s.streakLine));
     box.appendChild(row);
@@ -9298,7 +9297,7 @@
         render();
         var badge=document.querySelector('.quad[data-q="2"] ul.tasks .txp');
         if(!badge) throw new Error("нет предпросмотра награды на карточке дела");
-        if(badge.textContent.indexOf("+60 XP")===-1) throw new Error("предпросмотр показывает "+badge.textContent+" вместо +60 XP");
+        if(badge.textContent.indexOf("Большое дело")===-1) throw new Error("предпросмотр показывает "+badge.textContent+" вместо оценки усилия");
         markDone(t);
         render();
         if(document.querySelector('.quad[data-q="2"] ul.tasks .txp')) throw new Error("предпросмотр остался на закрытом деле");
@@ -9360,7 +9359,7 @@
         paintArcEvening(box, SDGrowth.getIntention());
         var head=box.querySelector(".da-head").textContent;
         if(head!=="День закрыт полностью 🎯") throw new Error("итог: "+head);
-        if(box.textContent.indexOf("+40 XP за день")===-1) throw new Error("XP за день не показаны");
+        if(box.textContent.indexOf("Завершено: 1 дел")===-1) throw new Error("итог завершений не показан");
         var echo=box.querySelector(".da-echo");
         if(!echo || echo.textContent.indexOf("держит слово себе")===-1) throw new Error("утренний выбор не вернулся вечером");
         if(!box.querySelector(".da-affirm").textContent) throw new Error("нет аффирмации");

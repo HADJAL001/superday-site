@@ -459,6 +459,7 @@ window.__i18nDict("es", {
     "Есть результат": "Hay resultado",
     "Закрыть первое дело": "Cerrar la primera tarea",
     "Хозяин матрицы": "Dueño de la matriz",
+    "Баланс приоритетов": "Equilibrio de prioridades",
     "Закрыть дела во всех четырёх квадрантах": "Cerrar tareas en los cuatro cuadrantes",
     "Плотный день": "Día intenso",
     "Закрыть 5 дел за один день": "Cerrar 5 tareas en un día",
