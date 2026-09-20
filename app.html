@@ -126,7 +126,7 @@
     font-family:var(--font-ui); color:var(--text);
     font-variant-numeric:tabular-nums; letter-spacing:.008em; font-weight:400;
     background:var(--bg-deep);
-    min-height:100vh; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    min-height:100dvh; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
   }
   /* Дисплейная антиква мельче гротеска по оптике, поэтому заголовки используют
      умеренный вес и нормальный трекинг: текст остается разборчивым на телефоне. */
@@ -873,6 +873,10 @@
   .panel-close:hover{border-color:var(--gold); color:var(--text)}
   .panel-body{flex:1 1 auto; overflow-y:auto; overscroll-behavior:contain; padding:12px 18px 40px;
     -webkit-overflow-scrolling:touch}
+  .panel-services{display:flex; gap:8px; padding:0 0 12px; border-bottom:1px solid var(--hair-soft)}
+  .panel-services a{flex:1; min-height:42px; display:grid; place-items:center; border:1px solid var(--border); border-radius:8px;
+    color:var(--text-dim); font-size:12px; font-weight:700; text-decoration:none}
+  .panel-services a:hover{color:var(--text); border-color:var(--gold)}
 
   .pgroup{border:1px solid var(--border); margin:0 0 10px;
     background:rgba(23,29,42,.12); overflow:hidden}
@@ -1176,7 +1180,7 @@
   .leaflet-control-attribution svg{display:inline; vertical-align:baseline}
 
   /* ===== Карта — фон всего главного экрана (как волна 31), не карточка ===== */
-  .mapcard{position:fixed; inset:0; z-index:0; height:100vh; overflow:hidden; background:var(--ink)}
+  .mapcard{position:fixed; inset:0; z-index:0; height:100dvh; overflow:hidden; background:var(--ink)}
   .mapview{position:absolute; inset:0; width:100%; height:100%; background:var(--ink)}
   .mapview .maplibregl-canvas{outline:0}
   .mapview .maplibregl-ctrl-group{overflow:hidden; border:1px solid var(--hair); border-radius:8px;
@@ -1928,6 +1932,31 @@
     .sp-swipe-hint{display:none}
     .stage-plan.sp-dismissed + *{display:none}
   }
+
+  /* Mobile layout contract: header actions stay compact; plan owns the lower viewport. */
+  @media(max-width:680px){
+    html,body{width:100%; min-height:100dvh; overflow-x:hidden}
+    header .bar{height:56px; padding:0 12px; gap:8px}
+    header .brand{display:flex; min-width:0; flex:1}
+    header .brand img{width:25px; height:25px}
+    header .brand b{font-size:17px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    header .head-service,header .back,#layoutBtn{display:none!important}
+    header .right{gap:6px; flex:0 0 auto}
+    .theme-btn,.panel-btn{width:42px; min-width:42px; height:42px; min-height:42px}
+    .offline-note,footer.wrap{display:none!important}
+    body.plan-open .stage{height:calc(100dvh - 56px); min-height:calc(100dvh - 56px); padding:0; overflow:hidden}
+    .stage-plan{position:fixed; left:0; right:0; bottom:0; z-index:60; width:100%; height:min(85dvh,720px); max-height:85dvh; margin:0;
+      display:grid; grid-template-rows:14px auto minmax(0,1fr) auto auto; overflow:hidden; border-radius:24px 24px 0 0}
+    .stage-plan::before{grid-row:1; margin:5px auto 0}
+    .sp-head{grid-row:2; align-self:end; padding:0 20px 12px; margin:0}
+    .sp-list{grid-row:3; min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; touch-action:pan-y}
+    .sp-row{padding:12px 0; margin:0 20px; min-width:0}
+    .sp-text{font-size:15px; line-height:1.3}
+    .sp-meta{gap:4px; margin-top:6px}
+    .sp-chip{min-height:22px; padding:3px 7px; font-size:11px; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+    .sp-origin{grid-row:4; margin:0; padding:8px 20px; background:rgba(10,16,27,.96); border-top:1px solid rgba(255,255,255,.07)}
+    .sp-start{grid-row:5; z-index:3; min-height:56px; margin:0; border-radius:0; box-shadow:0 -12px 26px rgba(10,16,27,.88); padding-bottom:env(safe-area-inset-bottom,0px)}
+  }
 </style>
 </head>
 <body>
@@ -2229,6 +2258,10 @@
     <button class="panel-close" id="panelClose" type="button" aria-label="Закрыть панель">&times;</button>
   </div>
   <div class="panel-body" id="panelBody">
+  <nav class="panel-services" aria-label="Документы и поддержка">
+    <a href="documents.html">Документы</a>
+    <a href="support.html">Поддержка</a>
+  </nav>
   <section class="pgroup" data-sec="matrix">
     <button class="pg-head" type="button" aria-expanded="false"><span class="pg-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-matrix"/></svg></span><span class="pg-title">Разбор по важности</span><span class="pg-note" data-note></span><span class="pg-chev" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-chev"/></svg></span></button>
     <div class="pg-body">
@@ -5356,6 +5389,7 @@
     var sum=document.createElement("span"); sum.className="sp-sum";
     sum.textContent=order.length+" "+plural(order.length,["дело","дела","дел"]);
     head.appendChild(title); head.appendChild(sum); box.appendChild(head);
+    var list=document.createElement("div"); list.className="sp-list";
     order.forEach(function(t, i){
       var row=document.createElement("div"); row.className="sp-row";
       var num=document.createElement("span"); num.className="sp-num"; num.textContent=String(i+1);
@@ -5383,8 +5417,9 @@
       }
       row.appendChild(num); row.appendChild(body);
       row.addEventListener("click", function(){ openTasksSheet(t.id); });
-      box.appendChild(row);
+      list.appendChild(row);
     });
+    box.appendChild(list);
     var locate=document.createElement("button"); locate.type="button"; locate.className="sp-locate";
     locate.textContent=validPoint(mapState.userLoc)?"Обновить моё местоположение":"Определить моё местоположение";
     locate.addEventListener("click",function(){
@@ -5427,6 +5462,7 @@
     var startY=0, dy=0, dragging=false;
     box.addEventListener("touchstart", function(e){
       if(!(window.matchMedia && window.matchMedia("(max-width:680px)").matches)) return;
+      if(e.target && e.target.closest && e.target.closest(".sp-list")) return;
       startY=e.touches[0].clientY; dy=0; dragging=true; box.classList.add("sp-dragging");
     }, {passive:true});
     box.addEventListener("touchmove", function(e){
