@@ -77,7 +77,7 @@
 
     /* Cormorant Garamond — высококонтрастная антиква «кутюрной» подачи;
        Jost — геометрический гротеск интерфейса. Кириллица полная у обеих. */
-    --font-display:"Cormorant Garamond","Playfair Display",Georgia,"Times New Roman",serif;
+    --font-display:Inter,Manrope,system-ui,-apple-system,"Segoe UI",sans-serif;
     --font-ui:"Inter","Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
   }
   html[data-theme="emerald"]{
@@ -173,6 +173,7 @@
     background:linear-gradient(180deg,rgba(23,29,42,.92),rgba(8,11,18,.9)); border:1px solid var(--border);
     border-radius:18px 18px 0 0; padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));
     backdrop-filter:blur(16px); box-shadow:0 -18px 40px -14px rgba(0,0,0,.55)}
+  body.route-sheet-open .composer{opacity:0; transform:translateY(110%); pointer-events:none; visibility:hidden}
   main.wrap{padding-bottom:132px}
   .composer .row1{display:flex; gap:10px; flex-wrap:wrap}
   .composer input[type=text]{flex:1 1 260px; min-width:0; background:var(--ink); border:1px solid var(--border);
@@ -200,6 +201,7 @@
     box-shadow:0 12px 28px -12px rgba(200,214,240,.5)}
   .add-btn:active{transform:translateY(1px)}
   .toggles{display:flex; gap:9px; margin-top:12px; flex-wrap:wrap; align-items:center}
+  .composer:not(.has-text) .toggles{display:none}
   .tg{cursor:pointer; user-select:none; font-size:12.5px; color:var(--text-dim); border:1px solid var(--border);
     background:var(--ink); padding:8px 14px; border-radius:999px; transition:.18s}
   .tg[aria-pressed=true]{color:var(--on-accent); font-weight:700; border-color:transparent}
@@ -304,7 +306,7 @@
   .route-close{flex:0 0 auto; width:32px; height:32px; border-radius:50%; border:1px solid var(--border);
     background:var(--ink); color:var(--text-dim); font-size:18px; line-height:1; cursor:pointer}
   .route-close:hover{color:var(--text); border-color:var(--hair)}
-  .route h3{font-family:var(--font-display); font-weight:700; font-size:22px; margin:0}
+  .route h3{font-family:var(--font-ui); font-weight:700; font-size:22px; margin:0}
   ol.plan{list-style:none; counter-reset:s; margin:0; padding:0; display:flex; flex-direction:column; gap:9px}
   ol.plan li{counter-increment:s; display:flex; align-items:center; gap:13px; font-size:14px}
   ol.plan li::before{content:counter(s); flex:0 0 auto; width:26px; height:26px; border-radius:50%;
@@ -323,6 +325,7 @@
   .route .done-line{margin-top:14px; font-size:12px; color:var(--text-muted)}
   .route .bar-wrap{height:6px; border-radius:6px; background:var(--ink); overflow:hidden; margin-top:8px; border:1px solid var(--border)}
   .route .bar-fill{height:100%; width:0; background:var(--grad-gold); transition:width .4s ease}
+  .pg-group-label{margin:18px 0 7px; padding:0 4px; color:var(--text-muted); font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase}
 
   .toolbar{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin:0 0 30px}
   .toolbar button{background:none; border:1px solid var(--border); color:var(--text-dim); border-radius:999px;
@@ -1677,7 +1680,7 @@
 
   /* Premium instrument system: one quiet surface language for every working window. */
   :root{
-    --font-display:"Prata",Georgia,"Times New Roman",serif;
+    --font-display:Inter,Manrope,system-ui,-apple-system,"Segoe UI",sans-serif;
     --font-ui:"Inter","Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
     --window:#101722;
     --window-deep:#0A1019;
@@ -3335,6 +3338,10 @@
   var tgU = document.getElementById("tgUrgent");
   var tgI = document.getElementById("tgImportant");
   var quadHint = document.getElementById("quadHint");
+  var composerForInput=document.getElementById("composer");
+  function syncComposerContext(){ if(composerForInput) composerForInput.classList.toggle("has-text",!!String(input.value||"").trim()); }
+  input.addEventListener("input",syncComposerContext);
+  syncComposerContext();
   var QUAD_NAME = {1:"→ Сделать сейчас",2:"→ Запланировать",3:"→ Быстро закрыть",4:"→ Отложить"};
 
   function refreshHint(){
@@ -10636,6 +10643,12 @@
     scrimEl=document.getElementById("scrim");
     panelBtn=document.getElementById("panelBtn");
     if(!panelEl || !scrimEl || !panelBtn) return;
+    var panelGroups={account:"Профиль",chat:"Инструменты",matrix:"Инструменты",remind:"Инструменты",voice:"Инструменты",stats:"Инструменты",growth:"Инструменты",tpl:"Инструменты",notes:"Инструменты",data:"Данные",help:"Помощь",diag:"Помощь"};
+    var lastGroup="";
+    Array.prototype.forEach.call(panelEl.querySelectorAll(".pgroup"),function(group){
+      var label=panelGroups[group.getAttribute("data-sec")]||"Помощь";
+      if(label!==lastGroup){ var title=document.createElement("div"); title.className="pg-group-label"; title.textContent=label; group.parentNode.insertBefore(title,group); lastGroup=label; }
+    });
 
     panelBtn.addEventListener("click", function(){ togglePanel(); });
     document.getElementById("panelClose").addEventListener("click", function(){ closePanel(); });
@@ -10726,6 +10739,8 @@
       routeEl.hidden=false;
       void routeEl.offsetWidth;
       routeEl.classList.add("open");
+      document.body.classList.add("route-sheet-open");
+      if(composerEl){ composerEl.setAttribute("aria-hidden","true"); if("inert" in HTMLElement.prototype) composerEl.inert=true; }
       scrimEl.classList.add("on");
       setBackdropInert(true);
       routeSheetOpen=true;
@@ -10743,6 +10758,8 @@
   function closeTasksSheet(){
     if(!routeSheetOpen) return;
     routeEl.classList.remove("open");
+    document.body.classList.remove("route-sheet-open");
+    if(composerEl){ composerEl.removeAttribute("aria-hidden"); if("inert" in HTMLElement.prototype) composerEl.inert=false; }
     scrimEl.classList.remove("on");
     setBackdropInert(false);
     routeSheetOpen=false;
