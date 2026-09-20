@@ -1516,6 +1516,23 @@
   body.nav-active .stage-mic,body.nav-active .stage-say,body.nav-active .stage-live,
   body.nav-active .route-brief,body.nav-active .stage-plan,body.nav-active .stage-links{display:none}
   body.nav-active .mapcard::after{background:rgba(6,10,26,.12); box-shadow:inset 0 0 70px 8px rgba(6,10,26,.38)}
+  /* Launch sequence: a short confirmation that the day has entered navigation mode. */
+  .stage-plan:not([hidden]){isolation:isolate}
+  .stage-plan:not([hidden])::after{content:"";position:absolute;z-index:2;left:6%;right:6%;height:2px;top:0;opacity:0;
+    pointer-events:none;background:linear-gradient(90deg,transparent,var(--gold-bright),transparent);box-shadow:0 0 18px var(--gold-bright)}
+  .stage-plan:not([hidden]) .sp-start{animation:launchBreathe 2.2s ease-in-out infinite}
+  .stage-plan.is-launching{pointer-events:none;animation:planCollapse .72s cubic-bezier(.2,.8,.2,1) both}
+  .stage-plan.is-launching::after{opacity:1;animation:routeScan .72s ease-in both}
+  .day-launch{position:fixed;inset:0;z-index:1005;display:grid;place-items:center;pointer-events:none;opacity:0}
+  .day-launch.is-active{opacity:1}
+  .day-launch-core{width:14px;height:14px;border-radius:50%;background:var(--gold-bright);box-shadow:0 0 0 0 rgba(232,203,113,.7),0 0 42px 13px rgba(232,203,113,.65)}
+  .day-launch.is-active .day-launch-core{animation:launchCore 1.05s cubic-bezier(.2,.8,.2,1) both}
+  .day-launch-label{position:absolute;top:calc(50% + 48px);font:700 11px var(--font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--text);text-shadow:0 2px 18px #000}
+  @keyframes launchBreathe{50%{box-shadow:0 0 0 5px rgba(232,203,113,.12),0 0 28px rgba(232,203,113,.35);filter:brightness(1.08)}}
+  @keyframes routeScan{from{transform:translateY(-20px)}to{transform:translateY(220px)}}
+  @keyframes planCollapse{0%{opacity:1;transform:scale(1)}55%{opacity:.7;filter:blur(1px)}100%{opacity:0;transform:scale(.92);filter:blur(9px)}}
+  @keyframes launchCore{0%{transform:scale(.5);opacity:0}20%{opacity:1}68%{transform:scale(5);box-shadow:0 0 0 22px rgba(232,203,113,.12),0 0 68px 24px rgba(232,203,113,.72)}100%{transform:scale(46);opacity:0;box-shadow:0 0 0 60px rgba(232,203,113,0),0 0 20px 0 rgba(232,203,113,0)}}
+  @media(prefers-reduced-motion:reduce){.stage-plan:not([hidden]) .sp-start,.stage-plan.is-launching,.stage-plan.is-launching::after,.day-launch.is-active .day-launch-core{animation:none}.stage-plan.is-launching{opacity:0}.day-launch{display:none}}
   .internal-nav.is-minimized > :not(.in-head){display:none}
   .internal-nav.is-minimized{padding:10px 12px; cursor:pointer}
   .internal-nav .in-head{align-items:center}
@@ -2046,6 +2063,10 @@
         <button class="rb-action primary" id="internalNavStop" type="button">Завершить маршрут</button>
       </div>
     </section>
+    <div class="day-launch" id="dayLaunch" aria-live="polite" aria-atomic="true" hidden>
+      <div class="day-launch-core" aria-hidden="true"></div>
+      <span class="day-launch-label">Запускаем маршрут</span>
+    </div>
     <section class="stage-plan" id="stagePlan" hidden aria-label="План дня"></section>
     <p class="stage-links"><button type="button" class="inline-link" id="introHelp">Как это устроено</button> · <button type="button" class="inline-link" id="introPanel">Панели</button></p>
   </section>
@@ -3922,6 +3943,40 @@
     startNavigationWatch();
     locateRouteOrigin(true);
   }
+  function playLaunchSound(){
+    try{
+      var AudioCtx=window.AudioContext||window.webkitAudioContext;
+      if(!AudioCtx) return;
+      var ctx=new AudioCtx(), now=ctx.currentTime, gain=ctx.createGain(), low=ctx.createOscillator(), high=ctx.createOscillator();
+      gain.gain.setValueAtTime(.0001,now); gain.gain.exponentialRampToValueAtTime(.12,now+.025); gain.gain.exponentialRampToValueAtTime(.0001,now+.58);
+      low.type="sine"; low.frequency.setValueAtTime(92,now); low.frequency.exponentialRampToValueAtTime(56,now+.18);
+      high.type="sine"; high.frequency.setValueAtTime(420,now+.27); high.frequency.exponentialRampToValueAtTime(720,now+.52);
+      low.connect(gain); high.connect(gain); gain.connect(ctx.destination); low.start(now); high.start(now+.24); low.stop(now+.24); high.stop(now+.6);
+      setTimeout(function(){ ctx.close(); },800);
+    }catch(e){}
+  }
+  function launchMapCamera(stops){
+    var first=stops&&stops[0], point=first&&first.loc;
+    if(!mapState.map || !validPoint(point)) return;
+    try{
+      if(mapState.engine==="leaflet") mapState.map.flyTo([point.lat,point.lon],Math.max(15,mapState.map.getZoom()),{duration:1.15});
+      else mapState.map.easeTo({center:[point.lon,point.lat],zoom:Math.max(15,mapState.map.getZoom()),pitch:52,bearing:-12,duration:1150,essential:true});
+    }catch(e){}
+  }
+  function beginDayLaunch(stops){
+    stops=(stops||[]).filter(function(t){ return t && validPoint(t.loc); });
+    if(!stops.length || document.body.classList.contains("nav-active")) return;
+    var plan=document.getElementById("stagePlan"), launch=document.getElementById("dayLaunch"), reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(plan) plan.classList.add("is-launching");
+    if(launch){ launch.hidden=false; launch.classList.add("is-active"); }
+    try{ if(navigator.vibrate) navigator.vibrate([50,30,50]); }catch(e){}
+    playLaunchSound(); launchMapCamera(stops);
+    setTimeout(function(){
+      if(launch){ launch.classList.remove("is-active"); launch.hidden=true; }
+      if(plan) plan.classList.remove("is-launching");
+      startInternalNavigation(stops);
+    },reduce?0:760);
+  }
   function recenterInternalNavigation(){
     if(!mapState.map || !validPoint(mapState.userLoc)){
       if(mapState.navigationActive) locateRouteOrigin(true);
@@ -5180,7 +5235,7 @@
     start.addEventListener("click",function(){
       var stops=planOrder().filter(function(t){ return !t.done && validPoint(t.loc); });
       if(!stops.length){ stageSay("Добавьте адрес к делу, чтобы начать маршрут."); return; }
-      startInternalNavigation(stops);
+      beginDayLaunch(stops);
     });
     box.appendChild(start);
     if(window.matchMedia && window.matchMedia("(max-width:680px)").matches){
