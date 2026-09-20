@@ -1197,6 +1197,7 @@
     border:1px solid rgba(232,203,113,.28);border-radius:8px;background:rgba(7,13,23,.93);color:var(--text);
     box-shadow:0 16px 42px rgba(0,0,0,.3);backdrop-filter:blur(14px)}
   .activity-dock[hidden]{display:none}
+  .activity-dock.is-open{display:block}
   .activity-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
   .activity-title{font:700 13px var(--font-ui,sans-serif);letter-spacing:0;color:var(--text)}
   .activity-status{font-size:11px;color:var(--text-muted);text-align:right}
@@ -1946,6 +1947,9 @@
       <button class="theme-btn" id="themeBtn" type="button" aria-pressed="false" title="Переключить цвет интерфейса">
         <span class="theme-swatch" aria-hidden="true"></span><span class="theme-label">Цвет</span>
       </button>
+      <button class="panel-btn activity-toggle" id="activityToggle" type="button" aria-expanded="false" aria-controls="activityDock" title="Открыть шагомер, пульс и местоположение">
+        <span class="pb-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-gauge"/></svg></span><span class="pb-label">Движение</span>
+      </button>
       <button class="panel-btn" id="layoutBtn" type="button" aria-expanded="false" aria-controls="layoutPop"
               title="Выбери, какие блоки видны на главном экране">
         <span class="pb-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-grid"/></svg></span><span class="pb-label">Блоки</span>
@@ -1973,7 +1977,7 @@
     </button>
     <div class="stage-say" id="stageSay">СКАЖИТЕ ДЕЛА — ИИ ПОКАЖЕТ ИХ НА КАРТЕ И СОБЕРЁТ ПЛАН ДНЯ</div>
     <div class="stage-live" id="stageLive" aria-live="polite"></div>
-    <section class="activity-dock" id="activityDock" aria-label="Активность и маршрут">
+    <section class="activity-dock" id="activityDock" hidden aria-label="Активность и маршрут">
       <div class="activity-top"><div class="activity-title">Движение сегодня</div><div class="activity-status" id="activityStatus">Готово к прогулке</div><button class="activity-expand" id="activityExpand" type="button" title="Показать шагомер и пульс" aria-label="Показать шагомер и пульс" aria-controls="activityDock" aria-expanded="true"><svg class="sdi" aria-hidden="true" focusable="false"><use href="#i-chev"/></svg></button></div>
       <div class="activity-progress" aria-hidden="true"><b id="activityProgress"></b></div>
       <div class="activity-values"><b id="stepCount">0</b><span id="stepGoal">из 8 000 шагов</span></div>
@@ -10610,7 +10614,29 @@
       heart=document.getElementById("heartRate"), watch=document.getElementById("watchConnect"), support=document.getElementById("watchSupport"),
       dock=document.getElementById("activityDock"), expand=document.getElementById("activityExpand");
     if(!stepCount || !locate || !go || !steps) return;
-    var wasCompact=false;
+    var wasCompact=false, activityToggle=document.getElementById("activityToggle");
+    function requestNotificationPermission(){
+      try{
+        if(window.Notification && Notification.permission==="default"){
+          return Notification.requestPermission().catch(function(){ return "denied"; });
+        }
+      }catch(e){}
+      return Promise.resolve(window.Notification ? Notification.permission : "unsupported");
+    }
+    function openActivityDock(){
+      if(!dock) return;
+      dock.hidden=false; dock.classList.add("is-open");
+      if(activityToggle){ activityToggle.setAttribute("aria-expanded","true"); activityToggle.title="Скрыть шагомер, пульс и местоположение"; }
+      requestNotificationPermission();
+      syncActivityDock();
+      if(locate && !mapState.userLoc && typeof locate.focus==="function") locate.focus();
+    }
+    function closeActivityDock(){
+      if(!dock) return;
+      dock.hidden=true; dock.classList.remove("is-open");
+      if(activityToggle){ activityToggle.setAttribute("aria-expanded","false"); activityToggle.title="Открыть шагомер, пульс и местоположение"; }
+    }
+    if(activityToggle) activityToggle.addEventListener("click",function(){ dock.hidden ? openActivityDock() : closeActivityDock(); });
     function syncActivityDock(){
       if(!dock || !expand) return;
       var compact=window.matchMedia && window.matchMedia("(max-width:680px)").matches;

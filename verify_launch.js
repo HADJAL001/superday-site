@@ -95,7 +95,7 @@ const SEED = () => {
       "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v103/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v104/.test(workerSource), "версия кэша service worker обновлена");
     say(/requested\.origin === self\.location\.origin/.test(workerSource) && /windows\[i\]\.navigate\(target\)\.catch/.test(workerSource),
       "push-уведомление открывает только безопасный маршрут внутри приложения");
     const referSource = fs.readFileSync(path.join(siteDir, "refer.js"), "utf8");
@@ -146,7 +146,7 @@ const SEED = () => {
       });
       return { count: controls.length, rects, overflow: document.documentElement.scrollWidth > innerWidth };
     });
-    say(appHeader.count === 4 && appHeader.rects.every(r => r.h >= 44 && r.left >= 0 && r.right <= 320) && !appHeader.overflow,
+    say(appHeader.count >= 4 && appHeader.rects.every(r => r.h >= 44 && r.left >= 0 && r.right <= 320) && !appHeader.overflow,
       "app.html: мобильная шапка имеет удобные зоны касания на 320px", JSON.stringify(appHeader));
     await navPage.click("#panelBtn");
     await navPage.waitForTimeout(140);
@@ -436,6 +436,14 @@ const SEED = () => {
     mustFail(zero >= 8, "скрытый знак измерен как нулевой (" + zero + "px) — замер видит display:none");
 
     await page.screenshot({ path: artifact("shot-desktop.png"), fullPage: false });
+    const activityInitial = await page.evaluate(() => ({
+      hidden: document.getElementById("activityDock").hidden,
+      toggleVisible: getComputedStyle(document.getElementById("activityToggle")).display !== "none"
+    }));
+    say(activityInitial.hidden && activityInitial.toggleVisible,
+      "desktop activity dock stays hidden until explicitly opened", JSON.stringify(activityInitial));
+    await page.click("#activityToggle");
+    await page.waitForTimeout(100);
     const desktopActivity = await page.evaluate(() => {
       const dock = document.getElementById("activityDock");
       const rail = document.getElementById("rail");
@@ -458,8 +466,13 @@ const SEED = () => {
       const el = await page.$(sel);
       if (el) await el.screenshot({ path: artifact(name) }).catch(() => {});
     }
+    await page.click("#activityToggle");
     await page.setViewportSize({ width: 430, height: 900 });
     await page.waitForTimeout(400);
+    const mobileInitial = await page.evaluate(() => ({ hidden: document.getElementById("activityDock").hidden }));
+    say(mobileInitial.hidden, "mobile activity dock stays hidden until explicitly opened", JSON.stringify(mobileInitial));
+    await page.click("#activityToggle");
+    await page.waitForTimeout(100);
     const mobileActivity = await page.evaluate(() => {
       const dock = document.getElementById("activityDock"), composer = document.getElementById("composer"), plan = document.getElementById("stagePlan");
       const d = dock.getBoundingClientRect(), c = composer.getBoundingClientRect(), p = plan.getBoundingClientRect();
@@ -514,6 +527,7 @@ const SEED = () => {
     const effortLabels = await page.evaluate(() => Array.from(document.querySelectorAll(".txp")).map(el => el.textContent));
     say(effortLabels.every(label => !/\bXP\b/.test(label)),
       "task cards describe effort without game points", effortLabels.join(" | ") || "no open task cards");
+    await page.click("#activityToggle");
     await page.click("#activityExpand");
     await page.waitForTimeout(60);
     await page.screenshot({ path: artifact("shot-mobile.png"), fullPage: false });
@@ -958,6 +972,8 @@ const SEED = () => {
     say(!/ГОВОРИТЕ/.test(spot.ph), "приглашение переведено", spot.ph);
     say(!/Срочно/.test(spot.u) && !/Важно/.test(spot.i), "теги переведены", spot.u + " / " + spot.i);
     await page.setViewportSize({ width: 320, height: 800 });
+    await page.waitForTimeout(120);
+    await page.click("#activityToggle");
     await page.waitForTimeout(120);
     const mobileFit = await page.evaluate(() => {
       const dock = document.getElementById("activityDock"), composer = document.getElementById("composer");
