@@ -6,7 +6,7 @@
 <!-- Заголовки безопасности (GitHub Pages → только через meta).
      upgrade-insecure-requests, object-src 'none', base-uri lock; инлайн требует 'unsafe-inline'.
      blob:/data: — для WebAudio-сигнала и экспорта резервной копии (URL.createObjectURL). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https:; worker-src 'self' blob:; connect-src 'self' https:; manifest-src 'self'; media-src 'self' data: blob:; form-action 'self' https: mailto:; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self' 'unsafe-inline' https:; worker-src 'self' blob:; connect-src 'self' https:; manifest-src 'self'; media-src 'self' data: blob:; form-action 'self' https: mailto:; upgrade-insecure-requests" />
 <meta name="referrer" content="strict-origin-when-cross-origin" />
 <meta name="color-scheme" content="dark" />
 <title>SUPER DAY — веб-планировщик (бета)</title>
@@ -34,11 +34,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-title" content="SUPER DAY" />
 <meta name="robots" content="index,follow" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <!-- Одна гарнитурная пара с лендингом (паритет платформ): Cormorant Garamond
      на заголовки + Jost на интерфейс. Кириллица полная у обеих. -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700&family=Prata&display=swap" rel="stylesheet" />
 <script>try{var saved=localStorage.getItem("superday_theme_v2"),chosen=localStorage.getItem("superday_theme_choice_v1");document.documentElement.dataset.theme=/^(daylight|emerald|platinum)$/.test(saved||"")&&(saved!=="daylight"||chosen==="1")?saved:"platinum";}catch(e){document.documentElement.dataset.theme="platinum";}</script>
 <style>
   :root{
