@@ -1512,6 +1512,7 @@
   .in-trip-value b{color:var(--text); font-size:12.5px; white-space:nowrap}
   .in-actions{display:flex; gap:8px; margin-top:12px}
   .in-actions .rb-action{flex:1 1 0; min-height:40px}
+  html:not([data-native-platform="android"]) #internalNavFocus{display:none}
   body.nav-active{overflow:hidden}
   body.nav-active .composer{display:none}
   body.nav-active .stage{pointer-events:none}
@@ -2063,6 +2064,7 @@
       <div class="in-actions">
         <button class="rb-action secondary" id="internalNavCinema" type="button">3D-просмотр</button>
         <button class="rb-action secondary" id="internalNavRecenter" type="button">К моей позиции</button>
+        <button class="rb-action secondary" id="internalNavFocus" type="button">Настроить фокус</button>
         <button class="rb-action primary" id="internalNavStop" type="button">Завершить маршрут</button>
       </div>
     </section>
@@ -3764,7 +3766,7 @@
   }
   (function initRouteBriefActions(){
     var nav=document.getElementById("routeNavigate"), preview=document.getElementById("routeCinemaBtn"), locate=document.getElementById("routeLocateBtn"), fuel=document.getElementById("routeFuelBtn"),
-      clear=document.getElementById("routeClearBtn"), recenter=document.getElementById("internalNavRecenter"), stop=document.getElementById("internalNavStop"),
+      clear=document.getElementById("routeClearBtn"), recenter=document.getElementById("internalNavRecenter"), focus=document.getElementById("internalNavFocus"), stop=document.getElementById("internalNavStop"),
       cinema=document.getElementById("internalNavCinema"), close=document.getElementById("internalNavClose"), minimize=document.getElementById("internalNavMinimize"),
       restore=document.getElementById("navRestoreBtn"), panel=document.getElementById("internalNav");
     if(nav) nav.addEventListener("click",function(){ startInternalNavigation(mapState.lastTasks); });
@@ -3773,6 +3775,9 @@
     if(fuel) fuel.addEventListener("click",focusVehicleSettings);
     if(clear) clear.addEventListener("click",clearActiveMapRoute);
     if(recenter) recenter.addEventListener("click",recenterInternalNavigation);
+    if(focus) focus.addEventListener("click",function(){
+      try{ if(window.ReactNativeWebView && window.ReactNativeWebView.postMessage) window.ReactNativeWebView.postMessage(JSON.stringify({type:"superday-focus-settings"})); }catch(e){}
+    });
     if(stop) stop.addEventListener("click",stopInternalNavigation);
     if(cinema) cinema.addEventListener("click",startRouteCinema);
     if(close) close.addEventListener("click",function(e){ e.stopPropagation(); setNavigationPanelVisibility(true); });
