@@ -6430,7 +6430,7 @@
   // Единственная публичная точка API. Префикс /site-api переписывается Caddy
   // в /api внутри контейнера; ключи провайдеров никогда не попадают в браузер.
   var API_BASE = "https://api.superday.run/site-api";
-  var STT_API = "https://api.superday.run/voice/stt/transcribe";
+  var STT_API = API_BASE + "/stt";
   var CITY_PACKAGES_KEY="superday_city_packages_v1", cityCandidate=null, cityDownloadController=null;
   function loadCityPackages(){ try{ return JSON.parse(localStorage.getItem(CITY_PACKAGES_KEY)||"[]")||[]; }catch(e){ return []; } }
   function saveCityPackages(items){ try{ localStorage.setItem(CITY_PACKAGES_KEY,JSON.stringify(items)); }catch(e){} }
