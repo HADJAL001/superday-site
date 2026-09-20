@@ -95,7 +95,7 @@ const SEED = () => {
       "кодовое слово вынесено в первый экран документов и поддержки с рабочим копированием");
     say(["documents.html", "support.html", "legal.css", "legal.js", "support.js"]
       .every(s => workerSource.includes('"/' + s + '"')), "документы и форма входят в офлайн-оболочку");
-    say(/superday-v105/.test(workerSource), "версия кэша service worker обновлена");
+    say(/superday-v106/.test(workerSource), "версия кэша service worker обновлена");
     say(/requested\.origin === self\.location\.origin/.test(workerSource) && /windows\[i\]\.navigate\(target\)\.catch/.test(workerSource),
       "push-уведомление открывает только безопасный маршрут внутри приложения");
     const referSource = fs.readFileSync(path.join(siteDir, "refer.js"), "utf8");
@@ -204,7 +204,7 @@ const SEED = () => {
     const supportCtx = await browser.newContext({ viewport: { width: 430, height: 900 }, serviceWorkers: "block" });
     const supportPage = await supportCtx.newPage();
     let submitted = null;
-    const supportUrl = "https://158.160.192.153/site-api/support";
+    const supportUrl = "https://api.superday.run/site-api/support";
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -257,7 +257,7 @@ const SEED = () => {
 
     const waitlistCtx = await browser.newContext({ viewport: { width: 430, height: 900 }, serviceWorkers: "block" });
     const waitlistPage = await waitlistCtx.newPage();
-    const waitlistUrl = "https://158.160.192.153/site-api/waitlist";
+    const waitlistUrl = "https://api.superday.run/site-api/waitlist";
     let subscribed = null;
     await waitlistPage.route(waitlistUrl, async route => {
       if (route.request().method() === "OPTIONS") {
@@ -566,7 +566,7 @@ const SEED = () => {
     // Deterministic browser-contract responses. Production acceptance below
     // uses the live providers; this block isolates client parsing/rendering so
     // a provider outage cannot make the UI regression suite nondeterministic.
-    await page.route("https://158.160.192.153/site-api/**", async route => {
+    await page.route("https://api.superday.run/site-api/**", async route => {
       const req = route.request();
       const url = new URL(req.url());
       const cors = {
@@ -609,7 +609,7 @@ const SEED = () => {
       }
       return route.fulfill({ status: 404, headers: cors, body: JSON.stringify({ error: "not_found" }) });
     });
-    await page.route("https://158.160.192.153/voice/stt/transcribe", async route => {
+    await page.route("https://api.superday.run/voice/stt/transcribe", async route => {
       const req = route.request();
       const cors = { "Access-Control-Allow-Origin": "https://superday.fun", "Content-Type": "application/json; charset=utf-8" };
       if (req.method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors, body: "" });

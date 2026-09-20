@@ -1497,6 +1497,8 @@
   .in-process[data-state="routing"] .in-process-dot{background:var(--champagne); animation:navpulse 1.2s ease-in-out infinite}
   .in-process[data-state="error"]{color:#E8B7B0}
   .in-process[data-state="error"] .in-process-dot{background:#E8B7B0}
+  .in-weather{margin-top:10px;padding-top:10px;border-top:1px solid var(--hair-soft);color:var(--text-dim);font-size:11.5px;line-height:1.4}
+  .in-weather[hidden]{display:none}.in-weather b{color:var(--text);font-weight:700}.in-weather[data-rain="true"] b{color:var(--champagne)}
   .in-trip{margin:0; border-top:1px solid var(--hair-soft)}
   .in-trip[hidden]{display:none}
   .in-trip summary{min-height:35px; display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -2050,6 +2052,7 @@
         <span class="in-process-dot" aria-hidden="true"></span>
         <span id="internalNavProcessText">Получаем маршрут от сервера…</span>
       </div>
+      <div class="in-weather" id="internalNavWeather" hidden></div>
       <details class="in-trip" id="internalNavTrip" hidden>
         <summary>Топливо и стоимость</summary>
         <div class="in-trip-values">
@@ -3806,6 +3809,37 @@
     var d=new Date(Date.now()+Math.max(0,minutes)*60000);
     return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
   }
+  function weatherLabel(code){
+    if(code===0) return "ясно";
+    if(code===1 || code===2) return "переменная облачность";
+    if(code===3) return "облачно";
+    if(code===45 || code===48) return "туман";
+    if((code>=51 && code<=67) || (code>=80 && code<=82)) return "дождь";
+    if((code>=71 && code<=77) || (code>=85 && code<=86)) return "снег";
+    if(code>=95) return "гроза";
+    return "без уточнения";
+  }
+  function renderNavigationWeather(point){
+    var el=document.getElementById("internalNavWeather");
+    if(!el || !validPoint(point)) return;
+    var key=Math.round(point.lat*100)/100+","+Math.round(point.lon*100)/100;
+    if(mapState.weatherKey===key && mapState.weatherValue){
+      var w=mapState.weatherValue, wet=w.precipitationMm>0 || /дождь|снег|гроза/.test(weatherLabel(w.weatherCode));
+      el.hidden=false; el.dataset.rain=wet?"true":"false";
+      el.innerHTML="<b>Погода у остановки: "+String(w.temperatureC)+"°C, "+weatherLabel(w.weatherCode)+".</b>"+(wet?" Возможны осадки.":"");
+      return;
+    }
+    if(mapState.weatherRequestKey===key) return;
+    mapState.weatherRequestKey=key; mapState.weatherValue=null; el.hidden=true;
+    fetchIdempotent(API_BASE+"/weather",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({lat:point.lat,lon:point.lon})})
+      .then(function(r){ if(!r.ok) throw new Error("weather_"+r.status); return r.json(); })
+      .then(function(data){
+        if(!data || typeof data.temperatureC!=="number" || typeof data.weatherCode!=="number" || typeof data.precipitationMm!=="number") throw new Error("weather_shape");
+        if(mapState.weatherRequestKey!==key) return;
+        mapState.weatherKey=key; mapState.weatherValue=data; mapState.weatherRequestKey=null;
+        if(mapState.navigationActive) renderNavigationWeather(point);
+      }).catch(function(){ if(mapState.weatherRequestKey===key) mapState.weatherRequestKey=null; });
+  }
   function renderInternalNavigation(route,pts){
     var panel=document.getElementById("internalNav");
     if(!panel || !mapState.navigationActive) return;
@@ -3822,6 +3856,7 @@
     clock.textContent=taskRouteTime(first);
     task.textContent=first.text || first.loc.label || first.loc.addr || "Следующая остановка";
     address.textContent=first.loc.label || first.loc.addr || "";
+    renderNavigationWeather(first.loc);
     guidance.hidden=true; trip.hidden=true;
     if(!validPoint(mapState.userLoc) || mapState.userLocState==="unavailable"){
       status.textContent=validPoint(mapState.userLoc)?"Маршрут приостановлен":"Ждём геолокацию";
@@ -4773,8 +4808,8 @@
   // группу целиком по batchId. Если модель недоступна — черновик остаётся
   // рабочим планом, а не пропадает: разбор не имеет права оставить человека ни
   // с чем.
-  var PARSE_API = "https://158.160.192.153/site-api/parse";
-  var DEBATE_API = "https://158.160.192.153/site-api/debate";
+  var PARSE_API = "https://api.superday.run/site-api/parse";
+  var DEBATE_API = "https://api.superday.run/site-api/debate";
   var IDEMPOTENT_RETRY_ATTEMPTS = 2;
   var IDEMPOTENT_RETRY_DELAY_MS = 300;
   function retryableHttpStatus(status){
@@ -6199,8 +6234,8 @@
   // основателя (волна 32): «НИКАКОЙ СТАТИКИ, ПИШИ ПОЛНОЦЕННЫЙ БЕКЭНД».
   // Единственная публичная точка API. Префикс /site-api переписывается Caddy
   // в /api внутри контейнера; ключи провайдеров никогда не попадают в браузер.
-  var API_BASE = "https://158.160.192.153/site-api";
-  var STT_API = "https://158.160.192.153/voice/stt/transcribe";
+  var API_BASE = "https://api.superday.run/site-api";
+  var STT_API = "https://api.superday.run/voice/stt/transcribe";
   var CITY_PACKAGES_KEY="superday_city_packages_v1", cityCandidate=null, cityDownloadController=null;
   function loadCityPackages(){ try{ return JSON.parse(localStorage.getItem(CITY_PACKAGES_KEY)||"[]")||[]; }catch(e){ return []; } }
   function saveCityPackages(items){ try{ localStorage.setItem(CITY_PACKAGES_KEY,JSON.stringify(items)); }catch(e){} }
@@ -9687,7 +9722,7 @@
   }
 
   // ===== Аккаунт и реальная оплата PlateGA =====
-  var BILLING_API="https://158.160.192.153/infra";
+  var BILLING_API="https://api.superday.run/infra";
   var BILLING_TOKEN_KEY="superday_billing_tokens_v1";
   var billingUser=null, billingSubscription=null, billingRefreshInFlight=null;
   function billingTokens(){
