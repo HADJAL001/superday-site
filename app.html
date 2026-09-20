@@ -5280,6 +5280,18 @@
       });
     })();
   }
+  function startDayFromPlan(){
+    var order=planOrder().filter(function(t){ return !t.done; });
+    var stops=order.filter(function(t){ return validPoint(t.loc); });
+    if(stops.length){ beginDayLaunch(stops); return; }
+    var needsAddress=order.filter(function(t){ return t && !validPoint(t.loc) && typeof t.placeQuery==="string" && t.placeQuery.trim(); })[0];
+    if(needsAddress){
+      stageSay("Для маршрута нужен точный адрес. Уточните место — запуск продолжится автоматически.");
+      editTaskLoc(needsAddress,function(){ setTimeout(startDayFromPlan,0); });
+      return;
+    }
+    stageSay("Добавьте адрес к делу, чтобы начать маршрут.");
+  }
   // План дня рядом с картой: та же нумерация, что у маркеров (planOrder),
   // иначе список и карта читались бы как два несвязанных плана.
   function renderStagePlan(){
@@ -5345,11 +5357,7 @@
     box.appendChild(locate);
     var start=document.createElement("button"); start.type="button"; start.className="sp-start";
     start.textContent="Начать день";
-    start.addEventListener("click",function(){
-      var stops=planOrder().filter(function(t){ return !t.done && validPoint(t.loc); });
-      if(!stops.length){ stageSay("Добавьте адрес к делу, чтобы начать маршрут."); return; }
-      beginDayLaunch(stops);
-    });
+    start.addEventListener("click",startDayFromPlan);
     box.appendChild(start);
     if(window.matchMedia && window.matchMedia("(max-width:680px)").matches){
       var hint=document.createElement("div"); hint.className="sp-swipe-hint"; hint.textContent="Свайп вниз, чтобы скрыть";
@@ -6553,7 +6561,7 @@
       cb(found);
     }) || token.abort;
   }
-  function editTaskLoc(t){
+  function editTaskLoc(t, afterSaved){
     var cur = t.placeQuery || (t.loc ? (t.loc.label || t.loc.addr || "") : "");
     var ans = window.prompt("Место дела — адрес или название (например «Тверская 1, Москва» или «Офис, ул. Ленина 5»).\n\nОставь пустым, чтобы убрать место.", cur);
     if(ans===null) return;
@@ -6570,6 +6578,7 @@
       t.placeQuery=ans.slice(0,160);
       var learned=rememberPlaceAlias(t.spokenPlace,ans);
       save(); render(); toast((learned?"Запомнил название · ":"Место сохранено: ") + label);
+      if(typeof afterSaved==="function") afterSaved(t);
     });
   }
   // Сфера жизни дела: цикл по кругу (без сферы → работа → дом → здоровье → без
