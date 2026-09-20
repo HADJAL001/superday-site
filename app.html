@@ -3840,6 +3840,18 @@
         if(mapState.navigationActive) renderNavigationWeather(point);
       }).catch(function(){ if(mapState.weatherRequestKey===key) mapState.weatherRequestKey=null; });
   }
+  function announceNavigation(route, task){
+    if(IS_SELFTEST || !route || !task || mapState.navigationAnnouncementKey) return;
+    var minutes=typeof route.minutesTraffic==="number"?route.minutesTraffic:route.minutes;
+    if(typeof route.km!=="number" || typeof minutes!=="number") return;
+    var destination=task.loc && (task.loc.label||task.loc.addr) || task.text || "следующая остановка";
+    var name=typeof profileName==="function" ? profileName() : "";
+    var phrase=(name ? name+", " : "")+"маршрут к "+destination+" готов. "+routeValue(route.km," километра")+", в пути около "+Math.max(1,Math.round(minutes))+" минут.";
+    if(route.trafficLevel) phrase+=" Дорожная обстановка: "+(TRAFFIC_LABEL[route.trafficLevel]||"без данных")+".";
+    mapState.navigationAnnouncementKey=String(task.id||destination)+"@"+String(mapState.navigationRouteAt||Date.now());
+    if(typeof isMuted==="function" && isMuted()) return;
+    if(typeof window.__ttsSpeak==="function") try{ window.__ttsSpeak(phrase); }catch(e){}
+  }
   function renderInternalNavigation(route,pts){
     var panel=document.getElementById("internalNav");
     if(!panel || !mapState.navigationActive) return;
@@ -3884,6 +3896,7 @@
     trip.hidden=!(fuelValue||costValue);
     process.dataset.state="tracking";
     processText.textContent=mapState.navigationLocationAt?"GPS отслеживает позицию":"Ожидаем новое положение GPS";
+    announceNavigation(route,first);
   }
   function updateUserLocationMarker(){
     if(!mapState.map || !validPoint(mapState.userLoc)) return;
@@ -3967,6 +3980,7 @@
     mapState.navPanelHidden=false; mapState.navMinimized=false; setNavigationPanelVisibility(false);
     mapState.navigationRouteOrigin=validPoint(mapState.userLoc)?{lat:mapState.userLoc.lat,lon:mapState.userLoc.lon}:null;
     mapState.navigationRouteAt=validPoint(mapState.navigationRouteOrigin)?Date.now():0; mapState.navigationLocationAt=0;
+    mapState.navigationAnnouncementKey=null;
     document.body.classList.add("nav-active");
     var trip=document.getElementById("internalNavTrip"); if(trip) trip.open=false;
     if(mapState.navigationTimer===null) mapState.navigationTimer=setInterval(function(){
@@ -4032,6 +4046,7 @@
     clearNavigationSession();
     if(mapState.navigationTimer!==null){ clearInterval(mapState.navigationTimer); mapState.navigationTimer=null; }
     mapState.navigationRouteOrigin=null; mapState.navigationRouteAt=0; mapState.navigationLocationAt=0; mapState.followUser=false;
+    mapState.navigationAnnouncementKey=null;
     mapState.navPanelHidden=false; mapState.navMinimized=false;
     document.body.classList.remove("nav-active");
     var panel=document.getElementById("internalNav"); if(panel){ panel.hidden=true; panel.classList.remove("is-minimized"); }
