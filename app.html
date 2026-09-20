@@ -1895,6 +1895,39 @@
     .stage-plan{max-height:min(44svh,380px)}
     .map-tool{background:rgba(5,10,18,.78); color:transparent}
   }
+
+  /* Mobile launchpad: one decision surface, with the composer yielding once a day plan exists. */
+  @media(max-width:680px){
+    body.plan-open .composer{opacity:0; transform:translateY(110%); pointer-events:none; transition:opacity .22s ease,transform .28s cubic-bezier(.2,.8,.2,1)}
+    body.plan-open main.wrap{padding-bottom:0}
+    body.plan-open .stage{min-height:calc(100svh - 56px); padding:12px 0 0; justify-content:flex-end}
+    .stage-plan{width:100%; max-height:min(58svh,520px); margin:0; padding:12px 20px calc(20px + env(safe-area-inset-bottom,0px));
+      border:1px solid rgba(255,255,255,.12); border-bottom:0; border-radius:22px 22px 0 0;
+      background:rgba(10,16,27,.88); -webkit-backdrop-filter:blur(24px) saturate(120%); backdrop-filter:blur(24px) saturate(120%);
+      box-shadow:0 -18px 48px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.08)}
+    .stage-plan::before{content:""; display:block; width:38px; height:4px; margin:0 auto 12px; border-radius:999px; background:rgba(236,241,237,.32)}
+    .sp-head{align-items:center; margin:0 0 12px; padding:0; position:static; background:none}
+    .sp-title{font-size:18px; letter-spacing:0; font-weight:650}
+    .sp-sum{padding:4px 8px; border-radius:999px; background:rgba(212,175,55,.16); color:#F2D77B; letter-spacing:.04em}
+    .sp-row{gap:12px; padding:12px 0 14px; border-top:1px solid rgba(255,255,255,.08)}
+    .sp-num{width:26px; height:26px; border-radius:50%; box-shadow:0 0 15px rgba(212,175,55,.38)}
+    .sp-text{font-size:16px; line-height:1.32}
+    .sp-meta{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; font-size:0}
+    .sp-meta span.sp-dot{display:none}
+    .sp-meta:not(:empty)::before{content:""; display:none}
+    .sp-chip{display:inline-flex; align-items:center; min-height:24px; padding:3px 8px; border-radius:999px; font:600 11px var(--font-ui); color:#C9D3D0; background:rgba(255,255,255,.07)}
+    .sp-chip.is-priority{color:#1D1A0D; background:#E7C65E}
+    .sp-chip.is-time{color:#BFD6E6; background:rgba(91,139,173,.22)}
+    .sp-origin{display:flex; align-items:center; gap:7px; min-height:30px; margin:0 0 8px; color:rgba(235,226,204,.66); font-size:12px}
+    .sp-origin button{appearance:none; padding:0; border:0; background:none; color:#F2D77B; font:700 12px var(--font-ui); cursor:pointer; animation:launchBreathe 2.2s ease-in-out infinite}
+    .sp-origin svg{width:15px; height:15px; color:#E8CB71}
+    .sp-locate{display:none}
+    .sp-start{position:static; min-height:56px; margin:8px 0 0; padding:0 18px; border:0; border-radius:14px;
+      background:linear-gradient(135deg,#B8860B,#FFD700); color:#10100B; font-size:16px; box-shadow:0 7px 22px rgba(212,175,55,.32)}
+    .sp-start::before{content:"▶"; margin-right:9px; font-size:12px}
+    .sp-swipe-hint{display:none}
+    .stage-plan.sp-dismissed + *{display:none}
+  }
 </style>
 </head>
 <body>
@@ -5280,7 +5313,21 @@
       });
     })();
   }
-  function startDayFromPlan(){
+  function startDayFromPlan(originChecked){
+    // Location permission can only be requested from the user's launch action.
+    // Once answered, continue the same launch rather than adding another step.
+    if(originChecked!==true && !validPoint(mapState.userLoc)){
+      if(mapState.locating) return;
+      mapState.locating=true; mapState.userLocState="requesting";
+      stageSay("Определяю точку старта…");
+      requestUserLocation(function(loc){
+        mapState.locating=false; mapState.userLoc=validPoint(loc)?loc:null;
+        mapState.userLocState=mapState.userLoc?"ready":"unavailable";
+        if(mapState.userLoc) buildMapView(tasksForMap());
+        startDayFromPlan(true);
+      },true);
+      return;
+    }
     var order=planOrder().filter(function(t){ return !t.done; });
     var stops=order.filter(function(t){ return validPoint(t.loc); });
     if(stops.length){ beginDayLaunch(stops); return; }
@@ -5299,6 +5346,7 @@
     var order=planOrder().filter(function(t){ return !t.done; });
     if(!order.length){
       box.hidden=true; box.innerHTML="";
+      document.body.classList.remove("plan-open");
       var stalePill=document.getElementById("spReopen"); if(stalePill) stalePill.remove();
       return;
     }
@@ -5306,9 +5354,7 @@
     var head=document.createElement("div"); head.className="sp-head";
     var title=document.createElement("span"); title.className="sp-title"; title.textContent="План на день";
     var sum=document.createElement("span"); sum.className="sp-sum";
-    var withLoc=order.filter(function(t){ return t.loc; }).length;
-    sum.textContent = order.length + " " + plural(order.length,["дело","дела","дел"])
-      + (withLoc ? " · на карте " + withLoc : "");
+    sum.textContent=order.length+" "+plural(order.length,["дело","дела","дел"]);
     head.appendChild(title); head.appendChild(sum); box.appendChild(head);
     order.forEach(function(t, i){
       var row=document.createElement("div"); row.className="sp-row";
@@ -5322,16 +5368,16 @@
         shopping.textContent="🛒 "+stageItems.join(" · "); body.appendChild(shopping);
       }
       var bits=[];
-      if(t.time){ var et=endTime(t); bits.push(et ? (t.time+"–"+et) : t.time); }
-      else if(validDur(t.dur)) bits.push(fmtDurShort(t.dur));
-      if(t.loc) bits.push(t.loc.addr||t.loc.label);
-      else if(t.placeQuery) bits.push(taskPlaceLabel(t.placeQuery));
-      bits.push(QUAD_SHORT[quadOf(t)]);
+      if(t.time){ var et=endTime(t); bits.push({text:et ? (t.time+"–"+et) : t.time,kind:"is-time"}); }
+      else if(validDur(t.dur)) bits.push({text:fmtDurShort(t.dur),kind:"is-time"});
+      if(t.loc) bits.push({text:t.loc.addr||t.loc.label,kind:""});
+      else if(t.placeQuery) bits.push({text:taskPlaceLabel(t.placeQuery),kind:""});
+      bits.push({text:QUAD_SHORT[quadOf(t)],kind:"is-priority"});
       if(bits.length){
         var meta=document.createElement("div"); meta.className="sp-meta";
         bits.forEach(function(b, k){
           if(k){ var d=document.createElement("span"); d.className="sp-dot"; d.textContent="·"; meta.appendChild(d); }
-          meta.appendChild(document.createTextNode(b));
+          var chip=document.createElement("span"); chip.className="sp-chip "+b.kind; chip.textContent=b.text; meta.appendChild(chip);
         });
         body.appendChild(meta);
       }
@@ -5355,14 +5401,22 @@
       },true);
     });
     box.appendChild(locate);
+    var origin=document.createElement("div"); origin.className="sp-origin";
+    if(validPoint(mapState.userLoc)){
+      origin.textContent="Старт определен по геолокации";
+    }else{
+      var targetIcon=document.createElementNS("http://www.w3.org/2000/svg","svg"); targetIcon.setAttribute("aria-hidden","true");
+      var targetUse=document.createElementNS("http://www.w3.org/2000/svg","use"); targetUse.setAttribute("href","#i-target"); targetIcon.appendChild(targetUse);
+      var originButton=document.createElement("button"); originButton.type="button"; originButton.textContent="Указать старт";
+      originButton.addEventListener("click",function(){ locate.click(); });
+      origin.appendChild(targetIcon); origin.appendChild(originButton);
+    }
+    box.appendChild(origin);
     var start=document.createElement("button"); start.type="button"; start.className="sp-start";
     start.textContent="Начать день";
-    start.addEventListener("click",startDayFromPlan);
+    start.addEventListener("click",function(){ startDayFromPlan(false); });
     box.appendChild(start);
-    if(window.matchMedia && window.matchMedia("(max-width:680px)").matches){
-      var hint=document.createElement("div"); hint.className="sp-swipe-hint"; hint.textContent="Свайп вниз, чтобы скрыть";
-      box.appendChild(hint);
-    }
+    document.body.classList.add("plan-open");
     box.classList.remove("sp-dismissed");
     initStagePlanSwipe(box);
   }
@@ -5384,7 +5438,7 @@
       if(!dragging) return; dragging=false; box.classList.remove("sp-dragging");
       if(dy>90){
         box.style.transform="translateY(160px)"; box.style.opacity="0";
-        setTimeout(function(){ box.classList.add("sp-dismissed"); box.style.transform=""; box.style.opacity=""; showStagePlanReopen(); },200);
+        setTimeout(function(){ box.classList.add("sp-dismissed"); document.body.classList.remove("plan-open"); box.style.transform=""; box.style.opacity=""; showStagePlanReopen(); },200);
       } else {
         box.style.transform=""; box.style.opacity="";
       }
@@ -5403,7 +5457,7 @@
       document.body.appendChild(pill);
       pill.addEventListener("click", function(){
         pill.remove();
-        var box=stageEl("stagePlan"); if(box) box.classList.remove("sp-dismissed");
+        var box=stageEl("stagePlan"); if(box){ box.classList.remove("sp-dismissed"); document.body.classList.add("plan-open"); }
       });
     }
   }
