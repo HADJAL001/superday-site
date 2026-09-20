@@ -1569,6 +1569,9 @@
     box-shadow:inset 0 1px 0 rgba(255,255,255,.48),0 8px 18px rgba(0,0,0,.24)}
   .sp-start:hover{filter:brightness(1.06); transform:translateY(-1px)}
   .sp-start:focus-visible{outline:3px solid rgba(245,219,133,.6); outline-offset:3px}
+  .sp-locate{width:100%; min-height:42px; margin-top:10px; border:1px solid rgba(232,208,142,.34); border-radius:7px;
+    background:rgba(10,25,28,.62); color:#F2D77B; font:700 12px var(--font-ui); cursor:pointer}
+  .sp-locate:disabled{opacity:.64; cursor:progress}
   .sp-items{font-size:11px; line-height:1.4; color:#E7D29B; margin-top:4px; word-break:break-word}
   @media(max-width:640px){
     .stage{min-height:calc(100svh - 104px); gap:13px; padding-top:14px}
@@ -5324,6 +5327,22 @@
       row.addEventListener("click", function(){ openTasksSheet(t.id); });
       box.appendChild(row);
     });
+    var locate=document.createElement("button"); locate.type="button"; locate.className="sp-locate";
+    locate.textContent=validPoint(mapState.userLoc)?"Обновить моё местоположение":"Определить моё местоположение";
+    locate.addEventListener("click",function(){
+      if(mapState.locating) return;
+      locate.disabled=true; locate.textContent="Определяем местоположение…";
+      mapState.locating=true; mapState.userLocState="requesting";
+      requestUserLocation(function(loc){
+        mapState.locating=false; mapState.userLoc=validPoint(loc)?loc:null;
+        mapState.userLocState=mapState.userLoc?"ready":"unavailable";
+        locate.disabled=false;
+        if(mapState.userLoc){ locate.textContent="Местоположение определено"; stageSay("Местоположение определено. Добавьте точный адрес к делу, чтобы построить маршрут."); }
+        else { locate.textContent="Определить моё местоположение"; stageSay("Не удалось определить местоположение. Разрешите доступ к геопозиции и повторите."); }
+        buildMapView(tasksForMap());
+      },true);
+    });
+    box.appendChild(locate);
     var start=document.createElement("button"); start.type="button"; start.className="sp-start";
     start.textContent="Начать день";
     start.addEventListener("click",function(){
