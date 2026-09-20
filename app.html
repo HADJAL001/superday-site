@@ -6661,19 +6661,35 @@
       }
       if(found===undefined){ toast("Сеть недоступна — попробуй позже", "error"); return; }
       suggestPlace(query,function(candidates){
-        if(candidates===undefined){ toast("Сеть недоступна — попробуй позже", "error"); return; }
+        if(candidates===undefined){ stageSay("Не удалось связаться с картой. Проверьте интернет и повторите запуск."); toast("Сеть недоступна — попробуй позже", "error"); return; }
         var selected=choosePlaceCandidate(query,candidates);
-        if(!selected){ toast(candidates.length?"Место не выбрано":"Похожих мест не нашёл — укажи улицу или город"); return; }
+        if(!selected){
+          if(candidates.length){ stageSay("Место не выбрано. Укажите адрес, чтобы продолжить запуск."); toast("Место не выбрано"); return; }
+          stageSay("Не удалось однозначно найти «"+query+"». Укажите улицу или город — запуск продолжится автоматически.");
+          setTimeout(function(){
+            editTaskLoc(t,afterSaved,"Не удалось однозначно найти «"+query+"».\n\nУкажите улицу и город или полное название места. После сохранения маршрут запустится автоматически.");
+          },0);
+          return;
+        }
         saveTaskPlace(t,query,{lat:selected.lat,lon:selected.lon,addr:selected.label},afterSaved);
       });
     });
   }
-  function editTaskLoc(t, afterSaved){
+  function editTaskLoc(t, afterSaved, promptText){
     var cur = t.placeQuery || (t.loc ? (t.loc.label || t.loc.addr || "") : "");
-    var ans = window.prompt("Место дела — адрес или название (например «Тверская 1, Москва» или «Офис, ул. Ленина 5»).\n\nОставь пустым, чтобы убрать место.", cur);
-    if(ans===null) return;
+    var ans = window.prompt(promptText || "Место дела — адрес или название (например «Тверская 1, Москва» или «Офис, ул. Ленина 5»).\n\nОставь пустым, чтобы убрать место.", cur);
+    if(ans===null){
+      if(typeof afterSaved==="function") afterSaved(false);
+      stageSay("Маршрут ожидает точный адрес места.");
+      return;
+    }
     ans = ans.trim();
-    if(ans===""){ t.loc=null; t.placeQuery=null; t.spokenPlace=null; save(); render(); return; }
+    if(ans===""){
+      t.loc=null; t.placeQuery=null; t.spokenPlace=null; save(); render();
+      stageSay("Добавьте адрес к делу, чтобы начать маршрут.");
+      if(typeof afterSaved==="function") afterSaved(false);
+      return;
+    }
     toast("Ищу место…");
     geocodeTaskPlace(t,ans, function(found){
       if(found===undefined){ toast("Сеть недоступна — попробуй позже", "error"); return; }
