@@ -5286,8 +5286,8 @@
     if(stops.length){ beginDayLaunch(stops); return; }
     var needsAddress=order.filter(function(t){ return t && !validPoint(t.loc) && typeof t.placeQuery==="string" && t.placeQuery.trim(); })[0];
     if(needsAddress){
-      stageSay("Для маршрута нужен точный адрес. Уточните место — запуск продолжится автоматически.");
-      editTaskLoc(needsAddress,function(){ setTimeout(startDayFromPlan,0); });
+      stageSay("Уточняю место для маршрута — запуск продолжится автоматически.");
+      resolveTaskPlace(needsAddress,function(saved){ if(saved!==false) setTimeout(startDayFromPlan,0); });
       return;
     }
     stageSay("Добавьте адрес к делу, чтобы начать маршрут.");
@@ -6561,6 +6561,58 @@
       cb(found);
     }) || token.abort;
   }
+  function suggestPlace(query, cb){
+    var near=validPoint(mapState&&mapState.userLoc)?mapState.userLoc:null;
+    var url=API_BASE+"/geocode?suggest=1&q="+encodeURIComponent(query);
+    if(near) url+="&lat="+encodeURIComponent(near.lat)+"&lon="+encodeURIComponent(near.lon);
+    fetchIdempotent(url).then(function(r){
+      if(r.status===404) return {candidates:[]};
+      if(!r.ok) throw new Error("suggest_"+r.status);
+      return r.json();
+    }).then(function(data){
+      var list=(data&&Array.isArray(data.candidates)?data.candidates:[]).filter(function(item){
+        return item && typeof item.lat==="number" && typeof item.lon==="number" && typeof item.label==="string" && validPoint(item);
+      }).slice(0,3);
+      cb(list);
+    }).catch(function(){ cb(undefined); });
+  }
+  function choosePlaceCandidate(query, candidates){
+    if(!candidates.length) return null;
+    if(candidates.length===1){
+      return window.confirm("Похоже, вы имели в виду:\n"+candidates[0].label+"\n\nСохранить это место?") ? candidates[0] : null;
+    }
+    var lines=candidates.map(function(item,index){ return (index+1)+". "+item.label; });
+    var choice=window.prompt("Нашла несколько похожих мест. Введите номер:\n\n"+lines.join("\n"),"1");
+    var index=Number(choice)-1;
+    return Number.isInteger(index) && candidates[index] ? candidates[index] : null;
+  }
+  function saveTaskPlace(t, query, found, afterSaved){
+    var label=taskPlaceLabel(query);
+    t.loc={lat:found.lat,lon:found.lon,label:label,addr:found.addr||found.label||query};
+    t.placeQuery=query.slice(0,160);
+    var learned=rememberPlaceAlias(t.spokenPlace,query);
+    save(); render(); toast((learned?"Запомнил название · ":"Место сохранено: ")+label);
+    if(typeof afterSaved==="function") afterSaved(t);
+  }
+  function resolveTaskPlace(t, afterSaved){
+    var query=String(t&&t.placeQuery||"").trim();
+    if(!t || !query){ if(typeof afterSaved==="function") afterSaved(false); return; }
+    toast("Уточняю место…");
+    geocodeTaskPlace(t,query,function(found){
+      if(found && validPoint(found)){
+        if(window.confirm("Нашёл: "+found.addr+"\n\nСохранить это место?")) saveTaskPlace(t,query,found,afterSaved);
+        else if(typeof afterSaved==="function") afterSaved(false);
+        return;
+      }
+      if(found===undefined){ toast("Сеть недоступна — попробуй позже", "error"); return; }
+      suggestPlace(query,function(candidates){
+        if(candidates===undefined){ toast("Сеть недоступна — попробуй позже", "error"); return; }
+        var selected=choosePlaceCandidate(query,candidates);
+        if(!selected){ toast(candidates.length?"Место не выбрано":"Похожих мест не нашёл — укажи улицу или город"); return; }
+        saveTaskPlace(t,query,{lat:selected.lat,lon:selected.lon,addr:selected.label},afterSaved);
+      });
+    });
+  }
   function editTaskLoc(t, afterSaved){
     var cur = t.placeQuery || (t.loc ? (t.loc.label || t.loc.addr || "") : "");
     var ans = window.prompt("Место дела — адрес или название (например «Тверская 1, Москва» или «Офис, ул. Ленина 5»).\n\nОставь пустым, чтобы убрать место.", cur);
@@ -6570,15 +6622,19 @@
     toast("Ищу место…");
     geocodeTaskPlace(t,ans, function(found){
       if(found===undefined){ toast("Сеть недоступна — попробуй позже", "error"); return; }
-      if(found===null){ toast("Это место не нашёл — попробуй проще: «улица, город»"); return; }
+      if(found===null){
+        toast("Ищу похожие места…");
+        suggestPlace(ans,function(candidates){
+          if(candidates===undefined){ toast("Сеть недоступна — попробуй позже", "error"); return; }
+          var selected=choosePlaceCandidate(ans,candidates);
+          if(!selected){ toast(candidates.length?"Место не сохранено":"Похожих мест не нашёл — укажи улицу или город"); return; }
+          saveTaskPlace(t,ans,{lat:selected.lat,lon:selected.lon,addr:selected.label},afterSaved);
+        });
+        return;
+      }
       var ok = window.confirm("Нашёл: " + found.addr + " — сохранить как место дела?");
       if(!ok){ toast("Не сохранил — попробуй ввести точнее", "error"); return; }
-      var label = taskPlaceLabel(ans);
-      t.loc = { lat:found.lat, lon:found.lon, label:label, addr:found.addr };
-      t.placeQuery=ans.slice(0,160);
-      var learned=rememberPlaceAlias(t.spokenPlace,ans);
-      save(); render(); toast((learned?"Запомнил название · ":"Место сохранено: ") + label);
-      if(typeof afterSaved==="function") afterSaved(t);
+      saveTaskPlace(t,ans,found,afterSaved);
     });
   }
   // Сфера жизни дела: цикл по кругу (без сферы → работа → дом → здоровье → без
