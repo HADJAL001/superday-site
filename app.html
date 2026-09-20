@@ -202,6 +202,11 @@
   .add-btn:active{transform:translateY(1px)}
   .toggles{display:flex; gap:9px; margin-top:12px; flex-wrap:wrap; align-items:center}
   .composer:not(.has-text) .toggles{display:none}
+  .quick-actions{position:fixed;left:14px;bottom:calc(142px + env(safe-area-inset-bottom,0px));z-index:29;display:flex;gap:8px}
+  .quick-action{min-height:36px;padding:0 12px;border:1px solid var(--hair);border-radius:9px;background:rgba(8,11,18,.82);color:var(--text-dim);font:600 11px var(--font-ui);cursor:pointer;backdrop-filter:blur(10px)}
+  .quick-action:hover{color:var(--text);border-color:var(--gold)}
+  body.route-sheet-open .quick-actions{opacity:0;pointer-events:none}
+  @media(max-width:680px){.quick-actions{left:10px;bottom:calc(164px + env(safe-area-inset-bottom,0px));}.quick-action{min-height:40px}}
   .tg{cursor:pointer; user-select:none; font-size:12.5px; color:var(--text-dim); border:1px solid var(--border);
     background:var(--ink); padding:8px 14px; border-radius:999px; transition:.18s}
   .tg[aria-pressed=true]{color:var(--on-accent); font-weight:700; border-color:transparent}
@@ -2026,23 +2031,12 @@
 <header>
   <div class="wrap bar">
     <a class="brand" href="index.html">
-      <img src="assets/mark.png" alt="" />
       <b>SUPER&nbsp;DAY</b><span class="beta">web · бета</span>
     </a>
     <div class="right">
       <a class="back" href="index.html">← На сайт</a>
       <a class="head-service" href="documents.html">Документы</a>
       <a class="head-service" href="support.html">Поддержка</a>
-      <button class="theme-btn" id="themeBtn" type="button" aria-pressed="false" title="Переключить цвет интерфейса">
-        <span class="theme-swatch" aria-hidden="true"></span><span class="theme-label">Цвет</span>
-      </button>
-      <button class="panel-btn activity-toggle" id="activityToggle" type="button" aria-expanded="false" aria-controls="activityDock" title="Открыть шагомер, пульс и местоположение">
-        <span class="pb-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-gauge"/></svg></span><span class="pb-label">Движение</span>
-      </button>
-      <button class="panel-btn" id="layoutBtn" type="button" aria-expanded="false" aria-controls="layoutPop"
-              title="Выбери, какие блоки видны на главном экране">
-        <span class="pb-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-grid"/></svg></span><span class="pb-label">Блоки</span>
-      </button>
       <button class="panel-btn" id="panelBtn" type="button" aria-expanded="false" aria-controls="panel"
               title="Настройки, матрица, неделя, шаблоны, заметки и данные">
         <span class="pb-ic" aria-hidden="true"><svg class="sdi" focusable="false"><use href="#i-bars"/></svg></span><span class="pb-label">Панель</span>
@@ -2203,6 +2197,10 @@
   </section>
 
 </main>
+<div class="quick-actions" aria-label="Быстрые действия">
+  <button type="button" class="quick-action" id="quickExit">Emergency Exit</button>
+  <button type="button" class="quick-action" id="quickDecline">Как отказаться</button>
+</div>
 <section class="composer" id="composer" aria-label="Добавить задачу">
   <div class="row1">
     <input type="text" id="taskInput" placeholder="Дело или адрес" autocomplete="off" />
@@ -10643,6 +10641,9 @@
     scrimEl=document.getElementById("scrim");
     panelBtn=document.getElementById("panelBtn");
     if(!panelEl || !scrimEl || !panelBtn) return;
+    var quickExit=document.getElementById("quickExit"), quickDecline=document.getElementById("quickDecline");
+    if(quickExit) quickExit.addEventListener("click",function(){ openPanel("exit"); });
+    if(quickDecline) quickDecline.addEventListener("click",function(){ openPanel("negotiator"); });
     var panelGroups={account:"Профиль",chat:"Инструменты",matrix:"Инструменты",remind:"Инструменты",voice:"Инструменты",stats:"Инструменты",growth:"Инструменты",tpl:"Инструменты",notes:"Инструменты",data:"Данные",help:"Помощь",diag:"Помощь"};
     var lastGroup="";
     Array.prototype.forEach.call(panelEl.querySelectorAll(".pgroup"),function(group){
