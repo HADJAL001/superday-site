@@ -6532,7 +6532,8 @@
     var geoUrl=API_BASE + "/geocode?q=" + encodeURIComponent(query);
     if(near) geoUrl += "&lat="+encodeURIComponent(near.lat)+"&lon="+encodeURIComponent(near.lon);
     fetchIdempotent(geoUrl,{signal:requestSignal})
-      .then(function(r){ if(!r.ok) throw new Error("geocode_"+r.status); return r.json(); })
+      // A 404 means the phrase needs fuzzy suggestions, not that the network failed.
+      .then(function(r){ if(r.status===404) return null; if(!r.ok) throw new Error("geocode_"+r.status); return r.json(); })
       .then(function(j){
         clearTimeout(timer);
         if(!j || j.error || typeof j.lat!=="number" || typeof j.lon!=="number"){ cb(null); return; }
