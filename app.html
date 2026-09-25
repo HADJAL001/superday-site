@@ -202,11 +202,12 @@
   .add-btn:active{transform:translateY(1px)}
   .toggles{display:flex; gap:9px; margin-top:12px; flex-wrap:wrap; align-items:center}
   .composer:not(.has-text) .toggles{display:none}
-  .quick-actions{position:fixed;left:14px;bottom:calc(142px + env(safe-area-inset-bottom,0px));z-index:29;display:flex;gap:8px}
-  .quick-action{min-height:36px;padding:0 12px;border:1px solid var(--hair);border-radius:9px;background:rgba(8,11,18,.82);color:var(--text-dim);font:600 11px var(--font-ui);cursor:pointer;backdrop-filter:blur(10px)}
+  .quick-actions{position:fixed;right:14px;bottom:calc(142px + env(safe-area-inset-bottom,0px));z-index:29;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:min(430px,calc(100vw - 28px))}
+  .quick-action{min-height:36px;padding:0 12px;border:1px solid var(--hair);border-radius:9px;background:rgba(8,11,18,.88);color:var(--text-dim);font:600 11px var(--font-ui);cursor:pointer;backdrop-filter:blur(10px);transition:.18s ease}
   .quick-action:hover{color:var(--text);border-color:var(--gold)}
+  .quick-action:focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px}
   body.route-sheet-open .quick-actions{opacity:0;pointer-events:none}
-  @media(max-width:680px){.quick-actions{left:10px;bottom:calc(164px + env(safe-area-inset-bottom,0px));}.quick-action{min-height:40px}}
+  @media(max-width:680px){.quick-actions{right:10px;bottom:calc(164px + env(safe-area-inset-bottom,0px));}.quick-action{min-height:40px}}
   .tg{cursor:pointer; user-select:none; font-size:12.5px; color:var(--text-dim); border:1px solid var(--border);
     background:var(--ink); padding:8px 14px; border-radius:999px; transition:.18s}
   .tg[aria-pressed=true]{color:var(--on-accent); font-weight:700; border-color:transparent}
@@ -1564,6 +1565,10 @@
     box-shadow:0 24px 54px rgba(2,12,11,.46),inset 0 1px 0 rgba(255,255,255,.11)}
   .stage-plan[hidden]{display:none}
   .sp-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:10px}
+  .sp-head-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+  .sp-dismiss{appearance:none;border:1px solid rgba(235,226,204,.22);border-radius:7px;background:rgba(255,255,255,.06);color:rgba(235,226,204,.78);padding:6px 9px;font:600 11px var(--font-ui);cursor:pointer;white-space:nowrap}
+  .sp-dismiss:hover{border-color:rgba(232,203,113,.7);color:#F2D77B;background:rgba(212,175,55,.12)}
+  .sp-dismiss:focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px}
   .sp-title{font-family:var(--font-display); font-size:17px; font-weight:600; color:#F2F5F0}
   .sp-sum{font-size:10px; color:#B7C5BE; letter-spacing:.1em; text-transform:uppercase; white-space:nowrap}
   .sp-row{display:flex; align-items:flex-start; gap:11px; padding:9px 0; border-top:1px solid rgba(214,230,220,.13)}
@@ -2198,8 +2203,8 @@
 
 </main>
 <div class="quick-actions" aria-label="Быстрые действия">
-  <button type="button" class="quick-action" id="quickExit">Emergency Exit</button>
-  <button type="button" class="quick-action" id="quickDecline">Как отказаться</button>
+  <button type="button" class="quick-action" id="quickExit">Экстренный выход</button>
+  <button type="button" class="quick-action" id="quickDecline">Отказаться от плана</button>
 </div>
 <section class="composer" id="composer" aria-label="Добавить задачу">
   <div class="row1">
@@ -5392,7 +5397,13 @@
     var title=document.createElement("span"); title.className="sp-title"; title.textContent="План на день";
     var sum=document.createElement("span"); sum.className="sp-sum";
     sum.textContent=order.length+" "+plural(order.length,["дело","дела","дел"]);
-    head.appendChild(title); head.appendChild(sum); box.appendChild(head);
+    var headActions=document.createElement("div"); headActions.className="sp-head-actions";
+    headActions.appendChild(sum);
+    var dismiss=document.createElement("button"); dismiss.type="button"; dismiss.className="sp-dismiss";
+    dismiss.textContent="Скрыть"; dismiss.setAttribute("aria-label","Скрыть план на день");
+    dismiss.addEventListener("click",dismissStagePlan);
+    headActions.appendChild(dismiss);
+    head.appendChild(title); head.appendChild(headActions); box.appendChild(head);
     var list=document.createElement("div"); list.className="sp-list";
     order.forEach(function(t, i){
       var row=document.createElement("div"); row.className="sp-row";
@@ -5477,6 +5488,13 @@
   }
 
   // Свайп вниз пальцем скрывает «План на день» на телефоне, открывая карту под ним.
+  function dismissStagePlan(){
+    var box=stageEl("stagePlan"); if(!box || box.hidden) return;
+    box.classList.add("sp-dismissed");
+    document.body.classList.remove("plan-open");
+    box.style.transform=""; box.style.opacity="";
+    showStagePlanReopen();
+  }
   function initStagePlanSwipe(box){
     if(box.__swipeInit) return; box.__swipeInit=true;
     var startY=0, dy=0, dragging=false;
@@ -5495,7 +5513,7 @@
       if(!dragging) return; dragging=false; box.classList.remove("sp-dragging");
       if(dy>105){
         box.style.transform="translateY(160px)"; box.style.opacity="0";
-        setTimeout(function(){ box.classList.add("sp-dismissed"); document.body.classList.remove("plan-open"); box.style.transform=""; box.style.opacity=""; showStagePlanReopen(); },200);
+        setTimeout(dismissStagePlan,200);
       } else {
         box.style.transform=""; box.style.opacity="";
       }
