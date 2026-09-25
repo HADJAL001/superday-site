@@ -5647,6 +5647,19 @@
     });
     box.appendChild(opts);
   }
+  var AFFIRM_SPOKEN_KEY="superday_affirm_spoken_date";
+  function speakEveningAffirmation(text){
+    if(!text || (typeof isMuted==="function" && isMuted()) || !window.speechSynthesis) return;
+    try{
+      var today=todayKey();
+      if(localStorage.getItem(AFFIRM_SPOKEN_KEY)===today) return;
+      var utterance=new SpeechSynthesisUtterance(text);
+      utterance.lang="ru-RU"; utterance.rate=0.98; utterance.pitch=0.96;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+      localStorage.setItem(AFFIRM_SPOKEN_KEY,today);
+    }catch(e){}
+  }
   function paintArcEvening(box, intention){
     var list=todayTasks();
     var done=list.filter(function(t){ return t.done; }).length;
@@ -5667,6 +5680,7 @@
     row.appendChild(arcEl("span",null,s.streakLine));
     box.appendChild(row);
     box.appendChild(arcEl("div","da-affirm", s.affirmation));
+    speakEveningAffirmation(s.affirmation);
     // Утреннее намерение всплывает вечером — петля закрывается там же, где
     // открылась, иначе утренний выбор остался бы без последствий.
     if(s.intentionFocus) box.appendChild(arcEl("div","da-echo","Утром ты выбрал быть тем, кто " +
