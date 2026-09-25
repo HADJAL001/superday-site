@@ -1,0 +1,9 @@
+{
+  "appId": "com.superday.run",
+  "appName": "SUPERDAY",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "ios": {
+    "contentInset": "automatic"
+  }
+}
