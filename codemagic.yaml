@@ -8,7 +8,7 @@ workflows:
     environment:
       ios_signing:
         provisioning_profiles:
-          - superday_app_store
+          - superday_app_store_v2
       vars:
         XCODE_WORKSPACE: mobile/ios/App/App.xcworkspace
         XCODE_SCHEME: App
