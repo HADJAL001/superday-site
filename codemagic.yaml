@@ -9,6 +9,8 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.superday.run
+        provisioning_profiles:
+          - superday_app_store
       vars:
         XCODE_WORKSPACE: mobile/ios/App/App.xcworkspace
         XCODE_SCHEME: App
