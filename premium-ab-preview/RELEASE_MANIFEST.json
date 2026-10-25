@@ -1,0 +1,148 @@
+{
+  "release": "OSGARD PREMIUM SEVEN V8",
+  "date": "2026-10-26",
+  "source": "OSGARD PREMIUM SEVEN V7 verified archive from user Library",
+  "scope": "isolated non-production static preview; no backend functionality",
+  "deploy_root": "premium-ab-preview/",
+  "source_v7_sha256": "ef06409d131b1ef884cf74eb49e893a25654476bd1c5e97dac87039800bb37fd",
+  "design": {
+    "approved_layout": "2+2+3",
+    "themes": [
+      "Black Chrome",
+      "Executive Blue"
+    ],
+    "no_new_generations": true
+  },
+  "routes": [
+    "all",
+    "myosa",
+    "newworld",
+    "osgardos",
+    "senjorio",
+    "vanguard",
+    "superday",
+    "o2"
+  ],
+  "assets": {
+    "assets/card-a-myosa.webp": {
+      "sha256": "6df562570f1a63f1f54ea3c7cde88356a018bff20d90a2c741f8cc0e2f566235",
+      "bytes": 92026
+    },
+    "assets/card-a-newworld.webp": {
+      "sha256": "93d4c315dc8dbed341378e22f6b8616db1f24ec3ee587fb2a71635f0a12efca5",
+      "bytes": 109322
+    },
+    "assets/card-a-o2.webp": {
+      "sha256": "0fdf9b74c5646b04626f8a611a4ed041dc5545231766d8f706087c42cc5b6200",
+      "bytes": 89934
+    },
+    "assets/card-a-osgardos.webp": {
+      "sha256": "1daf09c192e3786cc893eed21405d33a4c84b5815ab8ff3cedf9a4a16d461a4a",
+      "bytes": 89904
+    },
+    "assets/card-a-senjorio.webp": {
+      "sha256": "28862001f9c9206acb80c31e46f398af7d9611121b1b2750977a1879d1f5e7bd",
+      "bytes": 97582
+    },
+    "assets/card-a-superday.webp": {
+      "sha256": "4eeb744fafac788ee2edd6f4166b1472b1b1ec9156bbedc212369b4a6dc24935",
+      "bytes": 62072
+    },
+    "assets/card-a-vanguard.webp": {
+      "sha256": "410446052845451029537a93b9503322ff97bb2f413d0b49fab7f20d7baa7487",
+      "bytes": 100228
+    },
+    "assets/card-b-myosa.webp": {
+      "sha256": "71da5731868a94be92070316729175790fe91a5735362e53795bef41a3948d8b",
+      "bytes": 107522
+    },
+    "assets/card-b-newworld.webp": {
+      "sha256": "e4a26f7f4ab2266de8e3b13b3b1147a37bde650e01f9691d7c2baa89a2d62f67",
+      "bytes": 121496
+    },
+    "assets/card-b-o2.webp": {
+      "sha256": "0fdf9b74c5646b04626f8a611a4ed041dc5545231766d8f706087c42cc5b6200",
+      "bytes": 89934
+    },
+    "assets/card-b-osgardos.webp": {
+      "sha256": "029a6ad2ce1afaed74acf72c6e61c34b929733e32ed5b5a9af2fcc9021360a74",
+      "bytes": 73890
+    },
+    "assets/card-b-senjorio.webp": {
+      "sha256": "1701a677d22dc5cad1b47ca8ddb62700c676ae7e571cd3096425e6401aa42ea7",
+      "bytes": 96390
+    },
+    "assets/card-b-superday.webp": {
+      "sha256": "6cdf744891a0b51b19ba266894af4d9cf86c1af6ae03452e73e5e79a523e4db3",
+      "bytes": 74630
+    },
+    "assets/card-b-vanguard.webp": {
+      "sha256": "e7e9908a87abd1b52fd080fdf11091c57b44cbf95cb4510beae6769c24022a72",
+      "bytes": 89890
+    },
+    "assets/hero-a-myosa.webp": {
+      "sha256": "13d082a97e0ae6ac8434e5af447e0c21330d2ad58d51015a9fa263f524735061",
+      "bytes": 36296
+    },
+    "assets/hero-a-newworld.webp": {
+      "sha256": "1166179c3bc5e0af3f309cf8893747b05bbdb969d5e2943e5db3c93523508022",
+      "bytes": 52808
+    },
+    "assets/hero-a-o2.webp": {
+      "sha256": "ff7527698223df9fc0c7ad025a9a37aed76f4c3b6d10ec35c132799a1d7daf3c",
+      "bytes": 38548
+    },
+    "assets/hero-a-osgardos.webp": {
+      "sha256": "65fdce34274f8652bc2d25b93936e3c6d20de9c89f1d89729b3740d3ee3ffe25",
+      "bytes": 36776
+    },
+    "assets/hero-a-senjorio.webp": {
+      "sha256": "82436e86167d7a01d387bd1f0f5ef2787d2fabf20a9d4cdcc6bab32cc17454ac",
+      "bytes": 41448
+    },
+    "assets/hero-a-superday.webp": {
+      "sha256": "b307c6ec9fa34cc0296f1ef7995e0cf92aed4ac6627f6d3508575e2d7f432a32",
+      "bytes": 21230
+    },
+    "assets/hero-a-vanguard.webp": {
+      "sha256": "6a911abea51e9565fee0e2b3495d3a4d24a93e14789b5790a5a119236a36a8b3",
+      "bytes": 48578
+    },
+    "assets/hero-b-myosa.webp": {
+      "sha256": "8789916a192fcd4316a2b860e8d1e7e2ac12069d40b1cecb86c1b9707059d2e9",
+      "bytes": 42654
+    },
+    "assets/hero-b-newworld.webp": {
+      "sha256": "233e37b8623f537b083aa3bf3d78289bb90a3a5ea4ccd90d6c42543abac4f68c",
+      "bytes": 54302
+    },
+    "assets/hero-b-o2.webp": {
+      "sha256": "ff7527698223df9fc0c7ad025a9a37aed76f4c3b6d10ec35c132799a1d7daf3c",
+      "bytes": 38548
+    },
+    "assets/hero-b-osgardos.webp": {
+      "sha256": "19d2ec668c9ae3670823b5713fad7c556c0ad52b8f6c8926e9fe7af6a185275d",
+      "bytes": 31416
+    },
+    "assets/hero-b-senjorio.webp": {
+      "sha256": "004b969482f80348b8562451f548451bd305d6de12006e230a02408380119e65",
+      "bytes": 42970
+    },
+    "assets/hero-b-superday.webp": {
+      "sha256": "96ce37fc52f6b21a512c0b1055313fa5dd62bc8db0319efcc05952e45589c166",
+      "bytes": 29750
+    },
+    "assets/hero-b-vanguard.webp": {
+      "sha256": "0447617bc37fd9aa06a6cb3df263330f0589848d03169f236d14af6f3651a6bf",
+      "bytes": 36778
+    }
+  },
+  "boundaries": [
+    "No server authentication",
+    "No payments",
+    "No bookings",
+    "No bank settlement",
+    "No AI video generation",
+    "No verified art-card KPIs"
+  ]
+}

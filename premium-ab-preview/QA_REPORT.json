@@ -1,0 +1,571 @@
+{
+  "release": "OSGARD PREMIUM SEVEN V8.0",
+  "date": "2026-10-26",
+  "scope": "static local HTTP via Python + offline Chromium page.set_content of exact split JS/CSS/image bytes, because browser local network navigation is blocked",
+  "network_browser_tested": false,
+  "production_deployed": false,
+  "total": 99,
+  "passed": 99,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "Original V7 SHA256 unchanged",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Original 28 image assets retained",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/card-a-myosa.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/card-a-newworld.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/card-a-o2.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/card-a-osgardos.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/card-a-senjorio.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/card-a-superday.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/card-a-vanguard.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/card-b-myosa.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/card-b-newworld.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/card-b-o2.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/card-b-osgardos.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/card-b-senjorio.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/card-b-superday.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/card-b-vanguard.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/hero-a-myosa.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/hero-a-newworld.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/hero-a-o2.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/hero-a-osgardos.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/hero-a-senjorio.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/hero-a-superday.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/hero-a-vanguard.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/hero-b-myosa.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/hero-b-newworld.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/hero-b-o2.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/hero-b-osgardos.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/hero-b-senjorio.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/hero-b-superday.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "asset integrity: assets/hero-b-vanguard.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "No embedded image data in HTML",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Small HTML shell",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Only local scripts/CSS",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Explicit noindex",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "CSP disallows remote requests",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "No changed original art card metadata",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Seven compatible PREVIEW routes",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "HTTP static 200 index.html",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "HTTP static 200 styles.css",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "HTTP static 200 app.js",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "HTTP static 200 workspace.js",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "HTTP static 200 assets/card-a-myosa.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "HTTP static 200 assets/card-b-senjorio.webp",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "HTTP static 200 PREVIEW_superday.html",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "HTTP 404 on missing assets",
+      "pass": true,
+      "detail": "HTTP Error 404: File not found"
+    },
+    {
+      "name": "Gallery mount and seven cards",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "All A card images decode",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "All gallery images have meaningful alt",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Approved desktop 2+2+3 grid",
+      "pass": true,
+      "detail": "[{'x': 83, 'y': 88, 'w': 765, 'h': 361}, {'x': 853, 'y': 88, 'w': 766, 'h': 363}, {'x': 83, 'y': 456, 'w': 765, 'h': 317}, {'x': 853, 'y': 456, 'w': 766, 'h': 319}, {'x': 83, 'y': 779, 'w': 509, 'h': 228}, {'x': 596, 'y': 779, 'w': 509, 'h': 228}, {'x': 1110, 'y': 779, 'w': 509, 'h': 313}]"
+    },
+    {
+      "name": "All card routes are local",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Initial variant A",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "B switches entire artwork",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Command palette opens",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Search indexes products",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Escape closes command palette",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Product myosa",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Product image myosa",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Workspace myosa",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Step control myosa",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Product newworld",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Product image newworld",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Workspace newworld",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Step control newworld",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Product osgardos",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Product image osgardos",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Workspace osgardos",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Step control osgardos",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Product senjorio",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Product image senjorio",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Workspace senjorio",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Step control senjorio",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Product vanguard",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Product image vanguard",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Workspace vanguard",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Step control vanguard",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Product superday",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Product image superday",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Workspace superday",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Step control superday",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Product o2",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Product image o2",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Workspace o2",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Step control o2",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Viewport no overflow 320",
+      "pass": true,
+      "detail": "{'contentWidth': 320, 'screenWidth': 320}"
+    },
+    {
+      "name": "Viewport seven cards 320",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Viewport A artwork loads 320",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Viewport no overflow 390",
+      "pass": true,
+      "detail": "{'contentWidth': 390, 'screenWidth': 390}"
+    },
+    {
+      "name": "Viewport seven cards 390",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Viewport A artwork loads 390",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Mobile nav open",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Viewport no overflow 768",
+      "pass": true,
+      "detail": "{'contentWidth': 768, 'screenWidth': 768}"
+    },
+    {
+      "name": "Viewport seven cards 768",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Viewport A artwork loads 768",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Viewport no overflow 1280",
+      "pass": true,
+      "detail": "{'contentWidth': 1280, 'screenWidth': 1280}"
+    },
+    {
+      "name": "Viewport seven cards 1280",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "Viewport A artwork loads 1280",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "name": "V7→V8 exact layout visual regression",
+      "pass": true,
+      "detail": "0.481"
+    },
+    {
+      "name": "Browser JS no uncaught errors",
+      "pass": true,
+      "detail": "[]"
+    },
+    {
+      "name": "No JS TypeError in console",
+      "pass": true,
+      "detail": "[]"
+    }
+  ],
+  "browser_errors": [],
+  "console_errors": [],
+  "desktop_bounds": [
+    {
+      "x": 83,
+      "y": 88,
+      "w": 765,
+      "h": 361
+    },
+    {
+      "x": 853,
+      "y": 88,
+      "w": 766,
+      "h": 363
+    },
+    {
+      "x": 83,
+      "y": 456,
+      "w": 765,
+      "h": 317
+    },
+    {
+      "x": 853,
+      "y": 456,
+      "w": 766,
+      "h": 319
+    },
+    {
+      "x": 83,
+      "y": 779,
+      "w": 509,
+      "h": 228
+    },
+    {
+      "x": 596,
+      "y": 779,
+      "w": 509,
+      "h": 228
+    },
+    {
+      "x": 1110,
+      "y": 779,
+      "w": 509,
+      "h": 313
+    }
+  ],
+  "viewport_sizes": {
+    "320": {
+      "contentWidth": 320,
+      "screenWidth": 320
+    },
+    "390": {
+      "contentWidth": 390,
+      "screenWidth": 390
+    },
+    "768": {
+      "contentWidth": 768,
+      "screenWidth": 768
+    },
+    "1280": {
+      "contentWidth": 1280,
+      "screenWidth": 1280
+    }
+  }
+}
