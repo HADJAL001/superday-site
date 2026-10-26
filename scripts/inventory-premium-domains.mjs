@@ -29,3 +29,11 @@ const data=await Promise.all(sites.map(async ([name,domain,product,stage])=>{
 const report={title:'OSGARD SEVEN DOMAIN INVENTORY',checked_at:now,verified_previews:data.filter(d=>d.preview.verified).length,domains:7,results:data,disclaimer:'Read-only HTTP GET from GitHub Actions. An HTTP-successful preview is only static UI, not proof that product backend/auth/transactions work.'};
 writeFileSync('OSGARD_PREMIUM_V9_DOMAINS.json',JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify({checked_at:now,verified_previews:report.verified_previews,rows:data.map(d=>({domain:d.domain,root:d.homepage.http_status,preview:d.preview.http_status,result:d.preview.result}))},null,2));
+// Regression gate protects the one independently confirmed public V9 site.
+// The other six remain informational until native deployments are proven.
+const baseline=data.find(d=>d.domain==='superday.run');
+if(!baseline?.preview.verified){
+  console.error('REGRESSION: previously verified superday.run V9 preview is unavailable or returns the wrong HTML');
+  process.exitCode=1;
+}
+

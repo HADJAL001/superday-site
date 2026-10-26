@@ -1,6 +1,8 @@
 name: OSGARD Seven Domains Inventory
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 9 * * *' # Daily read-only inventory at 09:00 UTC
   push:
     branches: [main]
     paths:
