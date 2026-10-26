@@ -7,6 +7,7 @@ on:
     branches: [main]
     paths:
       - 'scripts/inventory-premium-domains.mjs'
+      - 'scripts/inspect-premium-hosting.mjs'
       - '.github/workflows/premium-seven-domain-inventory.yml'
 permissions:
   contents: read
@@ -21,9 +22,11 @@ jobs:
           node-version: '24'
       - name: Read-only HTTPS inventory of all seven public domains
         run: node scripts/inventory-premium-domains.mjs
-      - uses: actions/upload-artifact@v4
+      - name: Inspect public hosting fingerprints (read-only)\n        run: node scripts/inspect-premium-hosting.mjs\n      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: osgard-premium-v9-seven-domain-inventory
-          path: OSGARD_PREMIUM_V9_DOMAINS.json
+          path: |
+            OSGARD_PREMIUM_V9_DOMAINS.json
+            OSGARD_PREMIUM_HOST_FINGERPRINTS.json
           if-no-files-found: warn
