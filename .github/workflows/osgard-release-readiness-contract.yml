@@ -1,0 +1,41 @@
+name: OSGARD Master Release Readiness Contract
+on:
+  pull_request:
+    paths:
+      - 'docs/OSGARD_MASTER_RELEASE_PLAN.md'
+      - 'docs/OSGARD_RELEASE_TRACKER_V1.json'
+      - 'scripts/osgard-release-readiness.mjs'
+      - 'scripts/osgard-release-readiness.test.mjs'
+      - '.github/workflows/osgard-release-readiness-contract.yml'
+      - '.github/workflows/premium-seven-domain-inventory.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'docs/OSGARD_MASTER_RELEASE_PLAN.md'
+      - 'docs/OSGARD_RELEASE_TRACKER_V1.json'
+      - 'scripts/osgard-release-readiness.mjs'
+      - 'scripts/osgard-release-readiness.test.mjs'
+      - '.github/workflows/osgard-release-readiness-contract.yml'
+      - '.github/workflows/premium-seven-domain-inventory.yml'
+permissions:
+  contents: read
+jobs:
+  offline-readiness-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify no-false-PASS release gating without network or secrets
+        run: |
+          node --check scripts/osgard-release-readiness.mjs
+          node --test scripts/osgard-release-readiness.test.mjs
+      - name: Keep daily inventory and manual signoff separate
+        run: |
+          grep -Fq 'osgard-release-readiness.mjs' .github/workflows/premium-seven-domain-inventory.yml
+          grep -Fq 'OSGARD_RELEASE_READINESS.json' .github/workflows/premium-seven-domain-inventory.yml
+          grep -Fq 'full_production_release_approved: false' scripts/osgard-release-readiness.mjs
