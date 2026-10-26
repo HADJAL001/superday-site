@@ -15,6 +15,7 @@ export const SOURCE_PATHS = Object.freeze({
   osgardos: 'public/premium-ab-preview/index.html',
   myosa: 'web/public/premium-ab-preview/index.html'
 });
+const PRIVATE_NATIVE_REPOS = new Set(['HADJAL001/o2-system', 'HADJAL001/osgardos', 'HADJAL001/osa']);
 const SHA = /^[0-9a-f]{40}$/;
 const DIGEST = /^[0-9a-f]{64}$/;
 function invariant(ok, message) { if (!ok) throw Error('Invalid OSGARD source registry: ' + message); }
@@ -111,8 +112,9 @@ export async function attestSources({ tracker, pinned, getJSON, checkedAt = new 
       return row;
     } catch (error) {
       if (String(error?.message || '').startsWith('Invalid OSGARD source registry:')) throw error;
-      row.result = 'github_source_lookup_failed';
-      row.failure_code = (error?.status ?? 'network_or_schema_failure').toString().slice(0, 40);
+      row.result = error?.status === 'private_repo_read_access_not_configured' ?
+        'private_repo_read_access_not_configured' : 'github_source_lookup_failed';
+      row.failure_code = (error?.status ?? 'network_or_schema_failure').toString().slice(0, 60);
       return row;
     }
   }));
@@ -131,7 +133,14 @@ async function githubJSON(path) {
     throw Error('Unexpected GitHub API path');
   }
   const headers = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
-  const token = process.env.GITHUB_TOKEN;
+  const repository = /^\/repos\/(HADJAL001\/[a-zA-Z0-9_.-]+)\//.exec(path)?.[1];
+  const requiresPrivateRead = PRIVATE_NATIVE_REPOS.has(repository);
+  const token = requiresPrivateRead ? process.env.OSGARD_SOURCE_READ_TOKEN : process.env.GITHUB_TOKEN;
+  if (requiresPrivateRead && !token) {
+    const error = new Error('Private source read-only authorization not configured');
+    error.status = 'private_repo_read_access_not_configured';
+    throw error;
+  }
   if (token) headers.Authorization = 'Bearer ' + token;
   const response = await fetch('https://api.github.com' + path, {
     headers, signal: AbortSignal.timeout(15000), redirect: 'error'
@@ -154,7 +163,7 @@ async function main() {
     approved_source_files_verified: report.approved_source_files_verified,
     approved_source_files_in_main: report.approved_source_files_in_main,
     unknown_owners: report.unknown_owners,
-    details: report.products.map(x=>({id:x.product_id,reason:x.result}))
+    details: report.products.map(x=>({id:x.product_id,reason:x.result,failure_code:x.failure_code||null}))
   }, null, 2));
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY,
     '\n### Independently checked GitHub approved source files\n' +
