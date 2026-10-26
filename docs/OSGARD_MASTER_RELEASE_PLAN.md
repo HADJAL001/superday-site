@@ -62,7 +62,7 @@
 
 ## БЛОК 5. Единый релизный шлюз — EVIDENCE & GO/NO-GO
 
-Существующая ежедневная V13-аттестация проверяет только байты публичной статики. Новый `scripts/osgard-release-readiness.mjs` связывает её с реестром исходников и, при наличии, подтверждённым JSON доставки Forgejo. Он выдаёт отдельный `OSGARD_RELEASE_READINESS.json` и отчёт GitHub Step Summary. Скрипт **не работает с production-секретами** и **не деплоит**.
+Существующая ежедневная V13-аттестация проверяет только байты публичной статики. Новый `scripts/osgard-release-readiness.mjs` связывает её с реестром исходников, независимой GitHub-проверкой утверждённых байтов V17 (`scripts/osgard-source-attestation.mjs`) и, при наличии, подтверждённым JSON доставки Forgejo. Заявление `github_main` в реестре без свежей аттестации исходного файла больше не считается доказанным исходником. Он выдаёт отдельный `OSGARD_RELEASE_READINESS.json` и отчёт GitHub Step Summary. Скрипт **не работает с production-секретами** и **не деплоит**.
 
 **Условия перехода к ручной production-приёмке:** `7/7` утверждённых preview-байтов, `7/7` разрешённых нативных `main` источников, актуальный подтверждённый Forgejo SHA при использовании этого транспорта. Даже это только **`AWAITING_RUNTIME_SECURITY_AND_ROLLBACK_SIGNOFF`** — не полная готовность приложения.
 
@@ -98,13 +98,14 @@ node --test scripts/osgard-release-readiness.test.mjs
 
 # После существующей V13 сканирующей команды (создавшей JSON)
 node scripts/inventory-premium-domains.mjs
-node scripts/osgard-release-readiness.mjs
+node scripts/osgard-source-attestation.mjs
+node scripts/osgard-release-readiness.mjs --source-evidence OSGARD_SOURCE_ATTESTATION_V1.json
 
 # Посмотреть машинное решение; выполнение аудита не означает release PASS
 cat OSGARD_RELEASE_READINESS.json
 
 # Строгая проверка достаточности для следующего ручного этапа: сейчас должна FAIL
-node scripts/osgard-release-readiness.mjs --strict
+node scripts/osgard-release-readiness.mjs --source-evidence OSGARD_SOURCE_ATTESTATION_V1.json --strict
 ```
 
 Ответственный за инфраструктуру должен отдельно выполнить только одобренные шаги из `OSGARD_FORGEJO_V16.md`. Перед выпуском каждого нативного продукта требуется владелец исходников и хостинга.

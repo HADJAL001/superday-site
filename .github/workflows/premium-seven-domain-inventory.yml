@@ -68,7 +68,7 @@ jobs:
           OSGARD_SOURCE_READ_TOKEN: ${{ secrets.OSGARD_SOURCE_READ_TOKEN }}
         run: node scripts/osgard-source-attestation.mjs
       - name: Produce release-readiness decision without claiming production approval
-        run: node scripts/osgard-release-readiness.mjs
+        run: node scripts/osgard-release-readiness.mjs --source-evidence OSGARD_SOURCE_ATTESTATION_V1.json
       - name: Inspect public hosting fingerprints (read-only)
         run: node scripts/inspect-premium-hosting.mjs
       - uses: actions/upload-artifact@v4

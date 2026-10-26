@@ -25,8 +25,31 @@ function inventory(count = 1) {
   });
   return {version:13, domains:7, verified_previews:count, checked_at:at, results};
 }
+
+const pinned = JSON.parse(readFileSync(new URL('../premium-v13-approved-indexes.json',import.meta.url),'utf8'));
+function sourceProof(t=tracker,verifiedIds=new Set(t.products.filter(p=>p.source.kind!=='unknown').map(p=>p.id))) {
+  const products=t.products.map(p=>{
+    const ok=verifiedIds.has(p.id) && p.source.kind!=='unknown';
+    const inMain=ok && p.source.kind==='github_main';
+    return {
+      product_id:p.id,domain:p.domain,repository:p.source.repository,source_kind:p.source.kind,
+      approved_source_verified:ok,in_main:inMain, github_ref_sha:ok?sha:null,
+      observed_git_blob_sha:ok?sha:null, approved_index_sha256:pinned.approved_index_sha256[p.id],
+      observed_index_sha256:ok?pinned.approved_index_sha256[p.id]:null,
+      result:ok?(inMain?'approved_source_verified_in_main':'approved_source_verified_in_open_pr'):'not_verified'
+    };
+  });
+  return {
+    schema:'OSGARD_SOURCE_ATTESTATION_V1', checked_at:at, product_count:7,
+    approved_source_files_verified:products.filter(p=>p.approved_source_verified).length,
+    approved_source_files_in_main:products.filter(p=>p.in_main).length,
+    products
+  };
+}
+
 function compute(opts={}) {
   return evaluateRelease({tracker,inventory:inventory(opts.count??1),forgejoEvidence:opts.forgejoEvidence??null,
+    sourceEvidence:opts.sourceEvidence??null,approvedIndexes:pinned,
     expectedSha:opts.expectedSha??sha,checkedAt:at});
 }
 function v15(evidenceSha = sha) {
@@ -43,7 +66,9 @@ test('last verified baseline: 7 roots HTTP 200 is NOT 7 production releases',()=
   assert.equal(r.channels.root_html_http_200.count,7);
   assert.equal(r.channels.root_html_http_200.is_release_gate,false);
   assert.equal(r.channels.approved_static_previews.verified,1);
-  assert.equal(r.channels.authoritative_sources_merged.verified,3);
+  assert.equal(r.channels.authoritative_sources_merged.declared_main,3);
+  assert.equal(r.channels.authoritative_sources_merged.verified,0);
+  assert.equal(r.channels.approved_native_source_files.verified,0);
   assert.equal(r.channels.forgejo_exact_commit.verified,false);
   assert.equal(r.decision,'BLOCKED_NOT_APPROVED');
   assert.equal(r.full_production_release_approved,false);
@@ -115,7 +140,8 @@ test('after all code/source/transport evidence, runtime still needs human signof
   for (const product of modified.products) {
     product.source={kind:'github_main',repository:'HADJAL001/verified-source',reference:'main'};
   }
-  const r=evaluateRelease({tracker:modified,inventory:inventory(7),forgejoEvidence:v16(),expectedSha:sha,checkedAt:at});
+  const r=evaluateRelease({tracker:modified,inventory:inventory(7),forgejoEvidence:v16(),
+    sourceEvidence:sourceProof(modified),approvedIndexes:pinned,expectedSha:sha,checkedAt:at});
   assert.equal(r.decision,'AWAITING_RUNTIME_SECURITY_AND_ROLLBACK_SIGNOFF');
   assert.equal(r.ready_for_operator_runtime_signoff,true);
   assert.equal(r.channels.native_runtime_acceptance.verified,false);
@@ -125,4 +151,44 @@ test('after all code/source/transport evidence, runtime still needs human signof
 test('reject unsupported tracker or inventory schema',()=>{
   assert.throws(()=>evaluateRelease({tracker:{schema:'fake'},inventory:inventory(),expectedSha:sha}),/tracker schema/);
   assert.throws(()=>evaluateRelease({tracker,inventory:{...inventory(),version:12},expectedSha:sha}),/V13 inventory required/);
+});
+
+test('five correct native GitHub byte proofs produce three attested main sources, not seven releases',()=>{
+  const r=compute({sourceEvidence:sourceProof()});
+  assert.equal(r.channels.approved_native_source_files.verified,5);
+  assert.equal(r.channels.authoritative_sources_merged.declared_main,3);
+  assert.equal(r.channels.authoritative_sources_merged.verified,3);
+  assert.equal(r.products.find(p=>p.domain==='myosa.world').source_merged,false);
+  assert.equal(r.full_production_release_approved,false);
+});
+test('source registry declares main but lacks fresh byte proof: never accepted',()=>{
+  const f=sourceProof();f.products.find(p=>p.product_id==='osgardos').approved_source_verified=false;
+  f.approved_source_files_verified-=1;f.approved_source_files_in_main-=1;
+  const r=compute({sourceEvidence:f});
+  assert.equal(r.channels.authoritative_sources_merged.verified,2);
+  assert.equal(r.products.find(p=>p.domain==='osgardos.com').source_merged,false);
+});
+test('spoofed source verification with wrong pinned SHA256 is rejected',()=>{
+  const f=sourceProof();f.products.find(p=>p.product_id==='o2').observed_index_sha256='e'.repeat(64);
+  assert.throws(()=>compute({sourceEvidence:f}),/false-positive native source evidence/);
+});
+test('forged source counts cannot inflate production proof',()=>{
+  const f=sourceProof();f.approved_source_files_in_main=7;
+  assert.throws(()=>compute({sourceEvidence:f}),/source-main count/);
+});
+test('source evidence from a different domain or repo is rejected',()=>{
+  const f=sourceProof();f.products.find(p=>p.product_id==='all').repository='HADJAL001/untrusted';
+  assert.throws(()=>compute({sourceEvidence:f}),/source identity mismatch/);
+});
+test('stale source evidence cannot be combined with a new domain scan',()=>{
+  const f=sourceProof();f.checked_at='2026-10-20T00:00:00Z';
+  assert.throws(()=>compute({sourceEvidence:f}),/source evidence is stale/);
+});
+test('all static previews and Forgejo SHA still cannot bypass missing native source attestation',()=>{
+  const modified=structuredClone(tracker);
+  for(const p of modified.products)p.source={kind:'github_main',repository:'HADJAL001/approved-native',reference:'main'};
+  const r=evaluateRelease({tracker:modified,inventory:inventory(7),forgejoEvidence:v16(),approvedIndexes:pinned,expectedSha:sha,checkedAt:at});
+  assert.equal(r.channels.authoritative_sources_merged.declared_main,7);
+  assert.equal(r.channels.authoritative_sources_merged.verified,0);
+  assert.equal(r.decision,'BLOCKED_NOT_APPROVED');
 });
