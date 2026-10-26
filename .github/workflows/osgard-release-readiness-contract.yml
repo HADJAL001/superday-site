@@ -8,6 +8,7 @@ on:
       - 'scripts/osgard-release-readiness.test.mjs'
       - 'scripts/osgard-source-attestation.mjs'
       - 'scripts/osgard-source-attestation.test.mjs'
+      - 'scripts/osgard-source-token-boundary.test.mjs'
       - '.github/workflows/osgard-release-readiness-contract.yml'
       - '.github/workflows/premium-seven-domain-inventory.yml'
   push:
@@ -19,6 +20,7 @@ on:
       - 'scripts/osgard-release-readiness.test.mjs'
       - 'scripts/osgard-source-attestation.mjs'
       - 'scripts/osgard-source-attestation.test.mjs'
+      - 'scripts/osgard-source-token-boundary.test.mjs'
       - '.github/workflows/osgard-release-readiness-contract.yml'
       - '.github/workflows/premium-seven-domain-inventory.yml'
 permissions:
@@ -37,7 +39,7 @@ jobs:
       - name: Verify no-false-PASS release gating without network or secrets
         run: |
           node --check scripts/osgard-release-readiness.mjs
-          node --test scripts/osgard-release-readiness.test.mjs scripts/osgard-source-attestation.test.mjs
+          node --test scripts/osgard-release-readiness.test.mjs scripts/osgard-source-attestation.test.mjs scripts/osgard-source-token-boundary.test.mjs
       - name: Keep daily inventory and manual signoff separate
         run: |
           grep -Fq 'osgard-release-readiness.mjs' .github/workflows/premium-seven-domain-inventory.yml
