@@ -56,9 +56,16 @@ jobs:
           node scripts/verify-premium-preview.mjs
       - name: Read-only HTTPS inventory of all seven public domains
         run: node scripts/inventory-premium-domains.mjs
-      - name: Verify approved native GitHub source files without modifying repositories
+      - name: Check public source proof in PR without private tokens
+        if: github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/osgard-source-attestation.mjs
+      - name: Check approved sources on trusted main (private token optional)
+        if: github.event_name != 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          OSGARD_SOURCE_READ_TOKEN: ${{ secrets.OSGARD_SOURCE_READ_TOKEN }}
         run: node scripts/osgard-source-attestation.mjs
       - name: Produce release-readiness decision without claiming production approval
         run: node scripts/osgard-release-readiness.mjs
