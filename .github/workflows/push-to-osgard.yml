@@ -1,6 +1,6 @@
-# GitHub remains source of truth; Forgejo is a separate SSH delivery target.
-# Never claim success if TCP, SSH, remote-ref inspection or Git push fails.
-name: Delivery to OSGARD (V14 guarded Forgejo)
+# GitHub is the source of truth; Forgejo is a separate remote delivery target.
+# Fail closed on TCP, SSH, SHA mismatch, or remote-ref inspection failure.
+name: Delivery to OSGARD (V15 verified Forgejo)
 on:
   workflow_dispatch: {}
   push:
@@ -39,22 +39,24 @@ jobs:
           chmod 600 "$HOME/.ssh/id_ed25519"
           printf '%s\n' '[64.177.120.183]:2222 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDMpvWYVzBMK8VU3+IsIrJ0KnHKK4XMdwJxzHY3HO/uL' > "$HOME/.ssh/known_hosts"
           chmod 600 "$HOME/.ssh/known_hosts"
-      - name: Deliver exact GitHub branch commit to Forgejo
+      - name: Deliver immutable GitHub SHA and verify exact Forgejo ref
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         env:
           GIT_SSH_COMMAND: ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -o ConnectionAttempts=1
+        shell: bash
         run: bash scripts/forgejo-delivery.sh push
-      - name: Delete only confirmed remote branch
+      - name: Delete only confirmed branch and verify remote absence
         if: github.event_name == 'delete' && github.event.ref_type == 'branch'
         env:
           GONE: ${{ github.event.ref }}
           GIT_SSH_COMMAND: ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -o ConnectionAttempts=1
+        shell: bash
         run: bash scripts/forgejo-delivery.sh delete
       - name: Archive evidence even on failure
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: forgejo-delivery-v14-${{ github.run_id }}
+          name: forgejo-delivery-v15-${{ github.run_id }}
           path: forgejo_delivery_evidence.json
           if-no-files-found: warn
           retention-days: 30

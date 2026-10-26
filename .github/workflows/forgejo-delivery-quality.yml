@@ -1,4 +1,4 @@
-name: OSGARD Forgejo V14 Delivery Contract
+name: OSGARD Forgejo V15 Delivery Contract
 on:
   pull_request:
     paths:
@@ -6,6 +6,7 @@ on:
       - 'scripts/forgejo-delivery.test.mjs'
       - '.github/workflows/push-to-osgard.yml'
       - '.github/workflows/forgejo-delivery-quality.yml'
+      - 'docs/OSGARD_FORGEJO_V15.md'
   push:
     branches: [main]
     paths:
@@ -13,6 +14,7 @@ on:
       - 'scripts/forgejo-delivery.test.mjs'
       - '.github/workflows/push-to-osgard.yml'
       - '.github/workflows/forgejo-delivery-quality.yml'
+      - 'docs/OSGARD_FORGEJO_V15.md'
 permissions:
   contents: read
 jobs:
@@ -24,7 +26,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Verify Bash syntax and all transport/delete semantics without network
+      - name: Verify Bash syntax and transport, exact SHA, deletion semantics offline
         shell: bash
         run: |
           bash -n scripts/forgejo-delivery.sh
@@ -33,5 +35,7 @@ jobs:
         shell: bash
         run: |
           grep -Fq 'StrictHostKeyChecking=yes' .github/workflows/push-to-osgard.yml
+          grep -Fq 'BatchMode=yes' .github/workflows/push-to-osgard.yml
           ! grep -Eq 'StrictHostKeyChecking=no|--mirror|force: true' .github/workflows/push-to-osgard.yml
           grep -Fq 'if: always()' .github/workflows/push-to-osgard.yml
+          grep -Fq 'forgejo-delivery-v15-' .github/workflows/push-to-osgard.yml
