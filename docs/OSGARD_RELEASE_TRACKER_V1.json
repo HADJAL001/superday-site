@@ -1,0 +1,91 @@
+{
+  "schema": "OSGARD_RELEASE_TRACKER_V1",
+  "snapshot_at_utc": "2026-10-26T07:10:49Z",
+  "scope": "Approved premium previews and safe native deployment; not a claim of completed platform rollout",
+  "source_of_truth": {
+    "repository": "HADJAL001/superday-site",
+    "main_sha_at_snapshot": "de567437098ef1f47298d6d23fd36f5bdb6cd287",
+    "seven_domain_evidence_run": "https://github.com/HADJAL001/superday-site/actions/runs/40268658340",
+    "source_parity_document": "docs/OSGARD_PREMIUM_V13_SOURCE_PARITY.md"
+  },
+  "forgejo_snapshot": {
+    "transport": "github_hosted_runner_ssh",
+    "endpoint": "64.177.120.183:2222",
+    "state": "blocked_tcp_unreachable",
+    "run": "https://github.com/HADJAL001/superday-site/actions/runs/40284130089",
+    "incident": "https://github.com/HADJAL001/superday-site/issues/10",
+    "operator_only_recovery": "docs/OSGARD_FORGEJO_V16.md"
+  },
+  "rules": {
+    "protect_native_roots": true,
+    "do_not_claim_runtime_from_static_attestation": true,
+    "do_not_claim_forgejo_from_github_pages": true,
+    "required_premium_preview_count": 7,
+    "human_approval_required_for_production": true
+  },
+  "products": [
+    {
+      "id": "all",
+      "name": "SUPER DAY",
+      "domain": "superday.run",
+      "source": { "kind": "github_main", "repository": "HADJAL001/superday-site", "reference": "main" },
+      "production_owner": "GitHub Pages pipeline confirmed for public site and premium preview",
+      "release_notes": "Site is live. Backend, voice, identity, payments and other native services require separate acceptance.",
+      "critical_flows_to_test": ["task creation/persistence", "language selection", "support API", "voice capability when configured", "mobile/offline recovery"]
+    },
+    {
+      "id": "newworld",
+      "name": "OSGARD NEW WORLD",
+      "domain": "osgardnewworld.com",
+      "source": { "kind": "github_pr", "repository": "HADJAL001/asgard-redesign", "reference": "pull/259" },
+      "production_owner": "Vercel/Next.js candidate; verify actual project ownership and deploy settings",
+      "release_notes": "Approved preview has source provenance in PR #259. PR is not merged; public root and correct preview are different proofs.",
+      "critical_flows_to_test": ["sign-in if present", "project creation", "generation job", "preview and saved output", "permissions and quota boundaries"]
+    },
+    {
+      "id": "o2",
+      "name": "O2 SYSTEM",
+      "domain": "o2system.art",
+      "source": { "kind": "github_main", "repository": "HADJAL001/o2-system", "reference": "main" },
+      "production_owner": "Cloudflare frontend identified; confirm the exact deployment account/project",
+      "release_notes": "Static approved premium preview not published at the required path. Preserve accounting and audit data.",
+      "critical_flows_to_test": ["role permissions", "accounting entry lifecycle", "audit trail", "export/reconciliation", "data backup and restore"]
+    },
+    {
+      "id": "osgardos",
+      "name": "OSGARDOS",
+      "domain": "osgardos.com",
+      "source": { "kind": "github_main", "repository": "HADJAL001/osgardos", "reference": "main" },
+      "production_owner": "VPS deployment suspected from project docs; confirm runtime server and release authority",
+      "release_notes": "Approved premium preview and real backend release not verified on the domain.",
+      "critical_flows_to_test": ["core product workflow", "authorization when present", "API health", "result persistence", "recovery and rollback"]
+    },
+    {
+      "id": "myosa",
+      "name": "MYOSA",
+      "domain": "myosa.world",
+      "source": { "kind": "github_pr", "repository": "HADJAL001/osa", "reference": "pull/1" },
+      "production_owner": "Live Vite frontend; exact deployment project/authority not yet confirmed",
+      "release_notes": "PR #1 is open. Need deployment ownership and critical AI service acceptance.",
+      "critical_flows_to_test": ["safe AI request/response", "account isolation if present", "error states", "rate limiting", "privacy and data retention"]
+    },
+    {
+      "id": "senjorio",
+      "name": "SENJORIO",
+      "domain": "senjorio.com",
+      "source": { "kind": "unknown", "repository": null, "reference": null },
+      "production_owner": "Unverified; V13 approved artwork is staging only",
+      "release_notes": "Do not deploy from a similarly named repository without proof of the production owner.",
+      "critical_flows_to_test": ["booking request", "availability and confirmation", "pricing transparency", "cancellation and recovery", "payment handling only if enabled"]
+    },
+    {
+      "id": "vanguard",
+      "name": "VANGUARD",
+      "domain": "osgardvanguard.studio",
+      "source": { "kind": "unknown", "repository": null, "reference": null },
+      "production_owner": "Unverified; Next.js detected publicly, but not proof of repo ownership",
+      "release_notes": "Do not overwrite existing media workflows with visual preview or unsupported AI functionality.",
+      "critical_flows_to_test": ["media upload", "generation job if enabled", "output playback/download", "asset ownership", "quota and failure recovery"]
+    }
+  ]
+}

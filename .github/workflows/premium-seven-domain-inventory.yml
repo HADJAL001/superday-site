@@ -11,6 +11,11 @@ on:
       - 'scripts/premium-source-pinning.test.mjs'
       - 'premium-v13-approved-indexes.json'
       - 'docs/OSGARD_PREMIUM_V13_SOURCE_PARITY.md'
+      - 'docs/OSGARD_MASTER_RELEASE_PLAN.md'
+      - 'docs/OSGARD_RELEASE_TRACKER_V1.json'
+      - 'scripts/osgard-release-readiness.mjs'
+      - 'scripts/osgard-release-readiness.test.mjs'
+      - '.github/workflows/osgard-release-readiness-contract.yml'
       - '.github/workflows/premium-seven-domain-inventory.yml'
   push:
     branches: [main]
@@ -21,7 +26,12 @@ on:
       - 'scripts/premium-source-pinning.test.mjs'
       - 'premium-v13-approved-indexes.json'
       - 'docs/OSGARD_PREMIUM_V13_SOURCE_PARITY.md'
+      - 'docs/OSGARD_MASTER_RELEASE_PLAN.md'
+      - 'docs/OSGARD_RELEASE_TRACKER_V1.json'
+      - 'scripts/osgard-release-readiness.mjs'
+      - 'scripts/osgard-release-readiness.test.mjs'
       - 'scripts/inspect-premium-hosting.mjs'
+      - '.github/workflows/osgard-release-readiness-contract.yml'
       - '.github/workflows/premium-seven-domain-inventory.yml'
 permissions:
   contents: read
@@ -37,9 +47,12 @@ jobs:
       - name: Test strict asset, MIME, identity and SPA-fallback contracts
         run: |
           node --test scripts/premium-domain-attestation.test.mjs scripts/premium-source-pinning.test.mjs
+          node --test scripts/osgard-release-readiness.test.mjs
           node scripts/verify-premium-preview.mjs
       - name: Read-only HTTPS inventory of all seven public domains
         run: node scripts/inventory-premium-domains.mjs
+      - name: Produce release-readiness decision without claiming production approval
+        run: node scripts/osgard-release-readiness.mjs
       - name: Inspect public hosting fingerprints (read-only)
         run: node scripts/inspect-premium-hosting.mjs
       - uses: actions/upload-artifact@v4
@@ -51,4 +64,5 @@ jobs:
             OSGARD_PREMIUM_V12_DOMAINS.json
             OSGARD_PREMIUM_V9_DOMAINS.json
             OSGARD_PREMIUM_HOST_FINGERPRINTS.json
+            OSGARD_RELEASE_READINESS.json
           if-no-files-found: warn
