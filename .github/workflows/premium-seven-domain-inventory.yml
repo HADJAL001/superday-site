@@ -1,4 +1,4 @@
-name: OSGARD Seven Domains V12 Byte-Level Inventory
+name: OSGARD Seven Domains V13 Full Source Parity
 on:
   workflow_dispatch:
   schedule:
@@ -8,6 +8,9 @@ on:
       - 'scripts/inventory-premium-domains.mjs'
       - 'scripts/premium-domain-attestation.mjs'
       - 'scripts/premium-domain-attestation.test.mjs'
+      - 'scripts/premium-source-pinning.test.mjs'
+      - 'premium-v13-approved-indexes.json'
+      - 'docs/OSGARD_PREMIUM_V13_SOURCE_PARITY.md'
       - '.github/workflows/premium-seven-domain-inventory.yml'
   push:
     branches: [main]
@@ -15,6 +18,9 @@ on:
       - 'scripts/inventory-premium-domains.mjs'
       - 'scripts/premium-domain-attestation.mjs'
       - 'scripts/premium-domain-attestation.test.mjs'
+      - 'scripts/premium-source-pinning.test.mjs'
+      - 'premium-v13-approved-indexes.json'
+      - 'docs/OSGARD_PREMIUM_V13_SOURCE_PARITY.md'
       - 'scripts/inspect-premium-hosting.mjs'
       - '.github/workflows/premium-seven-domain-inventory.yml'
 permissions:
@@ -30,7 +36,7 @@ jobs:
           node-version: '24'
       - name: Test strict asset, MIME, identity and SPA-fallback contracts
         run: |
-          node --test scripts/premium-domain-attestation.test.mjs
+          node --test scripts/premium-domain-attestation.test.mjs scripts/premium-source-pinning.test.mjs
           node scripts/verify-premium-preview.mjs
       - name: Read-only HTTPS inventory of all seven public domains
         run: node scripts/inventory-premium-domains.mjs
@@ -39,8 +45,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: osgard-premium-v12-seven-domain-attestation
+          name: osgard-premium-v13-seven-domain-source-parity
           path: |
+            OSGARD_PREMIUM_V13_DOMAINS.json
             OSGARD_PREMIUM_V12_DOMAINS.json
             OSGARD_PREMIUM_V9_DOMAINS.json
             OSGARD_PREMIUM_HOST_FINGERPRINTS.json
