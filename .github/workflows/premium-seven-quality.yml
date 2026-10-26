@@ -1,0 +1,25 @@
+name: OSGARD Premium Seven Quality
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'premium-ab-preview/**'
+      - 'scripts/verify-premium-preview.mjs'
+      - '.github/workflows/premium-seven-quality.yml'
+  pull_request:
+    paths:
+      - 'premium-ab-preview/**'
+      - 'scripts/verify-premium-preview.mjs'
+      - '.github/workflows/premium-seven-quality.yml'
+permissions:
+  contents: read
+jobs:
+  release-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify original art, 7 products and working navigation
+        run: node scripts/verify-premium-preview.mjs

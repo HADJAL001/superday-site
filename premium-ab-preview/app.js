@@ -8,8 +8,8 @@
   const script = document.querySelector('script[data-osgard-premium]');
   if (!script) return;
   const base = script.dataset.base || './';
-  const slug = new URLSearchParams(window.location.search).get('product') || script.dataset.product || 'all';
   const embedded = script.dataset.mode === 'embed';
+  const slug = embedded ? (script.dataset.product || 'all') : (new URLSearchParams(window.location.search).get('product') || script.dataset.product || 'all');
   const mount = document.querySelector(script.dataset.mount || '#osgard-premium-root');
   if (!mount) { console.error('OSGARD premium: no mount element'); return; }
   const STORE = 'osgard-premium-style-v1';
@@ -99,7 +99,7 @@
   root.className='op-app ' + (embedded ? 'op-embedded' : 'op-standalone');
   root.dataset.variant=theme;
   root.dataset.product=slug;
-  root.setAttribute('data-build','2026-10-26-seven-sites-premium-v7');
+  root.setAttribute('data-build','2026-10-26-seven-sites-premium-v9');
   mount.appendChild(root);
 
   const escape = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -119,7 +119,7 @@
        <span class="op-mark" aria-hidden="true"><span></span></span><span class="op-brand-name"><strong>OSGARD</strong><small>${chosen ? escape(chosen.mark) : 'PREMIUM DIGITAL ECOSYSTEM'}</small></span>
       </a>
       <nav class="op-nav" aria-label="Навигация по странице">${n}</nav>
-      <div class="op-top-actions"><button type="button" class="op-command-open" data-open-command aria-haspopup="dialog" aria-label="Быстрый переход и поиск по семи продуктам">⌕ <span>Поиск</span> <kbd>Ctrl K</kbd></button>${styleControl()}<span class="op-top-note">Два визуальных решения<br>одна система</span><a class="op-btn op-btn-secondary" href="${chosen ? './PREVIEW_ALL.html' : '#products'}">${chosen ? 'Все 7 проектов' : 'Коллекция'}</a><button class="op-menu-btn" type="button" aria-controls="op-mobile-nav" aria-expanded="false" aria-label="Открыть меню"><i></i><i></i><i></i></button></div>
+      <div class="op-top-actions"><button type="button" class="op-command-open" data-open-command aria-haspopup="dialog" aria-label="Быстрый переход и поиск по семи продуктам">⌕ <span>Поиск</span> <kbd>Ctrl K</kbd></button>${styleControl()}<span class="op-top-note">Два визуальных решения<br>одна система</span><a class="op-btn op-btn-secondary" href="${chosen ? base + 'index.html' : '#products'}">${chosen ? 'Все 7 проектов' : 'Коллекция'}</a><button class="op-menu-btn" type="button" aria-controls="op-mobile-nav" aria-expanded="false" aria-label="Открыть меню"><i></i><i></i><i></i></button></div>
     </div><nav id="op-mobile-nav" class="op-mobile-nav" aria-label="Мобильное меню" data-open="false">${n}<a href="${base}index.html">Все семь продуктов</a></nav></header>`;
   }
   function footer() {
@@ -277,7 +277,7 @@
   // One event for every successful variant switch, including API and shortcuts.
   const originalApply=applyTheme;
   window.OSGARD_PREMIUM = window.OSGARD_PREMIUM || {};
-  window.OSGARD_PREMIUM.version='6.0.0';
+  window.OSGARD_PREMIUM.version='9.0.0';
   window.OSGARD_PREMIUM.setVariant=(variant)=>originalApply(String(variant).toLowerCase());
   window.OSGARD_PREMIUM.getVariant=()=>theme;
   window.OSGARD_PREMIUM.products=order.slice();
