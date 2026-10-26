@@ -1,0 +1,37 @@
+name: OSGARD Forgejo V14 Delivery Contract
+on:
+  pull_request:
+    paths:
+      - 'scripts/forgejo-delivery.sh'
+      - 'scripts/forgejo-delivery.test.mjs'
+      - '.github/workflows/push-to-osgard.yml'
+      - '.github/workflows/forgejo-delivery-quality.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/forgejo-delivery.sh'
+      - 'scripts/forgejo-delivery.test.mjs'
+      - '.github/workflows/push-to-osgard.yml'
+      - '.github/workflows/forgejo-delivery-quality.yml'
+permissions:
+  contents: read
+jobs:
+  no-credential-delivery-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify Bash syntax and all transport/delete semantics without network
+        shell: bash
+        run: |
+          bash -n scripts/forgejo-delivery.sh
+          node --test scripts/forgejo-delivery.test.mjs
+      - name: Assert delivery workflow never disables host verification
+        shell: bash
+        run: |
+          grep -Fq 'StrictHostKeyChecking=yes' .github/workflows/push-to-osgard.yml
+          ! grep -Eq 'StrictHostKeyChecking=no|--mirror|force: true' .github/workflows/push-to-osgard.yml
+          grep -Fq 'if: always()' .github/workflows/push-to-osgard.yml
