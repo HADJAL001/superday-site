@@ -110,6 +110,7 @@ export async function attestSources({ tracker, pinned, getJSON, checkedAt = new 
       row.result = verifiedMain ? 'approved_source_verified_in_main' : 'approved_source_verified_in_open_pr';
       return row;
     } catch (error) {
+      if (String(error?.message || '').startsWith('Invalid OSGARD source registry:')) throw error;
       row.result = 'github_source_lookup_failed';
       row.failure_code = (error?.status ?? 'network_or_schema_failure').toString().slice(0, 40);
       return row;
