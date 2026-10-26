@@ -1,0 +1,34 @@
+name: OSGARD Premium V9 Live HTTP Smoke
+on:
+  workflow_run:
+    workflows: ["pages build and deployment"]
+    types: [completed]
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/smoke-premium-live.mjs'
+      - '.github/workflows/premium-seven-live-smoke.yml'
+permissions:
+  contents: read
+jobs:
+  live-http:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Independent HTTPS status, content type, real art and version gate
+        run: node scripts/smoke-premium-live.mjs
+        env:
+          OSGARD_PREVIEW_ORIGIN: https://superday.run
+          OSGARD_VERIFY_ROOT: 'true'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: premium-v9-http-evidence
+          path: PREMIUM_V9_HTTP_SMOKE.json
+          if-no-files-found: warn
