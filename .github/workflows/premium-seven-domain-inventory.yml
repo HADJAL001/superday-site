@@ -1,12 +1,20 @@
-name: OSGARD Seven Domains Inventory
+name: OSGARD Seven Domains V12 Byte-Level Inventory
 on:
   workflow_dispatch:
   schedule:
     - cron: '0 9 * * *' # Daily read-only inventory at 09:00 UTC
+  pull_request:
+    paths:
+      - 'scripts/inventory-premium-domains.mjs'
+      - 'scripts/premium-domain-attestation.mjs'
+      - 'scripts/premium-domain-attestation.test.mjs'
+      - '.github/workflows/premium-seven-domain-inventory.yml'
   push:
     branches: [main]
     paths:
       - 'scripts/inventory-premium-domains.mjs'
+      - 'scripts/premium-domain-attestation.mjs'
+      - 'scripts/premium-domain-attestation.test.mjs'
       - 'scripts/inspect-premium-hosting.mjs'
       - '.github/workflows/premium-seven-domain-inventory.yml'
 permissions:
@@ -20,6 +28,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Test strict asset, MIME, identity and SPA-fallback contracts
+        run: |
+          node --test scripts/premium-domain-attestation.test.mjs
+          node scripts/verify-premium-preview.mjs
       - name: Read-only HTTPS inventory of all seven public domains
         run: node scripts/inventory-premium-domains.mjs
       - name: Inspect public hosting fingerprints (read-only)
@@ -27,8 +39,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: osgard-premium-v9-seven-domain-inventory
+          name: osgard-premium-v12-seven-domain-attestation
           path: |
+            OSGARD_PREMIUM_V12_DOMAINS.json
             OSGARD_PREMIUM_V9_DOMAINS.json
             OSGARD_PREMIUM_HOST_FINGERPRINTS.json
           if-no-files-found: warn
