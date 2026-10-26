@@ -15,6 +15,8 @@ on:
       - 'docs/OSGARD_RELEASE_TRACKER_V1.json'
       - 'scripts/osgard-release-readiness.mjs'
       - 'scripts/osgard-release-readiness.test.mjs'
+      - 'scripts/osgard-source-attestation.mjs'
+      - 'scripts/osgard-source-attestation.test.mjs'
       - '.github/workflows/osgard-release-readiness-contract.yml'
       - '.github/workflows/premium-seven-domain-inventory.yml'
   push:
@@ -30,11 +32,14 @@ on:
       - 'docs/OSGARD_RELEASE_TRACKER_V1.json'
       - 'scripts/osgard-release-readiness.mjs'
       - 'scripts/osgard-release-readiness.test.mjs'
+      - 'scripts/osgard-source-attestation.mjs'
+      - 'scripts/osgard-source-attestation.test.mjs'
       - 'scripts/inspect-premium-hosting.mjs'
       - '.github/workflows/osgard-release-readiness-contract.yml'
       - '.github/workflows/premium-seven-domain-inventory.yml'
 permissions:
   contents: read
+  pull-requests: read
 jobs:
   public-domain-inventory:
     runs-on: ubuntu-latest
@@ -47,10 +52,21 @@ jobs:
       - name: Test strict asset, MIME, identity and SPA-fallback contracts
         run: |
           node --test scripts/premium-domain-attestation.test.mjs scripts/premium-source-pinning.test.mjs
-          node --test scripts/osgard-release-readiness.test.mjs
+          node --test scripts/osgard-release-readiness.test.mjs scripts/osgard-source-attestation.test.mjs
           node scripts/verify-premium-preview.mjs
       - name: Read-only HTTPS inventory of all seven public domains
         run: node scripts/inventory-premium-domains.mjs
+      - name: Check public source proof in PR without private tokens
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/osgard-source-attestation.mjs
+      - name: Check approved sources on trusted main (private token optional)
+        if: github.event_name != 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          OSGARD_SOURCE_READ_TOKEN: ${{ secrets.OSGARD_SOURCE_READ_TOKEN }}
+        run: node scripts/osgard-source-attestation.mjs
       - name: Produce release-readiness decision without claiming production approval
         run: node scripts/osgard-release-readiness.mjs
       - name: Inspect public hosting fingerprints (read-only)
@@ -65,4 +81,5 @@ jobs:
             OSGARD_PREMIUM_V9_DOMAINS.json
             OSGARD_PREMIUM_HOST_FINGERPRINTS.json
             OSGARD_RELEASE_READINESS.json
+            OSGARD_SOURCE_ATTESTATION_V1.json
           if-no-files-found: warn
