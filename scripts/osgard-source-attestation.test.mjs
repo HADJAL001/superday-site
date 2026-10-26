@@ -102,3 +102,19 @@ test('source cannot be attested with malformed SHA or incomplete GitHub metadata
   const r=await scan(f);
   assert.equal(r.products.find(x=>x.product_id==='all').result,'github_ref_sha_invalid');
 });
+
+test('private native repository cannot be attested without read-only authorization',async()=>{
+  const f=fixture();
+  f.getJSON=async path=>{
+    if(path.startsWith('/repos/HADJAL001/osa/')){
+      const e=new Error('private source access not configured');
+      e.status='private_repo_read_access_not_configured';
+      throw e;
+    }
+    if(!f.endpoints.has(path)){const e=new Error('not found');e.status=404;throw e;}
+    return f.endpoints.get(path);
+  };
+  const r=await scan(f);
+  assert.equal(r.approved_source_files_verified,4);
+  assert.equal(r.products.find(x=>x.product_id==='myosa').result,'private_repo_read_access_not_configured');
+});
