@@ -29,3 +29,23 @@ test('refuse redirected asset to different path',()=>{const f=fixture();f.resour
 test('refuse altered central HTML retaining all markers',()=>{const f=fixture('all');f.preview.bytes=b(f.preview.bytes.toString()+'<!-- injected -->');assert.equal(check(f).result,'central_html_hash_mismatch');});
 test('refuse central modified stylesheet even with correct MIME',()=>{const f=fixture('all');f.resources['styles.css'].bytes=b('altered CSS');assert.equal(check(f).result,'asset_hash_mismatch');});
 test('do not verify preview when homepage is down',()=>{const f=fixture();f.homepage.status=502;assert.equal(check(f).result,'homepage_not_html');});
+test('V13 rejects native HTML modified while preserving brand markers', () => {
+ const f=fixture('myosa'); f.preview.bytes=b(f.preview.bytes.toString()+'<!-- unapproved change -->');
+ assert.equal(check(f).result,'preview_html_hash_mismatch');
+});
+test('V13 rejects modified native JS even with correct MIME', () => {
+ const f=fixture('newworld'); f.resources['app.js'].bytes=b('tampered JS');
+ assert.equal(check(f).result,'asset_hash_mismatch');
+});
+test('V13 rejects modified native stylesheet even with correct MIME', () => {
+ const f=fixture('osgardos'); f.resources['styles.css'].bytes=b('body{display:none}');
+ assert.equal(check(f).result,'asset_hash_mismatch');
+});
+test('V13 rejects missing approved native HTML digest', () => {
+ const f=fixture('senjorio'); delete f.approvedDigests['index.html'];
+ assert.equal(check(f).result,'approved_baseline_missing');
+});
+test('V13 rejects missing native JS digest', () => {
+ const f=fixture('vanguard'); delete f.approvedDigests['app.js'];
+ assert.equal(check(f).result,'approved_baseline_missing');
+});
