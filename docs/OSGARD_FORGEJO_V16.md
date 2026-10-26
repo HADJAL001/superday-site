@@ -47,3 +47,10 @@ Required final proof:
 The kit is not installed or scheduled automatically. If it becomes the approved long-term transport, design a separately reviewed recurring service with locking, backoff, monitoring and audited credentials. Avoid running both writers concurrently.
 
 Read-only diagnostics for the original ingress problem remain in [V15](OSGARD_FORGEJO_V15.md) and [incident #10](https://github.com/HADJAL001/superday-site/issues/10).
+
+
+## V16.1 real-Git regression proof
+
+The initial fake-Git contract alone could not detect a shallow-history push failure. V16.1 deliberately **removed `--depth=1` from the recovery fetch** and runs an offline integration test with real local bare Git repositories to verify an existing Forgejo main receives a normal fast-forward update. The same test confirms that divergent history is rejected without force.
+
+This is a local Git semantics test, not evidence of access to the real Forgejo host. SSH identity and connectivity remain operator-only validations.

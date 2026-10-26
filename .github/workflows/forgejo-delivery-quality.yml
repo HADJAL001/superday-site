@@ -10,6 +10,8 @@ on:
       - 'docs/OSGARD_FORGEJO_V16.md'
       - 'scripts/forgejo-local-recovery.sh'
       - 'scripts/forgejo-local-recovery.test.mjs'
+      - 'scripts/forgejo-local-recovery.integration.test.mjs'
+      - 'scripts/test-fixtures/forgejo-local-git-real-shim.sh'
       - 'scripts/test-fixtures/forgejo-local-git-mock.sh'
   push:
     branches: [main]
@@ -38,8 +40,8 @@ jobs:
         shell: bash
         run: |
           bash -n scripts/forgejo-delivery.sh scripts/forgejo-local-recovery.sh
-          bash -n scripts/test-fixtures/forgejo-local-git-mock.sh
-          node --test scripts/forgejo-delivery.test.mjs scripts/forgejo-local-recovery.test.mjs
+          bash -n scripts/test-fixtures/forgejo-local-git-mock.sh scripts/test-fixtures/forgejo-local-git-real-shim.sh
+          node --test scripts/forgejo-delivery.test.mjs scripts/forgejo-local-recovery.test.mjs scripts/forgejo-local-recovery.integration.test.mjs
       - name: Assert delivery workflow never disables host verification
         shell: bash
         run: |

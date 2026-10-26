@@ -64,6 +64,7 @@ scenario('apply: fetch immutable main and verify after push',{},'--apply',r=>{
   assert.equal(r.evidence.remote_sha,SOURCE_SHA);
   assert.ok(r.git.includes('push ssh://git@127.0.0.1:2222/osgard-admin/superday-site.git '+SOURCE_SHA+':'+ref));
   assert.doesNotMatch(r.git,/--force|--mirror/);
+  assert.doesNotMatch(r.git,/--depth=1|--shallow-since/);
   assert.match(r.ssh,/StrictHostKeyChecking=yes/);
   assert.match(r.ssh,/BatchMode=yes/);
 });
