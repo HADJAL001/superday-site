@@ -3,6 +3,12 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 9 * * *' # Daily read-only inventory at 09:00 UTC
+  pull_request:
+    paths:
+      - 'scripts/inventory-premium-domains.mjs'
+      - 'scripts/premium-domain-attestation.mjs'
+      - 'scripts/premium-domain-attestation.test.mjs'
+      - '.github/workflows/premium-seven-domain-inventory.yml'
   push:
     branches: [main]
     paths:
