@@ -1,39 +1,83 @@
-/** Public, read-only domain inventory. Success means the inventory ran, NOT that all sites are live. */
-import { writeFileSync } from 'node:fs';
-const sites=[
- ['MYOSA','myosa.world','myosa','source-not-verified'],
- ['OSGARD NEW WORLD','osgardnewworld.com','newworld','PR-259-pending-security'],
- ['OSGARDOS','osgardos.com','osgardos','source-in-main'],
- ['SENJORIO','senjorio.com','senjorio','source-not-verified'],
- ['VANGUARD','osgardvanguard.studio','vanguard','source-not-verified'],
- ['SUPER DAY','superday.run','all','github-pages-published'],
- ['O2 SYSTEM','o2system.art','o2','source-in-main'],
-];
-const now=new Date().toISOString();
-async function request(url){
- try{
-  const res=await fetch(url,{signal:AbortSignal.timeout(16000),redirect:'follow',cache:'no-store',headers:{'Cache-Control':'no-cache'}});
-  const body=await res.text();
-  return {ok:res.ok,status:res.status,url:res.url,type:res.headers.get('content-type')||'',text:body.slice(0,500000)};
- }catch(e){return {ok:false,status:null,error:String(e),type:'',text:''}}
-}
-const data=await Promise.all(sites.map(async ([name,domain,product,stage])=>{
- const origin='https://'+domain;
- const [homepage,preview]=await Promise.all([request(origin+'/'),request(origin+'/premium-ab-preview/index.html')]);
- const homeOk=homepage.ok&&/text\/html/i.test(homepage.type);
- const expected=product==='all'?'data-product="all"':'data-product="'+product+'"';
- const previewOk=preview.ok && /text\/html/i.test(preview.type) && preview.text.includes('data-osgard-premium') && preview.text.includes(expected);
- const message=!preview.ok?'preview_not_available':!previewOk?'different_html_or_spa_fallback':'preview_verified';
- return {name,domain,stage,homepage:{http_status:homepage.status,html:homeOk,error:homepage.error||null},preview:{http_status:preview.status,verified:previewOk,result:message,error:preview.error||null},checked_at:now};
-}));
-const report={title:'OSGARD SEVEN DOMAIN INVENTORY',checked_at:now,verified_previews:data.filter(d=>d.preview.verified).length,domains:7,results:data,disclaimer:'Read-only HTTP GET from GitHub Actions. An HTTP-successful preview is only static UI, not proof that product backend/auth/transactions work.'};
-writeFileSync('OSGARD_PREMIUM_V9_DOMAINS.json',JSON.stringify(report,null,2)+'\n');
-console.log(JSON.stringify({checked_at:now,verified_previews:report.verified_previews,rows:data.map(d=>({domain:d.domain,root:d.homepage.http_status,preview:d.preview.http_status,result:d.preview.result}))},null,2));
-// Regression gate protects the one independently confirmed public V9 site.
-// The other six remain informational until native deployments are proven.
-const baseline=data.find(d=>d.domain==='superday.run');
-if(!baseline?.preview.verified){
-  console.error('REGRESSION: previously verified superday.run V9 preview is unavailable or returns the wrong HTML');
-  process.exitCode=1;
+/**
+ * Daily, read-only seven-domain release attestation.
+ * Success indicates that the audit itself ran; no backend or auth functionality is exercised.
+ * A site is counted live only after identity, MIME, URL, and approved-original SHA-256 checks.
+ */
+import { readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { sites, assetRoutes, attest, sha256 } from './premium-domain-attestation.mjs';
+
+const checkedAt = new Date().toISOString();
+const sourceRoot = resolve('premium-ab-preview');
+const expectedBytes = name => readFileSync(resolve(sourceRoot, name));
+
+// Verify source-side approved originals against release manifest before trusting hashes.
+const manifest = JSON.parse(expectedBytes('RELEASE_MANIFEST.json').toString('utf8'));
+if (manifest.release !== 'OSGARD PREMIUM SEVEN V9') throw Error('Unexpected approved release identity');
+for (const [name, metadata] of Object.entries(manifest.assets ?? {})) {
+  const bytes = expectedBytes(name);
+  if (bytes.length !== metadata.bytes || sha256(bytes) !== metadata.sha256) {
+    throw Error(`Reference artwork does not match approved manifest: ${name}`);
+  }
 }
 
+async function readOnlyGet(url) {
+  try {
+    const response = await fetch(url, {
+      signal: AbortSignal.timeout(16000),
+      redirect: 'follow',
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' },
+    });
+    const maxBytes = 2 * 1024 * 1024;
+    const len = Number(response.headers.get('content-length'));
+    if (len > maxBytes) throw Error('body_too_large');
+    const bytes = Buffer.from(await response.arrayBuffer());
+    if (bytes.length > maxBytes) throw Error('body_too_large');
+    return { status: response.status, type: response.headers.get('content-type') || '', url: response.url, bytes };
+  } catch (error) {
+    return { status: null, type: '', url, bytes: Buffer.alloc(0), error: String(error) };
+  }
+}
+
+const results = await Promise.all(sites.map(async ([name,domain,product,stage]) => {
+  const origin = `https://${domain}`;
+  const paths = assetRoutes(product);
+  const [homepage,preview,...assets] = await Promise.all([
+    readOnlyGet(origin + '/'),
+    readOnlyGet(origin + '/premium-ab-preview/index.html'),
+    ...paths.map(path => readOnlyGet(origin + '/premium-ab-preview/' + path)),
+  ]);
+  const resources = Object.fromEntries(paths.map((path,i) => [path, assets[i]]));
+  const approvedDigests = {};
+  for (const rel of paths) {
+    if (rel.endsWith('.webp') || product === 'all') approvedDigests[rel] = sha256(expectedBytes(rel));
+  }
+  if (product === 'all') approvedDigests['index.html'] = sha256(expectedBytes('index.html'));
+  const status = attest({ domain, product, origin, homepage, preview, resources, approvedDigests });
+  return {
+    name, domain, stage,
+    homepage: { http_status:homepage.status, html: homepage.status === 200 && homepage.type.toLowerCase().includes('text/html'), error:homepage.error || null },
+    preview: { http_status:preview.status, verified:status.verified, result:status.result, checks:status.checks, verified_asset_count:status.verified_asset_count, error:preview.error || null },
+    checked_at:checkedAt,
+  };
+}));
+
+const report = {
+  title:'OSGARD SEVEN-DOMAIN BYTE-LEVEL RELEASE INVENTORY',
+  version:12,
+  checked_at:checkedAt,
+  verified_previews:results.filter(r => r.preview.verified).length,
+  domains:sites.length,
+  results,
+  disclaimer:'Static HTTP attestation only. Approved WebP bytes, MIME and correct HTML are not evidence that login, payments, AI engines or booking services work.',
+};
+const json = JSON.stringify(report,null,2) + '\n';
+writeFileSync('OSGARD_PREMIUM_V12_DOMAINS.json',json);
+writeFileSync('OSGARD_PREMIUM_V9_DOMAINS.json',json); // Legacy dashboards continue to work.
+console.log(JSON.stringify({checked_at:checkedAt,verified_previews:report.verified_previews,rows:results.map(r=>({domain:r.domain,root:r.homepage.http_status,preview:r.preview.http_status,verified:r.preview.verified,reason:r.preview.result}))},null,2));
+const baseline = results.find(r => r.domain === 'superday.run');
+if (!baseline?.preview.verified) {
+  console.error('REGRESSION: confirmed SUPER DAY live preview failed the approved asset SHA-256 and MIME contract');
+  process.exitCode = 1;
+}
