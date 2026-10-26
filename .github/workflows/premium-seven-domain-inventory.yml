@@ -42,6 +42,8 @@ permissions:
   pull-requests: read
 jobs:
   public-domain-inventory:
+    # Manual dispatch of another branch must never run arbitrary workflow code.
+    if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -62,7 +64,8 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/osgard-source-attestation.mjs
       - name: Check approved sources on trusted main (private token optional)
-        if: github.event_name != 'pull_request'
+        # Only audited code from this repository's default branch may read a cross-repo secret.
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && github.repository == 'HADJAL001/superday-site'
         env:
           GITHUB_TOKEN: ${{ github.token }}
           OSGARD_SOURCE_READ_TOKEN: ${{ secrets.OSGARD_SOURCE_READ_TOKEN }}
