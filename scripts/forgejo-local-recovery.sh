@@ -82,7 +82,7 @@ trap 'if [[ -n "$tempdir" ]]; then rm -rf -- "$tempdir"; fi' EXIT
 if ! git -C "$tempdir" init -q >/dev/null 2>&1; then
   fail staging_init_failed 'Unable to initialize an isolated temporary Git repository.'
 fi
-if ! git -C "$tempdir" fetch -q --no-tags --depth=1 "$SOURCE" "$REF" >/dev/null 2>&1; then
+if ! git -C "$tempdir" fetch -q --no-tags "$SOURCE" "$REF" >/dev/null 2>&1; then
   fail github_fetch_failed 'Cannot fetch the selected GitHub branch into temporary staging.'
 fi
 fetched_sha=''
