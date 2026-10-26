@@ -1,0 +1,57 @@
+{
+  "schema": "OSGARD_PREMIUM_V13_INDEX_PINNING",
+  "source_release": "Approved V9/V10/V11 design artifacts (never live backend evidence)",
+  "approved_index_sha256": {
+    "all": "ab6c9f700b18332acc954f6c8957499569360e299a435e69d08fb70354853d89",
+    "newworld": "0dae7fca3a70de87a06c37599afc0f3abe163e6dcd5b4f86669af3c574e8b4f4",
+    "o2": "3497df1cb42bc265f0b9fa589cec695400dc823be933729d5ed075eafa622ede",
+    "osgardos": "be445b7551b039efd0247d6f7b677bc946e58054f3e1105daf7915beb951a5cd",
+    "myosa": "31b1d34b513ec95cb87b4290c8e3bd38cf599951b51ac51d31ca9ca8868418df",
+    "senjorio": "c0383357db0e101f4d8d2744663b533b1bfd88e2894d3f6e082edab9ce2ea9d7",
+    "vanguard": "0be78cc2a533bc86141f33efab6828f51180ae59130df3ebe5be2d2235375c14"
+  },
+  "shell_css_sha256": "8d649e99d2ea22318c18886410dee11ab05c214b89bf5ee87f49f78fed275f89",
+  "central_app_js_sha256": "e803255ca87cefde40b184c0cd58f1deae6eb1715ed65f3937dae137b15144ec",
+  "central_styles_css_sha256": "8e42e0e6c7e52a6deafbd90e56836bea9909379dac899d7aa711cf72f140d106",
+  "source_provenance": {
+    "all": {
+      "status": "verified_github_main",
+      "repo": "HADJAL001/superday-site",
+      "commit": "50c0b02faae01a166ba836107175c4e7adb4cf92"
+    },
+    "newworld": {
+      "status": "verified_github_pr",
+      "repo": "HADJAL001/asgard-redesign",
+      "commit": "d0796a136bfdd737f3b7fd4804b957611e487d8f",
+      "html_blob": "f35fca2e43d06219cd9b47d5a6fbe690d556dbdb"
+    },
+    "o2": {
+      "status": "verified_github_main",
+      "repo": "HADJAL001/o2-system",
+      "commit": "11c56e51abaa4327d762866aa1796ea3ca337eaa",
+      "html_blob": "38090f4a057e7755c58d49bce44fef9a35baea80"
+    },
+    "osgardos": {
+      "status": "verified_github_main",
+      "repo": "HADJAL001/osgardos",
+      "commit": "635ab0d4eb45cdb00b4387a8ca303fe7175510c2",
+      "html_blob": "c922820754c3e329313b78c30b585a80fd17c150"
+    },
+    "myosa": {
+      "status": "verified_github_pr",
+      "repo": "HADJAL001/osa",
+      "commit": "42411f875bb6f8d4a51f244f1d917d0418d9edef",
+      "html_blob": "7d5dea2d2a1fa2a23961009c2f348f985dcc7053"
+    },
+    "senjorio": {
+      "status": "staging_only",
+      "repo": null,
+      "commit": null
+    },
+    "vanguard": {
+      "status": "staging_only",
+      "repo": null,
+      "commit": null
+    }
+  }
+}

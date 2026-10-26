@@ -50,8 +50,10 @@ export function attest({domain, product, origin, homepage, preview, resources, a
     fail('premium-ab-preview/index.html', 'preview_redirected', 'Unexpected redirected URL');
   } else if (!bodyText(preview).includes('data-osgard-premium') || !bodyText(preview).includes(expectedHtml)) {
     fail('premium-ab-preview/index.html', 'incorrect_html', 'Product identity or premium marker missing');
-  } else if (product === 'all' && approvedDigests['index.html'] !== sha256(preview.bytes)) {
-    fail('premium-ab-preview/index.html', 'central_html_hash_mismatch', 'Central approved HTML differs from checked-in source');
+  } else if (typeof approvedDigests?.['index.html'] !== 'string') {
+    fail('premium-ab-preview/index.html', 'approved_baseline_missing', 'No approved HTML digest');
+  } else if (approvedDigests['index.html'] !== sha256(preview.bytes)) {
+    fail('premium-ab-preview/index.html', product === 'all' ? 'central_html_hash_mismatch' : 'preview_html_hash_mismatch', 'Published HTML differs from approved original bytes');
   } else pass('premium-ab-preview/index.html', 'Correct identity and approved product HTML');
 
   for (const path of assetRoutes(product)) {
@@ -61,9 +63,8 @@ export function attest({domain, product, origin, homepage, preview, resources, a
     const ct = mime(r.type);
     if (!validMime(path, ct)) { fail(path, 'asset_mime_mismatch', `unexpected:${ct}`); continue; }
     if (!Buffer.isBuffer(r.bytes) || !r.bytes.length) { fail(path, 'asset_empty', 'Response body empty'); continue; }
-    if (path.endsWith('.webp') || product === 'all') {
-      if (approvedDigests[path] !== sha256(r.bytes)) { fail(path, 'asset_hash_mismatch', 'Approved SHA-256 differs from published bytes'); continue; }
-    }
+    if (typeof approvedDigests?.[path] !== 'string') { fail(path, 'approved_baseline_missing', 'No approved JS/CSS/WebP digest'); continue; }
+    if (approvedDigests[path] !== sha256(r.bytes)) { fail(path, 'asset_hash_mismatch', 'Published JS/CSS/WebP differs from approved bytes'); continue; }
     pass(path, 'HTTP 200, MIME and approved byte contract verified');
   }
   const verified = checks.every(x => x.passed);
