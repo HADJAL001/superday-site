@@ -1,4 +1,4 @@
-name: OSGARD Forgejo V15 Delivery Contract
+name: OSGARD Forgejo V16 Delivery and Recovery Contract
 on:
   pull_request:
     paths:
@@ -7,6 +7,10 @@ on:
       - '.github/workflows/push-to-osgard.yml'
       - '.github/workflows/forgejo-delivery-quality.yml'
       - 'docs/OSGARD_FORGEJO_V15.md'
+      - 'docs/OSGARD_FORGEJO_V16.md'
+      - 'scripts/forgejo-local-recovery.sh'
+      - 'scripts/forgejo-local-recovery.test.mjs'
+      - 'scripts/test-fixtures/forgejo-local-git-mock.sh'
   push:
     branches: [main]
     paths:
@@ -15,6 +19,10 @@ on:
       - '.github/workflows/push-to-osgard.yml'
       - '.github/workflows/forgejo-delivery-quality.yml'
       - 'docs/OSGARD_FORGEJO_V15.md'
+      - 'docs/OSGARD_FORGEJO_V16.md'
+      - 'scripts/forgejo-local-recovery.sh'
+      - 'scripts/forgejo-local-recovery.test.mjs'
+      - 'scripts/test-fixtures/forgejo-local-git-mock.sh'
 permissions:
   contents: read
 jobs:
@@ -29,8 +37,9 @@ jobs:
       - name: Verify Bash syntax and transport, exact SHA, deletion semantics offline
         shell: bash
         run: |
-          bash -n scripts/forgejo-delivery.sh
-          node --test scripts/forgejo-delivery.test.mjs
+          bash -n scripts/forgejo-delivery.sh scripts/forgejo-local-recovery.sh
+          bash -n scripts/test-fixtures/forgejo-local-git-mock.sh
+          node --test scripts/forgejo-delivery.test.mjs scripts/forgejo-local-recovery.test.mjs
       - name: Assert delivery workflow never disables host verification
         shell: bash
         run: |
