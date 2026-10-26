@@ -1,5 +1,5 @@
 {
-  "release": "OSGARD PREMIUM SEVEN V8",
+  "release": "OSGARD PREMIUM SEVEN V9",
   "date": "2026-10-26",
   "source": "OSGARD PREMIUM SEVEN V7 verified archive from user Library",
   "scope": "isolated non-production static preview; no backend functionality",
@@ -144,5 +144,6 @@
     "No bank settlement",
     "No AI video generation",
     "No verified art-card KPIs"
-  ]
+  ],
+  "release_note": "V9 fixes gallery return route and ships native product bridge contracts. Existing original art hashes are unchanged."
 }

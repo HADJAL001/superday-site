@@ -1,0 +1,27 @@
+name: OSGARD Seven Domains Inventory
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/inventory-premium-domains.mjs'
+      - '.github/workflows/premium-seven-domain-inventory.yml'
+permissions:
+  contents: read
+jobs:
+  public-domain-inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Read-only HTTPS inventory of all seven public domains
+        run: node scripts/inventory-premium-domains.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: osgard-premium-v9-seven-domain-inventory
+          path: OSGARD_PREMIUM_V9_DOMAINS.json
+          if-no-files-found: warn

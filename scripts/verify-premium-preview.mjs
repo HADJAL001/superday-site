@@ -10,6 +10,7 @@ const txt = rel => bytes(rel).toString('utf8');
 const check = (condition, message) => { if (!condition) throw new Error('V9 release gate: '+message); verified++; };
 let verified=0;
 const manifest=JSON.parse(txt('RELEASE_MANIFEST.json'));
+check(manifest.release==='OSGARD PREMIUM SEVEN V9','consistent release manifest version');
 const slugs=['myosa','newworld','osgardos','senjorio','vanguard','superday','o2'];
 check(manifest.assets && Object.keys(manifest.assets).length===28,'28 original art objects');
 check(manifest.routes.length===8 && manifest.routes[0]==='all','all seven routes in manifest');

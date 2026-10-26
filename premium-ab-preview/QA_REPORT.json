@@ -1,11 +1,11 @@
 {
-  "release": "OSGARD PREMIUM SEVEN V8.0",
+  "release": "OSGARD PREMIUM SEVEN V9.0",
   "date": "2026-10-26",
   "scope": "static local HTTP via Python + offline Chromium page.set_content of exact split JS/CSS/image bytes, because browser local network navigation is blocked",
   "network_browser_tested": false,
   "production_deployed": false,
-  "total": 99,
-  "passed": 99,
+  "total": 100,
+  "passed": 100,
   "failed": 0,
   "checks": [
     {
@@ -189,7 +189,7 @@
       "detail": ""
     },
     {
-      "name": "Seven compatible PREVIEW routes",
+      "name": "Eight compatible PREVIEW aliases (seven products + ALL)",
       "pass": true,
       "detail": ""
     },
@@ -457,6 +457,11 @@
       "name": "Mobile nav open",
       "pass": true,
       "detail": ""
+    },
+    {
+      "name": "Mobile final O2 artwork visibly painted",
+      "pass": true,
+      "detail": "[63.06625820611938, 62.13684011001988, 60.24859475491427]"
     },
     {
       "name": "Viewport no overflow 768",
