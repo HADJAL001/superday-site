@@ -4,7 +4,7 @@ name: Delivery to OSGARD (V15 verified Forgejo)
 on:
   workflow_dispatch: {}
   push:
-    branches: ['**']
+    branches: [main]
   delete:
 permissions:
   contents: read
