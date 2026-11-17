@@ -3,8 +3,8 @@
 # No SSH credentials or GitHub tokens are stored in this file.
 set -euo pipefail
 
-readonly FORGEJO_HOST='64.177.120.183'
-readonly FORGEJO_PORT='2222'
+readonly FORGEJO_HOST="${OSGARD_FORGEJO_HOST:-}"
+readonly FORGEJO_PORT="${OSGARD_FORGEJO_PORT:-}"
 readonly FORGEJO_REMOTE="ssh://git@${FORGEJO_HOST}:${FORGEJO_PORT}/osgard-admin/superday-site.git"
 readonly EVIDENCE_PATH="${GITHUB_WORKSPACE:-.}/forgejo_delivery_evidence.json"
 mode="${1:-}"
@@ -52,7 +52,7 @@ probe() {
     fi
     if [[ "$n" -eq 1 ]]; then sleep 2; fi
   done
-  fail tcp_unreachable 'GitHub runner cannot connect to 64.177.120.183:2222. Check server listener, firewall, provider security rules and routing. Keep SSH host-key validation enabled.'
+  fail tcp_unreachable 'GitHub runner cannot connect to the configured verified Forgejo host and port. Check server listener, firewall, provider security rules and routing. Keep SSH host-key validation enabled.'
 }
 
 valid_branch() {
@@ -153,6 +153,10 @@ delete_exact() {
   record success remote_ref_deleted_and_verified
 }
 
+if [[ ! "$FORGEJO_HOST" =~ ^[A-Za-z0-9.-]+$ || ! "$FORGEJO_PORT" =~ ^[0-9]{1,5}$ ]]; then
+  fail unverified_host_config 'Set independently verified OSGARD_FORGEJO_HOST and OSGARD_FORGEJO_PORT secrets before delivery.'
+  exit 1
+fi
 case "$mode" in
   preflight) probe ;;
   push) push_exact ;;
