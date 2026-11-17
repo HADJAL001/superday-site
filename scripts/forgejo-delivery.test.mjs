@@ -41,6 +41,8 @@ exit 99
     ...process.env,
     PATH: `${bin}:${process.env.PATH}`,
     GITHUB_WORKSPACE:dir,
+    OSGARD_FORGEJO_HOST:'64.177.120.183',
+    OSGARD_FORGEJO_PORT:'2222',
     GITHUB_REF_NAME:'main',
     GITHUB_SHA:SHA,
     GITHUB_RUN_ID:'54321',
@@ -166,4 +168,8 @@ test('workflow has preflight ahead of secrets and V15 fail-closed metadata',()=>
   assert.doesNotMatch(workflow,/StrictHostKeyChecking=no|git push.*--mirror|\|\| echo/);
   assert.match(workflow,/if: always\(\)/);
   assert.match(workflow,/forgejo-delivery-v15-/);
+});
+
+check('missing verified Forgejo host fails before any TCP or Git access',{env:{OSGARD_FORGEJO_HOST:''}},'preflight',r=>{
+  assert.equal(r.status,1);assert.equal(r.evidence.reason,'unverified_host_config');assert.equal(r.nc,'');assert.equal(r.git,'');
 });

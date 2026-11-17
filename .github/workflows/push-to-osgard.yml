@@ -5,7 +5,6 @@ on:
   workflow_dispatch: {}
   push:
     branches: [main]
-  delete:
 permissions:
   contents: read
 concurrency:
@@ -16,6 +15,9 @@ jobs:
     if: github.event_name != 'delete' || github.event.ref_type == 'branch'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      OSGARD_FORGEJO_HOST: ${{ secrets.OSGARD_FORGEJO_HOST }}
+      OSGARD_FORGEJO_PORT: ${{ secrets.OSGARD_FORGEJO_PORT }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,6 +29,7 @@ jobs:
       - name: Install pinned Forgejo deploy identity
         env:
           KEY: ${{ secrets.OSGARD_FORGEJO_SSH_KEY }}
+          KNOWN: ${{ secrets.OSGARD_FORGEJO_KNOWN_HOSTS }}
         shell: bash
         run: |
           set -euo pipefail
@@ -37,7 +40,17 @@ jobs:
           install -d -m 0700 "$HOME/.ssh"
           printf '%s\n' "$KEY" > "$HOME/.ssh/id_ed25519"
           chmod 600 "$HOME/.ssh/id_ed25519"
-          printf '%s\n' '[64.177.120.183]:2222 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDMpvWYVzBMK8VU3+IsIrJ0KnHKK4XMdwJxzHY3HO/uL' > "$HOME/.ssh/known_hosts"
+          if [[ -z "$KNOWN" ]]; then
+            echo '::error title=Unverified Forgejo host::OSGARD_FORGEJO_KNOWN_HOSTS not configured.'
+            exit 1
+          fi
+          printf '%s\n' "$KNOWN" > "$HOME/.ssh/known_hosts"
+          host_lookup="$OSGARD_FORGEJO_HOST"
+          if [[ "$OSGARD_FORGEJO_PORT" != 22 ]]; then host_lookup="[$OSGARD_FORGEJO_HOST]:$OSGARD_FORGEJO_PORT"; fi
+          ssh-keygen -F "$host_lookup" -f "$HOME/.ssh/known_hosts" >/dev/null || {
+            echo '::error title=Unverified Forgejo host::Pinned host key does not match the configured host/port.'
+            exit 1
+          }
           chmod 600 "$HOME/.ssh/known_hosts"
       - name: Deliver immutable GitHub SHA and verify exact Forgejo ref
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
