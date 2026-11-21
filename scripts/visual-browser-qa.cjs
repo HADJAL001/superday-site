@@ -27,8 +27,30 @@ async function geometry(page) {
 async function checkNoOverflow(page, name, width) {
   const state = await geometry(page);
   report.push({ page: name, width, ...state });
-  assert.ok(state.scrollWidth <= state.innerWidth + 2,
-    name + " horizontal overflow at " + width + ": " + JSON.stringify(state));
+  if (state.scrollWidth > state.innerWidth + 2) {
+    const offenders = await page.evaluate(() => {
+      const w = window.innerWidth;
+      return Array.from(document.querySelectorAll("body *")).map(element => {
+        const bounds = element.getBoundingClientRect();
+        const computed = getComputedStyle(element);
+        return {
+          tag: element.tagName.toLowerCase(),
+          id: element.id,
+          className: typeof element.className === "string" ? element.className.slice(0, 88) : "",
+          left: Math.round(bounds.left),
+          right: Math.round(bounds.right),
+          width: Math.round(bounds.width),
+          position: computed.position,
+          overflowX: computed.overflowX,
+        };
+      }).filter(item => item.width > 0 &&
+        ((item.right > w + 2 && item.left < w) || (item.left < -2 && item.right > 0)))
+        .sort((a, b) => (b.right - a.right))
+        .slice(0, 32);
+    });
+    throw new Error(name + " horizontal overflow at " + width + ": " +
+      JSON.stringify({ state, offenders }));
+  }
 }
 
 async function run() {
@@ -62,6 +84,7 @@ async function run() {
       await landing.locator("#superday-appearance").waitFor({ state:"visible" });
       assert.equal(await landing.locator("body").getAttribute("data-superday-premium"), "b");
       assert.equal(await landing.locator('#superday-appearance [data-mode="b"]').getAttribute("aria-pressed"), "true");
+      await screenshot(landing, "landing", width);
       await checkNoOverflow(landing, "landing", width);
       if (width < 900) {
         const copy = await landing.locator(".hero-grid > .reveal:first-child").boundingBox();
