@@ -15,10 +15,15 @@ on:
       - 'premium-app-theme.js'
       - 'scripts/visual-browser-qa.cjs'
       - '.github/workflows/visual-browser-quality.yml'
+      - 'i18n/site.*.js'
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: superday-chromium-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   browser-matrix:
