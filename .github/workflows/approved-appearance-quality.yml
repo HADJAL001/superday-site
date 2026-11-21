@@ -6,6 +6,11 @@ on:
       - 'index.html'
       - 'premium-appearance.js'
       - 'premium-appearance.css'
+      - 'premium-legal-appearance.js'
+      - 'premium-legal-appearance.css'
+      - 'documents.html'
+      - 'support.html'
+      - 'scripts/legal-themes-contract.test.mjs'
       - 'scripts/approved-appearance-dom.test.mjs'
       - 'scripts/premium-appearance-contract.test.mjs'
       - '.github/workflows/approved-appearance-quality.yml'
@@ -26,9 +31,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Validate theme-navigation JavaScript syntax
-        run: node --check premium-appearance.js
+      - name: Validate A/B JavaScript syntax on all public pages
+        run: |
+          node --check premium-appearance.js
+          node --check premium-legal-appearance.js
       - name: Test saved modes, blocked storage, menu and actual page links
-        run: node --test scripts/premium-appearance-contract.test.mjs scripts/approved-appearance-dom.test.mjs
+        run: node --test scripts/premium-appearance-contract.test.mjs scripts/approved-appearance-dom.test.mjs scripts/legal-themes-contract.test.mjs
       - name: Confirm original approved 28 WebP assets unchanged
         run: node scripts/verify-premium-preview.mjs
