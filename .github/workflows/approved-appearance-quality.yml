@@ -1,0 +1,51 @@
+name: Approved SUPER DAY Experience QA
+
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'premium-appearance.js'
+      - 'premium-appearance.css'
+      - 'premium-legal-appearance.js'
+      - 'premium-legal-appearance.css'
+      - 'documents.html'
+      - 'support.html'
+      - 'app.html'
+      - 'premium-app-theme.css'
+      - 'premium-app-theme.js'
+      - 'scripts/app-theme-contract.test.mjs'
+      - 'scripts/legal-themes-contract.test.mjs'
+      - 'scripts/approved-appearance-dom.test.mjs'
+      - 'scripts/premium-appearance-contract.test.mjs'
+      - '.github/workflows/approved-appearance-quality.yml'
+      - 'i18n/site.*.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: superday-appearance-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  visual-and-navigation-contract:
+    name: Approved A/B and mobile navigation contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Checkout current candidate
+        uses: actions/checkout@v4
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate A/B JavaScript syntax on all public pages
+        run: |
+          node --check premium-appearance.js
+          node --check premium-legal-appearance.js
+          node --check premium-app-theme.js
+      - name: Test saved modes, blocked storage, menu and actual page links
+        run: node --test scripts/premium-appearance-contract.test.mjs scripts/approved-appearance-dom.test.mjs scripts/legal-themes-contract.test.mjs scripts/app-theme-contract.test.mjs
+      - name: Confirm original approved 28 WebP assets unchanged
+        run: node scripts/verify-premium-preview.mjs

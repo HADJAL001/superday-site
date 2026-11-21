@@ -33,6 +33,10 @@ window.__i18nDict("en", {
     "Включить звук интерфейса": "Turn interface sound on",
 
     /* Первый экран */
+    "Продиктуй или запиши свои дела. SUPER DAY выделит важное, расставит приоритеты с помощью ИИ и составит понятный план на сегодня — с чего начать и что оставить на потом.": "Dictate or type your tasks. SUPER DAY highlights what matters, prioritizes your work with AI, and builds a clear plan for today: what to start with and what can wait.",
+    "Открыть планировщик →": "Open the planner →",
+    "Веб-версия доступна без установки.": "The web version works without installation.",
+    "Варианты для Android и iPhone — ниже.": "Android and iPhone options are below.",
     "Ясность вместо хаоса": "Clarity instead of chaos",
     "Дел слишком много?": "Too many things to do?",
     "Начни с главного.": "Start with what matters.",

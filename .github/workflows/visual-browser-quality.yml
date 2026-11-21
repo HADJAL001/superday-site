@@ -1,0 +1,60 @@
+name: SUPER DAY Chromium Visual Review
+
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'app.html'
+      - 'documents.html'
+      - 'support.html'
+      - 'premium-appearance.css'
+      - 'premium-appearance.js'
+      - 'premium-legal-appearance.css'
+      - 'premium-legal-appearance.js'
+      - 'premium-app-theme.css'
+      - 'premium-app-theme.js'
+      - 'scripts/visual-browser-qa.cjs'
+      - '.github/workflows/visual-browser-quality.yml'
+      - 'i18n/site.*.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: superday-chromium-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser-matrix:
+    name: Chromium 390 / 768 / 1440 pixel smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated test browser
+        run: |
+          npm init -y > /dev/null
+          npm install --no-save --no-package-lock --no-audit playwright
+          npx playwright install --with-deps chromium
+      - name: Test real pages and capture screenshots without live API calls
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/superday-qa-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/ > /dev/null; then break; fi
+            sleep 1
+          done
+          node scripts/visual-browser-qa.cjs
+      - name: Upload screenshots and viewport report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: superday-approved-ab-chromium-screenshots
+          path: browser-qa-artifacts/
+          if-no-files-found: warn
+          retention-days: 14
