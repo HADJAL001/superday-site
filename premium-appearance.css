@@ -351,3 +351,13 @@ body[data-superday-premium] .sd-appearance button.is-current {
   outline:2px solid #70caff;
   outline-offset:2px;
 }
+
+
+/* The original logo PNG has a light square background. Rendering it as
+   a monochrome mark on dark chrome preserves the logo without a white tile. */
+body[data-superday-premium] .brand img,
+body[data-superday-premium] .ps-top img {
+  filter:invert(1) grayscale(1) contrast(1.65)!important;
+  mix-blend-mode:screen;
+  background:transparent;
+}
