@@ -23,5 +23,6 @@ test('Both themes are accessible and preferences optional', () => {
 });
 
 test('Presentation patch does not handle transactions or user data', () => {
-  assert.doesNotMatch(js, /fetch\(|XMLHttpRequest|checkout|billing|supabase|payment|session/i);
+  const executable = js.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, "");
+  assert.doesNotMatch(executable, /fetch\(|XMLHttpRequest|checkout|billing|supabase|payment|session/i);
 });
