@@ -1,0 +1,109 @@
+/* SUPER DAY: native application of the previously approved A/B premium gallery.
+   Ref artwork remains unchanged at /premium-ab-preview/assets.
+   Visual-only overrides; no changes to purchase, support, tasks, auth or API. */
+body[data-superday-premium="a"] {
+  --plat:245,248,253;
+  --text:rgb(var(--plat));
+  --text-dim:rgba(var(--plat),.72);
+  --text-muted:rgba(var(--plat),.52);
+  --bg:#06080c; --bg-deep:#05070b; --ink:#06080c;
+  --surface:#0c1219; --surface-alt:#111923;
+  --border:#283848;
+  --hair:rgba(197,222,241,.23); --hair-soft:rgba(197,222,241,.11);
+  --gold:rgba(var(--plat),.92); --gold-bright:#fff; --gold-deep:#9dbad1;
+  --champagne:rgba(var(--plat),.86);
+  --platinum:#f5f8fd; --plat-dim:#afc3d7; --plat-deep:#738da7;
+  --grad-plat:linear-gradient(115deg,#7b90a3 0%,#e1f0fa 23%,#fff 43%,#b7d9eb 68%,#789bb1 100%);
+}
+body[data-superday-premium="b"] {
+  --plat:241,248,255;
+  --text:rgb(var(--plat));
+  --text-dim:rgba(var(--plat),.74);
+  --text-muted:rgba(var(--plat),.52);
+  --bg:#050a10; --bg-deep:#04080e; --ink:#050a10;
+  --surface:#0b1926; --surface-alt:#122435;
+  --border:#2b4962;
+  --hair:rgba(147,205,246,.27); --hair-soft:rgba(126,183,226,.15);
+  --gold:rgba(var(--plat),.92); --gold-bright:#e9f7ff; --gold-deep:#71bade;
+  --champagne:rgba(var(--plat),.86);
+  --platinum:#f1f8ff; --plat-dim:#b1d1e7; --plat-deep:#86aac7;
+  --grad-plat:linear-gradient(115deg,#43719d 0%,#a6def9 25%,#fff 42%,#85c9ed 72%,#4077a6 100%);
+}
+body[data-superday-premium] {
+  background:var(--bg-deep);
+  color:var(--text);
+}
+body[data-superday-premium]::before {
+  background:
+    radial-gradient(760px 540px at 78% -12%,rgba(103,165,228,.19),transparent 62%),
+    radial-gradient(850px 630px at 10% 13%,rgba(53,103,157,.16),transparent 67%),
+    linear-gradient(180deg,var(--bg) 0%,var(--bg-deep) 100%);
+}
+body[data-superday-premium] .nav {
+  background:color-mix(in srgb,var(--bg-deep) 83%,transparent);
+  border-bottom-color:var(--hair-soft);
+}
+body[data-superday-premium] .card,
+body[data-superday-premium] .plan,
+body[data-superday-premium] .apk-box {
+  border-color:var(--hair)!important;
+  background:linear-gradient(155deg,rgba(255,255,255,.045),transparent 48%),var(--surface)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 24px 50px rgba(0,0,0,.25)!important;
+}
+body[data-superday-premium] .btn-plat {
+  border-color:var(--hair)!important;
+  color:var(--platinum)!important;
+  background:linear-gradient(140deg,var(--surface-alt),var(--surface))!important;
+}
+body[data-superday-premium] .btn-ghost {
+  border-color:var(--hair)!important;
+  color:var(--platinum)!important;
+}
+body[data-superday-premium] .hero h1,
+body[data-superday-premium] .sec-head h2 {
+  text-wrap:balance;
+  letter-spacing:-.025em;
+}
+.sd-appearance {
+  display:inline-flex;
+  padding:3px;
+  flex:0 0 auto;
+  gap:3px;
+  background:var(--surface);
+  border:1px solid var(--hair);
+  border-radius:10px;
+}
+.sd-appearance button {
+  min-height:32px;
+  padding:5px 9px;
+  border:1px solid transparent;
+  border-radius:7px;
+  background:transparent;
+  color:var(--text-dim);
+  cursor:pointer;
+  font:600 11px/1.2 var(--font-ui,Arial,sans-serif);
+  white-space:nowrap;
+}
+.sd-appearance button.is-current {
+  background:var(--surface-alt);
+  color:var(--text);
+  border-color:var(--hair);
+}
+.sd-appearance button:focus-visible {
+  outline:2px solid #a6def9;
+  outline-offset:2px;
+}
+@media(max-width:1120px) {
+  .sd-appearance button { padding:4px 6px; font-size:10px; }
+}
+@media(max-width:850px) {
+  /* Keep primary site navigation unchanged. A/B is below header, never blocks CTA. */
+  .nav-inner { flex-wrap:wrap; height:auto!important; min-height:68px; padding-top:12px; padding-bottom:12px; row-gap:8px; }
+  .sd-appearance { margin-left:auto; }
+}
+@media(max-width:410px) {
+  .sd-appearance button { min-height:30px; padding:4px 5px; font-size:9px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .sd-appearance button { transition:none; }
+}
