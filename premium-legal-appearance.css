@@ -1,0 +1,115 @@
+/* The approved premium palette follows users into documents and support.
+ * Status/success/error tokens and form semantics remain independent. */
+html[data-sd-legal="a"] {
+  --bg:#06080c;
+  --surface:#0c1219;
+  --surface-strong:#111923;
+  --text:#f5f8fd;
+  --text-dim:#b4c3d1;
+  --text-muted:#93a4b7;
+  --border:rgba(197,222,241,.19);
+  --border-strong:rgba(197,222,241,.36);
+  --accent:#cbeaff;
+  --accent-text:#07111c;
+  --focus:#a1d9ff;
+  --font-ui:"Manrope","Jost","Segoe UI",sans-serif;
+  --font-display:"Manrope","Jost","Segoe UI",sans-serif;
+}
+html[data-sd-legal="b"] {
+  --bg:#050a10;
+  --surface:#0b1926;
+  --surface-strong:#122435;
+  --text:#f4f9ff;
+  --text-dim:#b6ccdf;
+  --text-muted:#90b0c8;
+  --border:rgba(126,183,226,.21);
+  --border-strong:rgba(147,205,246,.38);
+  --accent:#a5ddff;
+  --accent-text:#061523;
+  --focus:#70caff;
+  --font-ui:"Manrope","Jost","Segoe UI",sans-serif;
+  --font-display:"Manrope","Jost","Segoe UI",sans-serif;
+}
+html[data-sd-legal] body {
+  background:var(--bg);
+  color:var(--text);
+}
+html[data-sd-legal] .legal-header {
+  background:color-mix(in srgb,var(--bg) 94%,transparent);
+  border-color:var(--border);
+}
+html[data-sd-legal] .legal-hero h1 {
+  font-size:clamp(36px,4.9vw,60px);
+  font-weight:650;
+  line-height:1.12;
+  letter-spacing:-.04em;
+}
+html[data-sd-legal] .legal-section h2 {
+  font-size:clamp(26px,3.2vw,36px);
+  font-weight:630;
+  line-height:1.18;
+  letter-spacing:-.025em;
+}
+html[data-sd-legal] .verification-panel,
+html[data-sd-legal] .support-form,
+html[data-sd-legal] .support-aside {
+  border-color:var(--border);
+  background:var(--surface);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+}
+html[data-sd-legal] :focus-visible {
+  outline-color:var(--focus);
+}
+.sd-legal-theme-bar {
+  padding:9px 0;
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+}
+.sd-legal-theme-inner {
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.sd-legal-theme-caption {
+  color:var(--text-muted);
+  font:600 10px/1.2 "Manrope","Segoe UI",sans-serif;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.sd-legal-theme-group {
+  display:inline-flex;
+  flex-shrink:0;
+  padding:3px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--surface);
+  gap:3px;
+}
+.sd-legal-theme-choice {
+  min-height:36px;
+  min-width:72px;
+  padding:7px 11px;
+  border:1px solid transparent;
+  border-radius:7px;
+  background:transparent;
+  color:var(--text-dim);
+  font:600 11px/1.2 "Manrope","Segoe UI",sans-serif;
+  cursor:pointer;
+}
+.sd-legal-theme-choice.is-current {
+  background:var(--surface-strong);
+  color:var(--text);
+  border-color:var(--border);
+}
+.sd-legal-theme-choice:focus-visible {
+  outline:2px solid var(--focus);
+  outline-offset:2px;
+}
+@media(max-width:530px) {
+  .sd-legal-theme-bar { padding:8px 0; }
+  .sd-legal-theme-inner { gap:7px; }
+  .sd-legal-theme-caption { font-size:9px; }
+  .sd-legal-theme-choice { min-height:38px; padding:7px 9px; }
+}
