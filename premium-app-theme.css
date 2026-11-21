@@ -1,0 +1,57 @@
+/* Original Black Chrome / Executive Blue from the approved OSGARD 7 gallery.
+ * Scope: ONLY the planner's existing platinum mode.
+ * User-selected daylight / emerald remain authoritative, including their map UX.
+ * No financial logic or Eisenhower quadrant/status colours are changed. */
+html[data-theme="platinum"][data-superday-premium="a"] {
+  --plat:245,248,253;
+  --text:rgb(var(--plat));
+  --text-dim:rgba(var(--plat),.72);
+  --text-muted:rgba(var(--plat),.52);
+  --bg:#06080c;
+  --bg-deep:#05070b;
+  --ink:#06080c;
+  --surface:#0c1219;
+  --surface-alt:#111923;
+  --border:#283848;
+  --gold:#a1d9ff;
+  --gold-bright:#f4faff;
+  --gold-deep:#75a9c9;
+  --champagne:#d1ebfc;
+  --platinum:#f5f8fd;
+  --plat-dim:#b3c9d8;
+  --plat-deep:#829cb1;
+  --on-accent:#06121d;
+  --hair:rgba(197,222,241,.23);
+  --hair-soft:rgba(197,222,241,.11);
+  --grad-gold:linear-gradient(115deg,#7b90a3,#e1f0fa 24%,#fff 43%,#b7d9eb 68%,#789bb1);
+  --grad-plat:linear-gradient(115deg,#7b90a3,#e1f0fa 24%,#fff 43%,#b7d9eb 68%,#789bb1);
+  --font-display:"Manrope","Jost","Segoe UI",sans-serif;
+  --font-ui:"Manrope","Jost","Segoe UI",sans-serif;
+}
+html[data-theme="platinum"][data-superday-premium="b"] {
+  --plat:241,248,255;
+  --text:rgb(var(--plat));
+  --text-dim:rgba(var(--plat),.74);
+  --text-muted:rgba(var(--plat),.52);
+  --bg:#050a10;
+  --bg-deep:#04080e;
+  --ink:#050a10;
+  --surface:#0b1926;
+  --surface-alt:#122435;
+  --border:#2b4962;
+  --gold:#70caff;
+  --gold-bright:#e8f7ff;
+  --gold-deep:#488fbf;
+  --champagne:#b5e3fa;
+  --platinum:#f4f9ff;
+  --plat-dim:#b6d0e4;
+  --plat-deep:#86a9c5;
+  --on-accent:#051522;
+  --hair:rgba(147,205,246,.27);
+  --hair-soft:rgba(126,183,226,.15);
+  --grad-gold:linear-gradient(115deg,#43719d,#a6def9 25%,#fff 42%,#85c9ed 72%,#4077a6);
+  --grad-plat:linear-gradient(115deg,#43719d,#a6def9 25%,#fff 42%,#85c9ed 72%,#4077a6);
+  --font-display:"Manrope","Jost","Segoe UI",sans-serif;
+  --font-ui:"Manrope","Jost","Segoe UI",sans-serif;
+}
+/* Responsive labels and controls remain governed by the real planner code. */
