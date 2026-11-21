@@ -332,3 +332,22 @@ body[data-superday-premium] .sd-appearance button.is-current {
   body[data-superday-premium] .nav .sd-nav-toggle { padding:7px 9px; }
   body[data-superday-premium] .nav .sd-appearance button { padding:5px 8px; min-height:33px; font-size:10px; }
 }
+
+/* Keyboard shortcut into the real page, not a decorative overlay. */
+.sd-skip {
+  position:fixed;
+  z-index:200;
+  top:8px;
+  left:8px;
+  transform:translateY(-160%);
+  padding:10px 15px;
+  border-radius:8px;
+  background:#f5f8fd;
+  color:#061019;
+  font:700 13px/1.2 "Manrope",sans-serif;
+}
+.sd-skip:focus {
+  transform:translateY(0);
+  outline:2px solid #70caff;
+  outline-offset:2px;
+}
