@@ -18,10 +18,15 @@ on:
       - 'scripts/approved-appearance-dom.test.mjs'
       - 'scripts/premium-appearance-contract.test.mjs'
       - '.github/workflows/approved-appearance-quality.yml'
+      - 'i18n/site.*.js'
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: superday-appearance-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   visual-and-navigation-contract:
