@@ -145,9 +145,14 @@ async function run() {
     });
     const translated = await english.newPage();
     await translated.goto(ORIGIN + "/", { waitUntil:"domcontentloaded" });
-    await translated.locator(".hero p.lead").getByText(/Dictate or type your tasks/i).waitFor({ timeout: 10000 });
-    await translated.locator('.hero-cta a[href="app.html"]').getByText(/Open the planner/i).waitFor({ timeout: 10000 });
-    await translated.locator('.hero-note').getByText(/web version works without installation/i).waitFor({ timeout: 10000 });
+    await translated.waitForFunction(() => {
+      const lead = document.querySelector(".hero p.lead")?.textContent || "";
+      const action = document.querySelector('.hero-cta a[href="app.html"]')?.textContent || "";
+      const note = document.querySelector(".hero-note")?.textContent || "";
+      return lead.includes("Dictate or type your tasks")
+        && action.includes("Open the planner")
+        && note.includes("The web version works without installation");
+    }, null, { timeout: 10000 });
     report.push({page:"landing-en",width:1280,status:"translated hero text"});
     await translated.close();
     await english.close();
