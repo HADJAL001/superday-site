@@ -60,6 +60,7 @@ async function run() {
     for (const width of widths) {
       const context = await browser.newContext({
         viewport: { width, height: 850 },
+        locale: "ru-RU",
         reducedMotion:"reduce",
         colorScheme:"dark",
       });
@@ -128,6 +129,28 @@ async function run() {
       await landing.close();
       await context.close();
     }
+    // Check the newly simplified copy is translated, rather than displaying a
+    // mixed-language English headline and Russian body copy.
+    const english = await browser.newContext({
+      viewport: { width: 1280, height: 850 },
+      locale: "en-US",
+      reducedMotion:"reduce",
+    });
+    await english.route("**/*", route => {
+      const target = new URL(route.request().url());
+      if (target.origin === ORIGIN || target.protocol === "data:" || target.protocol === "blob:") {
+        return route.continue();
+      }
+      return route.abort();
+    });
+    const translated = await english.newPage();
+    await translated.goto(ORIGIN + "/", { waitUntil:"domcontentloaded" });
+    await translated.locator(".hero p.lead").getByText(/Dictate or type your tasks/i).waitFor({ timeout: 10000 });
+    await translated.locator('.hero-cta a[href="app.html"]').getByText(/Open the planner/i).waitFor({ timeout: 10000 });
+    await translated.locator('.hero-note').getByText(/web version works without installation/i).waitFor({ timeout: 10000 });
+    report.push({page:"landing-en",width:1280,status:"translated hero text"});
+    await translated.close();
+    await english.close();
     await writeFile(ARTIFACTS + "/report.json", JSON.stringify({ status:"PASS", screens:report },null,2));
     process.stdout.write("SUPER DAY visual QA PASS: "+report.length+" checks\n");
   } finally {
