@@ -124,7 +124,7 @@ body[data-superday-premium] .hero::before {
   height:min(54vw,800px);
   z-index:-1;
   top:-14%;
-  right:-5%;
+  right:0;
   border-radius:50%;
   pointer-events:none;
   background:radial-gradient(circle,rgba(117,177,226,.105),transparent 66%);
